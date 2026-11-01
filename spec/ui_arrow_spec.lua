@@ -248,13 +248,15 @@ describe("Positions in Edit Mode", function()
 		W.scripts.OnDragStop(W)
 		assert.are.same({ "TOPLEFT", "TOPLEFT", 100, -50 }, ns.UI.DB().pos.window)
 		_G.EventRegistry:TriggerEvent("EditMode.Exit")
-		assert.is_false(F.mouse)
-		assert.is_false(W.movable)
+		assert.is_false(F.mouse) -- click-free again (P7)
+		F.scripts.OnDragStart(F)
+		assert.is_falsy(rawget(F, "moving")) -- without Shift the arrow stays where it is
+		assert.is_false(rawget(ns.UI.movers.window.overlay, "shown"))
 		ns.UI.ResetPositions()
 		assert.are.equal("TOPRIGHT", W.points[1][1])
 	end)
 
-	it("cannot be dragged outside Edit Mode", function()
+	it("cannot be dragged by its body outside Edit Mode (the header band: spec/ui_place_spec.lua)", function()
 		local ns = S.login()
 		local W = ns.StepFrame.frame
 		W.scripts.OnDragStart(W)

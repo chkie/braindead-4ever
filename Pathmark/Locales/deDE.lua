@@ -230,7 +230,8 @@ L.MENU_RESUME = "Führung fortsetzen"
 L.BEHIND = "hinter dir"
 L.EDIT_WINDOW = "Pathmark: Schrittfenster"
 L.EDIT_ARROW = "Pathmark: Pfeil"
-L.EDITMODE_HINT = "Schrittfenster und Pfeil verschiebst du im Bearbeitungsmodus: Spielmenü (Esc), %s"
+L.EDITMODE_HINT =
+	"Das Schrittfenster ziehst du am Kopfband, den Pfeil mit gedrückter Umschalttaste, beides auch im Bearbeitungsmodus: Spielmenü (Esc), %s"
 L.MM_LEFT_PAUSE = "Linksklick: Führung pausieren"
 L.MM_LEFT_RESUME = "Linksklick: Führung fortsetzen"
 L.MM_RIGHT = "Rechtsklick: Menü"
@@ -275,7 +276,8 @@ L.BTN_SETUP = "Erneut starten"
 L.TIP_BTN_SETUP = "Öffnet den Einrichtungsdialog vom ersten Start."
 L.BTN_POSITION_LABEL = "Fenster"
 L.BTN_POSITION = "Positionieren"
-L.TIP_BTN_POSITION = "Schrittfenster und Pfeil verschiebst du im Bearbeitungsmodus von Blizzard."
+L.TIP_BTN_POSITION =
+	"Du ziehst das Schrittfenster am Kopfband und den Pfeil mit gedrückter Umschalttaste oder verschiebst beides im Bearbeitungsmodus."
 L.PAGE_PLAY = "Spielweise"
 L.OPT_STYLE = "Spielweise"
 L.TIP_STYLE =
@@ -306,7 +308,11 @@ L.TRACKER_hide = "Ausblenden"
 L.TIP_TRACKER_keep = "Pathmark lässt die Questanzeige so, wie du sie eingestellt hast."
 L.TIP_TRACKER_route =
 	"Die Questanzeige folgt den Quests der Route; andere Quests verlassen sie, außer du hakst sie selbst an."
-L.TIP_TRACKER_hide = "Blizzards Questanzeige bleibt ausgeblendet, solange Pathmark dich führt."
+L.TIP_TRACKER_hide =
+	"Blizzards Questanzeige bleibt ausgeblendet, solange Pathmark dich führt, und das Schrittfenster nimmt ihren Platz ein."
+L.OPT_LOCK = "Fenster fixieren"
+L.TIP_LOCK =
+	"Hält das Schrittfenster beim Ziehen am Kopfband fest; im Bearbeitungsmodus lässt es sich weiter verschieben."
 L.BTN_RESET_LABEL = "Position"
 L.BTN_RESET = "Zurücksetzen"
 L.TIP_BTN_RESET = "Setzt Schrittfenster und Pfeil auf Startposition und Startgröße zurück."

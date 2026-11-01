@@ -153,3 +153,8 @@ function CreateScrollBoxLinearView(top, bottom, left, right, spacing) end
 ---reads and sets its alpha (UI/QuestWatch.lua).
 ---@type table<string, any>
 ObjectiveTrackerFrame = {}
+
+---Blizzard's minimap cluster (Blizzard_Minimap/Mainline/Minimap.xml, 256x256 at the top right);
+---Pathmark only reads its edges for the step window's default place (UI/StepFrame.lua, Welle 5c).
+---@type table<string, any>
+MinimapCluster = {}

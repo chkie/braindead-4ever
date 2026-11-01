@@ -149,6 +149,7 @@ local function Finish()
 	end
 	if ns.StepFrame then
 		ns.StepFrame.Refresh()
+		ns.StepFrame.PlaceDefault() -- the tracker hides now: the window takes its place (Welle 5c)
 	end
 	if ns.QuestWatch then -- the quest tracker option starts after the first start (Welle 5b)
 		ns.QuestWatch.Queue()

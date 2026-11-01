@@ -29,8 +29,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- Arrival at 12 yd (5..30): check atlas and "Reached destination", hidden after 1 s.
 -- Cost: the direction (UnitPosition) is computed at most 20 times per second, the rotation (facing)
 -- every frame from the last direction; nothing allocates in OnUpdate (concept §2.3, brain chapter 12).
--- No arrow in instances or on another continent (the step window says so). Not clickable outside Edit
--- Mode (rule P7); always fully opaque, so the minimum alpha 0.3 of P7 holds. With "use Blizzard navigation" and the CVar showInGameNavigation on,
+-- No arrow in instances or on another continent (the step window says so). Click-free by default (rule
+-- P7): it takes the mouse only in Edit Mode or while Shift is held, then a drag moves it (owner reading
+-- 16); always fully opaque, so the minimum alpha 0.3 of P7 holds. With "use Blizzard navigation" and the CVar showInGameNavigation on,
 -- Blizzard's own marker shows the way and this arrow hides (rule P8).
 local _, ns = ...
 local L, UI, T, Nav = ns.L, ns.UI, ns.Theme, ns.Nav
@@ -87,7 +88,12 @@ local function Build()
 		A.Update(elapsed)
 	end)
 	F:Hide()
-	UI.Mover(F, "arrow", L.EDIT_ARROW, A.DEFAULT, false)
+	UI.Mover(F, "arrow", L.EDIT_ARROW, A.DEFAULT, {
+		shift = true,
+		drag = function()
+			return IsShiftKeyDown ~= nil and IsShiftKeyDown() == true
+		end,
+	})
 end
 
 -- Should the arrow show at all (option, pause, Blizzard navigation)?
@@ -257,7 +263,7 @@ M.Define("arrow", {
 	requires = {
 		funcs = { "UnitPosition", "GetPlayerFacing", "C_Map.GetWorldPosFromMapPos", "CreateVector2D" },
 	},
-	optional = { events = { "CVAR_UPDATE" } },
+	optional = { funcs = { "IsShiftKeyDown" }, events = { "CVAR_UPDATE", "MODIFIER_STATE_CHANGED" } },
 	init = Init,
 	events = {
 		CVAR_UPDATE = function(_, _, name)

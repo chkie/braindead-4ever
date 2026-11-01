@@ -48,22 +48,35 @@ The live route in Retail uses Forever quest IDs and maps, so quest names may sho
 | 4 Area (hint level 2, Welle 5b) | `/pathmark preview area`, then open the world map (M) | gold ring with a faint gold disc around your position, about 100 yards across; hover shows "Area" and "A book lies within the marked circle."; zoom in and out: the circle grows and shrinks with the map; clicks on the map still work inside it |
 | 5 Settings | `/pathmark preview settings` (or Esc, Options, AddOns, Pathmark) | main page and the five sub pages |
 
-## 3. Blizzard's quest tracker (Welle 5b, owner reading point 15)
+## 3. Blizzard's quest tracker (Welle 5b, owner reading points 15 and 16)
 
 Whether the watch calls and the tracker's alpha from addon code cause taint is unconfirmed; this check settles it. The module turns itself off when the game blocks one of its calls (`/pathmark status` shows `questwatch` with the reason).
 
 1. Before logging in: `/console taintLog 2` in the chat once (stays set), then `/reload`.
 2. Accept three quests, mark one of them in the quest log yourself (shift-click or the check box) and note which ones Blizzard's tracker shows.
 3. Settings, Display, "Blizzard's quest tracker":
-   - "Only quests of the route" (default): quests the route does not know leave the tracker, your own mark stays; a newly accepted quest off the route leaves it again within a second.
-   - "Hidden": the tracker disappears; quests you marked yourself stay in the list.
+   - "Hidden" (default since Welle 5c): the tracker disappears while Pathmark guides and the step window stands in its place; quests you marked yourself stay in the list. A player who never changed the option before Welle 5c gets this default too; one who chose "Unchanged" or "Hidden" keeps it.
+   - "Only quests of the route": quests the route does not know leave the tracker, your own mark stays; a newly accepted quest off the route leaves it again within a second.
    - "Unchanged": the marks from step 2 come back, plus what you marked or removed meanwhile.
-4. Right-click menu, "Pause guidance": the marks from step 2 come back; "Resume guidance" applies the option again.
+4. Right-click menu, "Pause guidance": the tracker shows again with the marks from step 2; "Resume guidance" applies the option again.
 5. Do the same once in a fight: nothing changes until the fight ends.
 6. `/reload`, then open `World of Warcraft/_retail_/Logs/taint.log`: lines naming `Pathmark` together with `ObjectiveTracker`, `QuestWatch` or `blocked` are the finding; copy them into the report. No such line: the check passed.
 7. Turn Pathmark off in the AddOns list and log in: the tracker shows the marks from step 2 (Pathmark puts them back at every logout).
 
-## 4. Situations per screenshot
+## 4. Moving the windows (Welle 5c, owner readings 16 and 17)
+
+Start from the default: settings, Display, "Reset" (positions and size).
+
+1. Default place: the step window stands top right where Blizzard's quest tracker stood, below the minimap and left of the two right action bars, with a gap to both. Turn the two right bars (action bars 4 and 5) on and off in Blizzard's settings and `/reload`: the window never reaches into them, also not with one of them off. Repeat at a second resolution or UI scale.
+2. Set "Blizzard's quest tracker" to "Only quests of the route": the tracker shows and the window moves left of it without overlap. "Hidden" puts it back.
+3. Drag the window by its header band (the gold title band) with the left mouse button: it follows; after `/reload` it is where you left it, and step 1 and 2 no longer move it. Dragging the step text or the list does nothing; right-click still opens the menu and the check box still works.
+4. Settings, Display, "Lock window" on: the header band no longer drags. Off again: it does.
+5. Edit Mode (Esc, Edit Mode): both windows show a gold tint with their name ("Pathmark: step window", "Pathmark: arrow") and can be dragged, also with "Lock window" on; closing Edit Mode removes the tint. This proves Blizzard fires `EditMode.Enter` and `EditMode.Exit` in this client (wow-ui-source `Blizzard_EditMode/Shared/EditModeManager.lua`, `EditModeManagerFrameMixin:EnterEditMode` and `:ExitEditMode`: live 12.1.5 lines 100 and 119, forever 1.60.1 lines 105 and 124). No tint appears: report it with `/pathmark status`.
+6. Arrow: without a key it lets clicks through to the world. Hold Shift and drag it; release Shift and it is click-free again.
+7. In a fight: neither window moves, not by the header, not with Shift, not in Edit Mode. A drag that runs when the fight starts stops there and keeps the place.
+8. Edit Mode, drag bar 6 (MultiBar5) to the right edge left of the right bars, close Edit Mode: after "Reset" the window keeps a gap to it too.
+
+## 5. Situations per screenshot
 
 Concept §2.12 asks for these situations; take the views of section 2 in them:
 
@@ -71,11 +84,11 @@ Concept §2.12 asks for these situations; take the views of section 2 in them:
 - next to a quest giver and in a fight,
 - size 75 % and 200 % (settings, main page, "Size"), and Blizzard's text size at its largest (Blizzard settings, Accessibility),
 - German and English client (Battle.net launcher, game settings, text language),
-- window and arrow moved in Edit Mode (Esc, Edit Mode, drag them; "Reset" on the settings page Display).
+- window and arrow moved (section 4; "Reset" on the settings page Display).
 
 Screenshots land in `World of Warcraft/_retail_/Screenshots/` (key: Print). A name per view helps, for example `1-normal-de-light.jpg`.
 
-## 5. If something breaks
+## 6. If something breaks
 
 - `/pathmark status` lists every module; a module that turned off shows its reason.
 - `/pathmark report` opens the copyable problem report (also in the right-click menu), with missing atlases if the client lacks one.
