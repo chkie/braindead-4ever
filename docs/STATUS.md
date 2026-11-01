@@ -143,7 +143,10 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Route data loaded only for the played faction | built | function per faction; `ns.Routes.Release()` drops the other faction's builder; measured offline (Lua 5.1): 1.56 MB for the Alliance data after release |
 | Example route Elwynn Forest (human, levels 1–10) runs through | built | `spec/routes_spec.lua` |
 | Start zones per race in the Forever client | planned | EG Link measured 20 of 56 combinations in the beta; confirm on 2026-11-05 |
-| Planned levels from XP simulation | planned | AP 10; levels are planning values until then |
+| Route simulator: model time, level and XP, quest log (35 working limit, 40 hard), hearthstone, flights, transports, objective kills, grind fill; all 56 combinations in both modes reach level 30 | built | `tools/routekit/sim.py`, parameters with source and Forever status in `data/plan/params.toml`; times are Modellstunden, not a forecast of play time (Welle 6a) |
+| Route metrics P1 to P11, G1 to G12 and the checkable rules of DR 22a, per combination and mode | built | `python3 -m tools.routekit metrics`; baseline in `docs/ROUTE-METRICS.md`; deterministic (same digest in two runs and across processes) |
+| CI job "Route quality" | built (reports only) | writes the metrics into the job summary; limits become required in Welle 6b |
+| Planned levels from XP simulation | planned | Welle 6b: the builder uses the simulator; levels are planning values until then |
 | Quest facts in the compiled data: quest level, full XP (Polestar), prerequisite groups | built | `quests` table, docs/ROUTE-FORMAT.md §Compiled form |
 
 ## Route runtime (step logic, owner wishes 9 and 10)
@@ -158,7 +161,7 @@ The logic behind the step window. Interface and rules: `docs/ROUTE-RUNTIME.md`. 
 | Quests done before the login skipped; entry at any level (steps planned more than 5 levels below are passed) | built | the margin of 5 levels is a chosen value; entry at level 12 and 25 per faction tested |
 | Check, skip with follow-up quests (prerequisite groups, any chain length), back, undo (20 actions) | built | chain over three quests tested with made-up and with real data; where no source secures the prerequisites (`unsure`), the step carries `chain = "incomplete"` until players confirm them (Welle 4 section) |
 | Abandoned quest: question with two ways (take it again, skip with follow-up quests); nothing moves before the answer | built | owner wish 10 |
-| XP balance (to the next level, step, route to the next zone, kills) | built | Classic rules (`Routes/XP.lua`) as estimates until `xp.curve`, `xp.kill` and `xp.quest` pass in the Forever client |
+| XP balance (to the next level, step, route to the next zone, kills) | built | Classic rules with the Forever kill rule for creatures below the character (forever-bugs #138) in `Routes/XP.lua`, the same in `tools/routekit/xp.py`; estimates until `xp.curve`, `xp.kill` and `xp.quest` pass in the Forever client |
 | Random test: 7,500 random actions (accept, abandon, play, check, skip, back, undo, answer, level, reload), route valid after each | built | `spec/route_random_spec.lua`, seeded |
 | Step window, right-click menu ("undo" there), texts | built | Welle 5, see "Interface" below |
 | Dungeon hint (owner wish 11) | built (logic and window) | see the Welle 4 section and "Interface" below |

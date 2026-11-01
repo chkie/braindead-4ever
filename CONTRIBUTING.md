@@ -52,6 +52,7 @@ It runs the same checks as CI:
 | Workflows | `actionlint` |
 | Route tools | `python3 -m unittest discover -s tools/tests -t .` |
 | Route data | `python3 -m tools.routekit check` |
+| Route quality (report only, [docs/ROUTE-METRICS.md](docs/ROUTE-METRICS.md)) | `python3 -m tools.routekit metrics` |
 
 A pull request can only be merged when all checks are green.
 

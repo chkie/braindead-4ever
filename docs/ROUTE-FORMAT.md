@@ -29,6 +29,7 @@ data/sources/<source>/   ----merge---->  data/facts/quests.jsonl
 | `python3 -m tools.routekit compile` | writes `Pathmark/Routes/Data_Alliance.lua` and `Data_Horde.lua` |
 | `python3 -m tools.routekit check` | lint, then compile into a temporary folder and compare with the committed files (CI) |
 | `python3 -m tools.routekit stats` | steps and quests per combination and level band |
+| `python3 -m tools.routekit metrics` | simulates every combination in both modes and reports the route metrics in Modellstunden ([ROUTE-METRICS.md](ROUTE-METRICS.md)) |
 
 The tools need Python 3.11 or later (standard library only). Reading All The Things needs Lua 5.1 (`scripts/setup.sh` installs it in `.tools/`).
 
@@ -155,7 +156,7 @@ The route of a combination: the first `start` module whose filter applies, then 
 - **Speed** (`#mode speed`): no quest without a secured prerequisite, no breadcrumbs.
 - **Explorer** (`#mode explorer`): also quests with an unknown or conflicting prerequisite and breadcrumbs. Known prerequisites are still enforced.
 
-The builder orders the actions of a block greedily: the cheapest next action (accept, objectives, turn-in), cost in yards plus 600 yards for every level an accept would raise the planned level; quest log at most 20; quests more than 4 levels below the block start are skipped; quest level at most 2 above the planned level. The planned level never goes down. These are computed routes, not played ones; the simulator (AP 10) and our measurements replace the planned levels.
+The builder orders the actions of a block greedily: the cheapest next action (accept, objectives, turn-in), cost in yards plus 600 yards for every level an accept would raise the planned level; quest log at most 20; quests more than 4 levels below the block start are skipped; quest level at most 2 above the planned level. The planned level never goes down. These are computed routes, not played ones. The route simulator (`tools/routekit/sim.py`, parameters in `data/plan/params.toml`) plays them and prices them in Modellstunden; `docs/ROUTE-METRICS.md` holds the metrics of every combination. From Welle 6b the builder uses the simulator; until then, and until our own measurements arrive, the planned levels stay planning values.
 
 ## Linter
 

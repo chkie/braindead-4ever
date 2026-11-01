@@ -22,14 +22,23 @@ of the Ace3 libraries used as well as that of the covered work.
 -- SPDX-License-Identifier: GPL-3.0-or-later WITH AdditionRef-Pathmark-Ace3-Exception
 
 -- Routes/XP.lua: experience rules for the XP balance (owner wish 9, 2026-11-01). Pure Lua, no WoW API.
--- These are Classic rules. WoW: Forever has no level scaling (Blizzard, brain chapter 14 §2) and no
--- announced change of the XP curve (chapter 14 §4.3), so the Classic values are the starting
--- assumption; every number derived here is shown as an estimate ("ca.") until the probe checks
--- xp.curve, xp.kill and xp.quest have measured them in the Forever client (docs/STATUS.md).
+-- Classic rules with one measured Forever change. WoW: Forever has no level scaling (Blizzard, brain
+-- chapter 14 §2) and no announced change of the XP curve (chapter 14 §4.3), so the Classic values
+-- are the starting assumption; every number derived here is shown as an estimate ("ca.") until the
+-- probe checks xp.curve, xp.kill and xp.quest have measured them in the Forever client
+-- (docs/STATUS.md).
+-- Forever change: a creature below the character gives (5 * creature level + 45) reduced by the
+-- level difference, not (5 * character level + 45) as in Classic. Measured in the beta (level 10
+-- against level 5: 40 XP in Forever, 54 in Classic Era, both rested) and closed by a Blizzard
+-- developer as "Not A Bug" on 2026-09-28: github.com/ClassicWoWCommunity/forever-bugs/issues/138;
+-- confirmed by the Polestar maintainer in github.com/fitzforge/polestar/issues/30 (brain chapter 06
+-- §8, report DR 22b). Creatures at or above the character's level are unchanged (none measured).
+-- tools/routekit/xp.py computes the same rules; tools/tests/fixtures/xp_cases.json holds the cases
+-- both must agree on.
 -- Sources (read 2026-11-01): warcraft.wiki.gg "Experience to level" (Vanilla / Classic table),
--- "Mob experience" (base formula before patch 4.0.3 uses the character level, zero difference),
--- "Experience point" (quest XP by level difference); cross-checked against cmangos/mangos-classic
--- src/game/Tools/Formulas.h (namespace XP: BaseGain, GetZeroDifference, IsTrivialLevelDifference).
+-- "Mob experience" (zero difference), "Experience point" (quest XP by level difference);
+-- cross-checked against cmangos/mangos-classic src/game/Tools/Formulas.h (namespace XP: BaseGain,
+-- GetZeroDifference, IsTrivialLevelDifference).
 local _, ns = ...
 
 local XP = {}
@@ -140,18 +149,18 @@ function XP.ZeroDiff(level)
 	return 17
 end
 
--- XP for a solo kill. Classic base: character level * 5 + 45 (Azeroth); +5 % per level above the
--- character, at most +4 levels; below linearly down to zero; elite doubles.
+-- XP for a solo kill. Creature at or above the character: character level * 5 + 45 (Azeroth),
+-- +5 % per level above, at most +4 levels. Creature below (Forever, forever-bugs #138): creature
+-- level * 5 + 45, linearly down to zero at the zero difference. Elite doubles.
 function XP.KillXP(level, mobLevel, elite)
 	mobLevel = mobLevel or level
-	local base = level * 5 + 45
 	local xp
 	if mobLevel >= level then
-		xp = base * (1 + 0.05 * math.min(mobLevel - level, 4))
+		xp = (level * 5 + 45) * (1 + 0.05 * math.min(mobLevel - level, 4))
 	elseif Trivial(level, mobLevel) then
 		return 0
 	else
-		xp = base * (1 - (level - mobLevel) / XP.ZeroDiff(level))
+		xp = (mobLevel * 5 + 45) * (1 - (level - mobLevel) / XP.ZeroDiff(level))
 	end
 	if elite then
 		xp = xp * 2

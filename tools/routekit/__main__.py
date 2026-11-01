@@ -8,6 +8,7 @@
   python3 -m tools.routekit compile        data/routes -> Pathmark/Routes
   python3 -m tools.routekit check          lint + compile into a temp dir and compare
   python3 -m tools.routekit stats          counts per combination and level band
+  python3 -m tools.routekit metrics        simulate all 56 combinations, report P1-P11, G1-G12, R rules
   python3 -m tools.routekit observe PATHS  player exports -> data/sources/own (run merge after)
 
 Foreign repositories are read from wherever they were cloned; nothing outside data/ is written
@@ -36,6 +37,11 @@ def main(argv=None):
     sub.add_parser("compile")
     sub.add_parser("check")
     sub.add_parser("stats")
+    met = sub.add_parser("metrics")
+    met.add_argument("--json", help="write the full report as JSON")
+    met.add_argument("--md", help="write the report as Markdown")
+    met.add_argument("--summary", help="append the Markdown report (GitHub step summary)")
+    met.add_argument("--write-baseline", action="store_true", help="store this run as the start route (data/plan)")
     obs = sub.add_parser("observe")
     obs.add_argument("paths", nargs="+")
     args = ap.parse_args(argv)
@@ -84,6 +90,10 @@ def main(argv=None):
         from . import stats
 
         return stats.main()
+    if args.cmd == "metrics":
+        from . import metrics
+
+        return metrics.main(args.json, args.md, args.summary, args.write_baseline)
     return 2
 
 
