@@ -1,0 +1,61 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Baukasten plan for the Horde: our own route logic (zone order and level bands), no data
+# values. Zone IDs are client uiMapIDs (brain chapter 07 §7); start zones per race are measured
+# by EG Link (game_rules.starts) for Orc, Troll, Tauren, Undead and Skyborne. Level bands are
+# planning values until the simulator (AP 10) measures.
+faction = "Horde"
+prefix = "h"
+
+[[start]]
+module = "durotar"
+races = ["ORC", "TROLL"]
+zones = [1411]
+levels = [1, 10]
+
+[[start]]
+module = "mulgore"
+races = ["TAUREN"]
+zones = [1412]
+levels = [1, 10]
+
+[[start]]
+module = "tirisfal"
+races = ["UNDEAD"]
+zones = [1420]
+levels = [1, 10]
+
+[[start]]
+module = "zephras"
+races = ["SKYBORNE_H"]
+zones = [2521, 2665]
+levels = [1, 12]
+
+[[core]]
+zone = 1413
+levels = [10, 16]
+how = "walk"
+
+[[core]]
+zone = 1421
+levels = [16, 19]
+how = "zeppelin"
+
+[[core]]
+zone = 1442
+levels = [19, 22]
+how = "zeppelin"
+
+[[core]]
+zone = 1440
+levels = [22, 25]
+how = "walk"
+
+[[core]]
+zone = 1424
+levels = [25, 28]
+how = "zeppelin"
+
+[[core]]
+zone = 1441
+levels = [28, 30]
+how = "zeppelin"

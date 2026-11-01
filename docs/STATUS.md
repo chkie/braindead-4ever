@@ -126,3 +126,19 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | luacheck, StyLua, LuaLS type check, gitleaks, actionlint | built | |
 | CI on GitHub with required checks | built | branch protection on `main` |
 | Release by tag (BigWigs packager to CurseForge, Wago, GitHub) | planned | needs the CurseForge and Wago projects and their tokens |
+
+## Routes and route data
+
+| Feature | Status | Note |
+| --- | --- | --- |
+| Route format with sources and status per value (`docs/ROUTE-FORMAT.md`) | built | format version 1 |
+| Importers for Polestar forever-db, EG Link, All The Things (decision FD-1101) | built | sources cloned outside the repository; versions in `data/sources/*/SOURCE.json` |
+| Merged facts with roots and prerequisite state (`data/facts/`) | built | every value `unbestätigt` |
+| Linter: provenance, allowed sources, block list, items before turn-in, prerequisite order, travel and zone returns, filters for all 56 combinations, Speed rule, labels | built | ten prepared errors found, clean fixture passes (`tools/tests`) |
+| Compiler to Lua tables (`Pathmark/Routes/Data_*.lua`), composer `ns.Routes` | built | CI recompiles and compares |
+| Building blocks 1–30: seven start areas (Zephras per faction), core route per faction, class quests inline and as inserts, Speed and Explorer | built | computed routes, not played; label `vorläufig` |
+| Route data loaded only for the played faction | built | function per faction; `ns.Routes.Release()` drops the other faction's builder; measured offline (Lua 5.1): 1.56 MB for the Alliance data after release |
+| Example route Elwynn Forest (human, levels 1–10) runs through | built | `spec/routes_spec.lua` |
+| Start zones per race in the Forever client | planned | EG Link measured 20 of 56 combinations in the beta; confirm on 2026-11-05 |
+| Planned levels from XP simulation | planned | AP 10; levels are planning values until then |
+
