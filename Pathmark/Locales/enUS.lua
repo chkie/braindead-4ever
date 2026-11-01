@@ -82,3 +82,31 @@ L.PROBE_RUN_DONE = "%s probe: %d checks saved. /pathmark probe report shows them
 L.PROBE_STATUS_SET = "%s probe: status set"
 L.PROBE_UNKNOWN = "%s probe: unknown id or status"
 L.PROBE_USAGE = "%s probe: run [label] | report | check <id> | status <id> planned|built|verified|blocked"
+
+-- Data-dependent values (time forecast, prerequisites nobody has confirmed yet) before enough runs
+L.STATUS_COLLECTING = "collecting data"
+
+-- Explorer mode (Routes/Discover.lua). {where}, {zone} are filled from the data; nothing else is added.
+-- Riddle (hint level 1, catalog): type, zone and part of the zone.
+L.RIDDLE_quest = "Someone {where} has a task to give."
+L.RIDDLE_treasure = "Something of value lies hidden {where}."
+L.RIDDLE_book = "A book waits to be read {where}."
+L.RIDDLE_rare = "A rare creature roams {where}."
+L.RIDDLE_flightpath = "A flight master waits {where}."
+L.RIDDLE_place = "There is a place to discover {where}."
+L.WHERE_n = "in the north of {zone}"
+L.WHERE_ne = "in the north-east of {zone}"
+L.WHERE_e = "in the east of {zone}"
+L.WHERE_se = "in the south-east of {zone}"
+L.WHERE_s = "in the south of {zone}"
+L.WHERE_sw = "in the south-west of {zone}"
+L.WHERE_w = "in the west of {zone}"
+L.WHERE_nw = "in the north-west of {zone}"
+L.WHERE_c = "in the middle of {zone}"
+-- Rumor (hint level 1, finds of other players): type and zone only.
+L.RUMOR_quest = "Other players found a task in {zone}."
+L.RUMOR_treasure = "Other players found something of value in {zone}."
+L.RUMOR_book = "Other players found a book in {zone}."
+L.RUMOR_rare = "Other players saw a rare creature in {zone}."
+L.RUMOR_flightpath = "Other players found a flight master in {zone}."
+L.RUMOR_place = "Other players found a place in {zone}."

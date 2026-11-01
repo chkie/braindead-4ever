@@ -1,9 +1,11 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Import from All The Things, Forever database (github.com/ATTWoWAddon/AllTheThings, MIT).
 
-The Lua source files in .contrib/.db/forever/zones are evaluated in a Lua 5.1 sandbox
-(att_dump.lua). Kept: quest ID, giver IDs, coordinates in map percent, prerequisites,
-races, classes, required level, breadcrumb and repeatable flags, objective providers.
+The Lua source files in .contrib/.db/forever/zones and .contrib/.db/forever/dungeons & raids
+are evaluated in a Lua 5.1 sandbox (att_dump.lua). Kept: quest ID, giver IDs, coordinates in
+map percent, prerequisites, races, classes, required level, breadcrumb and repeatable flags,
+objective providers, the instance a dungeon quest belongs to; instances (area, entrance,
+minimum level); the discovery catalog (treasures, books, rares, flight paths with coordinates).
 Not kept: names, comments, descriptions.
 """
 
@@ -30,10 +32,37 @@ def run(src_dir, out_dir, lua):
     proc = subprocess.run([lua, os.path.join(HERE, "att_dump.lua"), db], capture_output=True, text=True)
     if proc.returncode != 0:
         raise SystemExit("att_dump failed (%d): %s" % (proc.returncode, proc.stderr.strip()))
-    records = []
+    records, dungeons, finds = [], [], []
     for line in proc.stdout.splitlines():
         r = json.loads(line)
+        if r.get("kind") == "dungeon":
+            d = {"id": r["id"]}
+            for src, dst in (("area", "area"), ("mapID", "mapID"), ("lvl", "min")):
+                if r.get(src) is not None:
+                    d[dst] = r[src]
+            if r.get("coords"):
+                d["entrancePct"] = [[c[2], round(c[0], 2), round(c[1], 2)] for c in r["coords"]]
+            if r.get("timeline"):
+                d["timeline"] = r["timeline"]
+            dungeons.append(d)
+            continue
+        if r.get("kind") == "find":
+            f = {"type": r["type"], "id": r["id"], "pct": [[c[2], round(c[0], 2), round(c[1], 2)] for c in r["coords"]]}
+            if r.get("zoneMap"):
+                f["zone"] = r["zoneMap"]
+            if r.get("races"):
+                f["races"] = sorted(x for x in r["races"] if x in game.RACES)
+            if _removed(r.get("timeline")):
+                f["removed"] = True
+            first = f["pct"][0]
+            f["key"] = "%s-%d-%d-%d-%d" % (f["type"], f["id"], first[0], round(first[1] * 100), round(first[2] * 100))
+            if any(x["key"] == f["key"] for x in finds):
+                continue  # the same entry listed twice
+            finds.append(f)
+            continue
         rec = {"q": r["q"]}
+        if r.get("instance") is not None:
+            rec["instance"] = r["instance"]
         if r.get("zoneMap"):
             rec["zone"] = r["zoneMap"]
         if r.get("side"):
@@ -95,11 +124,15 @@ def run(src_dir, out_dir, lua):
             "commitDate": date,
             "license": "MIT",
             "copyright": "Copyright (c) 2026 AllTheThings WoW Addon (MIT License, LICENSE in the source repository)",
-            "files": ["quests.jsonl"],
-            "selection": "every q() entry under .contrib/.db/forever/zones, evaluated in a Lua 5.1 sandbox; "
-            "coordinates in map percent (x, y on uiMap); no names or comments",
+            "files": ["quests.jsonl", "dungeons.jsonl", "finds.jsonl"],
+            "selection": "every q() entry under .contrib/.db/forever/zones and .contrib/.db/forever/dungeons & raids, "
+            "instanceroot() entries, o()/n()/fp() entries under the TREASURES, RARES and FLIGHT_PATHS headers of "
+            "the zone files (book: an object holding an item of a library book quest), evaluated in a Lua 5.1 "
+            "sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
             "status": "unbestätigt",
         },
     )
     n = write_jsonl(os.path.join(out_dir, "quests.jsonl"), records)
-    return {"quests": n, "commit": commit[:7], "stderr": proc.stderr.strip()}
+    write_jsonl(os.path.join(out_dir, "dungeons.jsonl"), dungeons, key="id")
+    write_jsonl(os.path.join(out_dir, "finds.jsonl"), finds, key="key")
+    return {"quests": n, "dungeons": len(dungeons), "finds": len(finds), "commit": commit[:7], "stderr": proc.stderr.strip()}

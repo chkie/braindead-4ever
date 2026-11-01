@@ -1,18 +1,21 @@
 {
  "counts": {
-  "kept": 2247,
-  "no level": 84,
+  "dungeons": 14,
+  "finds": 428,
+  "kept": 2248,
+  "no level": 193,
   "pre conflict": 13,
-  "pre secured": 2008,
-  "pre unknown": 226
+  "pre secured": 2026,
+  "pre unknown": 209,
+  "timed modules": 0
  },
  "license": "GPL-3.0-only",
  "note": "Merged from the sources below; contains Polestar forever-db data (GPL-3.0-only), EG Link data (CC BY 4.0) and All The Things data (MIT). Every value starts as unbestätigt.",
  "prereqCoverageNewQuests": {
   "att 1-10": "211/313",
-  "att 11-20": "89/171",
-  "att 21-30": "37/94",
-  "att 31-40": "47/113",
+  "att 11-20": "92/178",
+  "att 21-30": "42/110",
+  "att 31-40": "58/143",
   "polestar 1-10": "199/311",
   "polestar 11-20": "57/192",
   "polestar 21-30": "0/112",

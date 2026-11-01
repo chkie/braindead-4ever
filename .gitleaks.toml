@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Secret scan (CI job "Secret scan"): the default rules, plus one exception. The discovery keys of
+# the route data ("key":"<type>-<id>-<map>-<x>-<y>", data/*/finds.jsonl) match generic-api-key;
+# they are IDs and coordinates, no secrets. Only that exact shape is allowed.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Discovery keys in the route data: type, ID, map and coordinates"
+regexTarget = "match"
+regexes = ['''key":"(quest|treasure|book|rare|flightpath|place)-\d+(-\d+)+"''']

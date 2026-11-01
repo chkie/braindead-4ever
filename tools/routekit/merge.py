@@ -12,6 +12,13 @@ Rules (DR 20 §5, decided and revisable; documented in docs/ROUTE-FORMAT.md §Fa
   different set, or for a Classic quest (ID < 70000) when no root states any (the Classic
   databases behind Polestar list chains completely). A new quest no root gives a
   prerequisite for has the state "unknown" and stays out of the Speed route.
+- Our own observations (data/sources/own/prereq.jsonl, written by `observe` from player
+  exports) count as the root "own": confirmed prerequisites like a stated set, a confirmed
+  "none" secures a quest that no other root states anything for.
+- Dungeons (data/facts/dungeons.jsonl) come from the ATT instance files; their quests are
+  the quests ATT lists under the instance plus Polestar dungeon quests (type 81) of the
+  instance's area. The discovery catalog (data/facts/finds.jsonl) is ATT's treasures, books,
+  rares and flight paths; map-percent coordinates on the four changed maps are left out.
 """
 
 import collections
@@ -36,9 +43,15 @@ def _load(src):
     return {r["q"]: r for r in read_jsonl(path)} if os.path.exists(path) else {}
 
 
+def _load_own():
+    """Own observations: {quest: {"pre": [[id], ...], "basis": "observed" | "observed-none", "observers": n}}."""
+    path = repo_path("data", "sources", "own", "prereq.jsonl")
+    return {r["q"]: r for r in read_jsonl(path)} if os.path.exists(path) else {}
+
+
 def _sources():
     out = {}
-    for src in ("polestar", "att", "eglink"):
+    for src in ("polestar", "att", "eglink", "own"):
         p = repo_path("data", "sources", src, "SOURCE.json")
         if os.path.exists(p):
             out[src] = read_json(p)
@@ -151,8 +164,43 @@ def _pre_groups(rec, src, breadcrumbs):
     return sorted(set(groups))
 
 
+def prereq_state(p, a, o, breadcrumbs, is_new, silent):
+    """Prerequisite field of one quest from the Polestar record p, the ATT record a and our own
+    observation o (data/sources/own/prereq.jsonl). silent: both Polestar and ATT are silent in a
+    band where silence counts (see run)."""
+    stated = []
+    for s, r in (("polestar", p), ("att", a)):
+        g = _pre_groups(r, s, breadcrumbs)
+        if g is not None and g:
+            stated.append((s, g))
+    if o and o.get("pre"):
+        stated.append(("own", sorted({tuple(sorted(g)) for g in o["pre"]})))
+    if stated:
+        # The root that states more IDs wins; a root that states a subset of them agrees
+        # (ATT often names one of several race-specific variants Polestar lists).
+        def ids(groups):
+            return {x for grp in groups for x in grp}
+
+        stated.sort(key=lambda sg: -len(ids(sg[1])))
+        v = stated[0][1]
+        agree = [s for s, g in stated if ids(g) <= ids(v)]
+        state = "secured" if len(agree) == len(stated) else "conflict"
+        pre = {"v": [list(g) for g in v], "src": agree, "state": state}
+        if state == "conflict":
+            pre["alt"] = {s: [list(g) for g in grp] for s, grp in stated if s not in agree}
+        return pre
+    if o and o.get("basis") == "observed-none":
+        return {"v": [], "src": ["own"], "state": "secured", "basis": "observed-none"}
+    if not is_new and p is not None:
+        return {"v": [], "src": ["polestar"], "state": "secured", "basis": "classic-none"}
+    if silent:
+        return {"v": [], "src": ["polestar", "att"], "state": "secured", "basis": "two-roots-silent"}
+    return {"v": [], "src": [], "state": "unknown"}
+
+
 def run():
     ps, att, eg = _load("polestar"), _load("att"), _load("eglink")
+    own = _load_own()
     frames = geo.Frames(read_jsonl(repo_path("data", "sources", "polestar", "ui_map.jsonl")))
     sources = _sources()
 
@@ -243,6 +291,8 @@ def run():
             rec["repeatable"] = True
         if q in att_breadcrumbs:
             rec["breadcrumb"] = True
+        if a and a.get("instance") is not None:
+            rec["instance"] = a["instance"]
 
         # races, classes, side
         race_vals = []
@@ -342,30 +392,9 @@ def run():
 
         # prerequisites
         breadcrumbs = att_breadcrumbs | ps_breadcrumb_links.get(q, set())
-        stated = []
-        for s, r in (("polestar", p), ("att", a)):
-            g = _pre_groups(r, s, breadcrumbs)
-            if g is not None and g:
-                stated.append((s, g))
-        if stated:
-            # The root that states more IDs wins; a root that states a subset of them agrees
-            # (ATT often names one of several race-specific variants Polestar lists).
-            def ids(groups):
-                return {x for grp in groups for x in grp}
-
-            stated.sort(key=lambda sg: -len(ids(sg[1])))
-            v = stated[0][1]
-            agree = [s for s, g in stated if ids(g) <= ids(v)]
-            state = "secured" if len(agree) == len(stated) else "conflict"
-            pre = {"v": [list(g) for g in v], "src": agree, "state": state}
-            if state == "conflict":
-                pre["alt"] = {s: [list(g) for g in grp] for s, grp in stated if s not in agree}
-        elif not rec["new"] and p is not None:
-            pre = {"v": [], "src": ["polestar"], "state": "secured", "basis": "classic-none"}
-        elif p is not None and a is not None and level is not None and silence_counts(level):
-            pre = {"v": [], "src": ["polestar", "att"], "state": "secured", "basis": "two-roots-silent"}
-        else:
-            pre = {"v": [], "src": [], "state": "unknown"}
+        o = own.get(q)
+        silent = p is not None and a is not None and level is not None and silence_counts(level)
+        pre = prereq_state(p, a, o, breadcrumbs, rec["new"], silent)
         bc = sorted(breadcrumbs & ({x for r in (p, a) if r for x in (r.get("pre") or {}).get("all", []) + (r.get("pre") or {}).get("any", []) + (r.get("pre") or {}).get("bc", [])}))
         if bc:
             pre["breadcrumbs"] = bc
@@ -400,6 +429,86 @@ def run():
         },
         "counts": dict(counts),
     }
+    dungeons = _dungeons(frames, ps, att, {r["q"] for r in facts})
+    finds = _finds(frames)
+    times = _times()
+    meta["counts"]["dungeons"] = len(dungeons)
+    meta["counts"]["finds"] = len(finds)
+    meta["counts"]["timed modules"] = len(times)
     write_json(repo_path("data", "facts", "FACTS.json"), meta)
     write_jsonl(repo_path("data", "facts", "quests.jsonl"), facts)
+    write_jsonl(repo_path("data", "facts", "dungeons.jsonl"), dungeons, key="id")
+    write_jsonl(repo_path("data", "facts", "finds.jsonl"), finds, key="key")
+    write_jsonl(repo_path("data", "facts", "times.jsonl"), times, key="module")
+    counts["dungeons"], counts["finds"] = len(dungeons), len(finds)
     return dict(counts)
+
+
+# ATT puts placeholder entrances at the map centre when the entrance is not known yet
+# (Hall of Thanes, Ruins of Lordaeron: 50.0, 50.0); those are left out.
+PLACEHOLDER_PCT = (50.0, 50.0)
+DUNGEON_TYPE = 81
+
+
+def _dungeons(frames, ps, att, kept):
+    """Instances with their quests (ATT instance files, Polestar dungeon quests of the area)."""
+    path = repo_path("data", "sources", "att", "dungeons.jsonl")
+    if not os.path.exists(path):
+        return []
+    out = []
+    for d in read_jsonl(path):
+        if d.get("timeline") and _att_removed(d["timeline"]):
+            continue
+        from_att = {q for q, r in att.items() if r.get("instance") == d["id"]} & kept
+        from_ps = set()
+        if d.get("area") is not None:
+            from_ps = {q for q, r in ps.items() if r.get("area") == d["area"] and r.get("type") == DUNGEON_TYPE} & kept
+        quests = from_att | from_ps
+        if not quests:
+            continue
+        rec = {"id": d["id"], "quests": sorted(quests), "src": ["att"] + (["polestar"] if from_ps else [])}
+        for k in ("area", "min"):
+            if d.get(k) is not None:
+                rec[k] = d[k]
+        for ui_map, x, y in d.get("entrancePct", []):
+            if (x, y) == PLACEHOLDER_PCT or ui_map in game.CHANGED_FRAMES or ui_map in game.NOT_ZONES:
+                continue
+            w = frames.to_world(ui_map, x, y)
+            if w:
+                rec["entrance"] = [ui_map, w[2], w[1]]
+                rec["entrancePct"] = [ui_map, round(x * 100), round(y * 100)]
+                break
+        out.append(rec)
+    return out
+
+
+def _att_removed(timeline):
+    return bool(timeline) and timeline[-1].split(" ")[0] in ("removed", "deleted")
+
+
+def _finds(frames):
+    """Discovery catalog from ATT: one record per entry, coordinates in hundredths of a percent
+    (0-10000, the unit of the data collector and the in-game exchange)."""
+    path = repo_path("data", "sources", "att", "finds.jsonl")
+    if not os.path.exists(path):
+        return []
+    out = []
+    for f in read_jsonl(path):
+        if f.get("removed"):
+            continue
+        pts = [[m, round(x * 100), round(y * 100)] for m, x, y in f["pct"] if m not in game.CHANGED_FRAMES and m in frames.by_map]
+        if not pts:
+            continue
+        rec = {"key": f["key"], "type": f["type"], "id": f["id"], "pos": pts, "src": ["att"], "status": "unbestätigt"}
+        if f.get("races"):
+            fs = {game.faction_of(r) for r in f["races"]}
+            if len(fs) == 1:
+                rec["side"] = "A" if game.ALLIANCE in fs else "H"
+        out.append(rec)
+    return out
+
+
+def _times():
+    """Module times from our own measured runs (data/sources/own/times.jsonl, written by observe)."""
+    path = repo_path("data", "sources", "own", "times.jsonl")
+    return read_jsonl(path) if os.path.exists(path) else []

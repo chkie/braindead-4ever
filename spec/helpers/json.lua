@@ -110,4 +110,90 @@ function M.b64decode(s)
 	return table.concat(out)
 end
 
+-- Small JSON reader for test fixtures (objects, arrays, strings without escapes beyond \" and \\,
+-- numbers, true, false, null).
+function M.decode(s)
+	local pos = 1
+	local value
+	local function ws()
+		pos = s:find("[^%s]", pos) or #s + 1
+	end
+	local function str_()
+		local out, i = {}, pos + 1
+		while true do
+			local c = s:sub(i, i)
+			if c == '"' then
+				pos = i + 1
+				return table.concat(out)
+			elseif c == "\\" then
+				out[#out + 1] = s:sub(i + 1, i + 1)
+				i = i + 2
+			elseif c == "" then
+				error("unterminated string")
+			else
+				out[#out + 1] = c
+				i = i + 1
+			end
+		end
+	end
+	function value()
+		ws()
+		local c = s:sub(pos, pos)
+		if c == "{" then
+			local t = {}
+			pos = pos + 1
+			ws()
+			if s:sub(pos, pos) == "}" then
+				pos = pos + 1
+				return t
+			end
+			while true do
+				ws()
+				local k = str_()
+				ws()
+				pos = pos + 1 -- ':'
+				t[k] = value()
+				ws()
+				local d = s:sub(pos, pos)
+				pos = pos + 1
+				if d == "}" then
+					return t
+				end
+			end
+		elseif c == "[" then
+			local t = {}
+			pos = pos + 1
+			ws()
+			if s:sub(pos, pos) == "]" then
+				pos = pos + 1
+				return t
+			end
+			while true do
+				t[#t + 1] = value()
+				ws()
+				local d = s:sub(pos, pos)
+				pos = pos + 1
+				if d == "]" then
+					return t
+				end
+			end
+		elseif c == '"' then
+			return str_()
+		elseif s:sub(pos, pos + 3) == "true" then
+			pos = pos + 4
+			return true
+		elseif s:sub(pos, pos + 4) == "false" then
+			pos = pos + 5
+			return false
+		elseif s:sub(pos, pos + 3) == "null" then
+			pos = pos + 4
+			return nil
+		end
+		local num = s:match("^-?%d+%.?%d*[eE]?[-+]?%d*", pos)
+		pos = pos + #num
+		return tonumber(num)
+	end
+	return value()
+end
+
 return M

@@ -56,6 +56,7 @@ local X = {
 	seen = {}, -- received key -> { first = sender, confirmed = bool }
 	nseen = 0,
 	senders = {}, -- sender -> { start, finds, bad }
+	pseen = {}, -- "sender;questID" of received prerequisite observations (session only)
 	muted = {},
 	recent = {}, -- received finds, newest last (session only)
 	stats = { offered = 0, sent = 0, received = 0, confirmed = 0, dropped = 0, bad = 0, results = {} },
@@ -216,6 +217,14 @@ local function Bucket(who)
 	return b
 end
 
+-- A find of another player for the explorer mode (Routes/Explore.lua): rumor, or confirmed.
+local function Heard(find, confirmed)
+	local E = ns.Explore
+	if E and E.Heard and find.kind ~= "t" and find.kind ~= "v" then
+		Guard.Call("explore", E.Heard, find, confirmed)
+	end
+end
+
 local function Receive(prefix, text, _, sender)
 	if U.IsSecret(prefix) or U.IsSecret(text) or U.IsSecret(sender) then
 		return
@@ -248,6 +257,25 @@ local function Receive(prefix, text, _, sender)
 	local key = Proto.Key(find)
 	local s = X.seen[key]
 	local C = ns.Collector
+	if find.kind == "p" then
+		-- Prerequisite observation: one per sender and quest in a session, so one player cannot pose
+		-- as several observers by changing the token. It goes to the route's store, not to the finds.
+		local per = who .. ";" .. find[2]
+		if s or X.pseen[per] then
+			return
+		end
+		X.pseen[per] = true
+		X.seen[key] = { first = who }
+		X.nseen = X.nseen + 1
+		if C and C.RecordNet then
+			C.RecordNet("rx", "p", unpack(find, 1, find.n))
+		end
+		local Route = ns.Route
+		if Route and Route.ObserveFind then
+			Guard.Call("route", Route.ObserveFind, find)
+		end
+		return
+	end
 	if not s then
 		if X.nseen >= X.SEEN_MAX then
 			X.seen, X.nseen = {}, 0
@@ -262,6 +290,7 @@ local function Receive(prefix, text, _, sender)
 		if #recent > X.RECENT_MAX then
 			table.remove(recent, 1) -- short list
 		end
+		Heard(find, false)
 	elseif not s.confirmed and s.first ~= who then
 		-- A second, independent player reports the same find (Plan: confirmation by two players).
 		s.confirmed = true
@@ -275,6 +304,7 @@ local function Receive(prefix, text, _, sender)
 				break
 			end
 		end
+		Heard(find, true)
 	end
 end
 X.Receive = Receive

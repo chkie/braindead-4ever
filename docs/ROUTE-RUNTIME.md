@@ -2,13 +2,18 @@
 
 The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. There is no window yet: it waits for the owner's approval of the design (AP 6). This document is the interface the window will use.
 
-Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01.
+Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast).
 
 | File | What it does |
 | --- | --- |
 | `Pathmark/Routes/XP.lua` | Classic experience rules: level table, kill XP, quest XP by level difference, XP needed for a level, kills for a shortfall. Pure Lua. |
+| `Pathmark/Routes/Prereq.lua` | Prerequisites from player observations (Welle 4): the rule shared with `tools/routekit/prereq.py`. Pure Lua. |
+| `Pathmark/Routes/Discover.lua` | Explorer mode rules (Welle 4): hint levels, riddle and rumor sentences, the area hint. Pure Lua. |
+| `Pathmark/Routes/Dungeon.lua` | Dungeon hint (Welle 4). Pure Lua over the runtime and the compiled dungeon tables. |
+| `Pathmark/Routes/Forecast.lua` | Time forecast (Welle 4). Pure Lua. |
 | `Pathmark/Routes/Runtime.lua` | The rules below. Pure Lua: the client state comes in through a world table, so the tests run the same code. |
 | `Pathmark/Routes/Guide.lua` | Module `route`: picks the route, feeds game events in, saves progress, offers `ns.Route`. |
+| `Pathmark/Routes/Explore.lua` | Module `explore`: own finds, finds of other players, the catalog; offers `ns.Explore`. |
 
 ## Module `route`
 
@@ -33,9 +38,18 @@ PathmarkCharDB.route = {
     roots = { [questID] = "<key>" },   -- quests the player skipped, and from which step
     pending = nil,                     -- quest ID of an abandon question without answer
     undo = { ... },                    -- up to 20 snapshots of the fields above
+    split = { m = "<module>", secs = 0, clean = true }, -- current module run (time forecast)
+    dungeons = { [instanceID] = true },                -- dungeon hints the player skipped
   },
+  rate = { secs = 0, xp = 0 },         -- own XP rate from active play, last 2 hours (time forecast)
 }
+PathmarkCharDB.explore = { level = 0, style = "self", found = { ["rare:100"] = "1429;2700;8800" },
+                           asked = { ["treasure:3642"] = 3 } }
+PathmarkDB.prereq = { obs = { [questID] = { [token] = "link;unlock;done;missing" } }, ref = { [questID] = "c1.c2" } }
+PathmarkDB.explore = { heard = { ["rare:62"] = "1429;4231;6512;2" } }  -- map;x;y;reports (1 or 2)
 ```
+
+`PathmarkDB.prereq` and `PathmarkDB.explore` are account-wide: what other players reported is true for every character. Own finds and the hint level belong to the character.
 
 A step key is `<module>/<step id>`; step IDs are chosen by the route author and never renumbered (docs/ROUTE-FORMAT.md). Quest state is never saved: it comes from the server each time.
 
@@ -81,16 +95,21 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.Mode()`, `Route.SetMode(mode)` | `"speed"` or `"explorer"`; switching rebuilds the route |
 | `Route.RegisterCallback(event, owner, fn)`, `Route.UnregisterCallback(event, owner)` | `fn(owner, ...)`, one per owner and event |
 | `Route.LastGain()` | `{ xp, level, at }` of the last XP gain (probe check `xp.kill`) |
+| `Route.ChainState(questID)` | `"known"`, `"observed"`, `"none"` or `"incomplete"` (§Prerequisites from player data); nil without a route |
+| `Route.DungeonHint()` | list of dungeon hints (§Dungeon hint), `{}` when none |
+| `Route.SkipDungeon(instanceID, show?)` | hides a dungeon hint (`show = true` shows it again); the route does not change; true if done |
+| `Route.Forecast()` | time forecast (§Time forecast) |
+| `Route.Observe(...)`, `Route.ObserveFind(find)`, `Route.Candidates(questID)`, `Route.Wants(questID)` | used by the collector and the exchange, not by the window |
 | `Route.Runtime()` | the runtime object, for diagnostics and tests only |
 
-Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step }`. `kind` is `"quest"`, `"travel"` or `"other"`; `label` is the module's label (`vorläufig` or `stabil`); `quests` lists the quest IDs; `step` is the compiled step (read only, layout in docs/ROUTE-FORMAT.md). Quest and item names are not part of it: the window reads them from the client in the player's language. Every call builds new info tables: call on the events below, not on every frame (brain chapter 12, no tables per frame).
+Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step, chain }`. `chain` is `"incomplete"` when a quest of the step has prerequisites nobody knows yet (show the status text `L.STATUS_COLLECTING`, "collecting data": skipping may leave a follow-up quest the game will not offer), else nil. `kind` is `"quest"`, `"travel"` or `"other"`; `label` is the module's label (`vorläufig` or `stabil`); `quests` lists the quest IDs; `step` is the compiled step (read only, layout in docs/ROUTE-FORMAT.md). Quest and item names are not part of it: the window reads them from the client in the player's language. Every call builds new info tables: call on the events below, not on every frame (brain chapter 12, no tables per frame).
 
 **Callbacks.** A failing listener is recorded in the error buffer under `route-listener` and stops no other listener; it never turns the `route` module off.
 
 | Event | Arguments after `owner` | When |
 | --- | --- | --- |
 | `StepChanged` | `current, previous` (step info or nil) | the current step changed |
-| `RouteRecalculated` | `reason`: `start`, `skip`, `back`, `undo`, `reaccept`, `missing` | the route was set up again or the skip set changed |
+| `RouteRecalculated` | `reason`: `start`, `skip`, `back`, `undo`, `reaccept`, `missing`, `prereq` | the route was set up again, the skip set changed, or players confirmed prerequisites (`prereq`) |
 | `XPBalance` | balance | after a step change, XP or level change, at most once per 0.1 s |
 | `QuestAbandoned` | `questID` | an abandon question waits for the answer |
 
@@ -126,6 +145,105 @@ Quest XP: the client's `GetQuestLogRewardXP` while the quest is in the log, else
 
 Until these checks pass in the Forever client, every number of the balance is shown as an estimate.
 
+## Prerequisites from player data
+
+No source states prerequisites for most new Forever quests of levels 21 to 30 (Polestar 0 of 112). The compiled data lists every quest whose prerequisites are not secured as `unsure`; players fill the gaps while they play.
+
+**What the collector observes** (`Collector/Collect.lua`). At every quest accept: the quest turned in directly before at the same giver, at most 120 s earlier (`link`); whether that giver listed its offers before the turn-in without the quest (`unlock`); the quests turned in this session and the known candidates the player has done (`done`); known candidates he has not done (`missing`). When an NPC lists its offers (`GOSSIP_SHOW`, `QUEST_GREETING`), once per quest and session for quests that are `unsure` or have candidates: `done` and `missing`. Each observation carries a token, a hash of the random install ID and the quest: one player counts once per quest, two observations of different quests cannot be linked. Records `accept` (fields 13 to 17) and `offer` go into the export; the observation goes to the route at once and through the exchange (kind `p`, no position) to other players when the quest is `unsure` or has candidates.
+
+**Rule** (same in `Routes/Prereq.lua` and `tools/routekit/prereq.py`, cases in `tools/tests/fixtures/prereq_cases.json`; chosen values): candidate c is a prerequisite (`observed`) when no observer has c in `missing`, at least 2 observers link it, at least 1 saw the unlock and at least 3 have done it. A quest has none (`observed-none`) after at least 5 observers when no candidate done by at least max(3, half of the observers) is left unrefuted and no unrefuted candidate has 2 links. Measured with simulated runs (`tools/tests/test_own_data.py`): co-occurrence alone gave 69 wrong prerequisites, the link without the unlock 2, the full rule none.
+
+**Use in the route.** A confirmed result changes the route at once (`RouteRecalculated` with `prereq`): skipping a confirmed prerequisite skips the follow-up. Observed groups replace the groups of the sources; an observed "none" keeps a prerequisite a source states. `Route.ChainState(q)`: `known` (a source secures it), `observed`, `none` or `incomplete`.
+
+**Measured share for the new quests of levels 21 to 30** (113 quests, both factions): secured 37 before Welle 4, 42 with the ATT prerequisites, 111 to 113 after simulated runs of 12 players per faction (three seeds) without a wrong prerequisite. The simulation plays the prerequisites the sources state as truth; the real share comes with real players.
+
+## Explorer mode
+
+Interface `ns.Explore` (module `explore`, not core). Rules in `Routes/Discover.lua`.
+
+| Function | Returns |
+| --- | --- |
+| `Explore.Level()`, `Explore.SetLevel(n)` | hint level 0 to 3; default by route mode (speed 3, explorer 0) until the player sets one |
+| `Explore.Styles()` | `{ { key = "arrow", mode = "speed", level = 3 }, { key = "hints", mode = "explorer", level = 1 }, { key = "self", mode = "explorer", level = 0 } }`, the three cards of the first start |
+| `Explore.Style()`, `Explore.SetStyle(key)` | chosen style or nil (not asked yet); setting one sets route mode and level |
+| `Explore.List(uiMapID?)` | visible finds on one map or everywhere, sorted by key |
+| `Explore.Ask(key, 2 or 3)` | the player asks for the area or the point of one find he sees; false at level 0 |
+| `Explore.RegisterCallback("FindsChanged", owner, fn)`, `Explore.UnregisterCallback(event, owner)` | `fn(owner, key?)` after a new find, a level or style change, a request |
+
+Entry of `List`:
+
+```lua
+{
+  key = "rare:100", kind = "rare", id = 100,   -- kind: quest, treasure, book, rare, flightpath, place
+  map = 1429,                                  -- uiMapID
+  source = "data",                             -- "own" | "players" | "data" (catalog, ATT)
+  status = "unconfirmed",                      -- "own" | "confirmed" | "unconfirmed"
+  show = "riddle",                             -- "point" | "area" | "riddle" | "rumor"
+  points = { { 2760, 8840 } },                 -- show = "point": map coordinates, hundredths of a percent
+  area = { x = 2825, y = 8766, rx = 288, ry = 432 }, -- show = "area": ellipse that holds the point
+  text = "A rare creature roams in the south-west of Elwynn Forest.", -- riddle or rumor; nil without zone name
+  part = "sw",                                 -- riddle: part of the zone (n, ne, e, se, s, sw, w, nw, c)
+}
+```
+
+| Level | Own finds | Catalog | Finds of other players |
+| --- | --- | --- | --- |
+| 0 | point | hidden | hidden, also on request |
+| 1 | point | riddle (type, zone, part of the zone) | rumor (type and zone) |
+| 2 | point | area | area |
+| 3 | point | point | point |
+
+A request (`Ask`) raises one visible find to area or point. Nothing counts what remains. The area is a circle of 100 yards (map size from `C_Map.GetMapWorldSize`, else 3 % of the map) whose centre is moved by up to half the radius, so it holds the point without showing it. Sentences come only from `L.RIDDLE_<kind>`, `L.WHERE_<part>` and `L.RUMOR_<kind>` filled with the zone name from the client (`C_Map.GetMapInfo`) and the part of the zone from the coordinates; without a zone name there is no text.
+
+Sources: the catalog (`finds`, ATT, unbestätigt); own finds from the collector (quest givers of quests the data does not know, catalog treasures and books when looted, books read, rares, flight masters); finds of other players from the exchange. A second independent player confirms a find; a report on a catalog find confirms it and replaces its position. Looted objects the catalog does not know are no discovery (ore and herbs cannot be told apart yet); no source feeds `place` yet.
+
+## Dungeon hint
+
+`Route.DungeonHint()` returns a list, sorted by the step where the first quest is picked up:
+
+```lua
+{
+  id = 63, area = 1581,                  -- instance ID; area ID for the name (C_Map.GetAreaInfo)
+  min = 10, lo = 15, hi = 24,            -- instance minimum level and the band of the hint
+  entrance = { 1436, 1539.7, -11327.3 }, -- uiMapID, world west, north; nil if unknown
+  quests = {
+    { q = 166, level = 22, xp = 3975, map = 1436, wx = 1045, wy = -10509,
+      state = "take",                    -- "take" (giver on the way) | "log" (already in the log)
+      step = "a-explorer-core-01-1436/t109", yards = 0 },  -- route step that passes the giver closest
+  },
+  first = 170,                           -- step index of the first pickup
+  gain = 3975, need = 0, balance = -3975, justified = false,
+}
+```
+
+**Rules.** A dungeon is suggested when the character's level lies in `lo..hi` and at least one of its quests can be taken on the way: the giver is within 1200 yards of a goto point of the route (same continent, `maps` table) from the current step on while the planned level stays in the band, the character has the quest's minimum level, race and class fit, and its prerequisites are handed in or handed in by the route before that step. Measured against the route data: givers on the route lie within 310 yards, capitals next to a route 306 to 1084 yards away (Thunder Bluff, Orgrimmar, Undercity), Stormwind from Westfall 1443 yards and more. Quests in the log count, handed-in ones not. The hint is optional: `Route.SkipDungeon(id)` hides it and changes nothing else.
+
+**Speed mode.** Only when the XP balance justifies it. `need` = XP the route lacks up to the next zone (`Balance().zone.shortfall`); `gain` = quest XP of the listed quests (Forever rule already in the data: the part above a normal quest of the same level is halved; then the Classic reduction by level difference); `balance` = min(gain, need) − max(0, gain − need). Shown when balance > 0. Explorer mode shows every fitting dungeon. Kill XP inside the dungeon (+20 % in Forever) is not counted.
+
+Known data limits: the Deadmines quests at Sentinel Hill need the Defias chain (155) and the Orgrimmar quests of Ragefire Chasm need 5727; no route takes these chains, so the hint names them only after the player did them.
+
+## Time forecast
+
+`Route.Forecast()`:
+
+```lua
+{
+  state = "ready",        -- "ready" | "collecting" | "done" (route finished)
+  seconds = 41200,        -- to the end of the route; only when ready
+  level = 30,             -- planned level at the end of the route
+  runs = 7,               -- fewest real runs among the modules ahead
+  plan = { module = "a-speed-core-01-1436", delta = 240 },  -- delta > 0: ahead of the median
+  minRuns = 5,
+  nextLevel = { state = "ready", seconds = 1800, perHour = 12000 },  -- own XP rate
+}
+```
+
+**Route part.** From the median of real module runs (compiled `times`, built by `tools/routekit/observe.py` from `split` records). Every module ahead needs at least 5 runs, else `state = "collecting"` and no numbers: show `L.STATUS_COLLECTING`. The current module counts with the share of its steps still ahead. `plan` compares a clean run of the current module with the median.
+
+**Level part.** Time to the next level from the player's own XP per second of active play (at least 10 minutes, the last 2 hours weigh). Until then `nextLevel.state = "collecting"`.
+
+**Measuring.** Active play: the time between two game events the route module handles, each gap counted up to 5 minutes. A module run is clean when it starts at the module's first step and every step up to its end is done (not skipped, not passed by the route); a clean run goes to the collector as `split` (module, seconds, mode). All thresholds are chosen values.
+
 ## Not built here
 
-The step window, its right-click menu and texts (AP 6, after design approval); the dungeon hint (owner wish 11); arrival detection for steps with only a `goto` (the route data has none) and hearthstone use (no `hs` element in the data).
+The step window, its right-click menu and texts (Welle 5); arrival detection for steps with only a `goto` (the route data has none) and hearthstone use (no `hs` element in the data); guidance inside dungeons (after 1.0).

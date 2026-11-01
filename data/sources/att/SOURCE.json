@@ -3,12 +3,14 @@
  "commitDate": "2026-11-01T01:50:51-05:00",
  "copyright": "Copyright (c) 2026 AllTheThings WoW Addon (MIT License, LICENSE in the source repository)",
  "files": [
-  "quests.jsonl"
+  "quests.jsonl",
+  "dungeons.jsonl",
+  "finds.jsonl"
  ],
  "license": "MIT",
  "name": "All The Things, Forever database",
  "repository": "https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever",
- "selection": "every q() entry under .contrib/.db/forever/zones, evaluated in a Lua 5.1 sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
+ "selection": "every q() entry under .contrib/.db/forever/zones and .contrib/.db/forever/dungeons & raids, instanceroot() entries, o()/n()/fp() entries under the TREASURES, RARES and FLIGHT_PATHS headers of the zone files (book: an object holding an item of a library book quest), evaluated in a Lua 5.1 sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
  "source": "att",
  "status": "unbestätigt"
 }

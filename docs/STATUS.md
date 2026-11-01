@@ -111,8 +111,8 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | XP balance (owner wish 9): XP to the next level, XP of the step, route to the next zone against the need, kills as an estimate | MVP | built (logic; window with AP 6) | `xp.curve`, `xp.kill`, `xp.quest` |
 | Performance budget: 10 MB, under 0.1 ms per frame | MVP | planned | `perf.profiler`, `perf.average`, `perf.memory` |
 | Game modes Speed, Explorer, Hardcore-safe | 1.0 | planned | no client API beyond M1 and `ver.hardcore` |
-| Hint levels | 1.0 | planned | no client API |
-| Time forecast | 1.0 | planned | `time.xp`, `time.xpmax`, `time.rested`, `time.played` |
+| Hint levels | 1.0 | built (logic; window with Welle 5) | no client API |
+| Time forecast | 1.0 | built (logic; window with Welle 5) | `time.xp`, `time.xpmax`, `time.rested`, `time.played` |
 | Optional automation (accept, turn in, reward) | 1.0 | planned | `auto.accept`, `auto.complete`, `auto.reward`, `auto.acknowledge`, `auto.autoaccept`, `auto.gossip`, `auto.gossipselect`, `auto.greeting` |
 | Group and duo | 1.0 | planned | `group.ingroup`, `group.members`, M11 checks |
 | Personal review "your way to 60" | 1.0 | planned | export (M11) and website (AP 9) |
@@ -155,11 +155,29 @@ The logic behind the step window, without the window (it waits for the design ap
 | Progress by step key, survives `/reload`; written back at logout if the client replaced the SavedVariables table | built | counter-checks: without reading or writing back the progress the tests fail |
 | Detection: quest accepted, objectives done, handed in, zone reached, level reached | built | from simulated events through the whole Elwynn start module; abandon and turn-in told apart by the completion flag 1 s after `QUEST_REMOVED`, also without `QUEST_TURNED_IN` |
 | Quests done before the login skipped; entry at any level (steps planned more than 5 levels below are passed) | built | the margin of 5 levels is a chosen value; entry at level 12 and 25 per faction tested |
-| Check, skip with follow-up quests (prerequisite groups, any chain length), back, undo (20 actions) | built | chain over three quests tested with made-up and with real data; prerequisites of the new quests 21 to 30 are not known yet (Polestar 0 of 112), so the chain is incomplete there |
+| Check, skip with follow-up quests (prerequisite groups, any chain length), back, undo (20 actions) | built | chain over three quests tested with made-up and with real data; where no source secures the prerequisites (`unsure`), the step carries `chain = "incomplete"` until players confirm them (Welle 4 section) |
 | Abandoned quest: question with two ways (take it again, skip with follow-up quests); nothing moves before the answer | built | owner wish 10 |
 | XP balance (to the next level, step, route to the next zone, kills) | built | Classic rules (`Routes/XP.lua`) as estimates until `xp.curve`, `xp.kill` and `xp.quest` pass in the Forever client |
 | Random test: 7,500 random actions (accept, abandon, play, check, skip, back, undo, answer, level, reload), route valid after each | built | `spec/route_random_spec.lua`, seeded |
 | Step window, right-click menu ("undo" there), texts | planned | AP 6, after the design approval |
-| Dungeon hint (owner wish 11) | planned | needs dungeon quest data |
+| Dungeon hint (owner wish 11) | built (logic; window with Welle 5) | see the Welle 4 section below |
 | Detection in the client (Retail test bed, then Forever) | planned | release gate T2 |
 
+## Explorer mode, dungeon hint, prerequisites from player data, time forecast (Welle 4)
+
+Logic without a window (the window comes with Welle 5). Interface and rules: `docs/ROUTE-RUNTIME.md` §Explorer mode, §Dungeon hint, §Prerequisites from player data, §Time forecast. Module `explore` (not core); its requirements are checked as `mod.explore.*`.
+
+| Feature | Status | Note |
+| --- | --- | --- |
+| Discovery types quest, treasure, book, rare, flight path, place | built | catalog from ATT (`finds`, unbestätigt); quests count when the data does not know them; looted objects only when the catalog names them as treasure or book; no source feeds `place` yet |
+| Hint levels 0 to 3 per character; own finds against finds of other players; the point only on request | built | level 0 shows nothing foreign, also not on request (counter-check in `spec/route_explore_spec.lua`); radius of the area hint (100 yards) is a chosen value |
+| Confirmation by a second independent player; a report replaces the catalog position | built | in-game exchange (`rx2`); within one session, sender names are never saved |
+| Play styles of the first start: follow the arrow, with hints, discover myself | built | route mode and hint level; the level stays a slider of its own |
+| Riddle and rumor sentences from templates (English, German) | built | only type, zone name from the client and part of the zone; wording not approved yet |
+| Dungeon hint: level band, givers on the way (1200 yards, measured against the route data), prerequisites, optional and skippable | built | dungeon quests from ATT and Polestar (FD-1101); the hint never changes the route |
+| Dungeon hint in speed mode only with a positive XP balance (Forever: dungeon quests −50 % extra XP) | built | kill XP inside the dungeon (+20 % in Forever) is not counted, the creatures per run are not measured; counter-check in `spec/route_dungeon_spec.lua` |
+| Prerequisites from player data: the collector records link, unlock, recent turn-ins and checked candidates at each accept and offer list; observations go through the exchange (`p`) | built | rule shared with `tools/routekit/prereq.py` (`tools/tests/fixtures/prereq_cases.json`); thresholds 2 links, 3 observers, 5 for "none" are chosen values |
+| The route uses a confirmed prerequisite at once (RouteRecalculated `prereq`) and marks the chain incomplete until then | built | observations account-wide in `PathmarkDB.prereq`; simulated runs with three players in `spec/route_prereq_spec.lua` |
+| ATT prerequisites for the new quests 21 to 30 | built | secured 37 of 113 before, 42 of 113 with ATT; simulated player runs (12 players) secure 111 to 113 of 113 without a wrong prerequisite (`tools/tests/test_own_data.py`) |
+| Time forecast: route time from the median of real module runs (at least 5), comparison with the plan, time to the next level from the own XP rate (at least 10 minutes of play) | built | state `collecting` until then, shown as "collecting data"; no module times measured yet (`times` is empty) |
+| Module runs measured as active play (gaps over 5 minutes count as 5) and recorded as `split` for the pipeline | built | thresholds are chosen values; `observe.py` builds `times` from the exports |

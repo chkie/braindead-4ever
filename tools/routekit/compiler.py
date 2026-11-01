@@ -154,7 +154,165 @@ def _quests(fmods, facts):
     return lines
 
 
-def compile_faction(faction, mods, comp, facts=None):
+def _unsure(fmods, facts, extra_ids=()):
+    """Quest IDs whose prerequisites are not secured (unknown or conflicting): the runtime marks
+    their chain as incomplete until our own observations confirm it."""
+    ids = sorted(q for q in _quest_ids(fmods) | set(extra_ids) if (facts.get(q, {}).get("pre") or {}).get("state", "unknown") != "secured")
+    lines = ["\tunsure = {"]
+    for i in range(0, len(ids), 12):
+        lines.append("\t\t%s," % ", ".join(str(q) for q in ids[i : i + 12]))
+    lines.append("\t},")
+    return lines
+
+
+# Dungeon hint (docs/ROUTE-RUNTIME.md §Dungeon hint). Chosen values, not measured: the level band of
+# an instance starts DUNGEON_BELOW levels under the median quest level (at least at the instance's
+# minimum level) and ends DUNGEON_ABOVE levels over the highest quest level.
+DUNGEON_BELOW = 3
+DUNGEON_ABOVE = 2
+# Forever: "Dungeon quests now reward 50% less extra experience beyond normal quest values"
+# (Beta Development Notes #4, brain chapter 14 §4.3). The normal value of a quest level is the
+# median full XP of the ordinary quests (Polestar type 0) of that level.
+DUNGEON_EXTRA_FACTOR = 0.5
+
+
+def _normal_xp(facts):
+    by_level = {}
+    for r in facts.values():
+        lv, xp = (r.get("level") or {}).get("v"), (r.get("xp") or {}).get("v")
+        if r.get("type") == 0 and lv and xp:
+            by_level.setdefault(lv, []).append(xp)
+    out = {}
+    for lv, xs in by_level.items():
+        xs = sorted(xs)
+        out[lv] = xs[len(xs) // 2]
+    return out
+
+
+def forever_dungeon_xp(full, level, normal):
+    """Full XP of a dungeon quest after the Forever rule: the part above a normal quest of the same
+    level is halved. Without a normal value the full XP stays (no invented reduction)."""
+    base = normal.get(level)
+    if not full or base is None or full <= base:
+        return full or 0
+    return int(round((base + DUNGEON_EXTRA_FACTOR * (full - base)) / 5.0)) * 5
+
+
+def _side_ok(r, faction):
+    side = (r.get("side") or {}).get("v")
+    return side in ("B", faction[0])
+
+
+def _dungeon_tables(faction, facts, dungeons):
+    """dungeons = { [instance] = { area, min, lo, hi, entrance, quests } } and dquests = { [quest] =
+    { level, min, xp, uiMap, wx, wy [, pre] [, r] [, c] } } for the faction. Quests without a known
+    giver position or started by an item are left out: the hint names givers on the way."""
+    normal = _normal_xp(facts)
+    dl, ql, used = ["\tdungeons = {"], ["\tdquests = {"], set()
+    for d in sorted(dungeons, key=lambda d: d["id"]):
+        qs = []
+        for q in d["quests"]:
+            r = facts.get(q)
+            if not r or not _side_ok(r, faction) or r.get("startItem") or not r.get("startPos"):
+                continue
+            races = (r.get("races") or {}).get("v")
+            if races is not None and not set(races) & set(game.races_of(faction)):
+                continue
+            qs.append(r)
+        if not qs:
+            continue
+        levels = sorted((r.get("level") or {}).get("v") or (r.get("min") or {}).get("v") or 1 for r in qs)
+        median = levels[len(levels) // 2]
+        lo = max(d.get("min") or 1, median - DUNGEON_BELOW)
+        hi = levels[-1] + DUNGEON_ABOVE
+        parts = ["area = %d" % d["area"]] if d.get("area") is not None else []
+        parts += ["min = %d" % (d.get("min") or 1), "lo = %d" % lo, "hi = %d" % hi]
+        if d.get("entrance"):
+            e = d["entrance"]
+            parts.append("entrance = { %d, %s, %s }" % (e[0], _num(e[1]), _num(e[2])))
+        parts.append("quests = { %s }" % ", ".join(str(r["q"]) for r in qs))
+        dl.append("\t\t[%d] = { %s }," % (d["id"], ", ".join(parts)))
+        for r in qs:
+            if r["q"] in used:
+                continue
+            used.add(r["q"])
+            lv = (r.get("level") or {}).get("v") or 0
+            mn = (r.get("min") or {}).get("v") or lv or 1
+            xp = forever_dungeon_xp((r.get("xp") or {}).get("v") or 0, lv, normal)
+            m, w, n = r["startPos"]["v"]
+            vals = [str(lv), str(mn), str(xp), str(m), _num(w), _num(n)]
+            groups = [sorted(g) for g in (r.get("pre") or {}).get("v") or [] if g]
+            if groups:
+                vals.append("pre = { %s }" % ", ".join("{ %s }" % ", ".join(str(x) for x in g) for g in groups))
+            races = (r.get("races") or {}).get("v")
+            if races is not None and not set(game.races_of(faction)) <= set(races):
+                vals.append("r = { %s }" % ", ".join(str(x) for x in sorted(set(races) & set(game.races_of(faction)))))
+            classes = (r.get("classes") or {}).get("v")
+            if classes is not None:
+                vals.append("c = { %s }" % ", ".join(str(x) for x in sorted(classes)))
+            ql.append("\t\t[%d] = { %s }," % (r["q"], ", ".join(vals)))
+    dl.append("\t},")
+    ql.append("\t},")
+    return dl, ql, used
+
+
+FIND_CODE = {"quest": 1, "treasure": 2, "book": 3, "rare": 4, "flightpath": 5, "place": 6}
+
+
+def _finds(faction, finds):
+    """Discovery catalog: { type, id, uiMap, x1, y1, x2, y2, ... } with x, y in hundredths of a percent;
+    only the points on the first point's map."""
+    lines = ["\tfinds = {"]
+    for f in sorted(finds, key=lambda f: f["key"]):
+        if f.get("side") not in (None, faction[0]):
+            continue
+        m = f["pos"][0][0]
+        pts = [p for p in f["pos"] if p[0] == m]
+        vals = [str(FIND_CODE[f["type"]]), str(f["id"]), str(m)] + ["%d, %d" % (p[1], p[2]) for p in pts]
+        lines.append("\t\t{ %s }," % ", ".join(vals))
+    lines.append("\t},")
+    return lines
+
+
+def _times(times):
+    """Measured module times: { [module] = { runs, median seconds } } (own data, docs/ROUTE-RUNTIME.md)."""
+    lines = ["\ttimes = {"]
+    for t in sorted(times, key=lambda t: t["module"]):
+        lines.append("\t\t[%s] = { %d, %d }," % (_lua_str(t["module"]), t["runs"], t["seconds"]))
+    lines.append("\t},")
+    return lines
+
+
+def _classic(facts):
+    """Quest IDs the facts know as Classic quests (not new in Forever). The explorer logic counts an
+    accepted quest as a discovery only when it is neither one of these nor a route or dungeon quest."""
+    ids = sorted(q for q, r in facts.items() if not r.get("new"))
+    lines = ["\tclassic = {"]
+    for i in range(0, len(ids), 16):
+        lines.append("\t\t%s," % ", ".join(str(q) for q in ids[i : i + 16]))
+    lines.append("\t},")
+    return lines
+
+
+def _maps(fmods, dquest_maps, frames):
+    """Continent (instance) of every uiMap the faction's goto points and dungeon quest givers use:
+    { [uiMap] = instance }. The dungeon hint measures distances in world yards, which only compare on
+    the same continent (brain chapter 07 §2)."""
+    ui = set(dquest_maps)
+    for m in fmods:
+        for st in m.steps:
+            for el in st.elements:
+                if el.verb == "goto":
+                    ui.add(el.args["map"])
+    lines = ["\tmaps = {"]
+    pairs = ["[%d] = %d" % (u, frames[u]) for u in sorted(ui) if frames.get(u) is not None]
+    for i in range(0, len(pairs), 8):
+        lines.append("\t\t%s," % ", ".join(pairs[i : i + 8]))
+    lines.append("\t},")
+    return lines
+
+
+def compile_faction(faction, mods, comp, facts=None, extra=None):
     fmods = sorted((m for m in mods.values() if m.faction == faction), key=lambda m: m.key)
     sources = sorted({m.header.get("sources", "") for m in fmods})
     out = [
@@ -179,6 +337,15 @@ def compile_faction(faction, mods, comp, facts=None):
     out.append("\t},")
     out += _compose(comp)
     out += _quests(fmods, facts or {})
+    extra = extra or {}
+    dl, ql, dq = _dungeon_tables(faction, facts or {}, extra.get("dungeons", []))
+    out += _unsure(fmods, facts or {}, dq)
+    out += dl + ql
+    out += _finds(faction, extra.get("finds", []))
+    out += _times([t for t in extra.get("times", []) if t["module"].startswith(faction[0].lower() + "-")])
+    out += _classic(facts or {})
+    dmaps = [(facts or {})[q]["startPos"]["v"][0] for q in dq]
+    out += _maps(fmods, dmaps, extra.get("frames", {}))
     out += ["\t}", "end", ""]
     return "\n".join(out)
 
@@ -188,12 +355,18 @@ def _write(target_dir):
 
     mods, comps = lint.load_routes()
     facts = {r["q"]: r for r in read_jsonl(repo_path("data", "facts", "quests.jsonl"))}
+    extra = {}
+    for name in ("dungeons", "finds", "times"):
+        path = repo_path("data", "facts", name + ".jsonl")
+        extra[name] = read_jsonl(path) if os.path.exists(path) else []
+    frames = repo_path("data", "sources", "polestar", "ui_map.jsonl")
+    extra["frames"] = {r["ui_map"]: r["map"] for r in read_jsonl(frames)} if os.path.exists(frames) else {}
     written = []
     for faction in (game.ALLIANCE, game.HORDE):
         comp = next(c for c in comps if c.faction == faction)
         path = os.path.join(target_dir, "Data_%s.lua" % faction)
         with open(path, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(compile_faction(faction, mods, comp, facts))
+            fh.write(compile_faction(faction, mods, comp, facts, extra))
         written.append(path)
     return written
 

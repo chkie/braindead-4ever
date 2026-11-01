@@ -8,6 +8,7 @@
   python3 -m tools.routekit compile        data/routes -> Pathmark/Routes
   python3 -m tools.routekit check          lint + compile into a temp dir and compare
   python3 -m tools.routekit stats          counts per combination and level band
+  python3 -m tools.routekit observe PATHS  player exports -> data/sources/own (run merge after)
 
 Foreign repositories are read from wherever they were cloned; nothing outside data/ is written
 by the importers.
@@ -35,6 +36,8 @@ def main(argv=None):
     sub.add_parser("compile")
     sub.add_parser("check")
     sub.add_parser("stats")
+    obs = sub.add_parser("observe")
+    obs.add_argument("paths", nargs="+")
     args = ap.parse_args(argv)
 
     if args.cmd == "import":
@@ -72,6 +75,11 @@ def main(argv=None):
 
         rc = linter.main([], combos=True)
         return rc or compiler.check()
+    if args.cmd == "observe":
+        from . import observe
+
+        print(observe.run(args.paths))
+        return 0
     if args.cmd == "stats":
         from . import stats
 

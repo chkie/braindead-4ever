@@ -1,0 +1,443 @@
+{
+ "note": "Shared cases for the prerequisite rule from player observations; Pathmark/Routes/Prereq.lua and tools/routekit/prereq.py must agree. Quest IDs 900001 and up are made up. Per observation: t observer token, l the quest turned in directly before at the NPC that gives the quest (0 = none), u 1 when that NPC did not offer the quest before that turn-in, d quests already done (turned in shortly before, or checked candidates), n checked candidates not done although the quest was offered or taken.",
+ "cases": [
+  {
+   "name": "linked twice, unlocked once, done by three players: confirmed",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900001,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900001
+     ],
+     "n": []
+    }
+   ],
+   "pre": [
+    [
+     900001
+    ]
+   ],
+   "state": "observed"
+  },
+  {
+   "name": "linked without any unlock is no prerequisite (handed in at the hub that offers the quest anyway)",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900001,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900001,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 900001,
+     "u": 0,
+     "d": [],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "done before by three players without a link is no prerequisite",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900001
+     ],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900001
+     ],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "two players are not enough",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "the same player twice counts once",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "aaaaaa",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "one player was offered the quest without it: refuted",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "dddddd",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": [
+      900001
+     ]
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "five players, every candidate done by three refuted: no prerequisite",
+   "q": 900003,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900010,
+     "u": 0,
+     "d": [
+      900011
+     ],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900011,
+     "u": 0,
+     "d": [
+      900010
+     ],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900010,
+      900011
+     ],
+     "n": []
+    },
+    {
+     "t": "dddddd",
+     "l": 900012,
+     "u": 0,
+     "d": [],
+     "n": [
+      900010,
+      900011
+     ]
+    },
+    {
+     "t": "eeeeee",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": [
+      900010
+     ]
+    }
+   ],
+   "pre": [],
+   "state": "observed-none"
+  },
+  {
+   "name": "a candidate every observer had done keeps the quest unknown",
+   "q": 900003,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900010
+     ],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900010
+     ],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900010
+     ],
+     "n": []
+    },
+    {
+     "t": "dddddd",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900010
+     ],
+     "n": []
+    },
+    {
+     "t": "eeeeee",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900010
+     ],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "a candidate fewer than half of the observers had done does not block none",
+   "q": 900003,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900020
+     ],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900020
+     ],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900020
+     ],
+     "n": []
+    },
+    {
+     "t": "dddddd",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "eeeeee",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "ffffff",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "gggggg",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "observed-none"
+  },
+  {
+   "name": "four players are not enough for none",
+   "q": 900003,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "dddddd",
+     "l": 0,
+     "u": 0,
+     "d": [],
+     "n": []
+    }
+   ],
+   "pre": [],
+   "state": "unknown"
+  },
+  {
+   "name": "a quest is never its own prerequisite",
+   "q": 900002,
+   "obs": [
+    {
+     "t": "aaaaaa",
+     "l": 900002,
+     "u": 1,
+     "d": [
+      900002,
+      900001
+     ],
+     "n": []
+    },
+    {
+     "t": "bbbbbb",
+     "l": 900001,
+     "u": 1,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "cccccc",
+     "l": 900001,
+     "u": 0,
+     "d": [],
+     "n": []
+    },
+    {
+     "t": "dddddd",
+     "l": 0,
+     "u": 0,
+     "d": [
+      900001
+     ],
+     "n": []
+    }
+   ],
+   "pre": [
+    [
+     900001
+    ]
+   ],
+   "state": "observed"
+  }
+ ]
+}

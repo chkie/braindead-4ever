@@ -97,17 +97,34 @@ describe("Collector", function()
 	end)
 
 	it("records quest accept with giver, dialog position, name, level and quest XP", function()
-		local _, own = start()
+		local ns, own = start()
 		wow.world.npc, wow.world.questID = NPC, 783
 		wow.fire("QUEST_DETAIL", 0)
 		wow.world.npc = nil
 		wow.world.player.x, wow.world.player.y = 0.5, 0.5 -- walked away before accepting
 		wow.fire("QUEST_ACCEPTED", 783)
 		local r = ofKind(own, "accept")[1]
-		assert.are.same(
-			{ "accept", "0", "1429", "4231", "6512", "783", "c", "823", "0", "Marshal McBride", "5", "40" },
-			r
-		)
+		-- then the prerequisite observation: token, link, unlock, done, missing (Routes/Prereq.lua)
+		local token = ns.Prereq.Token(PathmarkCollectDB.install, 783)
+		assert.are.same({
+			"accept",
+			"0",
+			"1429",
+			"4231",
+			"6512",
+			"783",
+			"c",
+			"823",
+			"0",
+			"Marshal McBride",
+			"5",
+			"40",
+			token,
+			"0",
+			"0",
+			"",
+			"",
+		}, r)
 		-- the NPC name is also noted once
 		assert.are.same({ "823", "Marshal McBride" }, { ofKind(own, "npc")[1][6], ofKind(own, "npc")[1][7] })
 	end)
