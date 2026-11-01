@@ -28,6 +28,8 @@ run secrets gitleaks git --redact --no-banner .
 run workflows actionlint
 run route-tools python3 -m unittest discover -s tools/tests -t .
 run route-data python3 -m tools.routekit check
+# reports only (Welle 6a); fails only when the tool breaks (P1, parameters without source)
+run route-quality sh -c 'python3 -m tools.routekit metrics >/dev/null'
 
 if ((${#failed[@]})); then
 	echo "FAILED: ${failed[*]}"

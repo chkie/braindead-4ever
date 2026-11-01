@@ -6,7 +6,7 @@ Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Las
 
 | File | What it does |
 | --- | --- |
-| `Pathmark/Routes/XP.lua` | Classic experience rules: level table, kill XP, quest XP by level difference, XP needed for a level, kills for a shortfall. Pure Lua. |
+| `Pathmark/Routes/XP.lua` | Experience rules: Classic level table, kill XP (Forever rule for creatures below the character), quest XP by level difference, XP needed for a level, kills for a shortfall. Pure Lua; `tools/routekit/xp.py` computes the same (shared cases `tools/tests/fixtures/xp_cases.json`). |
 | `Pathmark/Routes/Prereq.lua` | Prerequisites from player observations (Welle 4): the rule shared with `tools/routekit/prereq.py`. Pure Lua. |
 | `Pathmark/Routes/Discover.lua` | Explorer mode rules (Welle 4): hint levels, riddle and rumor sentences, the area hint. Pure Lua. |
 | `Pathmark/Routes/Dungeon.lua` | Dungeon hint (Welle 4). Pure Lua over the runtime and the compiled dungeon tables. |
@@ -137,14 +137,14 @@ Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step,
 }
 ```
 
-Quest XP: the client's `GetQuestLogRewardXP` while the quest is in the log, else the route data (full XP from Polestar) with the Classic reduction (full up to quest level + 5, then 80, 60, 40, 20, 10 %). Kill XP: Classic, `level * 5 + 45` for a creature at the character's level.
+Quest XP: the client's `GetQuestLogRewardXP` while the quest is in the log, else the route data (full XP from Polestar) with the Classic reduction (full up to quest level + 5, then 80, 60, 40, 20, 10 %). Kill XP: `level * 5 + 45` for a creature at the character's level. A creature below the character gives `(creature level * 5 + 45) * (1 - difference / zero difference)` in Forever, not the Classic `level * 5 + 45` as base (beta measurement level 10 against 5: 40 XP rested, Classic Era 54; closed as "Not A Bug" in forever-bugs #138).
 
 ## Assumptions to measure in Forever
 
 | Assumption | Probe check | How |
 | --- | --- | --- |
 | XP per level as in Classic (1 to 60: 4,084,700) | `xp.curve` | `/pathmark probe run`: client `UnitXPMax` against the table |
-| Kill XP as in Classic; Forever has no level scaling (chapter 14 §2) | `xp.kill` | kill a creature solo, keep it targeted, `/pathmark probe check xp.kill` |
+| Kill XP as in Classic for creatures at or above the character, the Forever rule (forever-bugs #138) below; Forever has no level scaling (chapter 14 §2) | `xp.kill` | kill a creature solo, keep it targeted, `/pathmark probe check xp.kill` |
 | Quest XP: Polestar value with the Classic reduction | `xp.quest` | with a route quest in the log: `/pathmark probe run` |
 | Planned levels | none | AP 10 simulation and our measurements |
 

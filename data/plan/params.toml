@@ -1,0 +1,459 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Model parameters and limits of the route simulator (tools/routekit/sim.py) and the route
+# metrics (tools/routekit/metrics.py). Our own route logic, no game data.
+#
+# Every entry names its source. `forever` says whether the value is known to hold in WoW: Forever:
+#   "ja"          a Forever source states it (Blizzard, client data, beta measurement),
+#   "unbestätigt" a Classic value, an emulator value or a prior of another tool, not measured in
+#                 Forever; replaced by our own measurements once the data collector delivers,
+#   "gewählt"     our own choice where no source gives a value; the note says why.
+# `sd` is the spread the source gives (mean ± sd); only time parameters with a spread are varied
+# in the 16 held-out draws (DR 22c §D). Times are model times: the simulator prices a route, it
+# does not predict real play time ("Modellstunden", DR 22b §6).
+# Reports: .claude/research/2026-10-31-wow-addon/22b-zeit-xp-modell.md (§Modellparameter),
+# 22c-optimierungsverfahren.md, 22d-gleichwertigkeit-dynamik.md, 22a-speedrun-methodik.md of the
+# Pathmark workspace; plan "Welle 6 Routenbau" of 2026-11-01 (decisions).
+
+# --- Movement and travel ------------------------------------------------------------------------
+
+[param.run_speed]
+value = 7.0
+unit = "yd/s"
+source = "warcraft.wiki.gg Speed (https://warcraft.wiki.gg/wiki/Speed?action=raw); cMaNGOS baseMoveSpeed MOVE_RUN 7.0 (via Polestar tools/lib/nav/move.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Classic base value, never changed."
+
+[param.detour_eastern_kingdoms]
+value = 1.35
+sd = 0.12
+unit = "factor (path / straight line)"
+source = "Polestar prior detour0 (https://raw.githubusercontent.com/fitzforge/polestar/main/tools/lib/sim/params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Prior, not measured. Applies on instance 0."
+
+[param.detour_kalimdor]
+value = 1.30
+sd = 0.12
+unit = "factor (path / straight line)"
+source = "Polestar prior detour1 (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Prior, not measured. Applies on instance 1."
+
+[param.detour_other]
+value = 1.35
+sd = 0.12
+unit = "factor (path / straight line)"
+source = "no source for Zephras Isle and other instances"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Chosen: the larger of the two continent priors (Eastern Kingdoms), with its spread."
+
+[param.mount_level]
+value = 40
+unit = "level"
+source = "method.gg mount guide (Beta); Blizzard Panel Recap: mount comes with the riding training; DR 22b"
+date = "2026-10-21"
+forever = "unbestätigt"
+note = "Fan page on beta state. The routes end at level 30, so it has no effect yet."
+
+[param.mount_speed]
+value = 1.6
+unit = "factor of run speed"
+source = "warcraft.wiki.gg Speed (+60 %); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.flight_speed]
+value = 30.0
+unit = "yd/s"
+source = "warcraft.wiki.gg Flight path (434 %, about 30.4); Polestar FLIGHT_SPEED 30; DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "The repository has no TaxiPathNode lengths; the simulator flies the straight line (lower bound), chosen."
+
+[param.flight_hop_sec]
+value = 2.0
+unit = "s per hop"
+source = "Polestar Travel.lua FLIGHT_STOP; DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.flight_overhead_sec]
+value = 20.0
+sd = 8.0
+unit = "s per flight"
+source = "Polestar prior flightOverhead (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.hearth_cast_sec]
+value = 10.0
+unit = "s"
+source = "warcraft.wiki.gg Hearthstone; DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.hearth_cooldown_sec]
+value = 3600.0
+unit = "s"
+source = "Forever client SpellCooldowns wowf 8690 (brain chapter 14 §4.6); DR 22b"
+date = "2026-11-01"
+forever = "ja"
+note = "Client data; confirm in game."
+
+[param.transport_cycle_sec]
+value = 240.0
+unit = "s"
+source = "warcraft.wiki.gg Travel guide to zeppelins and boats: cycle 180 to 300 s (Undercity-Orgrimmar 3:59); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Chosen: the middle of the range 180-300 s. Wait = half a cycle (random arrival)."
+
+[param.transport_dock_sec]
+value = 60.0
+unit = "s"
+source = "warcraft.wiki.gg Travel guide to zeppelins and boats; DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Ride = cycle / 2 - dock time (a cycle is two rides and two stays), derived."
+
+[param.portal_sec]
+value = 8.0
+unit = "s"
+source = "Polestar prior interactSec (use an object); DR 22b"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Chosen: a portal costs one object use."
+
+# --- Fighting and work ----------------------------------------------------------------------------
+
+[param.kill_sec_1]
+value = 11.0
+sd = 3.0
+unit = "s per kill at level 1, including downtime"
+source = "Polestar prior killSec1 (params.js, forge/model.md); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Prior, not measured; linear to kill_sec_60. Blizzard's design goal 10-15 s is fighting only."
+
+[param.kill_sec_60]
+value = 30.0
+sd = 6.0
+unit = "s per kill at level 60, including downtime"
+source = "Polestar prior killSec60 (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.kill_above]
+value = 0.10
+unit = "share more kill time per level the creature is above"
+source = "Polestar prior (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.kill_below]
+value = 0.05
+unit = "share less kill time per level the creature is below"
+source = "Polestar prior (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.kill_below_min]
+value = 0.5
+unit = "lowest factor for creatures below"
+source = "Polestar prior (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.extra_kills]
+value = 0.043
+unit = "kills on the way per objective kill"
+source = "Polestar extraKill, fitted 2026-10-12 against level checkpoints (SIMULATION.md); DR 22b"
+date = "2026-10-12"
+forever = "unbestätigt"
+note = "sd 0.038 in the source; kept at the mean in the draws because it changes XP, not only time."
+
+[param.item_kills]
+value = 1.0
+unit = "kills per collected item"
+source = "no drop rates in data/facts (the Polestar selection has no item_source)"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Chosen: one kill per item (lower bound for time, upper bound for kill XP)."
+
+[param.mob_level]
+value = "quest level"
+unit = "rule"
+source = "no creature levels in data/facts"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Chosen: objective creatures have the quest's level; the character's level when the quest has none."
+
+[param.class_factor]
+value = { WARRIOR = 1.15, PALADIN = 1.10, PRIEST = 1.05, ROGUE = 1.0, SHAMAN = 1.0, DRUID = 1.0, MAGE = 0.90, WARLOCK = 0.85, HUNTER = 0.80 }
+unit = "factor of kill time"
+source = "Polestar priors (params.js, forge/model.md); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Profiles for P11: slow = WARRIOR, fast = HUNTER (DR 22c §B.4)."
+
+[param.talk_sec]
+value = 6.0
+sd = 2.0
+unit = "s per accept or turn-in"
+source = "Polestar prior talkSec (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.interact_sec]
+value = 8.0
+sd = 3.0
+unit = "s per object use"
+source = "Polestar prior interactSec (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.escort_sec]
+value = 240.0
+sd = 90.0
+unit = "s per escort or event objective"
+source = "Polestar prior escortSec (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Event objectives (k=event) are counted as escorts: chosen, the data does not tell them apart."
+
+[param.level_overhead_sec]
+value = 60.0
+sd = 40.0
+unit = "s per level-up (trainer, vendor)"
+source = "Polestar prior levelOverhead (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+
+[param.grind_eff]
+value = 0.7
+sd = 0.12
+unit = "real grind rate / formula rate"
+source = "Polestar prior grindEff (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Grind: creatures at the character's level, kill_xp / kill time x grind_eff."
+
+[param.food_kill_xp]
+value = 0.0
+unit = "share more kill XP"
+source = "Well Fed +5 % kill XP (Warcraft Tavern 13.09.2026, Mein-MMO 28.09.2026; Blizzard: small experience bonus); DR 22b"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Chosen: the model plays without food (duration unknown, R34 makes buffs optional). The source value is 0.05."
+
+[param.rested_start]
+value = 0.0
+unit = "XP in the rested pool at the start"
+source = "rested rules: warcraft.wiki.gg Experience point, cMaNGOS ComputeRest; DR 22b"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Chosen: the model has no logout and no inn time, so no rested XP."
+
+[param.quest_log_limit]
+value = 40
+unit = "quests"
+source = "Forever client MAXIMUM_NUM_QUESTS_LOG_CAN_ACCEPT = 40 (Gethe/wow-ui-source forever); Polestar #30; DR 22a R30"
+date = "2026-10-22"
+forever = "ja"
+
+[param.quest_log_work]
+value = 35
+unit = "quests"
+source = "plan Welle 6 Routenbau 2026-11-01, decision"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Working limit for building routes: client 40 minus 5 for the player's own quests."
+
+# --- Not used by the model yet (listed for completeness, DR 22b) ------------------------------
+
+[param.swim_speed]
+value = 4.72
+unit = "yd/s"
+source = "cMaNGOS MOVE_SWIM (via Polestar move.js); DR 22b"
+date = "2026-10-15"
+forever = "unbestätigt"
+note = "Not used: the data has no water."
+
+[param.elite_kill_factor]
+value = 3.5
+sd = 1.0
+unit = "factor of kill time"
+source = "Polestar prior (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Not used: the data has no elite flag per creature."
+
+[param.death_risk_sec]
+value = 300.0
+sd = 150.0
+unit = "s per zone with creatures 5 or more levels above"
+source = "Polestar prior deathRisk (params.js); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Not used: the data has no creature levels per zone."
+
+[param.food_sec]
+value = [18, 21, 24, 27, 30]
+unit = "s full eat/drink at levels 1/5/15/25/35"
+source = "Classic tooltips (Wowhead, comparison only); DR 22b"
+date = "2026-11-01"
+forever = "unbestätigt"
+note = "Not used: downtime is part of the kill time prior."
+
+# --- Checks of the model --------------------------------------------------------------------
+
+[check.xph_1_20]
+value = [8150, 32800]
+unit = "XP per Modellstunde, levels 1-20"
+source = "DR 22b recommendation 3: Forever beta average 20.5 h to level 20 (developer podcast 24.09.2026, via Kami Labs and Mein-MMO) and Classic Era SSF record 1-20 5:06:09 h (speedrun.com)"
+date = "2026-11-01"
+forever = "ja"
+note = "A speed route outside this band means the model is wrong, not the route good (DR 22b)."
+
+# --- Limits (reported in Welle 6a, required from Welle 6b) ----------------------------------
+
+[limit.g3_coverage]
+value = 0.80
+source = "plan Welle 6 decision; DR 22d G3"
+forever = "gewählt"
+note = "Quest XP at the planned level / XP of the level band, per band and combination, at least."
+
+[limit.g4_coverage_spread]
+value = 0.10
+source = "plan Welle 6 decision; DR 22d G4"
+forever = "gewählt"
+note = "Largest minus smallest coverage per band over all combinations, at most."
+
+[limit.g5_quest_ratio]
+value = 1.25
+source = "plan Welle 6 decision; DR 22d G5"
+forever = "gewählt"
+note = "Most / fewest accepted quests per band over all combinations (speed), at most."
+
+[limit.g6_walk_ratio]
+value = 1.20
+source = "plan Welle 6 decision; DR 22d G6"
+forever = "gewählt"
+note = "Walked yards per quest XP: largest / median per band, at most."
+
+[limit.g7_arrival]
+value = 1.0
+source = "DR 22d G7 start value"
+forever = "gewählt"
+note = "Level on arrival at the first core block against its #levels start, levels, at most."
+
+[limit.g8_insert_sec]
+value = 600.0
+source = "DR 22d G8 start value"
+forever = "gewählt"
+note = "Model seconds per class insert, at most (reported as Modellstunden: 600 s = 0.17)."
+
+[limit.g8_insert_total_sec]
+value = 1800.0
+source = "DR 22d G8 start value"
+forever = "gewählt"
+note = "Model seconds of all class inserts of one combination 1-30, at most (reported as Modellstunden: 1800 s = 0.5)."
+
+[limit.g10_regret]
+value = 0.10
+source = "DR 22d G10 start value"
+forever = "gewählt"
+note = "(T - best T of the class) / best T of the class, Modellstunden 1-30, at most."
+
+[limit.g11_own]
+value = 1.0
+source = "DR 22d G11 start value"
+forever = "gewählt"
+note = "Share of route quests whose race and class condition comes from our own measurement, before #label stabil."
+
+[limit.p2_coverage]
+value = 0.90
+source = "DR 22c §F P2 start value (Factoruide grind_cap)"
+forever = "gewählt"
+note = "Quest XP + objective kill XP / XP of the module's level band, at least."
+
+[limit.p2_grind_share]
+value = 0.10
+source = "plan Welle 6 decision (P2 grind at most 10 % per level); DR 22c §F; Factoruide grind_cap"
+forever = "gewählt"
+note = "Grind time / time in the level, per level, at most."
+
+[limit.p4_leg_sec]
+value = 180.0
+source = "DR 22c §F P4 (Polestar long single-quest trips: more than 3 min)"
+forever = "gewählt"
+note = "A leg longer than this for one quest whose XP rate is below half the route's rate counts."
+
+[limit.p5_visit_yd]
+value = 400.0
+source = "DR 22c §5 (Polestar judge: a visit ends 400 yd away)"
+forever = "gewählt"
+
+[limit.p6_passed_yd]
+value = 500.0
+source = "DR 22c §5 (Polestar judge: giver within 500 yd of the walked line)"
+forever = "gewählt"
+
+[limit.p6_later_yd]
+value = 1000.0
+source = "DR 22c §5 (Polestar judge: taken later only after more than 1,000 yd)"
+forever = "gewählt"
+
+[limit.p6_sample_yd]
+value = 50.0
+source = "Polestar judge (legs sampled every 50 yd), DR 22c §5"
+forever = "gewählt"
+
+[limit.p8_outlier]
+value = 5
+source = "DR 22c §F P8 (ThPi: accept more than 5 levels above the median of the 5 neighbours on each side)"
+forever = "gewählt"
+
+[limit.r06_objective_yd]
+value = 150.0
+source = "Polestar forge along credit radius 150 yd (DR 22c §3)"
+forever = "gewählt"
+note = "An open objective within this distance of the walked line counts as passed."
+
+[limit.r09_min_quests]
+value = 3
+source = "DR 22a R09 start value k = 3"
+forever = "gewählt"
+
+[limit.r13_flight_master_yd]
+value = 65.6
+source = "DR 22a R13 start value r = 60 m"
+forever = "gewählt"
+note = "60 m in yards (1 yd = 0.9144 m)."
+
+[limit.r27_above]
+value = 2
+source = "DR 22a R27 (speed: creatures at most 2 levels above)"
+forever = "gewählt"
+
+[limit.p3_draws]
+value = 16
+source = "DR 22c §D (Polestar Forge: 16 held-out parameter draws with a fixed seed)"
+forever = "gewählt"
+note = "A method value, not a game value."
+
+[limit.p3_seed]
+value = 1
+source = "no source; any fixed number keeps the draws reproducible"
+forever = "gewählt"
+note = "Chosen seed of the draws."
+
+[limit.p3_clip_sd]
+value = 2.0
+source = "no source (Polestar priors have their own lower and upper bounds, DR 22b gives only mean and sd)"
+forever = "gewählt"
+note = "Chosen: draws are cut at mean +/- 2 sd and kept above zero."
