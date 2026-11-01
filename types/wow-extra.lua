@@ -12,3 +12,30 @@ SlashCmdList = {}
 ---(Blizzard_ProjectConstants/Camelot/ProjectConstants.lua), nil elsewhere.
 ---@type number?
 WOW_PROJECT_CAMELOT = 18
+
+---Close button text (GlobalStrings). Forever: Ketho GlobalStrings forever, used by Blizzard frames.
+---@type string
+CLOSE = "Close"
+
+---"New flight path discovered!" (GlobalStrings, deDE "Neue Flugroute entdeckt!").
+---@type string
+ERR_NEWTAXIPATH = ""
+
+---Frames closed by the Escape key (FrameXML UIParentPanelManager).
+---@type string[]
+UISpecialFrames = {}
+
+---Number of chat windows (FrameXML ChatFrame constants).
+---@type number
+NUM_CHAT_WINDOWS = 10
+
+---Party category of instance groups (FrameXML constant; IsInGroup(LE_PARTY_CATEGORY_INSTANCE)).
+---@type number
+LE_PARTY_CATEGORY_INSTANCE = 2
+
+---"Firstname Lastname" in Forever, name without realm in Retail; Forever ignores the second argument
+---(FrameXML Mainline/UnitFrame.lua, Camelot/NameUtil.lua).
+---@param unit string
+---@param showServerName? boolean
+---@return string?
+function GetUnitName(unit, showServerName) end
