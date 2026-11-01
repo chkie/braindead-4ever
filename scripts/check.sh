@@ -26,6 +26,8 @@ run format stylua --check .
 run types lua-language-server --check . --checklevel=Warning --logpath="$ROOT/.tools/luals-log"
 run secrets gitleaks git --redact --no-banner .
 run workflows actionlint
+run route-tools python3 -m unittest discover -s tools/tests -t .
+run route-data python3 -m tools.routekit check
 
 if ((${#failed[@]})); then
 	echo "FAILED: ${failed[*]}"

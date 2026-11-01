@@ -11,3 +11,5 @@
 .DS_Store
 # LuaLS check output
 luals-check/
+# Python bytecode of the route tools
+__pycache__/

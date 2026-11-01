@@ -36,6 +36,9 @@ What you discover, Pathmark shares in the game with other players who use it, th
 | `docs/STATUS.md` | every feature with its status and the probe checks it needs |
 | `decoder/` | reads an export text in the browser or in Node |
 | `scripts/` | local setup and checks |
+| `data/` | route data: imported sources, merged facts, route files ([format](docs/ROUTE-FORMAT.md)) |
+| `tools/` | route tools: importers, linter, compiler (Python 3, Lua 5.1) |
+| `NOTICE` | credits and licences of the data from other projects |
 
 How to set up the tools and run the checks: [CONTRIBUTING.md](CONTRIBUTING.md).
 

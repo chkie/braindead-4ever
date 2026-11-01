@@ -102,8 +102,8 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | M6 Report a problem with one click | MVP | built | `mod.report.*` (command `/pathmark report`; the click comes with AP 6) |
 | M7 Discoveries recorded by the collector | MVP | built | `find.giverguid`, `find.giverquest`, `find.rewardxp`, `find.questxp`, `find.lootsource`, `find.lootcount`, `find.fishing`, `find.lootnpc`, `find.booknpc`, `find.booktitle`, `find.taxiid`, `find.taxinodes`, `find.taxiworld`, `find.flightstate`, `find.newtaxi`, `find.ontaxi`, `find.rareclass`, `find.rarecombat`, `find.targetguid`, `find.targetname`, `find.creatureid`, `find.vignettes`, `find.vignetteev`, `find.legacyconst`, `find.legacy1187`, `find.legacy1188`, `find.legacy1189`, `find.combatlog`, `mod.collector.*` |
 | M8 Quest item button, if the probe reports the call as allowed | MVP if the probe is green | planned | `qitem.info`, `qitem.use`, `qitem.cvar`, `qitem.button` |
-| M9 Routes 1 to 30 for all 56 combinations as building blocks | MVP | planned | no client API; route format and linter come with AP 5 |
-| M10 Status per value (unconfirmed, confirmed) and per section (provisional) | MVP | planned | no client API; route data (AP 5) |
+| M9 Routes 1 to 30 for all 56 combinations as building blocks | MVP | built | no client API; computed routes, see "Routes and route data" below |
+| M10 Status per value (unconfirmed, confirmed) and per section (provisional) | MVP | built | in the route data (AP 5); shown in the addon with AP 6 |
 | M11 Data contribution through addon messages, export as extra | MVP | built | `comm.prefix`, `comm.lockdown`, `comm.outgoing`, `comm.trial`, `comm.veteran`, `comm.join`, `comm.filter`, `comm.channel`, `comm.nameformat`, `comm.stats`, `comm.burst`, `comm.restrictev`, `comm.noticeev`, `enc.json`, `enc.deflate`, `enc.zlib`, `enc.base64space`, `export.window`, `mod.exchange.*` |
 | M12 Interface: setup dialog, settings, looks Modern and Classic | MVP | planned | `ui.settings`, `ui.opensettings`, `ui.editmode`, `ui.helptip`, `ui.compartment`, `atlas.header`, `atlas.nub`, `atlas.check`, `atlas.glow`, `atlas.collapse`, `atlas.parchment`, `atlas.arrow`, `atlas.pin`, `atlas.minipin`, `atlas.questnormal`, `atlas.questturnin`, `atlas.barbg`, `atlas.barfill`, `atlas.indicator`, `font.header`, `font.line`, `font.small`, `font.med3`, `font.highlight`, `color.normal`, `color.highlight`, `color.tracker`, `color.dimred`, `sound.complete`, `sound.option`, `sound.select` |
 | M13 Accessibility: scaling, contrast, shape and color, key bindings, gamepad does not break | MVP | planned | `ui.textsize`, `ui.gamepad`, `cvar.contrast`, `cvar.colorblind`, `cvar.fontscale`, `cvar.instant`, `cvar.gamepad` |
@@ -126,3 +126,19 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | luacheck, StyLua, LuaLS type check, gitleaks, actionlint | built | |
 | CI on GitHub with required checks | built | branch protection on `main` |
 | Release by tag (BigWigs packager to CurseForge, Wago, GitHub) | planned | needs the CurseForge and Wago projects and their tokens |
+
+## Routes and route data
+
+| Feature | Status | Note |
+| --- | --- | --- |
+| Route format with sources and status per value (`docs/ROUTE-FORMAT.md`) | built | format version 1 |
+| Importers for Polestar forever-db, EG Link, All The Things (decision FD-1101) | built | sources cloned outside the repository; versions in `data/sources/*/SOURCE.json` |
+| Merged facts with roots and prerequisite state (`data/facts/`) | built | every value `unbestätigt` |
+| Linter: provenance, allowed sources, block list, items before turn-in, prerequisite order, travel and zone returns, filters for all 56 combinations, Speed rule, labels | built | ten prepared errors found, clean fixture passes (`tools/tests`) |
+| Compiler to Lua tables (`Pathmark/Routes/Data_*.lua`), composer `ns.Routes` | built | CI recompiles and compares |
+| Building blocks 1–30: seven start areas (Zephras per faction), core route per faction, class quests inline and as inserts, Speed and Explorer | built | computed routes, not played; label `vorläufig` |
+| Route data loaded only for the played faction | built | function per faction; `ns.Routes.Release()` drops the other faction's builder; measured offline (Lua 5.1): 1.56 MB for the Alliance data after release |
+| Example route Elwynn Forest (human, levels 1–10) runs through | built | `spec/routes_spec.lua` |
+| Start zones per race in the Forever client | planned | EG Link measured 20 of 56 combinations in the beta; confirm on 2026-11-05 |
+| Planned levels from XP simulation | planned | AP 10; levels are planning values until then |
+

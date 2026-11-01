@@ -39,6 +39,16 @@ jobs:
       - name: Lint (luacheck)
         if: ${{ !cancelled() }}
         run: luacheck .
+      - uses: actions/setup-python@v7
+        if: ${{ !cancelled() }}
+        with:
+          python-version: "3.12"
+      - name: Route tools (unittest)
+        if: ${{ !cancelled() }}
+        run: python3 -m unittest discover -s tools/tests -t .
+      - name: Route data (lint all 56 combinations, compiled files up to date)
+        if: ${{ !cancelled() }}
+        run: python3 -m tools.routekit check
 
   format:
     name: Format

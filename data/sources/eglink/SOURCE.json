@@ -1,0 +1,37 @@
+{
+ "attribution": "Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changed: reduced to quest facts and start positions, merged over builds, coordinates reordered.",
+ "builds": [
+  "wow_classic_beta/1.60.1.70009",
+  "wow_classic_beta/1.60.1.70124",
+  "wow_classic_beta/1.60.1.70170",
+  "wow_classic_beta/1.60.1.70205",
+  "wow_classic_beta/1.60.1.70235",
+  "wow_classic_beta/1.60.1.70245",
+  "wow_classic_beta/1.60.1.70291",
+  "wow_classic_beta/1.60.1.70334",
+  "wow_classic_beta/1.60.1.70338",
+  "wow_classic_beta/1.60.1.70374",
+  "wow_classic_beta/1.60.1.70425",
+  "wow_classic_beta/1.60.1.70450",
+  "wow_classic_beta/1.60.1.70532",
+  "wowf/1.60.1.70205",
+  "wowf/1.60.1.70291",
+  "wowf/1.60.1.70334",
+  "wowf/1.60.1.70338",
+  "wowf/1.60.1.70374",
+  "wowf/1.60.1.70425",
+  "wowf/1.60.1.70450",
+  "wowf/1.60.1.70532"
+ ],
+ "commit": "572beca51aba0ed1e485d0530ec0aa7da2ea9abe",
+ "commitDate": "2026-10-31T10:23:50Z",
+ "files": [
+  "quests.jsonl",
+  "starts.jsonl"
+ ],
+ "license": "CC-BY-4.0",
+ "name": "EG Link output: World of Warcraft: Forever",
+ "repository": "https://github.com/JIVESCORP/eg-link-output-wowf",
+ "source": "eglink",
+ "status": "unbestätigt"
+}
