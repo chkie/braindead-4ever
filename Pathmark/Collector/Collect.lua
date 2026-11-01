@@ -61,6 +61,10 @@ local tickers = {}
 local detail, completion -- quest dialog contexts
 local turnedIn, active, lastObj = {}, {}, {}
 local npcSeen, rareSeen, vignetteSeen = {}, {}, {}
+-- Prerequisite observations (Routes/Prereq.lua, docs/ROUTE-RUNTIME.md): quests turned in this session
+-- (newest first), the last turn-in with its giver and the offer list the NPC showed before it, the
+-- last offer list, and quests whose offer was observed this session.
+local recent, lastTurn, listing, offerSeen = {}, nil, nil, {}
 local scanQueued, lastMap, lastX, lastY, onTaxi, rosterTimer = false, nil, nil, nil, false, nil
 
 local function Rec(kind, map, x, y, ...)
@@ -81,6 +85,11 @@ local function Offer(kind, ...)
 	if X and X.Offer then
 		X.Offer(kind, ...)
 	end
+	-- The same find is the player's own discovery (explorer mode, Routes/Explore.lua).
+	local E = ns.Explore
+	if kind ~= "p" and kind ~= "t" and E and E.Own then
+		Guard.Call("explore", E.Own, kind, ...)
+	end
 end
 
 local function Call(fn, ...)
@@ -99,6 +108,12 @@ function C.RecordNet(kind, ...)
 		return net:Write(nil, kind, ...)
 	end
 	return false
+end
+
+-- A module of the route played from its first to its last step (Routes/Guide.lua): active seconds
+-- and route mode. The pipeline builds the module times of the time forecast from these.
+function C.RecordSplit(module, seconds, mode)
+	Rec("split", nil, nil, nil, module, math.floor((seconds or 0) + 0.5), mode)
 end
 
 -- NPC name in the client language, once per NPC and session (Plan: NPC names come from the collectors).
@@ -134,6 +149,166 @@ local function Take(ctx, q)
 	if ctx and ctx.q == q and GetTime() - ctx.at < C.CONTEXT_TTL then
 		return ctx
 	end
+end
+
+-- Prerequisite observations -----------------------------------------------------------------------
+
+local function Prereq()
+	return ns.Prereq
+end
+
+local function Recent(q)
+	for i = #recent, 1, -1 do
+		if recent[i] == q then
+			table.remove(recent, i)
+		end
+	end
+	table.insert(recent, 1, q)
+	local P = Prereq()
+	while P and #recent > P.LIST_MAX do
+		recent[#recent] = nil
+	end
+end
+
+local function Done(q)
+	if C_QuestLog.IsQuestFlaggedCompleted(q) == true then
+		return true
+	end
+	for _, r in ipairs(recent) do
+		if r == q then
+			return true
+		end
+	end
+	return false
+end
+
+-- Quest IDs the open NPC dialog offers: gossip list or greeting list (both optional).
+local function OfferList(greeting)
+	local out = {}
+	if greeting then
+		for i = 1, Num((Call(api.GetNumAvailableQuests))) or 0 do
+			-- isTrivial, frequency, isRepeatable, isLegendary, questID, ... (chapter 06 §5)
+			local r = api.GetAvailableQuestInfo and U.Pack(pcall(api.GetAvailableQuestInfo, i))
+			local q = r and r[1] and Num(r[6])
+			if q then
+				out[#out + 1] = q
+			end
+		end
+	else
+		for _, info in ipairs(Call(api.GetAvailableQuests) or {}) do
+			local q = Num(info.questID)
+			if q then
+				out[#out + 1] = q
+			end
+		end
+	end
+	return out
+end
+
+-- Done candidates, recent turn-ins and missing candidates of q, as the rule in Prereq.lua wants them.
+local function Checks(q, link)
+	local Route = ns.Route
+	local done, missing, checked = {}, {}, {}
+	for _, c in ipairs(Route and Route.Candidates and Route.Candidates(q) or {}) do
+		if c ~= link and c ~= q then
+			checked[c] = true
+			if Done(c) then
+				done[#done + 1] = c
+			else
+				missing[#missing + 1] = c
+			end
+		end
+	end
+	for _, r in ipairs(recent) do
+		if not checked[r] and r ~= link and r ~= q then
+			done[#done + 1] = r
+		end
+	end
+	local P = Prereq()
+	local max = P and P.LIST_MAX or 10
+	while #done > max do
+		done[#done] = nil
+	end
+	while #missing > max do
+		missing[#missing] = nil
+	end
+	return done, missing
+end
+
+local function Token(q)
+	local P = Prereq()
+	return P and C.root and P.Token(C.root.install, q)
+end
+
+-- Hands one observation to the route (own data counts at once) and offers it to other players when
+-- it can help: the quest's prerequisites are open or someone named candidates for it.
+local function Observe(q, token, link, unlock, done, missing, share)
+	local Route = ns.Route
+	if Route and Route.Observe then
+		Route.Observe(q, token, link, unlock == 1, done, missing)
+	end
+	if share and Route and Route.Wants and Route.Wants(q) then
+		Offer("p", token, q, link, unlock, table.concat(done, "."), table.concat(missing, "."))
+	end
+end
+
+-- The NPC lists what it offers (GOSSIP_SHOW, QUEST_GREETING). Remembered for the unlock check of the
+-- next turn-in; quests whose prerequisites are open are observed once per session.
+local function Listed(greeting)
+	local k, id = Ref("npc")
+	local list = OfferList(greeting)
+	local set = {}
+	for _, q in ipairs(list) do
+		set[q] = true
+	end
+	listing = { k = k, id = id, at = GetTime(), set = set }
+	local Route = ns.Route
+	if not (Route and Route.Wants) then
+		return
+	end
+	local map, x, y
+	for _, q in ipairs(list) do
+		local token = not offerSeen[q] and Route.Wants(q) and Token(q)
+		if token then
+			offerSeen[q] = true
+			if not map then
+				map, x, y = Pos()
+			end
+			local done, missing = Checks(q, 0)
+			Rec("offer", map, x, y, q, token, table.concat(done, "."), table.concat(missing, "."))
+			-- A refutation helps every player; an offer without one stays local.
+			Observe(q, token, 0, 0, done, missing, #missing > 0)
+		end
+	end
+end
+
+-- A turn-in at an NPC: kept with the offer list that NPC showed before it, for the next accept.
+local function NoteTurn(q, ctx)
+	Recent(q)
+	if lastTurn and lastTurn.q == q then
+		return
+	end
+	local now, P = GetTime(), Prereq()
+	local window = P and P.LINK_SECONDS or 120
+	local before
+	if listing and ctx.k and listing.k == ctx.k and listing.id == ctx.id and now - listing.at <= window then
+		before = listing.set
+	end
+	lastTurn = { q = q, k = ctx.k, id = ctx.id, at = now, before = before }
+end
+
+-- Link and unlock of an accept: the quest turned in directly before at the same giver, at most
+-- LINK_SECONDS ago, and whether the giver listed q before that turn-in.
+local function Link(q, ctx)
+	local t, P = lastTurn, Prereq()
+	local window = P and P.LINK_SECONDS or 120
+	if not (t and ctx.k and t.k == ctx.k and t.id == ctx.id and GetTime() - t.at <= window) then
+		return 0, 0
+	end
+	if t.q == q then
+		return 0, 0
+	end
+	return t.q, (t.before and not t.before[q]) and 1 or 0
 end
 
 -- Objectives: events are only markers; the quest log is read in one batch (Polestar queueScan).
@@ -306,6 +481,9 @@ local function Init()
 	-- No math.randomseed: the client seeds math.random itself (JourneyTracker: some clients ignore it).
 	for name, path in pairs({
 		GetQuestID = "GetQuestID",
+		GetAvailableQuests = "C_GossipInfo.GetAvailableQuests",
+		GetNumAvailableQuests = "GetNumAvailableQuests",
+		GetAvailableQuestInfo = "GetAvailableQuestInfo",
 		GetQuestLogRewardXP = "GetQuestLogRewardXP",
 		GetLootSourceInfo = "GetLootSourceInfo",
 		IsFishingLoot = "IsFishingLoot",
@@ -383,10 +561,34 @@ local events = {
 		end
 		-- GetQuestLogRewardXP is not in the API documentation and may vanish (Polestar): optional.
 		local xp = Num((Call(api.GetQuestLogRewardXP, q)))
-		Rec("accept", map, x, y, q, ctx.k, ctx.id, ctx.item, ctx.name, Num(UnitLevel("player")), xp)
+		local token = Token(q)
+		local link, unlock = Link(q, ctx)
+		local done, missing = Checks(q, link)
+		lastTurn = nil -- the next accept follows an accept, not a turn-in
+		Rec(
+			"accept",
+			map,
+			x,
+			y,
+			q,
+			ctx.k,
+			ctx.id,
+			ctx.item,
+			ctx.name,
+			Num(UnitLevel("player")),
+			xp,
+			token,
+			link,
+			unlock,
+			table.concat(done, "."),
+			table.concat(missing, ".")
+		)
 		active[q] = true
 		if map and x and y then
 			Offer("q", q, ctx.k or "n", ctx.id or 0, map, x, y)
+		end
+		if token then
+			Observe(q, token, link, unlock, done, missing, true)
 		end
 		QueueScan()
 	end,
@@ -401,6 +603,7 @@ local events = {
 		turnedIn[q] = GetTime()
 		local ctx = Take(completion, q) or {}
 		completion = nil
+		NoteTurn(q, ctx)
 		local map, x, y = ctx.map, ctx.x, ctx.y
 		if not ctx.at then
 			map, x, y = Pos()
@@ -417,6 +620,11 @@ local events = {
 			return
 		end
 		active[q], lastObj[q] = nil, nil
+		-- Forever may send QUEST_TURNED_IN late or never: a turn-in dialog for q is enough for the link.
+		local ctx = Take(completion, q)
+		if ctx then
+			NoteTurn(q, ctx)
+		end
 		C_Timer.After(
 			1,
 			Guard.Wrap("collector", function()
@@ -425,6 +633,9 @@ local events = {
 					return
 				end
 				local flagged = C_QuestLog.IsQuestFlaggedCompleted(q) == true
+				if flagged then
+					Recent(q)
+				end
 				Here(flagged and "turnin" or "abandon", q) -- "turnin" without XP: no QUEST_TURNED_IN came
 			end)
 		)
@@ -573,11 +784,15 @@ local events = {
 		end
 	end,
 
-	-- Other NPC interactions only note the NPC name.
+	-- NPC dialogs: note the NPC name and what it offers (prerequisite observations).
 	GOSSIP_SHOW = function()
 		local k, id = Ref("npc")
 		local map, x, y = Pos()
 		NoteNpc(k, id, k == "c" and Str((UnitName("npc"))) or nil, map, x, y)
+		Listed(false)
+	end,
+	QUEST_GREETING = function()
+		Listed(true)
 	end,
 	PLAYER_INTERACTION_MANAGER_FRAME_SHOW = function()
 		local k, id = Ref("npc")
@@ -724,6 +939,9 @@ M.Define("collector", {
 	optional = {
 		funcs = {
 			"GetQuestID",
+			"C_GossipInfo.GetAvailableQuests",
+			"GetNumAvailableQuests",
+			"GetAvailableQuestInfo",
 			"GetQuestLogRewardXP",
 			"GetLootSourceInfo",
 			"IsFishingLoot",
@@ -757,6 +975,7 @@ M.Define("collector", {
 			"TAXIMAP_OPENED",
 			"UI_INFO_MESSAGE",
 			"GOSSIP_SHOW",
+			"QUEST_GREETING",
 			"PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
 			"ZONE_CHANGED_NEW_AREA",
 			"PLAYER_CONTROL_LOST",

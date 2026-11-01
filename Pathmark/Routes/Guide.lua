@@ -29,7 +29,7 @@ of the Ace3 libraries used as well as that of the covered work.
 -- Forever sends QUEST_TURNED_IN late or not at all (brain chapter 06 §3, §4).
 local _, ns = ...
 local U, M, Guard = ns.Util, ns.Modules, ns.Guard
-local R, RT = ns.Routes, ns.Runtime
+local R, RT, P, Fc = ns.Routes, ns.Runtime, ns.Prereq, ns.Forecast
 local Num, Str = U.Num, U.Str
 
 local Route = {
@@ -45,10 +45,12 @@ local LISTENER = "route-listener" -- errors of other modules' callbacks are reco
 local api = {} -- optional client functions
 local listeners = {} -- event -> { { owner, fn }, ... }
 local rt, root -- runtime; PathmarkCharDB.route
+local store -- prerequisite observations, account-wide (PathmarkDB.prereq)
 local turnedIn = {} -- quests handed in this session (QUEST_TURNED_IN), the flag can lag behind
 local levelSeen -- PLAYER_LEVEL_UP payload; UnitLevel can lag behind
 local evalQueued, balanceQueued = false, false
 local lastXP, lastMax
+local lastActive -- GetTime() of the last game event; gaps up to Forecast.IDLE_CAP count as play
 
 -- Callbacks -------------------------------------------------------------------------------------
 
@@ -123,6 +125,56 @@ local world = {
 }
 Route.world = world
 
+-- Play time (time forecast, docs/ROUTE-RUNTIME.md §Time forecast) --------------------------------
+
+-- Active play since the last game event, added to the own XP rate (per character) and to the run of
+-- the current module. xp: XP gained with this event.
+local function Active(xp)
+	local now = GetTime()
+	local d = lastActive and math.max(0, math.min(now - lastActive, Fc.IDLE_CAP)) or 0
+	lastActive = now
+	if root then
+		root.rate = type(root.rate) == "table" and root.rate or {}
+		Fc.Add(root.rate, d, xp)
+	end
+	local sp = rt and rt.saved.split
+	if type(sp) == "table" then
+		sp.secs = (sp.secs or 0) + d
+	end
+end
+
+-- Module runs: a run is clean when it starts at the module's first step and every step up to its end
+-- is done (not skipped, not passed by the route). A clean run goes to the collector as a "split"
+-- record (tools/routekit/observe.py builds the module times from them).
+local function Split(cur, prev)
+	if not rt then
+		return
+	end
+	local s = rt.saved
+	local sp = type(s.split) == "table" and s.split or nil
+	rt.ranges = rt.ranges or Fc.Ranges(rt)
+	local ranges = rt.ranges
+	local from = prev and prev.index
+	local to = cur and cur.index or #rt.steps + 1
+	if sp and from and to > from then
+		for j = from, to - 1 do
+			if rt.steps[j] and rt.steps[j].module == sp.m and rt:StepState(j) ~= "done" then
+				sp.clean = false
+			end
+		end
+	end
+	if sp and cur and sp.m == cur.module then
+		return
+	end
+	if sp and sp.clean and ranges[sp.m] and to > ranges[sp.m].last then
+		local C = ns.Collector
+		if C and C.RecordSplit then
+			C.RecordSplit(sp.m, sp.secs or 0, root and root.mode)
+		end
+	end
+	s.split = cur and { m = cur.module, secs = 0, clean = ranges[cur.module].first == cur.index } or nil
+end
+
 -- Balance and evaluation, bundled per burst of events ---------------------------------------------
 
 local function SendBalance()
@@ -148,6 +200,7 @@ local function Evaluate()
 end
 
 local function QueueEvaluate()
+	Active()
 	if evalQueued or not rt then
 		return
 	end
@@ -157,6 +210,7 @@ end
 
 local function OnRuntime(event, ...)
 	if event == "StepChanged" then
+		Split(...)
 		QueueBalance()
 	end
 	Fire(event, ...)
@@ -196,7 +250,19 @@ local function Build()
 		saved = { v = Route.SAVE_FORMAT, race = raceID, class = classID }
 		root[mode] = saved
 	end
-	rt = RT.New(steps, data.quests, world, saved, { race = raceID, class = classID, modules = data.modules })
+	rt = RT.New(
+		steps,
+		data.quests,
+		world,
+		saved,
+		{ race = raceID, class = classID, modules = data.modules, unsure = data.unsure }
+	)
+	rt.data, rt.race, rt.class = data, raceID, classID
+	if store then
+		for q, r in pairs(store:Known()) do
+			rt:SetObserved(q, r.state, r.groups)
+		end
+	end
 	rt.notify = OnRuntime
 	Fire("RouteRecalculated", "start")
 	rt:Evaluate()
@@ -274,6 +340,131 @@ function Route.SetMode(mode)
 	return rt ~= nil
 end
 
+-- Time forecast (docs/ROUTE-RUNTIME.md §Time forecast) -------------------------------------------
+
+-- { state, seconds, level, runs, plan, minRuns, nextLevel }: state "ready" | "collecting" | "done";
+-- nextLevel = { state, seconds, perHour }. A part in state "collecting" has no numbers.
+function Route.Forecast()
+	return Call(function()
+		local out = Fc.Route(rt, rt.data.times, rt.saved.split)
+		local b = rt:Balance()
+		out.minRuns = Fc.MIN_RUNS
+		out.nextLevel = Fc.Level(root.rate, not b.stopped and b.toLevel or nil)
+		return out
+	end)
+end
+
+-- Dungeon hint (owner wish 11, docs/ROUTE-RUNTIME.md §Dungeon hint) -------------------------------
+
+-- Dungeons that fit now with givers on the way: list (Routes/Dungeon.lua), {} when none. In speed mode
+-- only those the XP balance justifies. Call on StepChanged and XPBalance.
+function Route.DungeonHint()
+	return Call(function()
+		return ns.Dungeon.Hints(rt, rt.data, {
+			mode = root.mode,
+			level = world.Level(),
+			race = rt.race,
+			class = rt.class,
+			balance = rt:Balance(),
+			skipped = rt.saved.dungeons,
+		})
+	end) or {}
+end
+
+-- Hides a dungeon hint (or shows it again with show = true). The route does not change.
+function Route.SkipDungeon(id, show)
+	return Call(function()
+		id = tonumber(id)
+		if not (id and rt.data.dungeons and rt.data.dungeons[id]) then
+			return false
+		end
+		local s = rt.saved
+		s.dungeons = type(s.dungeons) == "table" and s.dungeons or {}
+		s.dungeons[id] = (not show) or nil
+		return true
+	end) == true
+end
+
+-- Prerequisites from player data (Welle 4, docs/ROUTE-RUNTIME.md) -------------------------------
+
+local function Store()
+	if not store then
+		local db = ns.db or (type(PathmarkDB) == "table" and PathmarkDB) or {}
+		db.prereq = type(db.prereq) == "table" and db.prereq or {}
+		store = P.New(db.prereq)
+	end
+	return store
+end
+
+-- One observation of quest q (own, from the collector, or received): token of the observer, the
+-- quest turned in directly before at the giver (0 = none), whether that turn-in unlocked q, quests
+-- done and checked candidates not done. A changed result changes the route at once
+-- (RouteRecalculated "prereq"). Returns true when the result for q changed.
+function Route.Observe(q, token, link, unlock, done, missing)
+	if not M.IsActive("route") then
+		return false
+	end
+	return Guard.Call("route", function()
+		local s = Store()
+		if not s:Add(q, token, link, unlock, done, missing) then
+			return false
+		end
+		q = tonumber(q)
+		local state, groups = s:Result(q)
+		if rt and rt:SetObserved(q, state, groups) then
+			rt:Changed("prereq")
+		end
+		return true
+	end) == true
+end
+
+-- A prerequisite message from another player (Collector/Exchange.lua, kind "p").
+function Route.ObserveFind(find)
+	return Route.Observe(find[2], find[1], find[3], tonumber(find[4]) == 1, P.Ids(find[5]), P.Ids(find[6]))
+end
+
+-- "known" | "observed" | "none" | "incomplete"; nil without a route.
+function Route.ChainState(q)
+	return Call(function()
+		return rt:ChainState(q)
+	end)
+end
+
+-- Quests that may be prerequisites of q: what observers reported and what the route data names.
+function Route.Candidates(q)
+	local set = {}
+	if store then
+		for _, c in ipairs(store:Candidates(q)) do
+			set[c] = true
+		end
+	end
+	if rt then
+		for _, group in ipairs(rt:Groups(q)) do
+			for _, c in ipairs(group) do
+				set[c] = true
+			end
+		end
+	end
+	local out = {}
+	for c in pairs(set) do
+		out[#out + 1] = c
+	end
+	table.sort(out)
+	return out
+end
+
+-- Whether an offer of q is worth recording: its prerequisites are not secured by a source, or
+-- observers already named candidates for it.
+function Route.Wants(q)
+	if not M.IsActive("route") then
+		return false
+	end
+	if rt and rt.unsure[q] then
+		return true
+	end
+	return store ~= nil and #store:Candidates(q) > 0
+end
+
 -- Last XP gain seen (for the probe check xp.kill).
 function Route.LastGain()
 	return Route.lastGain
@@ -302,6 +493,7 @@ local function Init()
 		api[name] = M.Optional(path)
 	end
 	root = Root()
+	Store()
 end
 
 local function TrackXP()
@@ -314,6 +506,7 @@ local function TrackXP()
 		if gain > 0 then
 			Route.lastGain = { xp = gain, level = Num(UnitLevel("player")), at = GetTime() }
 		end
+		Active(math.max(0, gain))
 	end
 	lastXP, lastMax = xp, max
 end
@@ -321,6 +514,7 @@ end
 local events = {
 	PLAYER_LOGIN = function()
 		lastXP, lastMax = Num(UnitXP("player")), Num(UnitXPMax("player"))
+		lastActive = GetTime() -- time offline is no play
 		Build()
 	end,
 	PLAYER_LOGOUT = function()
@@ -328,6 +522,9 @@ local events = {
 		Root()
 		if root then
 			PathmarkCharDB.route = root
+		end
+		if store and type(PathmarkDB) == "table" and PathmarkDB.prereq ~= store.db then
+			PathmarkDB.prereq = store.db
 		end
 	end,
 	QUEST_ACCEPTED = function(_, _, questID)

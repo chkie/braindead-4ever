@@ -47,6 +47,10 @@ class Pool:
             return False
         if r.get("type") in EXCLUDED_TYPES or r.get("repeatable") or r.get("startItem"):
             return False
+        # Quests ATT lists under an instance belong to the dungeon hint, not to the route, unless
+        # Polestar types them as an ordinary quest (type 0, e.g. Red Silk Bandanas in Westfall).
+        if r.get("instance") is not None and r.get("type") != 0:
+            return False
         if self.mode == "speed" and (r.get("breadcrumb") or r["pre"]["state"] != "secured"):
             return False
         side = r.get("side", {}).get("v")

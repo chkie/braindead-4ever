@@ -33,6 +33,9 @@ of the Ace3 libraries used as well as that of the covered work.
 --   r  rare enemy    npcID, class, map, x, y      (class r = rare, e = rare elite, w = world boss)
 --   f  flight master npcID, nodeID, map, x, y
 --   v  vignette      vignetteID, map, x, y
+--   p  prerequisite observation (Routes/Prereq.lua): token, questID, link (quest turned in directly
+--      before at the giver, 0 = none), unlock (0/1), done IDs, missing IDs (lists of at most 10
+--      quest IDs separated by ".", may be empty). No position: it says nothing about where a player is.
 -- giverKind: c = creature, o = game object, i = item, n = none (giverID 0).
 -- Readers skip unknown kinds and other protocol versions without counting them as broken, so a
 -- newer addon version can add kinds without muting older ones.
@@ -47,7 +50,8 @@ Proto.VERSION = 1
 local GIVER = { c = true, o = true, i = true, n = true }
 local CLASS = { r = true, e = true, w = true }
 
--- Field types: "id" 1..9999999, "map" 1..999999, "xy" 0..10000, "giver", "class"
+-- Field types: "id" 1..9999999, "gid" 0..9999999, "map" 1..999999, "xy" 0..10000, "giver", "class",
+-- "tok" six characters [0-9a-z], "flag" 0 or 1, "ids" up to 10 IDs joined by "." (may be empty)
 local KINDS = {
 	q = { "id", "giver", "gid", "map", "xy", "xy" },
 	t = { "id", "giver", "gid", "map", "xy", "xy" },
@@ -56,14 +60,37 @@ local KINDS = {
 	r = { "id", "class", "map", "xy", "xy" },
 	f = { "id", "id", "map", "xy", "xy" },
 	v = { "id", "map", "xy", "xy" },
+	p = { "tok", "id", "gid", "flag", "ids", "ids" },
 }
 Proto.KINDS = KINDS
+
+local IDS_MAX = 10
 
 local function Valid(ftype, v)
 	if ftype == "giver" then
 		return GIVER[v] == true
 	elseif ftype == "class" then
 		return CLASS[v] == true
+	elseif ftype == "tok" then
+		return type(v) == "string" and v:match("^[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]$") ~= nil
+	elseif ftype == "ids" then
+		if v == "" then
+			return true
+		end
+		if type(v) ~= "string" or not v:match("^%d+[%d%.]*$") or v:find("..", 1, true) or v:sub(-1) == "." then
+			return false
+		end
+		local n = 0
+		for x in v:gmatch("%d+") do
+			n = n + 1
+			local id = tonumber(x)
+			if n > IDS_MAX or id < 1 or id > 9999999 then
+				return false
+			end
+		end
+		return true
+	elseif ftype == "flag" then
+		return v == 0 or v == 1 or v == "0" or v == "1"
 	end
 	local n = type(v) == "number" and v or (type(v) == "string" and v:match("^%d+$") and tonumber(v))
 	if not n or n ~= math.floor(n) then
@@ -129,7 +156,7 @@ function Proto.Parse(msg)
 		if not ftype or not Valid(ftype, part) then
 			return nil, "bad"
 		end
-		find[i] = (ftype == "giver" or ftype == "class") and part or tonumber(part)
+		find[i] = (ftype == "giver" or ftype == "class" or ftype == "tok" or ftype == "ids") and part or tonumber(part)
 	end
 	if i ~= #spec then
 		return nil, "bad"
@@ -144,6 +171,8 @@ function Proto.Key(find)
 	local k = find.kind
 	if k == "q" or k == "t" then
 		return table.concat({ k, find[1], find[2], find[3], find[4] }, ";")
+	elseif k == "p" then
+		return table.concat({ k, find[2], find[1] }, ";")
 	elseif k == "f" then
 		return table.concat({ k, find[1], find[2] }, ";")
 	end

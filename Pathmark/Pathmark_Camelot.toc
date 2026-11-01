@@ -29,8 +29,13 @@ Routes\Routes.lua
 Routes\Data_Alliance.lua
 Routes\Data_Horde.lua
 Routes\XP.lua
+Routes\Prereq.lua
+Routes\Discover.lua
+Routes\Dungeon.lua
+Routes\Forecast.lua
 Routes\Runtime.lua
 Routes\Guide.lua
+Routes\Explore.lua
 # Developer API probe: the packager drops this block and .pkgmeta ignores the folder.
 #@do-not-package@
 Probe\Probe.lua

@@ -211,6 +211,7 @@ local function NewWorld(flavor)
 		npc = nil, -- { guid = "Creature-...", name = "..." } while a dialog is open
 		units = {}, -- token -> { guid, name, classification, level }
 		questID = nil, -- GetQuestID() in an open quest dialog
+		offers = {}, -- quest IDs the open NPC dialog lists (GOSSIP_SHOW, QUEST_GREETING)
 		-- { { questID = n, objectives = { { numFulfilled, numRequired, finished } }, complete = bool,
 		--    rewardXP = n } }
 		questLog = {},
@@ -520,6 +521,22 @@ function M.reset(opts)
 	_G.GetQuestID = function()
 		return W.questID
 	end
+	-- NPC offers: gossip list (C_GossipInfo) and greeting list (indexed globals), quest IDs only.
+	_G.C_GossipInfo = {
+		GetAvailableQuests = function()
+			local out = {}
+			for i, q in ipairs(W.offers) do
+				out[i] = { questID = q, title = "Quest " .. q }
+			end
+			return out
+		end,
+	}
+	_G.GetNumAvailableQuests = function()
+		return #W.offers
+	end
+	_G.GetAvailableQuestInfo = function(i)
+		return false, 0, false, false, W.offers[i]
+	end
 	_G.GetQuestLogRewardXP = function(q)
 		for _, e in ipairs(log()) do
 			if e.questID == q and e.rewardXP then
@@ -775,8 +792,13 @@ function M.addonFiles(withProbe)
 		"Pathmark/Routes/Data_Alliance.lua",
 		"Pathmark/Routes/Data_Horde.lua",
 		"Pathmark/Routes/XP.lua",
+		"Pathmark/Routes/Prereq.lua",
+		"Pathmark/Routes/Discover.lua",
+		"Pathmark/Routes/Dungeon.lua",
+		"Pathmark/Routes/Forecast.lua",
 		"Pathmark/Routes/Runtime.lua",
 		"Pathmark/Routes/Guide.lua",
+		"Pathmark/Routes/Explore.lua",
 	}
 	if withProbe then
 		files[#files + 1] = "Pathmark/Probe/Probe.lua"

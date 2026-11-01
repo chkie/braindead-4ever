@@ -77,8 +77,14 @@ function RT.New(steps, quests, world, saved, opts)
 		index = {},
 		dependents = {},
 		accepts = {},
+		unsure = {}, -- questID -> true: no source secures its prerequisites (data: unsure)
+		observed = {}, -- questID -> prerequisite groups confirmed by player observations
+		resolved = {}, -- questID -> "observed" | "observed-none" (Routes/Prereq.lua)
 		notify = noop,
 	}, RT)
+	for _, q in ipairs(opts.unsure or {}) do
+		self.unsure[q] = true
+	end
 	local seen = {}
 	for i, entry in ipairs(steps) do
 		local data = entry.step
@@ -127,18 +133,36 @@ function RT.New(steps, quests, world, saved, opts)
 			nextTravel = i
 		end
 	end
-	-- Reverse prerequisites: quest -> route quests that name it in one of their groups.
-	for q in pairs(seen) do
-		local info = self.quests[q]
-		for _, group in ipairs(info and info[3] or {}) do
+	self.routeQuests = seen
+	self:Reindex()
+	return self
+end
+
+-- Prerequisite groups of a quest: groups confirmed by player observations replace the groups of
+-- the sources (own measurements replace foreign data); otherwise the route data.
+local NONE = {}
+function RT:Groups(q)
+	local own = self.observed[q]
+	if own and #own > 0 then
+		return own
+	end
+	local info = self.quests[q]
+	return info and info[3] or NONE
+end
+
+-- Reverse prerequisites: quest -> route quests that name it in one of their groups.
+function RT:Reindex()
+	local dependents = {}
+	for q in pairs(self.routeQuests) do
+		for _, group in ipairs(self:Groups(q)) do
 			for _, m in ipairs(group) do
-				local list = self.dependents[m] or {}
-				self.dependents[m] = list
+				local list = dependents[m] or {}
+				dependents[m] = list
 				list[#list + 1] = q
 			end
 		end
 	end
-	return self
+	self.dependents = dependents
 end
 
 -- Quests that cannot be done any more because the player skipped them or a quest they need.
@@ -167,8 +191,7 @@ end
 
 -- A quest is dead when one of its prerequisite groups has only blocked quests left.
 function RT:Dead(q, blocked)
-	local info = self.quests[q]
-	for _, group in ipairs(info and info[3] or {}) do
+	for _, group in ipairs(self:Groups(q)) do
 		local all = #group > 0
 		for _, m in ipairs(group) do
 			if not blocked[m] then
@@ -335,6 +358,13 @@ function RT:Info(i)
 		return nil
 	end
 	local m = self.modules[s.module]
+	local chain
+	for _, q in ipairs(s.quests) do
+		if self:ChainState(q) == "incomplete" then
+			chain = "incomplete"
+			break
+		end
+	end
 	return {
 		index = i,
 		total = #self.steps,
@@ -347,6 +377,7 @@ function RT:Info(i)
 		label = m and m.label,
 		quests = copy(s.quests),
 		step = s.data,
+		chain = chain,
 	}
 end
 
@@ -692,4 +723,42 @@ function RT:Balance()
 		zone.kills, zone.killXP = XP.Kills(zone.shortfall, level, rested)
 	end
 	return b
+end
+
+-- Prerequisites from player data (docs/ROUTE-RUNTIME.md) ------------------------------------------
+
+-- "known": a source secures the prerequisites; "observed": players confirmed them (Routes/Prereq.lua);
+-- "none": players confirmed there is none; "incomplete": nobody knows yet, so skipping a quest may
+-- leave a follow-up quest in the route that the game will not offer.
+function RT:ChainState(q)
+	local r = self.resolved[q]
+	if r == "observed" then
+		return "observed"
+	elseif r == "observed-none" then
+		return "none"
+	elseif self.quests[q] and not self.unsure[q] then
+		return "known"
+	end
+	return "incomplete"
+end
+
+-- Result of the prerequisite rule for one quest (Prereq:Result). Returns true when the route changed;
+-- the caller then recalculates (RT:Changed("prereq")). An observed "none" keeps prerequisites a
+-- source states (same as tools/routekit/merge.py).
+function RT:SetObserved(q, state, groups)
+	local before = self.resolved[q]
+	local beforeKey = ns.Prereq and ns.Prereq.GroupKey(self.observed[q]) or ""
+	if state == "observed" then
+		self.resolved[q], self.observed[q] = state, groups
+	elseif state == "observed-none" then
+		self.resolved[q], self.observed[q] = state, nil
+	else
+		self.resolved[q], self.observed[q] = nil, nil
+	end
+	local key = ns.Prereq and ns.Prereq.GroupKey(self.observed[q]) or ""
+	if before == self.resolved[q] and beforeKey == key then
+		return false
+	end
+	self:Reindex()
+	return true
 end

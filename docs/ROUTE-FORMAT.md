@@ -210,6 +210,21 @@ Acceptance (Plan, work package 5): ten prepared errors in `tools/tests/fixtures/
 }
 ```
 
+Added with Welle 4 (additive, format stays 1):
+
+```lua
+  unsure = { 3116, 3117, ... },              -- route and dungeon quests whose prerequisites no source secures
+  dungeons = { [63] = { area = 1581, min = 10, lo = 15, hi = 24, entrance = { 1436, 1539.7, -11327.3 },
+                        quests = { 166, 167 } } },
+  dquests = { [166] = { 22, 14, 3975, 1436, 1045, -10509, pre = { { 155 } }, r = { 1 }, c = { 9 } } },
+                                             -- quest level, min level, full XP (Forever rule), giver uiMap, wx, wy
+  finds = { { 4, 100, 1429, 2760, 8840 } },  -- type (1 quest, 2 treasure, 3 book, 4 rare, 5 flight path,
+                                             -- 6 place), ID, uiMap, x, y pairs (hundredths of a percent)
+  times = { ["a-speed-start-elwynn"] = { 20, 3600 } },  -- real runs, median seconds (own data)
+  classic = { 2, 5, 6, ... },                -- quest IDs the facts know as Classic (not new in Forever)
+  maps = { [1411] = 1, [1453] = 0 },         -- continent of every uiMap of goto points and dungeon givers
+```
+
 `quests` (added 2026-11-01, additive, format stays 1) comes from `data/facts`: quest level (0 if unknown), full quest XP (0 if unknown) and the prerequisite groups of `pre` (one quest per group is enough; breadcrumbs are never in it). The route runtime uses it for skipping follow-up quests and for the XP balance.
 
 Elements are flat arrays `{ verb, arguments..., sources, status [, roots] }`:
