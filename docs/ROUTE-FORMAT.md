@@ -62,6 +62,7 @@ Rules applied by `merge` (decided 2026-11-01, revisable):
    - `unknown` otherwise.
 4. **Levels.** Minimum level from EG Link, then ATT, then Polestar; Polestar's placeholder minimum level 1 for quests above level 5 is ignored.
 5. **Band.** Quests with a minimum level up to 30 and a quest level up to 34.
+6. **XP.** `xp` is the full quest XP as Polestar states it (no other source has it); the addon applies the level reduction itself and prefers the client's value while the quest is in the log (`docs/ROUTE-RUNTIME.md`).
 
 ## Route files
 
@@ -202,8 +203,14 @@ Acceptance (Plan, work package 5): ten prepared errors in `tools/tests/fixtures/
   compose = { speed = { starts = { { key = "...", r = { 1 } } }, core = { "..." },
                         inserts = { { after = "start", key = "...", r = { 1 }, c = { 5 } } } },
               explorer = { ... } },
+  quests = {                                 -- every quest the faction's modules name
+    [6] = { 5, 340, { { 18 } } },            -- quest level, full XP, prerequisite groups
+    [783] = { 1, 40 },                       -- no prerequisites: no third value
+  },
 }
 ```
+
+`quests` (added 2026-11-01, additive, format stays 1) comes from `data/facts`: quest level (0 if unknown), full quest XP (0 if unknown) and the prerequisite groups of `pre` (one quest per group is enough; breadcrumbs are never in it). The route runtime uses it for skipping follow-up quests and for the XP balance.
 
 Elements are flat arrays `{ verb, arguments..., sources, status [, roots] }`:
 

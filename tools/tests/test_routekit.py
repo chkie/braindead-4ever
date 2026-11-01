@@ -127,6 +127,21 @@ class Compiler(unittest.TestCase):
         self.assertEqual("{ 5, 1429, -150.5, -8900, 10, 4, 0, 1 }", els[1])
         self.assertEqual("{ 6, 3, 1439, 16, 0 }", els[2])
 
+    def test_quest_table(self):
+        mod = routefmt.parse(
+            "@a1 lv=1\n  accept 900002 | src=polestar status=unbestätigt\n"
+            "@t1 lv=2\n  turnin 900001 | src=polestar status=unbestätigt\n"
+        )
+        facts = {
+            900001: {"q": 900001, "level": {"v": 2}, "xp": {"v": 120}, "pre": {"v": []}},
+            900002: {"q": 900002, "level": {"v": 3}, "xp": {"v": 250}, "pre": {"v": [[900001, 900005], [900003]]}},
+        }
+        lines = compiler._quests([mod], facts)
+        self.assertEqual(
+            ["\tquests = {", "\t\t[900001] = { 2, 120 },", "\t\t[900002] = { 3, 250, { { 900001, 900005 }, { 900003 } } },", "\t},"],
+            lines,
+        )
+
 
 class RepositoryData(unittest.TestCase):
     """The committed route data lints clean for all 56 combinations and the compiled files are

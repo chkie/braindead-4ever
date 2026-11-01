@@ -232,6 +232,10 @@ def run():
             counts["no level"] += 1
             continue
 
+        # quest XP: only Polestar states it (full reward at the quest level, before the level reduction)
+        if p and p.get("xp") is not None:
+            rec["xp"] = {"v": p["xp"], "src": ["polestar"]}
+
         # type, repeatable
         if p and p.get("type") is not None:
             rec["type"] = p["type"]
