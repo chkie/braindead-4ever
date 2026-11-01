@@ -8,10 +8,12 @@ move-folders:
 
 ignore:
   - Pathmark/Probe
+  - data
   - decoder
   - docs
   - scripts
   - spec
+  - tools
   - types
   - CONTRIBUTING.md
   - README.md
