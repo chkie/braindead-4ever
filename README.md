@@ -18,6 +18,14 @@ Pathmark is developed with AI assistance (Claude by Anthropic). Every change has
 
 Quest IDs, coordinates and times never come from an AI model. Each value carries its source.
 
+## Data contribution
+
+Pathmark records what you do while leveling, in your own game folder: quests accepted and turned in with their place, experience, objects you loot, rare enemies, flight masters and similar finds. Nothing in it names your character, your realm, your guild or other players, and there is no chat. Time is kept relative to the session, the date only as a day.
+
+What you discover, Pathmark shares in the game with other players who use it, through addon messages: IDs and map positions only, to your group at once, to your guild and other players 30 to 90 seconds later. This is part of the addon and cannot be switched off. Addon messages show the game's sender name to the receiving addon; Pathmark never stores it.
+
+`/pathmark export` shows your data as a text to copy, for the website that comes later. `/pathmark report` builds a problem report without names.
+
 ## Repository layout
 
 | Path | Content |
@@ -25,7 +33,8 @@ Quest IDs, coordinates and times never come from an AI model. Each value carries
 | `Pathmark/` | the addon as it goes into `Interface/AddOns` |
 | `spec/` | offline tests (busted, Lua 5.1) with stand-ins for the WoW API |
 | `types/` | type stubs for the Lua Language Server |
-| `docs/STATUS.md` | every feature with its status |
+| `docs/STATUS.md` | every feature with its status and the probe checks it needs |
+| `decoder/` | reads an export text in the browser or in Node |
 | `scripts/` | local setup and checks |
 
 How to set up the tools and run the checks: [CONTRIBUTING.md](CONTRIBUTING.md).
@@ -55,6 +64,14 @@ Pathmark (Arbeitstitel) ist ein kostenloser Leveling-Guide für World of Warcraf
 Pathmark wird mit KI-Unterstützung entwickelt (Claude von Anthropic). Jede Änderung muss vor dem Zusammenführen automatische Tests, Linter, Typprüfung, Formatprüfung und einen Scan auf Zugangsdaten bestehen. Funktionen werden vor einer Veröffentlichung im Spiel getestet. Das Addon selbst enthält keine KI.
 
 Quest-IDs, Koordinaten und Zeiten stammen nie aus einem KI-Modell. Jede Angabe trägt ihre Quelle.
+
+### Datenbeitrag
+
+Pathmark zeichnet beim Leveln in deinem eigenen Spielordner auf, was du tust: angenommene und abgegebene Quests mit ihrem Ort, Erfahrung, geplünderte Objekte, seltene Gegner, Flugmeister und ähnliche Funde. Darin steht kein Name deines Charakters, deines Realms, deiner Gilde oder anderer Spieler, und kein Chat. Zeiten zählen relativ zur Sitzung, das Datum nur als Tag.
+
+Was du entdeckst, teilt Pathmark im Spiel mit anderen Spielern, die es auch nutzen, über Addon-Nachrichten: nur Kennungen und Kartenpositionen, an deine Gruppe sofort, an deine Gilde und andere Spieler 30 bis 90 Sekunden später. Das gehört zum Addon und lässt sich nicht ausschalten. Addon-Nachrichten zeigen dem empfangenden Addon den Absendernamen des Spiels; Pathmark speichert ihn nie.
+
+`/pathmark export` zeigt deine Daten als Text zum Kopieren, für die Website, die später kommt. `/pathmark report` erstellt einen Fehlerbericht ohne Namen.
 
 ### Lizenz
 

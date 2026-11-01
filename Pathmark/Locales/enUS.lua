@@ -55,3 +55,30 @@ L.MSG_SAFE_MODE_SET = "%s: safe mode %s, takes effect after /reload"
 L.MSG_FLAG_SET = "%s: %s %s, takes effect after /reload"
 L.WORD_ON = "on"
 L.WORD_OFF = "off"
+
+-- Slash command extras
+L.MSG_FLAG_MANDATORY = "%s: %s is part of the addon and cannot be turned off"
+L.MSG_AFTER_COMBAT = "Pathmark: try again after combat"
+
+-- Copy window
+L.COPY_STATUS = "%d characters. Press Ctrl+C to copy."
+L.COPY_DONE = "Copied."
+
+-- Export
+L.EXPORT_TITLE = "Pathmark: share data"
+L.EXPORT_MORE = "More data waiting: run /pathmark export again after pasting."
+L.EXPORT_NOTHING = "Pathmark: no new data to share yet"
+L.EXPORT_FAILED = "Pathmark: export failed (%s)"
+L.EXPORT_OFF = "Pathmark: the data collector is not running, see /pathmark status"
+L.ERR_COLLECT_NEWER = "data from a newer addon version, recording stays off and the data is kept"
+
+-- Report a problem
+L.REPORT_TITLE = "Pathmark: report a problem"
+L.REPORT_OFF = "%s: the report is not running, see /pathmark status"
+
+-- Developer probe
+L.PROBE_TITLE = "Pathmark probe"
+L.PROBE_RUN_DONE = "%s probe: %d checks saved. /pathmark probe report shows them; /reload writes them to disk."
+L.PROBE_STATUS_SET = "%s probe: status set"
+L.PROBE_UNKNOWN = "%s probe: unknown id or status"
+L.PROBE_USAGE = "%s probe: run [label] | report | check <id> | status <id> planned|built|verified|blocked"

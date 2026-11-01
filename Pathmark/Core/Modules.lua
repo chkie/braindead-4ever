@@ -63,8 +63,13 @@ local function EventOK(ev)
 	return C_EventUtils.IsEventValid(ev) == true, "real"
 end
 
--- spec = { core = bool, requires = { funcs = {...}, events = {...} },
+-- spec = { core = bool, mandatory = bool, requires = { funcs = {...}, events = {...} },
+--          optional = { funcs = {...}, events = {...} },
 --          init = fn(spec), disable = fn(spec), events = { EVENT = fn(spec, event, ...) } }
+-- core: runs in safe mode. mandatory: part of the addon that the player cannot switch off (data
+-- contribution, owner decision 2026-11-01): flags and a safe mode set by hand do not stop it; the
+-- automatic safe mode after failed starts and the error buffer still do.
+-- optional: what the module uses when the client has it; listed for the API probe (Probe/Checks.lua).
 function M.Define(name, spec)
 	M.defs[name] = spec
 	M.order[#M.order + 1] = name
@@ -152,9 +157,9 @@ end
 function M.Boot(db)
 	for _, name in ipairs(M.order) do
 		local spec = M.defs[name]
-		if db.flags[name] == false then
+		if db.flags[name] == false and not spec.mandatory then
 			M.state[name], M.why[name] = "off", L.WHY_FLAG
-		elseif db.safeMode and not spec.core then
+		elseif db.safeMode and not spec.core and not (spec.mandatory and not db.autoSafe) then
 			M.state[name], M.why[name] = "off", L.WHY_SAFE_MODE
 		else
 			local miss = Missing(spec)

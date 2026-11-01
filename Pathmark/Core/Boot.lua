@@ -103,15 +103,23 @@ end
 
 SLASH_PATHMARK1 = "/pathmark"
 SlashCmdList.PATHMARK = function(msg)
-	local cmd, a, b = (msg or ""):lower():match("^%s*(%S*)%s*(%S*)%s*(%S*)")
+	local cmd, rest = (msg or ""):match("^%s*(%S*)%s*(.-)%s*$")
+	cmd = cmd:lower()
+	local a, b = rest:lower():match("^(%S*)%s*(%S*)")
 	local db = ns.db
 	if not db then
 		print(L.MSG_NOT_LOADED:format(ADDON))
 		return
 	end
-	if cmd == "safe" then
+	local ext = ns.Commands and ns.Commands[cmd]
+	if ext then
+		-- Subcommands of other files (export, report, probe) get the rest of the line as typed.
+		ns.Guard.Call("slash", ext, rest, cmd)
+	elseif cmd == "safe" then
 		db.safeMode, db.autoSafe = (a ~= "off"), false
 		print(L.MSG_SAFE_MODE_SET:format(ADDON, OnOff(db.safeMode)))
+	elseif cmd == "flag" and ns.Modules.defs[a] and ns.Modules.defs[a].mandatory then
+		print(L.MSG_FLAG_MANDATORY:format(ADDON, a))
 	elseif cmd == "flag" and a ~= "" then
 		-- nil = default (on). Trap: "x and nil or false" is always false in Lua.
 		if b == "off" then
