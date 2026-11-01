@@ -14,14 +14,9 @@ local function shown(region)
 	return rawget(region, "shown") == true
 end
 
+-- Next steps in the visible part of the scroll list.
 local function nextRows(ns)
-	local out = {}
-	for _, row in ipairs(frame(ns).next) do
-		if shown(row.text) then
-			out[#out + 1] = row
-		end
-	end
-	return out
+	return ns.StepFrame.VisibleRows()
 end
 
 -- First step key (from the current one on) whose skip takes follow-up quests with it.
@@ -47,16 +42,16 @@ describe("Step window", function()
 			assert.is_true(shown(W))
 			local cur = ns.Route.Current()
 			assert.are.equal("a-speed-start-elwynn/a33", cur.key)
-			assert.matches("^Elwynn Forest · 1/%d+$", W.title.text)
+			assert.matches("^Elwynn Forest • 1/%d+$", W.title.text)
 			assert.matches("^Accept “Wolves Across the Border”", W.step.text)
-			assert.matches("^Elwynn Forest · 70 |4yd:yds$", W.detail.text)
+			assert.matches("^Elwynn Forest • 70 |4yd:yds$", W.detail.text)
 			local rows = nextRows(ns)
 			assert.are.equal(3, #rows)
 			for _, row in ipairs(rows) do
 				assert.are.equal(0.6, row.text.alpha)
 				assert.are.equal(2, row.text.maxLines) -- at most two lines (release gate T19)
 			end
-			assert.matches("Level |cffffffff1|r · |cffffffff400|r XP to go", W.xp.text, 1, true)
+			assert.matches("Level |cffffffff1|r • |cffffffff400|r XP to go", W.xp.text, 1, true)
 			assert.is_false(shown(W.status))
 		end)
 
@@ -472,7 +467,7 @@ describe("Step window", function()
 		local W = frame(ns)
 		local row = W.next[2] -- behind the step where its giver is passed
 		assert.is_true(shown(row.tag))
-		assert.are.equal("Optional · Dungeon · Level 18–24", row.tag.text)
+		assert.are.equal("Optional • Dungeon • Level 18–24", row.tag.text)
 		assert.are.equal("The Deadmines: accept “Kobold Camp Cleanup”", row.text.text)
 		assert.are.same({ 1, 0.82, 0 }, row.tag.textColor)
 		assert.are.equal(4, row.text.maxLines)
@@ -517,9 +512,9 @@ describe("Step window", function()
 		local ns = S.login({ locale = "deDE" })
 		local W = frame(ns)
 		assert.are.equal("„Wölfe an der Grenze“ annehmen", W.step.text)
-		assert.are.equal("Wald von Elwynn · 70 |4m", W.detail.text)
-		assert.matches("^Stufe |cffffffff1|r · noch |cffffffff400|r EP", W.xp.text)
-		assert.matches("^Wald von Elwynn · 1/", W.title.text)
+		assert.are.equal("Wald von Elwynn • 70 |4m", W.detail.text)
+		assert.matches("^Stufe |cffffffff1|r • noch |cffffffff400|r EP", W.xp.text)
+		assert.matches("^Wald von Elwynn • 1/", W.title.text)
 		assert.are.equal(1, W.title.maxLines)
 	end)
 end)

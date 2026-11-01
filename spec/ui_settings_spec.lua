@@ -100,6 +100,7 @@ describe("Settings", function()
 			textSize = true,
 			style = "hints",
 			hint = 1,
+			tracker = "route",
 		}
 		for key, value in pairs(expect) do
 			assert.are.equal(value, ns.UI.Get(key), key)
@@ -131,11 +132,7 @@ describe("Settings", function()
 		_G.Settings.SetValue("PATHMARK_BGALPHA", 60)
 		assert.are.same({ 0, 0, 0, 0.6 }, W.bg.colorTexture)
 		_G.Settings.SetValue("PATHMARK_AHEAD", 1)
-		local n = 0
-		for _, row in ipairs(W.next) do
-			n = n + (rawget(row.text, "shown") and 1 or 0)
-		end
-		assert.are.equal(1, n)
+		assert.are.equal(1, #ns.StepFrame.VisibleRows())
 	end)
 
 	it("size slider runs from 75 to 200 % in steps of 5 and shows percent", function()
@@ -189,7 +186,7 @@ describe("Settings", function()
 		assert.are.equal(3, ns.UI.Get("hint"))
 		assert.are.equal("speed", ns.Route.Mode())
 		assert.is_false(hint.modifyPredicate())
-		assert.are.equal("3 · Point", hint.options.formatter(3))
+		assert.are.equal("3 • Point", hint.options.formatter(3))
 		local header = page.inits[#page.inits]
 		assert.are.same({ "header", "Finds by other players" }, { header.kind, header.name })
 		assert.matches("Show location", header.tooltip, 1, true)
@@ -214,7 +211,11 @@ describe("Settings", function()
 		assert.matches("Edit Mode", wow.world.uiErrors[1], 1, true)
 		ns.UI.DB().pos = { window = { "CENTER", "CENTER", 0, 0 } }
 		ns.UI.Place("window")
-		byName("Display").inits[4].click()
+		for _, i in ipairs(byName("Display").inits) do
+			if i.kind == "button" then
+				i.click()
+			end
+		end
 		assert.are.equal("TOPRIGHT", ns.StepFrame.frame.points[1][1])
 	end)
 
@@ -228,7 +229,7 @@ describe("Settings", function()
 		end
 		local all = table.concat(texts, "\n")
 		assert.matches("GNU General Public License 3.0, without warranty", all, 1, true)
-		assert.matches("All The Things (MIT) · EG Link (CC BY 4.0) · Polestar forever-db (GPL-3.0)", all, 1, true)
+		assert.matches("All The Things (MIT) • EG Link (CC BY 4.0) • Polestar forever-db (GPL-3.0)", all, 1, true)
 		assert.matches("Not affiliated with Blizzard Entertainment", all, 1, true)
 	end)
 

@@ -182,7 +182,7 @@ function ST.Step(info, withObjective)
 	return table.concat(parts, L.JOIN), have, need, quest
 end
 
--- "Elwynn Forest · 4/48"; the word "step" is in the tooltip.
+-- "Elwynn Forest • 4/48"; the word "step" is in the tooltip.
 function ST.Header(info)
 	local zone = ST.MapName(ST.ZoneMap(info)) or ST.MapName(Num(C_Map.GetBestMapForUnit("player"))) or ""
 	if not info then
@@ -191,7 +191,7 @@ function ST.Header(info)
 	return L.HEADER:format(zone, info.index, info.total)
 end
 
--- "Wolves in the fields · 42 yd": place (zone of the target) and distance.
+-- "Wolves in the fields • 42 yd": place (zone of the target) and distance.
 function ST.Detail(target, dist)
 	local place = target and ST.MapName(target.map)
 	if place and dist then
@@ -278,7 +278,7 @@ function ST.Provisional(module, runs)
 	return L.PROV_TEXT:format(runs or 0, ST.List(SourceNames(bits)))
 end
 
--- XP line: "Level 3 · 620 XP to go · this step +260 XP"; numbers in white.
+-- XP line: "Level 3 • 620 XP to go • this step +260 XP"; numbers in white.
 function ST.XP(b)
 	if not b then
 		return nil
@@ -299,7 +299,63 @@ function ST.XP(b)
 			parts[#parts + 1] = L.XP_STEP:format(W(n), word)
 		end
 	end
-	return table.concat(parts, " · ")
+	return table.concat(parts, L.SEP)
+end
+
+-- "1 h 25 min", "25 min", "under 1 min".
+function ST.Duration(seconds)
+	local m = math.floor((tonumber(seconds) or 0) / 60 + 0.5)
+	if m < 1 then
+		return L.TIME_LESS
+	elseif m < 60 then
+		return L.TIME_M:format(m)
+	end
+	return L.TIME_HM:format(math.floor(m / 60), m % 60)
+end
+
+-- Tooltip of the XP line (Welle 5b, owner guideline 7 and wish 13): planned level of this step against
+-- the character's level, then the time forecast. Values only from data; a part without enough real runs
+-- says "collecting data". Returns title and a list of { text, gold } lines.
+function ST.XPTip(info, b, f)
+	local lines = {}
+	local function add(text, gold)
+		lines[#lines + 1] = { text = text, gold = gold }
+	end
+	local level = b and b.level
+	if info and info.lv then
+		add(L.TT_PLAN_LEVEL:format(info.lv))
+		if level then
+			local d = level - info.lv
+			local dev = d == 0 and L.DEV_ON
+				or d == 1 and L.DEV_ABOVE_1
+				or d > 1 and L.DEV_ABOVE_N:format(d)
+				or d == -1 and L.DEV_BELOW_1
+				or L.DEV_BELOW_N:format(-d)
+			add(L.TT_OWN_LEVEL:format(level, dev))
+		end
+	end
+	if f and f.state ~= "done" then
+		add(L.TT_FORECAST, true)
+		if f.state == "ready" and f.seconds then
+			local dur = ST.Duration(f.seconds)
+			add(f.level and L.TT_ROUTE_END:format(f.level, dur) or L.TT_ROUTE_END_WAIT:format(dur))
+			local delta = f.plan and f.plan.delta
+			if delta and math.abs(delta) >= 60 then
+				add((delta > 0 and L.TT_AHEAD or L.TT_BEHIND):format(ST.Duration(math.abs(delta))))
+			end
+		else
+			add(L.TT_ROUTE_END_WAIT:format(L.STATUS_COLLECTING))
+		end
+		local n = f.nextLevel
+		if n and level and b and not b.stopped then
+			if n.state == "ready" and n.seconds then
+				add(L.TT_NEXT_LEVEL:format(level + 1, ST.Duration(n.seconds), ns.Theme.Number(n.perHour or 0)))
+			else
+				add(L.TT_NEXT_LEVEL_WAIT:format(level + 1, L.STATUS_COLLECTING))
+			end
+		end
+	end
+	return L.TT_XP_TITLE, lines
 end
 
 -- "The route falls short of Westfall …" when the route to the next zone does not reach its level.

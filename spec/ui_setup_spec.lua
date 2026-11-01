@@ -28,7 +28,7 @@ describe("First start", function()
 		assert.are.equal("CENTER", d.points[1][1])
 		assert.are.equal("Set up Pathmark", d.TitleText.text)
 		assert.are.equal("Detected", d.detectedLabel.text)
-		assert.are.equal("Mensch · Krieger · Level 1 · Route starts in Elwynn Forest", d.detected.text)
+		assert.are.equal("Mensch • Krieger • Level 1 • Route starts in Elwynn Forest", d.detected.text)
 		assert.are.equal("How do you want to play?", d.question.text)
 		local titles = {}
 		for i, card in ipairs(d.cards) do
@@ -114,7 +114,7 @@ describe("First start", function()
 		wow.advance(2)
 		local d = dialog()
 		assert.are.equal("Pathmark einrichten", d.TitleText.text)
-		assert.are.equal("Mensch · Krieger · Stufe 1 · Route ab Wald von Elwynn", d.detected.text)
+		assert.are.equal("Mensch • Krieger • Stufe 1 • Route ab Wald von Elwynn", d.detected.text)
 		assert.are.equal("Wie willst du spielen?", d.question.text)
 		assert.are.equal("Einfach dem Pfeil folgen", d.cards[1].title.text)
 		assert.are.equal(

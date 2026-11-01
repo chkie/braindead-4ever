@@ -18,9 +18,9 @@ describe("Developer preview", function()
 		local _, W = preview("normal")
 		assert.matches("“Wolves Across the Border”: collect Tough Wolf Meat", W.step.text, 1, true)
 		assert.matches("3/8", W.step.text, 1, true)
-		assert.matches("· 4/48$", W.title.text)
+		assert.matches("• 4/48$", W.title.text)
 		assert.matches(
-			"Level |cffffffff3|r · |cffffffff620|r XP to go · this step +|cffffffff260|r XP",
+			"Level |cffffffff3|r • |cffffffff620|r XP to go • this step +|cffffffff260|r XP",
 			W.xp.text,
 			1,
 			true
@@ -66,7 +66,7 @@ describe("Developer preview", function()
 		)
 		assert.are.equal("UI-QuestTracker-Objective-Fail", W.icon.atlas)
 		SlashCmdList.PATHMARK("preview dungeon")
-		assert.are.equal("Optional · Dungeon · Level 18–24", W.next[2].tag.text)
+		assert.are.equal("Optional • Dungeon • Level 18–24", W.next[2].tag.text)
 		assert.are.equal(
 			"The Deadmines: accept “The Defias Brotherhood” and “Red Silk Bandanas”",
 			W.next[2].text.text
@@ -94,6 +94,19 @@ describe("Developer preview", function()
 		SlashCmdList.PATHMARK("preview arrival")
 		ns.Arrow.Update(0.25)
 		assert.are.equal("Reached destination", F.dist.text)
+		assert.are.same({}, wow.errors)
+	end)
+
+	it("narrow and wide: smallest width and ten steps with the rest scrolling, off restores the size", function()
+		local ns, W = preview("narrow", { locale = "deDE" })
+		assert.are.equal(260, W.w)
+		assert.are.equal(3, #ns.StepFrame.VisibleRows())
+		SlashCmdList.PATHMARK("preview wide")
+		assert.are.equal(500, W.w)
+		assert.are.equal(10, #ns.StepFrame.VisibleRows())
+		assert.is_true(W.listBox.scrollable)
+		SlashCmdList.PATHMARK("preview off")
+		assert.are.same({ 300, 3 }, { ns.UI.Get("width"), ns.UI.Get("ahead") })
 		assert.are.same({}, wow.errors)
 	end)
 

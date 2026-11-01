@@ -45,6 +45,7 @@ UI\Menu.lua
 UI\StepFrame.lua
 UI\Arrow.lua
 UI\MapPins.lua
+UI\QuestWatch.lua
 UI\Minimap.lua
 UI\Setup.lua
 UI\Settings.lua

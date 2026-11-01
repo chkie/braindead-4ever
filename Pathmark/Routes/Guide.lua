@@ -490,6 +490,20 @@ function Route.Wants(q)
 	return store ~= nil and #store:Candidates(q) > 0
 end
 
+-- Quests the route still follows: set { [questID] = true } of the route's quests without the ones the
+-- player skipped and their follow-up quests. For Blizzard's quest tracker (UI/QuestWatch.lua).
+function Route.Quests()
+	return Call(function()
+		local blocked, out = rt:Blocked(), {}
+		for q in pairs(rt.routeQuests) do
+			if not blocked[q] then
+				out[q] = true
+			end
+		end
+		return out
+	end) or {}
+end
+
 -- Last XP gain seen (for the probe check xp.kill).
 function Route.LastGain()
 	return Route.lastGain

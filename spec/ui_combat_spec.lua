@@ -26,6 +26,16 @@ local function everything(ns)
 	ns.MinimapButton.Click("LeftButton")
 	ns.MinimapButton.Click("LeftButton")
 	ns.Arrow.Update(1)
+	local grip = ns.StepFrame.grip -- size grip (owner reading 14)
+	grip.scripts.OnMouseDown(grip, "LeftButton")
+	grip.scripts.OnMouseUp(grip, "LeftButton")
+	-- Blizzard's quest tracker (owner reading 15): a quest off the route with Blizzard's own mark, then
+	-- the option to hidden: both want RemoveQuestWatch and the tracker's alpha
+	wow.world.questLog[#wow.world.questLog + 1] = { questID = 90001 }
+	wow.fire("QUEST_ACCEPTED", 90001)
+	wow.world.watch(90001, true)
+	ns.UI.Set("tracker", "hide")
+	wow.advance(1)
 end
 
 describe("Combat lockdown", function()
@@ -46,6 +56,7 @@ describe("Combat lockdown", function()
 		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
 		assert.are.equal(1, #wow.world.helptips)
 		assert.is_table(wow.world.waypoint)
+		assert.are.same({}, wow.world.watches) -- the tracker pass ran after the fight
 		assert.are.equal(0, ns.UI.Waiting())
 	end)
 
@@ -79,5 +90,8 @@ describe("Combat lockdown", function()
 		assert.is_true(seen["PathmarkSetupFrame:Show"], "setup window not caught")
 		assert.is_true(seen["C_Map.SetUserWaypoint"], "waypoint not caught")
 		assert.is_true(seen.PlaySound, "sound not caught")
+		assert.is_true(seen["Frame:StartSizing"], "sizing not caught")
+		assert.is_true(seen["C_QuestLog.RemoveQuestWatch"], "RemoveQuestWatch not caught")
+		assert.is_true(seen["ObjectiveTrackerFrame:SetAlpha"], "tracker alpha not caught")
 	end)
 end)

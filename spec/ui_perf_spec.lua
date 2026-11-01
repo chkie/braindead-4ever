@@ -93,6 +93,36 @@ describe("Interface performance (offline)", function()
 		assert.is_true(perFrame < 0.05)
 	end)
 
+	it("explorer style and the quest tracker pass stay under budget (Welle 5b)", function()
+		local ns = S.login({ saved = { ui = { style = "self", hint = 0 } } })
+		local N = 200
+		local start = os.clock()
+		for _ = 1, N do
+			ns.StepFrame.Refresh(true)
+		end
+		local light = (os.clock() - start) * 1000 / N
+		report("step window light refresh, explorer style without a riddle left: %.3f ms", light)
+		report("worst case from quest log bursts: %.4f ms per frame (budget 0.1)", light * 5 / 60)
+		assert.is_true(light * 5 / 60 < 0.1)
+		-- quest tracker: a pass with a full log of 25 quests, once per burst of quest events (0.2 s)
+		local W = wow.world
+		for i = 1, 25 do
+			W.questLog[#W.questLog + 1] = { questID = 90000 + i }
+			W.watch(90000 + i, true)
+		end
+		start = os.clock()
+		for _ = 1, N do
+			ns.QuestWatch.Apply()
+		end
+		local pass = (os.clock() - start) * 1000 / N
+		report(
+			"quest tracker pass (25 quests in the log): %.3f ms, at most 5 per second: %.4f ms per frame",
+			pass,
+			pass * 5 / 60
+		)
+		assert.is_true(pass * 5 / 60 < 0.1)
+	end)
+
 	it("memory of the interface stays far under 10 MB", function()
 		collectgarbage("collect")
 		wow.reset({})

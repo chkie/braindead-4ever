@@ -21,6 +21,12 @@ U.AUDITED = {
 	"C_SuperTrack.SetSuperTrackedUserWaypoint",
 	"PlaySound",
 	"PathmarkSetupFrame:Show",
+	-- Welle 5b: sizing the step window and Blizzard's quest tracker are kept out of fights by the
+	-- owner's decision (ENTWURF-LESUNG points 14 and 15)
+	"Frame:StartSizing",
+	"C_QuestLog.AddQuestWatch",
+	"C_QuestLog.RemoveQuestWatch",
+	"ObjectiveTrackerFrame:SetAlpha",
 }
 
 local function Color(r, g, b)
@@ -237,6 +243,12 @@ function U.install(M, W, opts)
 	function Frame:EnableMouse(on)
 		self.mouse = on
 	end
+	function Frame:SetMouseMotionEnabled(on)
+		self.motion = on
+	end
+	function Frame:SetMouseClickEnabled(on)
+		self.clicks = on
+	end
 	function Frame:SetMovable(on)
 		self.movable = on
 	end
@@ -248,6 +260,33 @@ function U.install(M, W, opts)
 	end
 	function Frame:StopMovingOrSizing()
 		self.moving = false
+		self.sizingPoint = nil
+	end
+	function Frame:SetResizable(on)
+		self.resizable = on
+	end
+	function Frame:SetResizeBounds(minW, minH, maxW, maxH)
+		self.bounds = { minW, minH, maxW, maxH }
+	end
+	function Frame:StartSizing(point)
+		audit("Frame:StartSizing")
+		if not rawget(self, "resizable") then
+			error("Frame is not resizable", 2)
+		end
+		self.sizingPoint = point or "BOTTOMRIGHT"
+	end
+	-- Screen edges: a fixed spot unless a test sets left/top.
+	function Frame:GetLeft()
+		return rawget(self, "left") or 100
+	end
+	function Frame:GetTop()
+		return rawget(self, "top") or 700
+	end
+	function Frame:SetEnabled(on)
+		self.enabled = on and true or false
+	end
+	function Frame:IsEnabled()
+		return rawget(self, "enabled") ~= false
 	end
 	function Frame:Click(button)
 		local fn = self.scripts.OnClick
@@ -307,6 +346,30 @@ function U.install(M, W, opts)
 				f:Hide()
 			end)
 		end
+		if template == "WowScrollBox" then
+			f.updates, f.offset = 0, 0
+			function f.SetPanExtent(box, n)
+				box.pan = n
+			end
+			-- Blizzard measures the scrollable child against its own height (ScrollBoxLinearView.lua).
+			function f.FullUpdate(box)
+				box.updates = box.updates + 1
+				local child = rawget(box, "child")
+				local extent, visible = child and child:GetHeight() or 0, box:GetHeight() or 0
+				box.scrollable = extent > visible + 0.5
+				local bar = rawget(box, "bar")
+				if bar then
+					bar:SetShown(box.scrollable or not rawget(bar, "hideIfUnscrollable"))
+				end
+			end
+			function f.ScrollToBegin(box)
+				box.offset = 0
+			end
+		elseif template == "MinimalScrollBar" then
+			function f.SetHideIfUnscrollable(bar, on)
+				bar.hideIfUnscrollable = on
+			end
+		end
 		if name == "PathmarkSetupFrame" then
 			local show = f.Show
 			f.Show = function(self)
@@ -316,6 +379,27 @@ function U.install(M, W, opts)
 		end
 		return f
 	end
+	-- Static scroll box (wow-ui-source forever Shared/Scroll): the view takes the children flagged
+	-- `scrollable`; the scroll bar follows the box.
+	_G.ScrollBoxConstants = { UpdateImmediately = true, NoScrollInterpolation = true, RetainScrollPosition = true }
+	_G.CreateScrollBoxLinearView = function()
+		return {
+			SetPanExtent = function(view, n)
+				view.pan = n
+			end,
+		}
+	end
+	_G.ScrollUtil = {
+		InitScrollBoxWithScrollBar = function(box, bar, view)
+			assert(view and bar and box, "scroll box, bar and view needed")
+			box.view, box.bar = view, bar
+			for _, w in ipairs(M.frames) do
+				if rawget(w, "parent") == box and rawget(w, "scrollable") then
+					box.child = w
+				end
+			end
+		end,
+	}
 	_G.CreateFont = function(name)
 		return NewWidget("Font", name)
 	end
@@ -402,6 +486,51 @@ function U.install(M, W, opts)
 	_G.C_QuestLog.RequestLoadQuestByID = function(q)
 		W.titleRequests[q] = true
 	end
+	-- Quest watch list (QuestLogDocumentation.lua forever). W.watch(q, on) is Blizzard's own mark or a
+	-- click of the player (not addon code, not audited); the addon's calls are audited.
+	M.knownEvents.QUEST_WATCH_LIST_CHANGED = true
+	W.watches = {}
+	local function setWatch(q, on)
+		for i, w in ipairs(W.watches) do
+			if w == q then
+				if on then
+					return false
+				end
+				table.remove(W.watches, i)
+				M.fire("QUEST_WATCH_LIST_CHANGED", q, false)
+				return true
+			end
+		end
+		if not on or #W.watches >= 25 or not _G.C_QuestLog.GetLogIndexForQuestID(q) then
+			return false
+		end
+		W.watches[#W.watches + 1] = q
+		M.fire("QUEST_WATCH_LIST_CHANGED", q, true)
+		return true
+	end
+	W.watch = setWatch
+	_G.C_QuestLog.AddQuestWatch = function(q)
+		audit("C_QuestLog.AddQuestWatch")
+		return setWatch(q, true)
+	end
+	_G.C_QuestLog.RemoveQuestWatch = function(q)
+		audit("C_QuestLog.RemoveQuestWatch")
+		return setWatch(q, false)
+	end
+	_G.C_QuestLog.GetNumQuestWatches = function()
+		return #W.watches
+	end
+	_G.C_QuestLog.GetQuestIDForQuestWatchIndex = function(i)
+		return W.watches[i]
+	end
+	_G.Constants = { QuestWatchConsts = { MAX_QUEST_WATCHES = 25 } }
+	-- Blizzard's quest tracker: only its alpha is touched.
+	local tracker = NewWidget("Frame", "ObjectiveTrackerFrame")
+	function tracker.SetAlpha(self, a)
+		audit("ObjectiveTrackerFrame:SetAlpha")
+		self.alpha = a
+	end
+
 	_G.C_Item = {
 		GetItemNameByID = function(id)
 			return W.items[id]
@@ -494,6 +623,12 @@ function U.install(M, W, opts)
 		end,
 		UseFrameLevelType = function() end,
 		OnLoad = function() end,
+		GetMap = function(self)
+			return self.owningMap
+		end,
+		SetIgnoreGlobalPinScale = function(self, on)
+			self.ignoreGlobalPinScale = on
+		end,
 	}
 	_G.MapCanvasDataProviderMixin = {
 		GetMap = function(self)
@@ -506,6 +641,7 @@ function U.install(M, W, opts)
 	local wm = NewWidget("Frame", "WorldMapFrame")
 	wm.pinPools, wm.pins, wm.providers, wm.mapID = {}, {}, {}, 1429
 	wm.canvas = NewWidget("Frame", nil, nil, wm)
+	wm.canvas:SetSize(1002, 668) -- size of Blizzard's world map canvas for a zone
 	function wm.GetCanvas(self)
 		return self.canvas
 	end
@@ -516,9 +652,16 @@ function U.install(M, W, opts)
 		self.providers[#self.providers + 1] = p
 		p:OnAdded(self)
 	end
+	-- Order and wiring of MapCanvasMixin:AcquirePin (Blizzard_MapCanvas.lua forever): owning map, motion
+	-- scripts only for a new pin that takes mouse motion, OnLoad, Show, OnAcquired.
 	function wm.AcquirePin(self, template, ...)
 		local pool = self.pinPools[template]
 		local pin = pool.createFunc()
+		pin.owningMap = self
+		if rawget(pin, "motion") then
+			pin:SetScript("OnEnter", pin.OnMouseEnter)
+			pin:SetScript("OnLeave", pin.OnMouseLeave)
+		end
 		pin:OnLoad()
 		pin:Show()
 		pin:OnAcquired(...)

@@ -2,7 +2,7 @@
 
 The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `Pathmark/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
 
-Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding).
+Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip).
 
 | File | What it does |
 | --- | --- |
@@ -103,6 +103,7 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.DungeonHint()` | list of dungeon hints (§Dungeon hint), `{}` when none |
 | `Route.SkipDungeon(instanceID, show?)` | hides a dungeon hint (`show = true` shows it again); the route does not change; true if done |
 | `Route.Forecast()` | time forecast (§Time forecast) |
+| `Route.Quests()` | set `{ [questID] = true }` of the route's quests without the skipped ones and their follow-up quests (Welle 5b, Blizzard's quest tracker) |
 | `Route.Observe(...)`, `Route.ObserveFind(find)`, `Route.Candidates(questID)`, `Route.Wants(questID)` | used by the collector and the exchange, not by the window |
 | `Route.Runtime()` | the runtime object, for diagnostics and tests only |
 
@@ -267,5 +268,7 @@ The windows (`Pathmark/UI/`) read the logic only through the adapter `UI/Connect
 | `Explore.Styles`, `SetStyle`, `Level`, `SetLevel` | first start and settings page "Play style"; style and hint level are kept account-wide on the settings page and handed to `ns.Explore` at login and on every change |
 | `Explore.List`, `FindsChanged` | a new rumor (`show = "rumor"`) once in the step window with "Show location"; finds with `show = "point"` on the world map (own finds with the check) |
 | `Explore.Ask(key, 3)` | "Show location": waypoint pin and arrow goal for this one find |
+| `Route.Forecast`, step info `lv`, `Balance().level` | tooltip of the XP line (Welle 5b): planned level at this step and the character's deviation, then route end, the section against the median and the next level; "collecting data" while a part has too few runs |
+| `Route.Quests` | option "Blizzard's quest tracker" (Welle 5b): with "only quests of the route" the tracker follows the route's quests in the log |
 
-Not shown, because design v2 has no place for them: the riddle text and the area hint on the map (`show = "riddle"` and `"area"`) and the time forecast (`Route.Forecast`).
+Since Welle 5b also: `show = "riddle"` of the player's zone as the line "Hint: …" in the step window (one at a time, the next after a completed step) and `show = "area"` as a circle on the world map with the tooltip "Area".

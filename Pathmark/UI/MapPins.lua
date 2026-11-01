@@ -25,6 +25,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- World map: Blizzard's own symbols only (owner reading 7): Waypoint-MapPin-Tracked for the current
 -- goal, QuestNormal for quest givers and QuestTurnin for turn-ins of the current and the next steps;
 -- discovery items of Welle 4 through ns.Connect (own finds with a check, revealed finds as a pin).
+-- Hint level 2 (Welle 5b): the area of a find as a circle in Blizzard's atlases (gold ring of the
+-- scouting map over a faint gold disc), sized in map units and scaling with the terrain, tooltip "Area"
+-- with one sentence like design v2 view 4; hover only, clicks go through to the map.
 -- Minimap: Waypoint-MapPin-Minimap-Tracked for the goal, off by default ("Standard" scope).
 -- Pins without an XML template: own pool in WorldMapFrame.pinPools like HereBeDragons-Pins (brain
 -- chapter 07 §4, pattern E). Blizzard's user waypoint is only set with "use Blizzard navigation", so
@@ -38,6 +41,7 @@ local V = R.VERB
 local P = {
 	TEMPLATE = ADDON .. "PinTemplate",
 	SIZE = { pin = 30, giver = 28, turnin = 22, check = 19 },
+	AREA_ALPHA = 0.18, -- the gold disc under the ring (chosen value)
 	MINI_SIZE = 20,
 	MINI_EVERY = 0.1,
 }
@@ -105,14 +109,32 @@ end
 local function PinMixin()
 	local Pin = CreateFromMixins(MapCanvasPinMixin)
 	function Pin:OnLoad()
+		self.Fill = self:CreateTexture(nil, "BACKGROUND")
+		self.Fill:SetAllPoints()
 		self.Icon = self:CreateTexture(nil, "ARTWORK")
 		self.Icon:SetAllPoints()
 		self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
 	end
-	function Pin:OnAcquired(x, y, kind, title)
-		self.kind, self.title = kind, title
-		local size = P.SIZE[kind] or 24
-		self:SetSize(size, size)
+	-- area = { rx, ry, text } for kind "area" (radii in map units 0..1)
+	function Pin:OnAcquired(x, y, kind, title, area)
+		self.kind, self.title, self.text = kind, title, area and area.text
+		local isArea = kind == "area" and area ~= nil
+		if self.SetIgnoreGlobalPinScale then -- an area scales with the terrain, a symbol keeps its size
+			self:SetIgnoreGlobalPinScale(isArea)
+		end
+		if isArea then
+			local canvas = self:GetMap():GetCanvas()
+			self:SetSize((canvas:GetWidth() or 0) * area.rx * 2, (canvas:GetHeight() or 0) * area.ry * 2)
+			self:SetScale(1)
+			T.SetAtlas(self.Fill, "areafill")
+			self.Fill:SetVertexColor(T.RGB(NORMAL_FONT_COLOR))
+			self.Fill:SetAlpha(P.AREA_ALPHA)
+			self.Fill:Show()
+		else
+			local size = P.SIZE[kind] or 24
+			self:SetSize(size, size)
+			self.Fill:Hide()
+		end
 		T.SetAtlas(self.Icon, kind)
 		self:SetPosition(x, y)
 	end
@@ -120,7 +142,12 @@ local function PinMixin()
 	function Pin:OnMouseEnter()
 		if self.title and self.title ~= "" then
 			GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			GameTooltip:SetText(self.title, T.RGB(HIGHLIGHT_FONT_COLOR))
+			if self.text then
+				GameTooltip:SetText(self.title, T.RGB(NORMAL_FONT_COLOR))
+				GameTooltip:AddLine(self.text, 1, 1, 1, true)
+			else
+				GameTooltip:SetText(self.title, T.RGB(HIGHLIGHT_FONT_COLOR))
+			end
 			GameTooltip:Show()
 		end
 	end
@@ -142,7 +169,12 @@ local function SetupMap()
 		or CreateFramePool("FRAME")
 	pool.parent = WorldMapFrame:GetCanvas()
 	pool.createFunc = function()
-		return Mixin(CreateFrame("Frame", nil, WorldMapFrame:GetCanvas()), Pin)
+		local f = CreateFrame("Frame", nil, WorldMapFrame:GetCanvas())
+		-- The map wires OnEnter/OnLeave to OnMouseEnter/OnMouseLeave only for a new pin that already takes
+		-- mouse motion (MapCanvasMixin:AcquirePin, Blizzard_MapCanvas.lua forever); clicks go through.
+		f:SetMouseMotionEnabled(true)
+		f:SetMouseClickEnabled(false)
+		return Mixin(f, Pin)
 	end
 	pool.resetFunc = function(_, pin)
 		pin:Hide()
@@ -180,8 +212,14 @@ function P.Draw(map)
 			map:AcquirePin(P.TEMPLATE, x, y, p.kind, p.title)
 		end
 	end
-	for _, item in ipairs(C.MapItems(shown)) do
-		if item.x and item.y then
+	local items = C.MapItems(shown)
+	for _, item in ipairs(items) do -- areas first, so the symbols lie on top
+		if item.kind == "area" and item.x and item.y then
+			map:AcquirePin(P.TEMPLATE, item.x, item.y, "area", item.title, item)
+		end
+	end
+	for _, item in ipairs(items) do
+		if item.kind ~= "area" and item.x and item.y then
 			map:AcquirePin(P.TEMPLATE, item.x, item.y, item.kind == "own" and "check" or "pin", item.title)
 		end
 	end

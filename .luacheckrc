@@ -39,6 +39,11 @@ read_globals = {
 			"GetNumQuestLogEntries",
 			"GetQuestObjectives",
 			"GetTitleForQuestID",
+			-- watch list (UI/QuestWatch.lua, QuestLogDocumentation.lua forever)
+			"AddQuestWatch",
+			"GetNumQuestWatches",
+			"GetQuestIDForQuestWatchIndex",
+			"RemoveQuestWatch",
 			"IsComplete",
 			"IsFailed",
 			"IsQuestFlaggedCompleted",
@@ -60,7 +65,7 @@ read_globals = {
 			SendAddonMessageResult = { other_fields = true },
 		},
 	},
-	Constants = { fields = { LegacyConsts = { other_fields = true } } },
+	Constants = { fields = { LegacyConsts = { other_fields = true }, QuestWatchConsts = { other_fields = true } } },
 	-- interface (UI/, Welle 5): checked against the Forever inventories (Ketho BlizzardInterfaceResources
 	-- branch forever: GlobalAPI, FrameXML, Frames, Mixins, GlobalStrings; wow-ui-source forever)
 	C_CVar = { fields = { "GetCVar" } },
@@ -68,6 +73,11 @@ read_globals = {
 	C_Minimap = { fields = { "GetViewRadius" } },
 	C_SuperTrack = { fields = { "SetSuperTrackedUserWaypoint" } },
 	C_Texture = { fields = { "GetAtlasInfo" } },
+	-- Welle 5b: Blizzard's quest tracker, only its alpha (Blizzard_ObjectiveTracker.xml forever)
+	ObjectiveTrackerFrame = { fields = { "GetAlpha", "SetAlpha" } },
+	-- Welle 5b: scroll list of the step window (wow-ui-source forever Shared/Scroll)
+	ScrollUtil = { fields = { "InitScrollBoxWithScrollBar" } },
+	ScrollBoxConstants = { fields = { "UpdateImmediately" } },
 	AddonCompartmentFrame = { fields = { "RegisterAddon" } },
 	EventRegistry = { fields = { "RegisterCallback" } },
 	GameTooltip = { fields = { "AddLine", "Hide", "SetOwner", "SetText", "Show" } },
@@ -106,6 +116,7 @@ read_globals = {
 	"CreateFramePool",
 	"CreateFromMixins",
 	"CreateSettingsButtonInitializer",
+	"CreateScrollBoxLinearView",
 	"CreateSettingsListSectionHeaderInitializer",
 	"CreateUnsecuredRegionPoolInstance",
 	"CreateVector2D",
