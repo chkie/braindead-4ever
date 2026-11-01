@@ -1,0 +1,91 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Required checks for every pull request and every push to main.
+# release.yml calls this workflow too, so a tag only ships when all checks pass.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  lua:
+    name: Tests and lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: leafo/gh-actions-lua@v13.1.0
+        with:
+          luaVersion: "5.1.5"
+      - uses: leafo/gh-actions-luarocks@v6.1.1
+      - name: Install busted and luacheck
+        run: |
+          luarocks install busted 2.3.0-1
+          luarocks install luacheck 1.2.0-1
+      - name: Tests (busted)
+        run: busted
+      - name: Lint (luacheck)
+        if: ${{ !cancelled() }}
+        run: luacheck .
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: JohnnyMorganz/stylua-action@v5.0.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: 2.6.0
+          args: --check .
+
+  types:
+    name: Type check
+    runs-on: ubuntu-latest
+    env:
+      LUALS_VERSION: 3.19.2
+      LUALS_SHA256: 93ad326b10f6c00911dd8c450fa098332dbd8f9f45d1052f5636a2d54479b947
+    steps:
+      - uses: actions/checkout@v7
+      - name: Fetch WoW API annotations
+        run: scripts/fetch-wow-api.sh
+      - name: Install lua-language-server
+        run: |
+          archive="lua-language-server-${LUALS_VERSION}-linux-x64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" \
+            "https://github.com/LuaLS/lua-language-server/releases/download/${LUALS_VERSION}/${archive}"
+          echo "${LUALS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/luals"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/luals"
+      - name: Type check (lua-language-server)
+        run: |
+          "$RUNNER_TEMP/luals/bin/lua-language-server" --check . --checklevel=Warning \
+            --check_format=pretty --logpath="$RUNNER_TEMP/luals-log"
+
+  secrets:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # scan the whole history
+      - name: Install gitleaks
+        run: |
+          archive="gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          curl -fsSL -o "$RUNNER_TEMP/$archive" \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/${archive}"
+          echo "${GITLEAKS_SHA256}  $RUNNER_TEMP/$archive" | sha256sum -c -
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP" gitleaks
+      - name: Secret scan (gitleaks)
+        run: '"$RUNNER_TEMP/gitleaks" git --redact --no-banner --verbose .'

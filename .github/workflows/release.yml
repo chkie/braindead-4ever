@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Tag push -> all CI checks -> BigWigs packager -> CurseForge, Wago, GitHub Releases.
+# Release type from the tag: v1.0.1 = release, v1.0.1-beta.1 = beta, v1.0.1-alpha.1 = alpha.
+# Use annotated tags: git tag -a v1.0.1 -m "v1.0.1"
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Checks
+    uses: ./.github/workflows/ci.yml
+
+  release:
+    name: Package and upload
+    needs: checks
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # GitHub release; without it: "Resource not accessible by integration"
+    env:
+      CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+      WAGO_API_TOKEN: ${{ secrets.WAGO_API_TOKEN }}
+      GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }} # valid for packager v2 and master
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # full history for the changelog and the previous tag
+      # Forever support since v2.6.0. No WoWInterface token: WoWInterface does not list Forever.
+      - uses: BigWigsMods/packager@v2.6.1
+      - name: Discord notice
+        if: ${{ success() && env.DISCORD_WEBHOOK_URL != '' }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          URL="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
+          MSG=$(printf 'New version %s on GitHub now: %s\nCurseForge after review (08:00 to 15:00 CET), Wago follows.' "$TAG" "$URL" | cut -c1-1900)
+          jq -n --arg c "$MSG" '{content:$c, allowed_mentions:{parse:[]}}' \
+            | curl -fsS --retry 3 -H "Content-Type: application/json" -d @- "${DISCORD_WEBHOOK_URL}?wait=true"
