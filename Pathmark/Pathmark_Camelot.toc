@@ -1,0 +1,18 @@
+## Interface: 16001
+## Title: Pathmark
+## Notes: Free leveling guide, levels 1 to 60. Not affiliated with Blizzard Entertainment.
+## Notes-deDE: Kostenloser Leveling-Guide, Stufe 1 bis 60. Nicht mit Blizzard Entertainment verbunden.
+## Category: Quests
+## Author: chkie
+## Version: @project-version@
+## X-License: GPL-3.0-or-later WITH AdditionRef-Pathmark-Ace3-Exception
+## X-Website: https://github.com/chkie/pathmark
+## SavedVariables: PathmarkDB
+
+# WoW: Forever (game type camelot). The packager reads this suffix; _Forever.toc it does not.
+# Keep the file list identical to Pathmark.toc (checked by spec/toc_spec.lua).
+Locales\enUS.lua
+Locales\deDE.lua [AllowLoadTextLocale deDE]
+Core\Guard.lua
+Core\Modules.lua
+Core\Boot.lua

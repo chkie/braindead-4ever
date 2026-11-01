@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# BigWigsMods/packager. YAML: spaces only, no tabs. Dotfiles are always ignored.
+# The addon lives in Pathmark/; move-folders lifts it to the package root.
+package-as: Pathmark
+
+move-folders:
+  Pathmark/Pathmark: Pathmark
+
+ignore:
+  - docs
+  - scripts
+  - spec
+  - types
+  - CONTRIBUTING.md
+  - README.md
+  - stylua.toml

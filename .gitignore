@@ -1,0 +1,13 @@
+# Local toolchain (Lua 5.1, LuaRocks, busted, luacheck, WoW API annotations)
+.tools/
+# Lua and LuaRocks installed by the CI actions
+.lua/
+.luarocks/
+# Packager output
+.release/
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+# LuaLS check output
+luals-check/
