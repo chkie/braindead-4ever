@@ -615,7 +615,9 @@ function SF.Invalidate(balance)
 	view.dungeon = C.Dungeon()
 end
 
-function SF.Refresh()
+-- light = only the window's texts (quest log counts, titles loaded): the map pins and the arrow goal
+-- follow only when the current step changed. A full refresh updates everything.
+function SF.Refresh(light)
 	if not W or not M.IsActive("window") then
 		return
 	end
@@ -626,9 +628,14 @@ function SF.Refresh()
 	if view.playing then
 		return -- the done feedback finishes first, then Refresh runs again
 	end
-	view.started = view.started or C.Current() ~= nil or C.Missing() ~= nil
-	SF.Render(C.Current())
+	local before = view.info and view.info.key
+	local cur = C.Current()
+	view.started = view.started or cur ~= nil or C.Missing() ~= nil
+	SF.Render(cur)
 	W:Show()
+	if light == true and before == (cur and cur.key) then
+		return
+	end
 	if ns.Arrow then
 		ns.Arrow.SetTarget(view.target, view.info)
 	end
@@ -648,7 +655,7 @@ function SF.Queue()
 		0.2,
 		Guard.Wrap("window", function()
 			queued = false
-			SF.Refresh()
+			SF.Refresh(true)
 		end)
 	)
 end

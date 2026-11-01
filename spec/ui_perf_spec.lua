@@ -59,11 +59,17 @@ describe("Interface performance (offline)", function()
 			ns.StepFrame.Refresh()
 		end
 		local ms = (os.clock() - start) * 1000 / N
-		report("step window refresh (event driven): %.3f ms per refresh", ms)
+		report("step window full refresh (step or route change): %.3f ms", ms)
 		assert.is_true(ms < 5, ("refresh %.3f ms"):format(ms))
-		-- quest log updates are coalesced to at most 5 refreshes per second (0.2 s, StepFrame.Queue):
+		start = os.clock()
+		for _ = 1, N do
+			ns.StepFrame.Refresh(true)
+		end
+		local light = (os.clock() - start) * 1000 / N
+		report("step window light refresh (quest log update): %.3f ms", light)
+		-- quest log updates are coalesced to at most 5 light refreshes per second (0.2 s, StepFrame.Queue):
 		-- worst case while questing, spread over 60 frames per second
-		local worst = ms * 5 / 60
+		local worst = light * 5 / 60
 		report("step window worst case from quest log bursts: %.4f ms per frame (budget 0.1)", worst)
 		assert.is_true(worst < 0.1)
 		start = os.clock()
