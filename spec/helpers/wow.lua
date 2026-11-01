@@ -197,8 +197,8 @@ local function NewWorld(flavor)
 			surname = "Brightwood",
 			realm = "Testrealm",
 			guid = "Player-1234-0ABCDEF0",
-			race = { "Mensch", "Human" },
-			class = { "Krieger", "WARRIOR" },
+			race = { "Mensch", "Human", 1 }, -- UnitRace: localized, raceFile, raceID
+			class = { "Krieger", "WARRIOR", 1 }, -- UnitClass: localized, classFile, classID
 			faction = { "Alliance", "Allianz" },
 			level = 5,
 			xp = 120,
@@ -211,8 +211,11 @@ local function NewWorld(flavor)
 		npc = nil, -- { guid = "Creature-...", name = "..." } while a dialog is open
 		units = {}, -- token -> { guid, name, classification, level }
 		questID = nil, -- GetQuestID() in an open quest dialog
-		questLog = {}, -- { { questID = n, objectives = { { numFulfilled, numRequired, finished } } } }
+		-- { { questID = n, objectives = { { numFulfilled, numRequired, finished } }, complete = bool,
+		--    rewardXP = n } }
+		questLog = {},
 		completed = {}, -- questID -> true
+		mapInfo = {}, -- uiMapID -> { mapID, name, parentMapID } (C_Map.GetMapInfo)
 		loot = {}, -- { { link = "...", sources = { guid, count, ... } } }
 		fishing = false,
 		itemText = "Ein altes Buch",
@@ -413,10 +416,10 @@ function M.reset(opts)
 		return x and x.classification or "normal"
 	end
 	_G.UnitRace = function()
-		return P.race[1], P.race[2]
+		return P.race[1], P.race[2], P.race[3]
 	end
 	_G.UnitClass = function()
-		return P.class[1], P.class[2]
+		return P.class[1], P.class[2], P.class[3]
 	end
 	_G.UnitFactionGroup = function()
 		return P.faction[1], P.faction[2]
@@ -463,6 +466,9 @@ function M.reset(opts)
 				return { x = P.x, y = P.y }
 			end
 		end,
+		GetMapInfo = function(id)
+			return W.mapInfo[id]
+		end,
 	}
 
 	-- Quests
@@ -484,10 +490,22 @@ function M.reset(opts)
 				end
 			end
 		end,
+		GetLogIndexForQuestID = function(q)
+			for i, e in ipairs(log()) do
+				if e.questID == q and not e.isHeader then
+					return i
+				end
+			end
+		end,
 		IsQuestFlaggedCompleted = function(q)
 			return W.completed[q] == true
 		end,
-		IsComplete = function()
+		IsComplete = function(q)
+			for _, e in ipairs(log()) do
+				if e.questID == q then
+					return e.complete == true
+				end
+			end
 			return false
 		end,
 		IsFailed = function()
@@ -502,7 +520,12 @@ function M.reset(opts)
 	_G.GetQuestID = function()
 		return W.questID
 	end
-	_G.GetQuestLogRewardXP = function()
+	_G.GetQuestLogRewardXP = function(q)
+		for _, e in ipairs(log()) do
+			if e.questID == q and e.rewardXP then
+				return e.rewardXP, e.rewardXP
+			end
+		end
 		return 40, 40
 	end
 
@@ -748,6 +771,12 @@ function M.addonFiles(withProbe)
 		"Pathmark/Collector/Collect.lua",
 		"Pathmark/Collector/Exchange.lua",
 		"Pathmark/Core/Report.lua",
+		"Pathmark/Routes/Routes.lua",
+		"Pathmark/Routes/Data_Alliance.lua",
+		"Pathmark/Routes/Data_Horde.lua",
+		"Pathmark/Routes/XP.lua",
+		"Pathmark/Routes/Runtime.lua",
+		"Pathmark/Routes/Guide.lua",
 	}
 	if withProbe then
 		files[#files + 1] = "Pathmark/Probe/Probe.lua"

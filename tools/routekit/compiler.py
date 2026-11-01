@@ -7,7 +7,7 @@ import os
 import tempfile
 
 from . import game, routefmt
-from .io import repo_path
+from .io import read_jsonl, repo_path
 
 FORMAT = 1
 VERB_CODE = {
@@ -127,7 +127,34 @@ def _compose(comp):
     return lines
 
 
-def compile_faction(faction, mods, comp):
+def _quest_ids(fmods):
+    ids = set()
+    for m in fmods:
+        for st in m.steps:
+            for el in st.elements:
+                if el.verb in ("accept", "complete", "turnin"):
+                    ids.add(el.args["q"])
+    return ids
+
+
+def _quests(fmods, facts):
+    """Quest facts the addon needs at runtime (docs/ROUTE-FORMAT.md §Compiled form, quests):
+    level, XP and prerequisite groups of every quest the faction's modules name."""
+    lines = ["\tquests = {"]
+    for q in sorted(_quest_ids(fmods)):
+        rec = facts.get(q, {})
+        level = (rec.get("level") or {}).get("v") or 0
+        xp = (rec.get("xp") or {}).get("v") or 0
+        groups = [sorted(g) for g in (rec.get("pre") or {}).get("v") or [] if g]
+        vals = [str(level), str(xp)]
+        if groups:
+            vals.append("{ %s }" % ", ".join("{ %s }" % ", ".join(str(x) for x in g) for g in groups))
+        lines.append("\t\t[%d] = { %s }," % (q, ", ".join(vals)))
+    lines.append("\t},")
+    return lines
+
+
+def compile_faction(faction, mods, comp, facts=None):
     fmods = sorted((m for m in mods.values() if m.faction == faction), key=lambda m: m.key)
     sources = sorted({m.header.get("sources", "") for m in fmods})
     out = [
@@ -151,6 +178,7 @@ def compile_faction(faction, mods, comp):
         out += _module(m)
     out.append("\t},")
     out += _compose(comp)
+    out += _quests(fmods, facts or {})
     out += ["\t}", "end", ""]
     return "\n".join(out)
 
@@ -159,12 +187,13 @@ def _write(target_dir):
     from . import lint
 
     mods, comps = lint.load_routes()
+    facts = {r["q"]: r for r in read_jsonl(repo_path("data", "facts", "quests.jsonl"))}
     written = []
     for faction in (game.ALLIANCE, game.HORDE):
         comp = next(c for c in comps if c.faction == faction)
         path = os.path.join(target_dir, "Data_%s.lua" % faction)
         with open(path, "w", encoding="utf-8", newline="\n") as fh:
-            fh.write(compile_faction(faction, mods, comp))
+            fh.write(compile_faction(faction, mods, comp, facts))
         written.append(path)
     return written
 

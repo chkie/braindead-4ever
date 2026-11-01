@@ -13,7 +13,7 @@ The developer probe checks in the client whether every function, event, value, a
 | Command | What it does |
 | --- | --- |
 | `/pathmark probe run [label]` | runs every check that needs no context; label defaults to `free` or `combat` |
-| `/pathmark probe check <id>` | runs one check, also the manual ones (`comm.burst`, `export.window`, `perf.memory`, `qitem.button`) |
+| `/pathmark probe check <id>` | runs one check, also the manual ones (`comm.burst`, `export.window`, `perf.memory`, `qitem.button`, `xp.kill`) |
 | `/pathmark probe status <id> planned\|built\|verified\|blocked` | sets the plan status after a game test |
 | `/pathmark probe report` | copyable report, one tab-separated line per check, plus blocked actions |
 
@@ -94,7 +94,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Feature | Stage | Status | Probe checks |
 | --- | --- | --- | --- |
 | Client and restrictions: build, project ID, secret values, restriction state, locales, game rules, script budget, SavedVariables after a cold start | all | built (probe) | `ver.build`, `ver.project`, `ver.camelot`, `ver.secretfn`, `ver.secrets`, `ver.restrict`, `ver.locales`, `ver.preset`, `ver.hardcore`, `ver.selffound`, `ver.rulesevent`, `ver.throttle`, `sv.coldstart` |
-| M1 Step display: current step and the next three, progress detected automatically, skip and back | MVP | planned | `quest.count`, `quest.info`, `quest.objectives`, `quest.flagged`, `quest.ready`, `quest.max`, `quest.trivial`, `quest.elite`, `quest.timers`, `quest.completed`, `quest.autocomplete`, `quest.progressev`, `quest.finished` |
+| M1 Step display: current step and the next three, progress detected automatically, skip and back | MVP | built (logic; window with AP 6) | `quest.count`, `quest.info`, `quest.objectives`, `quest.flagged`, `quest.ready`, `quest.max`, `quest.trivial`, `quest.elite`, `quest.timers`, `quest.completed`, `quest.autocomplete`, `quest.progressev`, `quest.finished` |
 | M2 Navigation: arrow, map and minimap markers, TomTom | MVP | planned | `nav.map`, `nav.pos`, `nav.world`, `nav.facing`, `nav.worldpos`, `nav.canwaypoint`, `nav.setwaypoint`, `nav.mappoint`, `nav.supertrack`, `nav.nextwaypoint`, `nav.questsonmap`, `nav.maprestrict`, `nav.tomtom`, `nav.cvar`, `nav.range`, `nav.reached`, `nav.supertrackev`, `nav.waypointev`, `nav.moving` |
 | M3 Matching route by faction, race and class, entry at any level | MVP | planned | `route.race`, `route.class`, `route.faction`, `route.level`, `route.maxlevel`, `route.xpoff` |
 | M4 Quest and item names from the client, NPC names from the collectors | MVP | planned | `name.quest`, `name.loadquest`, `name.questload`, `name.item`, `name.itemload`, `name.map`, `name.npc`, `name.npctooltip`, `name.creatureid` |
@@ -108,6 +108,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | M12 Interface: setup dialog, settings, looks Modern and Classic | MVP | planned | `ui.settings`, `ui.opensettings`, `ui.editmode`, `ui.helptip`, `ui.compartment`, `atlas.header`, `atlas.nub`, `atlas.check`, `atlas.glow`, `atlas.collapse`, `atlas.parchment`, `atlas.arrow`, `atlas.pin`, `atlas.minipin`, `atlas.questnormal`, `atlas.questturnin`, `atlas.barbg`, `atlas.barfill`, `atlas.indicator`, `font.header`, `font.line`, `font.small`, `font.med3`, `font.highlight`, `color.normal`, `color.highlight`, `color.tracker`, `color.dimred`, `sound.complete`, `sound.option`, `sound.select` |
 | M13 Accessibility: scaling, contrast, shape and color, key bindings, gamepad does not break | MVP | planned | `ui.textsize`, `ui.gamepad`, `cvar.contrast`, `cvar.colorblind`, `cvar.fontscale`, `cvar.instant`, `cvar.gamepad` |
 | M14 Safety for the start without a test: error buffer, runtime probe, safe mode, start guard, version notice | MVP | built (version notice planned) | `safe.eventvalid`, `safe.errorhandler`, `safe.debugstack`, `safe.blocked`, `safe.forbidden`, `safe.scripterrors` |
+| XP balance (owner wish 9): XP to the next level, XP of the step, route to the next zone against the need, kills as an estimate | MVP | built (logic; window with AP 6) | `xp.curve`, `xp.kill`, `xp.quest` |
 | Performance budget: 10 MB, under 0.1 ms per frame | MVP | planned | `perf.profiler`, `perf.average`, `perf.memory` |
 | Game modes Speed, Explorer, Hardcore-safe | 1.0 | planned | no client API beyond M1 and `ver.hardcore` |
 | Hint levels | 1.0 | planned | no client API |
@@ -126,6 +127,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | luacheck, StyLua, LuaLS type check, gitleaks, actionlint | built | |
 | CI on GitHub with required checks | built | branch protection on `main` |
 | Release by tag (BigWigs packager to CurseForge, Wago, GitHub) | planned | needs the CurseForge and Wago projects and their tokens |
+| Package holds only the addon files and the licences (`.pkgmeta` leaves out `tools`, `data`, `decoder`, `spec`, `docs`, `scripts`, `types`, the probe) | built | `spec/pkgmeta_spec.lua` applies the packager's selection to the tracked files; a real packager run comes with the first alpha tag |
 
 ## Routes and route data
 
@@ -141,4 +143,23 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Example route Elwynn Forest (human, levels 1–10) runs through | built | `spec/routes_spec.lua` |
 | Start zones per race in the Forever client | planned | EG Link measured 20 of 56 combinations in the beta; confirm on 2026-11-05 |
 | Planned levels from XP simulation | planned | AP 10; levels are planning values until then |
+| Quest facts in the compiled data: quest level, full XP (Polestar), prerequisite groups | built | `quests` table, docs/ROUTE-FORMAT.md §Compiled form |
+
+## Route runtime (step logic, owner wishes 9 and 10)
+
+The logic behind the step window, without the window (it waits for the design approval). Interface and rules: `docs/ROUTE-RUNTIME.md`. Module `route` (core); its requirements are checked as `mod.route.*`.
+
+| Feature | Status | Note |
+| --- | --- | --- |
+| Route per faction, race ID, class ID and mode at login; a race without a start module is reported, not an error | built | all 56 combinations in both modes offline (`spec/route_guide_spec.lua`) |
+| Progress by step key, survives `/reload`; written back at logout if the client replaced the SavedVariables table | built | counter-checks: without reading or writing back the progress the tests fail |
+| Detection: quest accepted, objectives done, handed in, zone reached, level reached | built | from simulated events through the whole Elwynn start module; abandon and turn-in told apart by the completion flag 1 s after `QUEST_REMOVED`, also without `QUEST_TURNED_IN` |
+| Quests done before the login skipped; entry at any level (steps planned more than 5 levels below are passed) | built | the margin of 5 levels is a chosen value; entry at level 12 and 25 per faction tested |
+| Check, skip with follow-up quests (prerequisite groups, any chain length), back, undo (20 actions) | built | chain over three quests tested with made-up and with real data; prerequisites of the new quests 21 to 30 are not known yet (Polestar 0 of 112), so the chain is incomplete there |
+| Abandoned quest: question with two ways (take it again, skip with follow-up quests); nothing moves before the answer | built | owner wish 10 |
+| XP balance (to the next level, step, route to the next zone, kills) | built | Classic rules (`Routes/XP.lua`) as estimates until `xp.curve`, `xp.kill` and `xp.quest` pass in the Forever client |
+| Random test: 7,500 random actions (accept, abandon, play, check, skip, back, undo, answer, level, reload), route valid after each | built | `spec/route_random_spec.lua`, seeded |
+| Step window, right-click menu ("undo" there), texts | planned | AP 6, after the design approval |
+| Dungeon hint (owner wish 11) | planned | needs dungeon quest data |
+| Detection in the client (Retail test bed, then Forever) | planned | release gate T2 |
 
