@@ -10,7 +10,12 @@ local TOCS = {
 	{ file = DIR .. "/Pathmark_Camelot.toc", gameType = "camelot", flavor = "forever" },
 }
 -- Globals the addon may create. Everything else must stay in the namespace.
-local ALLOWED_NEW_GLOBALS = { PathmarkDB = true, SLASH_PATHMARK1 = true }
+local ALLOWED_NEW_GLOBALS = {
+	PathmarkDB = true,
+	PathmarkCollectDB = true,
+	PathmarkCharDB = true,
+	SLASH_PATHMARK1 = true,
+}
 
 local function fileExists(path)
 	local fh = io.open(path, "rb")
@@ -72,7 +77,28 @@ describe("TOC files", function()
 			it("has the required directives", function()
 				assert.are.equal("Pathmark", toc.directives.Title)
 				assert.are.equal("@project-version@", toc.directives.Version)
-				assert.are.equal("PathmarkDB", toc.directives.SavedVariables)
+				assert.are.equal("PathmarkDB, PathmarkCollectDB", toc.directives.SavedVariables)
+				assert.are.equal("PathmarkCharDB", toc.directives.SavedVariablesPerCharacter)
+			end)
+
+			it("keeps the developer probe inside the do-not-package block", function()
+				local fh = assert(io.open(entry.file, "rb"))
+				local text = fh:read("*a")
+				fh:close()
+				local block = text:match("#@do%-not%-package@\r?\n(.-)#@end%-do%-not%-package@")
+				assert.is_string(block, "no #@do-not-package@ block")
+				local inside = {}
+				for line in block:gmatch("[^\r\n]+") do
+					if not line:match("^#") then
+						inside[#inside + 1] = line
+					end
+				end
+				assert.are.same({ "Probe\\Probe.lua", "Probe\\Checks.lua" }, inside)
+				for _, line in ipairs(toc.files) do
+					if line.path:match("^Probe") then
+						assert.is_truthy(block:find(line.path, 1, true), line.path .. " outside the block")
+					end
+				end
 			end)
 
 			it("puts unlocalized Notes before Notes-deDE", function()
@@ -117,13 +143,20 @@ describe("TOC files", function()
 					end
 
 					local ns, loaded = loadToc(entry, { locale = locale })
-					assert.are.equal(locale == "deDE" and 5 or 4, #loaded)
+					assert.are.equal(locale == "deDE" and #toc.files or #toc.files - 1, #loaded)
 
 					wow.fire("ADDON_LOADED", "SomeOtherAddon")
 					assert.is_nil(ns.db)
 					wow.fire("ADDON_LOADED", ADDON)
+					wow.fire("PLAYER_LOGIN")
 					wow.fire("PLAYER_ENTERING_WORLD", true, false)
 					wow.advance(10)
+
+					for _, name in ipairs({ "collector", "exchange", "report" }) do
+						assert.are.equal("on", ns.Modules.state[name], name)
+					end
+					assert.is_table(PathmarkCollectDB)
+					assert.is_string(PathmarkCharDB.id)
 
 					assert.are.same({}, wow.errors)
 					assert.is_table(PathmarkDB)
@@ -143,6 +176,16 @@ describe("TOC files", function()
 			end
 		end)
 	end
+end)
+
+describe(".pkgmeta", function()
+	it("leaves the developer probe and the decoder out of the package", function()
+		local fh = assert(io.open(".pkgmeta", "rb"))
+		local text = fh:read("*a")
+		fh:close()
+		assert.is_truthy(text:find("\n  %- Pathmark/Probe\n"), "Pathmark/Probe not ignored")
+		assert.is_truthy(text:find("\n  %- decoder\n"), "decoder not ignored")
+	end)
 end)
 
 describe("Locales", function()

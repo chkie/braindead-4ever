@@ -7,12 +7,27 @@
 ## Version: @project-version@
 ## X-License: GPL-3.0-or-later WITH AdditionRef-Pathmark-Ace3-Exception
 ## X-Website: https://github.com/chkie/pathmark
-## SavedVariables: PathmarkDB
+## SavedVariables: PathmarkDB, PathmarkCollectDB
+## SavedVariablesPerCharacter: PathmarkCharDB
 
 # Retail 12.1.5 test bed and fallback. Forever loads Pathmark_Camelot.toc instead.
 # Keep the file list identical to Pathmark_Camelot.toc (checked by spec/toc_spec.lua).
 Locales\enUS.lua
 Locales\deDE.lua [AllowLoadTextLocale deDE]
+Core\Util.lua
 Core\Guard.lua
 Core\Modules.lua
+Core\CopyWindow.lua
+Collector\Migrate.lua
+Collector\Store.lua
+Collector\Export.lua
+Collector\Proto.lua
+Collector\Collect.lua
+Collector\Exchange.lua
+Core\Report.lua
+# Developer API probe: the packager drops this block and .pkgmeta ignores the folder.
+#@do-not-package@
+Probe\Probe.lua
+Probe\Checks.lua
+#@end-do-not-package@
 Core\Boot.lua

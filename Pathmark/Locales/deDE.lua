@@ -49,3 +49,27 @@ L.MSG_SAFE_MODE_SET = "%s: sicherer Modus %s, wirkt nach /reload"
 L.MSG_FLAG_SET = "%s: %s %s, wirkt nach /reload"
 L.WORD_ON = "an"
 L.WORD_OFF = "aus"
+
+L.MSG_FLAG_MANDATORY = "%s: %s gehört zum Addon und lässt sich nicht ausschalten"
+L.MSG_AFTER_COMBAT = "Pathmark: nach dem Kampf erneut versuchen"
+
+L.COPY_STATUS = "%d Zeichen. Mit Strg+C kopieren."
+L.COPY_DONE = "Kopiert."
+
+L.EXPORT_TITLE = "Pathmark: Daten teilen"
+L.EXPORT_MORE = "Weitere Daten warten: nach dem Einfügen /pathmark export erneut ausführen."
+L.EXPORT_NOTHING = "Pathmark: noch keine neuen Daten zum Teilen"
+L.EXPORT_FAILED = "Pathmark: Export fehlgeschlagen (%s)"
+L.EXPORT_OFF = "Pathmark: der Datensammler läuft nicht, siehe /pathmark status"
+L.ERR_COLLECT_NEWER =
+	"Daten aus einer neueren Addon-Version, die Aufzeichnung bleibt aus und die Daten bleiben erhalten"
+
+L.REPORT_TITLE = "Pathmark: Fehler melden"
+L.REPORT_OFF = "%s: der Fehlerbericht läuft nicht, siehe /pathmark status"
+
+L.PROBE_TITLE = "Pathmark-Sonde"
+L.PROBE_RUN_DONE =
+	"%s-Sonde: %d Prüfungen gespeichert. /pathmark probe report zeigt sie, /reload schreibt sie auf die Platte."
+L.PROBE_STATUS_SET = "%s-Sonde: Status gesetzt"
+L.PROBE_UNKNOWN = "%s-Sonde: unbekannte ID oder unbekannter Status"
+L.PROBE_USAGE = "%s-Sonde: run [Bezeichnung] | report | check <ID> | status <ID> planned|built|verified|blocked"
