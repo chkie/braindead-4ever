@@ -131,3 +131,25 @@ OPTIONAL = ""
 LFG_TYPE_DUNGEON = ""
 ---@type string
 XP = ""
+
+-- Welle 5b: scroll list of the step window (wow-ui-source forever Blizzard_SharedXML/Shared/Scroll).
+
+---@type table<string, any>
+ScrollUtil = {}
+
+---@type table<string, any>
+ScrollBoxConstants = {}
+
+---Linear view for static scroll boxes (ScrollBoxLinearView.lua).
+---@param top? number
+---@param bottom? number
+---@param left? number
+---@param right? number
+---@param spacing? number
+---@return table
+function CreateScrollBoxLinearView(top, bottom, left, right, spacing) end
+
+---Blizzard's quest tracker (Blizzard_ObjectiveTracker/Blizzard_ObjectiveTracker.xml); Pathmark only
+---reads and sets its alpha (UI/QuestWatch.lua).
+---@type table<string, any>
+ObjectiveTrackerFrame = {}

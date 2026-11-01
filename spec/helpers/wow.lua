@@ -818,6 +818,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/UI/StepFrame.lua",
 		"Pathmark/UI/Arrow.lua",
 		"Pathmark/UI/MapPins.lua",
+		"Pathmark/UI/QuestWatch.lua",
 		"Pathmark/UI/Minimap.lua",
 		"Pathmark/UI/Setup.lua",
 		"Pathmark/UI/Settings.lua",

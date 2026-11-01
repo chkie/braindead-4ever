@@ -124,7 +124,7 @@ local function Build()
 	S.frame = d
 end
 
--- "Human · Warrior · Level 1 · Route starts in Elwynn Forest"
+-- "Human • Warrior • Level 1 • Route starts in Elwynn Forest"
 function S.DetectedLine()
 	local race = ns.Util.Str((UnitRace("player"))) or ""
 	local class = ns.Util.Str((UnitClass("player"))) or ""
@@ -149,6 +149,9 @@ local function Finish()
 	end
 	if ns.StepFrame then
 		ns.StepFrame.Refresh()
+	end
+	if ns.QuestWatch then -- the quest tracker option starts after the first start (Welle 5b)
+		ns.QuestWatch.Queue()
 	end
 end
 

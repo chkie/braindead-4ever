@@ -626,6 +626,12 @@ local CHECKS = {
 	{ id = "atlas.barbg", kind = "atlas", name = "Legacy-Progressbar-BG" },
 	{ id = "atlas.barfill", kind = "atlas", name = "Legacy-Progressbar-Fill" },
 	{ id = "atlas.indicator", kind = "atlas", name = "ui-hud-minimap-addon-indicator" },
+	-- Welle 5b: area of hint level 2, size grip and scroll list of the step window, quest tracker
+	{ id = "atlas.area", kind = "atlas", name = "UI-prey-Scoutingmap-ring" },
+	{ id = "atlas.areafill", kind = "atlas", name = "common-mask-circle" },
+	{ id = "ui.resize", kind = "value", name = "PanelResizeButtonMixin" },
+	{ id = "ui.scrollbox", kind = "exists", name = "ScrollUtil.InitScrollBoxWithScrollBar" },
+	{ id = "ui.tracker", kind = "value", name = "ObjectiveTrackerFrame" },
 	{ id = "font.header", kind = "value", name = "ObjectiveTrackerHeaderFont" },
 	{ id = "font.line", kind = "value", name = "ObjectiveTrackerLineFont" },
 	{ id = "font.small", kind = "value", name = "GameFontNormalSmall" },

@@ -45,9 +45,11 @@ C.STYLES = {
 C.STYLE_ORDER = { "arrow", "hints", "self" }
 
 local source -- nil = ns.Route
+local findsGen = 0 -- counts changes of finds, hint level and style; the riddle is looked up after one
 
 function C.Use(src)
 	source = src
+	findsGen = findsGen + 1
 end
 
 local function R()
@@ -90,6 +92,11 @@ end
 
 function C.Balance()
 	return call("Balance")
+end
+
+-- Time forecast (docs/ROUTE-RUNTIME.md §Time forecast), or nil.
+function C.Forecast()
+	return call("Forecast")
 end
 
 function C.Pending()
@@ -135,6 +142,11 @@ end
 
 function C.SetMode(mode)
 	return call("SetMode", mode) == true
+end
+
+-- Quests the route follows (set of quest IDs, skipped ones and their follow-ups left out).
+function C.RouteQuests()
+	return call("Quests") or {}
 end
 
 -- Why there is no route (race without start module), or nil.
@@ -228,6 +240,7 @@ end
 
 -- The discovery logic follows every change of the hint level, wherever it comes from.
 UI.OnChange("hint", C, function(_, _, value)
+	findsGen = findsGen + 1
 	if X("Level") ~= value then
 		X("SetLevel", value)
 	end
@@ -235,6 +248,7 @@ end)
 
 -- A style chosen on the settings page: hint level to the style's start value, route mode follows.
 UI.OnChange("style", C, function(_, _, value)
+	findsGen = findsGen + 1
 	local s = C.STYLES[value]
 	if s and UI.Get("hint") ~= s.hint then
 		UI.Set("hint", s.hint)
@@ -256,6 +270,7 @@ local function Entry(key)
 end
 
 function C.OnFindsChanged(_, key)
+	findsGen = findsGen + 1
 	if not key or seen[key] then
 		return
 	end
@@ -315,12 +330,69 @@ function C.Reveal(id)
 	return t
 end
 
--- Map items for one shown map: { { kind = "own" | "point", x, y, title }, ... } (x, y 0..1). Areas and
--- riddles are not placed on the map in design v2.
+-- Riddles (hint level 1, catalog finds): one sentence for the zone the player is in, shown as its own
+-- line in the step window; it goes after the next completed step and the next riddle of the zone
+-- follows (Welle 5b). Never with "just follow the arrow" (level 3 shows the points).
+local riddleSeen = {}
+local riddleCache = {} -- map, gen, value: the step window asks on every quest log update
+
+local function Finds(map)
+	if source and type(source.Finds) == "function" then
+		return source.Finds(map) or {}
+	end
+	return X("List", map) or {}
+end
+
+-- First riddle { id, text } of the player's zone not used up yet, or nil.
+function C.Riddle()
+	if UI.Get("style") == "arrow" then
+		return nil
+	end
+	if source and type(source.Riddle) == "function" then
+		return source.Riddle()
+	end
+	local map = ns.Util.Num(C_Map.GetBestMapForUnit("player"))
+	if not map then
+		return nil
+	end
+	local cache = riddleCache
+	if cache.map == map and cache.gen == findsGen then
+		return cache.value
+	end
+	local value
+	for _, e in ipairs(Finds(map)) do
+		if e.show == "riddle" and e.text and not riddleSeen[e.key] then
+			value = { id = e.key, text = e.text }
+			break
+		end
+	end
+	cache.map, cache.gen, cache.value = map, findsGen, value
+	return value
+end
+
+function C.RiddleDone(id)
+	if id then
+		riddleSeen[id] = true
+	end
+	findsGen = findsGen + 1
+end
+
+-- Map items for one shown map (x, y, rx, ry 0..1): { kind = "own" | "point", x, y, title } and, at hint
+-- level 2, { kind = "area", x, y, rx, ry, title, text }: the circle that holds a find (Welle 5b).
 function C.MapItems(map)
 	local out = {}
-	for _, e in ipairs(X("List", map) or {}) do
-		if e.show == "point" then
+	for _, e in ipairs(Finds(map)) do
+		if e.show == "area" and e.area then
+			out[#out + 1] = {
+				kind = "area",
+				x = e.area.x / 10000,
+				y = e.area.y / 10000,
+				rx = e.area.rx / 10000,
+				ry = e.area.ry / 10000,
+				title = ns.L.TT_AREA,
+				text = ns.L["AREA_" .. tostring(e.kind)],
+			}
+		elseif e.show == "point" then
 			for _, p in ipairs(e.points or {}) do
 				out[#out + 1] = {
 					kind = e.source == "own" and "own" or "point",

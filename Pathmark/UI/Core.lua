@@ -36,7 +36,8 @@ local UI = {
 		arrow = true,
 		scale = 100, -- percent, 75..200, step 5
 		sound = true,
-		ahead = 3, -- steps ahead 0..3
+		ahead = 3, -- steps ahead 0..10, synchronous with the height of the step window (owner reading 14)
+		width = 300, -- width of the step window, 260..500 (owner reading 14)
 		bgAlpha = 35, -- percent, 0..80
 		dim = true, -- dim the step window to 60 % in combat
 		arrival = 12, -- yards, 5..30
@@ -47,6 +48,7 @@ local UI = {
 		textSize = true, -- follow Blizzard's text size (userFontScale)
 		style = "hints", -- play style: arrow | hints | self (closing the setup picks "hints")
 		hint = 1, -- hint level 0..3
+		tracker = "route", -- Blizzard's quest tracker: keep | route | hide (owner reading 15)
 	},
 	-- Presets of the "Anzeigeumfang" dropdown: each sets these options (brain chapter 18 pattern D).
 	SCOPES = {
@@ -55,6 +57,8 @@ local UI = {
 		full = { ahead = 3, pins = true, minipins = true, sound = true },
 	},
 	COMBAT_ALPHA = 0.6,
+	-- Size of the step window (owner reading 14): reset together with the positions.
+	SIZE_KEYS = { "width", "ahead" },
 	settings = {}, -- key -> Blizzard setting object, filled by UI/Settings.lua
 }
 ns.UI = UI
@@ -250,6 +254,9 @@ end
 
 local function Save(key)
 	local m = UI.movers[key]
+	if not m then
+		return
+	end
 	local point, _, relPoint, x, y = m.frame:GetPoint(1)
 	if point then
 		local db = UI.DB()
@@ -299,8 +306,14 @@ function UI.SetEditing(on)
 	UI.Changed("editing")
 end
 
+UI.SavePosition = Save
+
+-- "Reset" on the Display page: positions and the size of the step window (owner reading 14).
 function UI.ResetPositions()
 	UI.DB().pos = nil
+	for _, key in ipairs(UI.SIZE_KEYS) do
+		UI.Set(key, UI.DEFAULTS[key])
+	end
 	for key in pairs(UI.movers) do
 		UI.Place(key)
 	end

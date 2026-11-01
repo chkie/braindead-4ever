@@ -27,12 +27,23 @@ of the Ace3 libraries used as well as that of the covered work.
 -- sound), mini, combat (60 %), usage hint (HelpTip), right-click menu, status line, route falls short,
 -- skip with follow-ups (StaticPopup), quest abandoned, optional dungeon step, rumor line; check box;
 -- XP line. Reads the logic only through ns.Connect.
+-- Size (owner reading 14): a grip at the bottom right (Blizzard's PanelResizeButtonTemplate) drags the
+-- width (260 to 500) and the height; the height sets how many next steps are visible (0 to 10, the
+-- option "steps ahead" follows), the next LIST_MAX steps sit in a Blizzard ScrollBox and the rest
+-- scrolls. Not while fighting.
 local ADDON, ns = ...
 local L, UI, T, C, ST, Nav = ns.L, ns.UI, ns.Theme, ns.Connect, ns.StepText, ns.Nav
 local M, Guard = ns.Modules, ns.Guard
 
 local SF = {
-	WIDTH = 300,
+	WIDTH = 300, -- default width; the player's width is UI.Get("width")
+	MIN_WIDTH = 260,
+	MAX_WIDTH = 500,
+	MAX_AHEAD = 10,
+	LIST_MAX = 20, -- next steps in the scroll list (chosen value)
+	LIST_GAP = 12, -- space between the current step and the list
+	ROW_GAP = 6,
+	ROW_PAN = 20, -- one mouse wheel notch scrolls about one line
 	HEADER = 36,
 	ICON = 19,
 	LEFT = 8, -- body padding left
@@ -48,11 +59,28 @@ local SF = {
 ns.StepFrame = SF
 
 local W -- the window
+SF.below, SF.listTop, SF.rowTops, SF.rowBottoms = 0, 0, {}, {}
 local view = {} -- what is shown: info, mode, target, rumor, message
 local lastCount = {} -- step key -> needed count, for the final "8/8" of a done step
 
 local function TextX()
 	return SF.LEFT + SF.ICON + SF.GAP_ICON
+end
+
+local function Clamp(v, lo, hi)
+	return math.max(lo, math.min(hi, v))
+end
+
+-- Width the layout uses: the dragged width while sizing, else the saved one.
+function SF.Width()
+	if W and SF.sizing then
+		return Clamp(W:GetWidth() or SF.WIDTH, SF.MIN_WIDTH, SF.MAX_WIDTH)
+	end
+	return Clamp(tonumber(UI.Get("width")) or SF.WIDTH, SF.MIN_WIDTH, SF.MAX_WIDTH)
+end
+
+function SF.Ahead()
+	return Clamp(math.floor(tonumber(UI.Get("ahead")) or 3), 0, SF.MAX_AHEAD)
 end
 
 -- Building ------------------------------------------------------------------------------------------
@@ -87,9 +115,10 @@ end
 local function Build()
 	W = CreateFrame("Frame", nil, UIParent)
 	SF.frame = W
-	W:SetSize(SF.WIDTH, 120)
+	W:SetSize(SF.Width(), 120)
 	W:SetFrameStrata("MEDIUM")
 	W:EnableMouse(true)
+	W:SetResizable(true)
 
 	W.bg = W:CreateTexture(nil, "BACKGROUND")
 	W.bg:SetAllPoints()
@@ -133,6 +162,9 @@ local function Build()
 	-- Banner: abandoned quest or rumor, with buttons (UIPanelButtonTemplate)
 	W.banner = FS(W, "line")
 	W.banner:SetTextColor(T.RGB(NORMAL_FONT_COLOR))
+	-- Hint level 1: the riddle of the zone as its own line in the look of the rumor line (Welle 5b)
+	W.riddle = FS(W, "line")
+	W.riddle:SetTextColor(T.RGB(NORMAL_FONT_COLOR))
 	W.btnReaccept = Button(W, L.REACCEPT, function()
 		C.ResolveAbandon("reaccept")
 	end)
@@ -196,27 +228,10 @@ local function Build()
 	W.detail = FS(W, "line")
 	W.detail:SetTextColor(T.Tracker("Normal"))
 
-	-- Next steps, dimmed, at most two lines each (T19); an optional step carries a gold tag line
+	-- Next steps, dimmed, at most two lines each (T19); an optional step carries a gold tag line.
+	-- They sit in a scroll list (owner reading 14); rows are made when first needed (SF.Row).
 	W.next = {}
-	for i = 1, 3 do
-		local row = {}
-		row.bullet = FS(W, "line")
-		row.bullet:SetText("·")
-		row.tag = FS(W, "small")
-		row.tag:SetTextColor(T.RGB(NORMAL_FONT_COLOR))
-		row.text = FS(W, "line")
-		row.text:SetTextColor(T.RGB(HIGHLIGHT_FONT_COLOR))
-		row.hit = CreateFrame("Frame", nil, W)
-		row.hit:SetAllPoints(row.text)
-		row.hit:EnableMouse(true)
-		row.hit:Hide()
-		row.hit:SetScript("OnMouseUp", function(_, button)
-			if button == "RightButton" then
-				SF.DungeonMenu(row)
-			end
-		end)
-		W.next[i] = row
-	end
+	SF.BuildList()
 
 	W.rule = W:CreateTexture(nil, "ARTWORK")
 	W.rule:SetHeight(1)
@@ -224,6 +239,21 @@ local function Build()
 	W.rule:SetAlpha(0.14)
 	W.xp = FS(W, "small")
 	W.xp:SetTextColor(T.Tracker("Normal"))
+	-- hover the XP line: planned level here, own deviation, time forecast (Welle 5b)
+	W.xpHit = CreateFrame("Frame", nil, W)
+	W.xpHit:SetAllPoints(W.xp)
+	W.xpHit:EnableMouse(true)
+	W.xpHit:SetScript("OnEnter", function(self)
+		SF.ShowXPTip(self)
+	end)
+	W.xpHit:SetScript("OnLeave", function()
+		GameTooltip:Hide()
+	end)
+	W.xpHit:SetScript("OnMouseUp", function(_, button)
+		if button == "RightButton" and not UI.editing then
+			ns.Menu.Open(W)
+		end
+	end)
 	W.reach = FS(W, "small")
 	W.reach:SetTextColor(T.RGB(NORMAL_FONT_COLOR))
 	W.status = FS(W, "status")
@@ -237,7 +267,87 @@ local function Build()
 	W:SetScript("OnUpdate", function(_, elapsed)
 		SF.Tick(elapsed)
 	end)
+	W:SetScript("OnSizeChanged", function(_, width, height)
+		SF.OnSized(width, height)
+	end)
+	SF.BuildGrip()
 	UI.Mover(W, "window", L.EDIT_WINDOW, SF.DEFAULT, true)
+end
+
+-- Scroll list of the next steps: Blizzard's WowScrollBox with a MinimalScrollBar and a linear view
+-- over one content frame (brain chapter 04 §6; wow-ui-source forever Shared/Scroll/ScrollTemplates.xml:
+-- "Intended for static scroll boxes"). Without these Blizzard parts the list is a clipped frame: the
+-- steps ahead show, the rest does not scroll.
+function SF.BuildList()
+	local box, bar
+	if ScrollUtil and ScrollUtil.InitScrollBoxWithScrollBar and CreateScrollBoxLinearView then
+		local ok1, b1 = pcall(CreateFrame, "Frame", nil, W, "WowScrollBox")
+		local ok2, b2 = pcall(CreateFrame, "EventFrame", nil, W, "MinimalScrollBar")
+		if ok1 and ok2 then
+			box, bar = b1, b2
+		end
+	end
+	box = box or CreateFrame("Frame", nil, W)
+	local list = CreateFrame("Frame", nil, box)
+	list.scrollable = true -- the linear view takes children with this flag (ScrollBoxLinearView.lua)
+	list:SetHeight(1)
+	if bar then
+		bar:SetHideIfUnscrollable(true)
+		local scrollView = CreateScrollBoxLinearView()
+		scrollView:SetPanExtent(SF.ROW_PAN)
+		ScrollUtil.InitScrollBoxWithScrollBar(box, bar, scrollView)
+	else
+		box:SetClipsChildren(true)
+		list:SetPoint("TOPLEFT", box, "TOPLEFT", 0, 0)
+		list:SetPoint("TOPRIGHT", box, "TOPRIGHT", 0, 0)
+	end
+	W.listBox, W.list, SF.bar = box, list, bar
+end
+
+-- Row i of the next steps (made on first use).
+function SF.Row(i)
+	local row = W.next[i]
+	if row then
+		return row
+	end
+	local parent = W.list
+	row = {}
+	row.bullet = FS(parent, "line")
+	row.bullet:SetText(L.BULLET)
+	row.tag = FS(parent, "small")
+	row.tag:SetTextColor(T.RGB(NORMAL_FONT_COLOR))
+	row.text = FS(parent, "line")
+	row.text:SetTextColor(T.RGB(HIGHLIGHT_FONT_COLOR))
+	row.hit = CreateFrame("Frame", nil, parent)
+	row.hit:SetAllPoints(row.text)
+	row.hit:EnableMouse(true)
+	row.hit:Hide()
+	row.hit:SetScript("OnMouseUp", function(_, button)
+		if button == "RightButton" then
+			SF.DungeonMenu(row)
+		end
+	end)
+	W.next[i] = row
+	return row
+end
+
+-- Grip at the bottom right: Blizzard's PanelResizeButtonTemplate for the look and the resize cursor
+-- (wow-ui-source forever Mainline/SharedUIPanelTemplates.xml), own mouse scripts for the rules.
+function SF.BuildGrip()
+	local ok, grip = pcall(CreateFrame, "Button", nil, W, "PanelResizeButtonTemplate")
+	if not ok or not grip then
+		return
+	end
+	grip:SetPoint("BOTTOMRIGHT", W, "BOTTOMRIGHT", -2, 2)
+	grip:SetScript("OnMouseDown", function(_, button)
+		if button == "LeftButton" then
+			Guard.Call("window", SF.StartSizing)
+		end
+	end)
+	grip:SetScript("OnMouseUp", function()
+		Guard.Call("window", SF.StopSizing)
+	end)
+	SF.grip = grip
 end
 
 -- Layout --------------------------------------------------------------------------------------------
@@ -252,12 +362,22 @@ local function Place(region, x, y)
 	region:SetPoint("TOPLEFT", W, "TOPLEFT", x, -y)
 end
 
+-- Inside the scroll list; x counts from the window's left edge (the list spans the full width).
+local function PlaceIn(region, x, y)
+	region:ClearAllPoints()
+	region:SetPoint("TOPLEFT", W.list, "TOPLEFT", x, -y)
+end
+
 -- Anchors every visible part from top to bottom and sizes the window to its content.
 function SF.Layout()
 	local mini = UI.DB().mini == true
+	local total = SF.Width()
 	local x = TextX()
-	local width = SF.WIDTH - x - SF.RIGHT
+	local width = total - x - SF.RIGHT
 	local y = SF.HEADER + 10
+	if not SF.sizing then
+		W:SetWidth(total)
+	end
 
 	-- banner
 	local bannerShown = W.banner:IsShown()
@@ -269,7 +389,7 @@ function SF.Layout()
 		for _, b in ipairs({ W.btnReaccept, W.btnSkipChain, W.btnShow }) do
 			if b:IsShown() then
 				local bw = FitButton(b)
-				if bx > x and bx + bw > SF.WIDTH - SF.RIGHT then
+				if bx > x and bx + bw > total - SF.RIGHT then
 					bx, y = x, y + rowH + 6
 				end
 				Place(b, bx, y)
@@ -278,6 +398,12 @@ function SF.Layout()
 		end
 		y = y + rowH + 10
 	end
+	if W.riddle:IsShown() and not mini then
+		W.riddle:SetWidth(width)
+		Place(W.riddle, x, y)
+		y = y + Height(W.riddle) + 8
+	end
+	W.riddle:SetAlpha(mini and 0 or 1)
 
 	-- current step
 	local curTop = y
@@ -299,30 +425,61 @@ function SF.Layout()
 	W.glow:SetPoint("LEFT", W, "TOPLEFT", 0, -(curTop + 10))
 	W.glow:SetPoint("RIGHT", W, "TOPRIGHT", 0, -(curTop + 10))
 
-	-- next steps
+	-- next steps in the scroll list; tops and bottoms of each row inside the list
 	local nx = SF.LEFT + SF.INDENT
-	local nwidth = SF.WIDTH - nx - SF.BULLET - SF.RIGHT
-	local first = true
+	local nwidth = total - nx - SF.BULLET - SF.RIGHT
+	local tops, bottoms, ly = {}, {}, 0
 	for _, row in ipairs(W.next) do
-		if row.text:IsShown() and not mini then
-			y = y + (first and 12 or 6)
-			first = false
-			Place(row.bullet, nx, y)
+		local on = row.text:IsShown() and not mini
+		if on then
+			ly = ly + (#tops > 0 and SF.ROW_GAP or 0)
+			tops[#tops + 1] = ly
+			PlaceIn(row.bullet, nx, ly)
 			if row.tag:IsShown() then
 				row.tag:SetWidth(nwidth)
-				Place(row.tag, nx + SF.BULLET, y)
-				y = y + Height(row.tag)
+				PlaceIn(row.tag, nx + SF.BULLET, ly)
+				ly = ly + Height(row.tag)
 			end
 			row.text:SetWidth(nwidth)
-			Place(row.text, nx + SF.BULLET, y)
-			y = y + Height(row.text)
+			PlaceIn(row.text, nx + SF.BULLET, ly)
+			ly = ly + Height(row.text)
+			bottoms[#bottoms + 1] = ly
 		end
-		row.bullet:SetShown(row.text:IsShown() and not mini)
+		row.bullet:SetShown(on)
 	end
+	SF.rowTops, SF.rowBottoms = tops, bottoms
+	W.list:SetHeight(math.max(ly, 1))
+	local shown = math.min(SF.Ahead(), #bottoms)
+	local listH = shown > 0 and bottoms[shown] or 0
+	local listTop = y + SF.LIST_GAP
+	SF.listTop = listTop
+	if SF.sizing then
+		local maxH = bottoms[math.min(SF.MAX_AHEAD, #bottoms)] or 0
+		listH = Clamp((W:GetHeight() or 0) - listTop - SF.below, 0, maxH)
+	end
+	if listH > 0 then
+		y = listTop
+		W.listBox:ClearAllPoints()
+		W.listBox:SetPoint("TOPLEFT", W, "TOPLEFT", 0, -y)
+		W.listBox:SetPoint("RIGHT", W, "RIGHT", 0, 0)
+		W.listBox:SetHeight(listH)
+		W.listBox:Show()
+		y = y + listH
+	else
+		W.listBox:SetHeight(1)
+		W.listBox:Hide()
+	end
+	if SF.bar then
+		SF.bar:ClearAllPoints()
+		SF.bar:SetPoint("TOPRIGHT", W.listBox, "TOPRIGHT", -2, 0)
+		SF.bar:SetPoint("BOTTOMRIGHT", W.listBox, "BOTTOMRIGHT", -2, 0)
+		W.listBox:FullUpdate(ScrollBoxConstants and ScrollBoxConstants.UpdateImmediately or true)
+	end
+	local fixedTop = y - listH - (listH > 0 and SF.LIST_GAP or 0)
 
 	-- XP line, route falls short, status
 	local lx = SF.LEFT + SF.INDENT
-	local lwidth = SF.WIDTH - lx - SF.RIGHT
+	local lwidth = total - lx - SF.RIGHT
 	if W.xp:IsShown() and not mini then
 		y = y + 12
 		W.rule:ClearAllPoints()
@@ -333,8 +490,10 @@ function SF.Layout()
 		W.xp:SetWidth(lwidth)
 		Place(W.xp, lx, y)
 		y = y + Height(W.xp)
+		W.xpHit:Show()
 	else
 		W.rule:Hide()
+		W.xpHit:Hide()
 	end
 	if W.reach:IsShown() and not mini then
 		W.reach:SetWidth(lwidth)
@@ -355,8 +514,20 @@ function SF.Layout()
 		row.tag:SetAlpha(mini and 0 or 1)
 		row.bullet:SetAlpha(mini and 0 or row.alpha or 0.6)
 	end
-	W:SetHeight(y + 12)
-	SF.height = y + 12
+	local height = y + 12
+	-- what lies below the list: a height drag changes only the list
+	SF.below = height - (listH > 0 and (listTop + listH) or fixedTop)
+	SF.height = height
+	if not SF.sizing then
+		W:SetHeight(height)
+		local maxRows = math.min(SF.MAX_AHEAD, #bottoms)
+		local fixed = height - listH - (listH > 0 and SF.LIST_GAP or 0)
+		local maxH = fixed + (maxRows > 0 and (SF.LIST_GAP + bottoms[maxRows]) or 0)
+		W:SetResizeBounds(SF.MIN_WIDTH, fixed, SF.MAX_WIDTH, math.max(fixed, maxH))
+	end
+	if SF.grip then
+		SF.grip:SetShown(not mini)
+	end
 end
 
 -- Looks: background, scale, combat dim, mini toggle -----------------------------------------------
@@ -384,6 +555,91 @@ function SF.SetMini(on)
 	UI.DB().mini = on and true or nil
 	SF.ApplyLook()
 	SF.Refresh()
+end
+
+-- Size (owner reading 14) -----------------------------------------------------------------------------
+
+-- Next steps whose middle fits into a list of height h (0..MAX_AHEAD).
+function SF.RowsFor(h)
+	local n = 0
+	for i, bottom in ipairs(SF.rowBottoms or {}) do
+		if i > SF.MAX_AHEAD or h < (SF.rowTops[i] + bottom) / 2 then
+			break
+		end
+		n = i
+	end
+	return n
+end
+
+-- Rows of the list inside its visible part, top to bottom (tests and the developer preview).
+function SF.VisibleRows()
+	local out = {}
+	local h = W.listBox:IsShown() and (W.listBox:GetHeight() or 0) or 0
+	local k = 0
+	for _, row in ipairs(W.next) do
+		if row.text:IsShown() and row.bullet:IsShown() then
+			k = k + 1
+			if (SF.rowBottoms[k] or math.huge) > h + 0.5 then
+				break
+			end
+			out[#out + 1] = row
+		end
+	end
+	return out
+end
+
+-- Grip pressed: never in a fight, in Edit Mode or in the mini view.
+function SF.StartSizing()
+	if not W or SF.sizing or UI.Fighting() or UI.editing or UI.DB().mini then
+		return false
+	end
+	SF.sizing = true
+	SF.Refresh() -- the whole list, also at 0 steps ahead, so the drag can show more
+	W:StartSizing("BOTTOMRIGHT", true)
+	W:SetUserPlaced(false) -- own saving (brain chapter 04 §4)
+	return true
+end
+
+-- While dragging: the width follows at once, the height decides the steps ahead ("steps ahead" follows).
+function SF.OnSized(_, height)
+	if not (W and SF.sizing) then
+		return
+	end
+	local n = SF.RowsFor((height or 0) - (SF.listTop or 0) - (SF.below or 0))
+	if n ~= SF.Ahead() then
+		UI.Set("ahead", n) -- the settings page and the map pins follow; Refresh lays out again
+	else
+		SF.Layout()
+	end
+end
+
+-- Grip released (or a fight starts): width saved per account, height snaps to the shown steps; the top
+-- left corner stays where it is.
+function SF.StopSizing()
+	if not (W and SF.sizing) then
+		return false
+	end
+	W:StopMovingOrSizing()
+	local left, top = W:GetLeft(), W:GetTop()
+	local width = math.floor(Clamp(W:GetWidth() or SF.WIDTH, SF.MIN_WIDTH, SF.MAX_WIDTH) + 0.5)
+	SF.sizing = false
+	if left and top then
+		W:ClearAllPoints()
+		W:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
+		UI.SavePosition("window")
+	end
+	UI.Set("width", width)
+	SF.Refresh()
+	return true
+end
+
+local function OnFight(_, _, fighting)
+	if SF.grip then
+		SF.grip:SetEnabled(not fighting)
+	end
+	if fighting then
+		SF.StopSizing()
+	end
 end
 
 -- Content ---------------------------------------------------------------------------------------------
@@ -460,6 +716,14 @@ local function RenderBanner(info)
 	return false
 end
 
+-- Riddle line: not with an open abandon question, no new one in a fight; it goes after the next
+-- completed step like the rumor.
+local function RenderRiddle(info, pending)
+	local riddle = info and not pending and (view.riddleShown or (not UI.Fighting() and C.Riddle())) or nil
+	view.riddleShown = riddle or view.riddleShown
+	SetLine(W.riddle, riddle and riddle.text and L.RIDDLE_LINE:format(riddle.text) or nil)
+end
+
 -- Dungeon hint (owner wish 11) as an optional step: "The Deadmines: accept “…”", tagged with Blizzard's
 -- OPTIONAL and LFG_TYPE_DUNGEON and the level band. It sits behind the step where its first giver is
 -- passed, or on top when that is now; right-click on it skips it like any step.
@@ -478,8 +742,9 @@ local function DungeonRow(hint)
 	}
 end
 
+-- Rows of the scroll list: the next LIST_MAX steps while any are shown (or the window is being sized).
 function SF.NextRows(info)
-	local ahead = UI.Get("ahead") or 3
+	local ahead = (SF.Ahead() > 0 or (W and SF.sizing)) and SF.LIST_MAX or 0
 	local rows = {}
 	if not info or ahead <= 0 then
 		return rows
@@ -506,8 +771,9 @@ end
 
 local function RenderNext(info)
 	local rows = SF.NextRows(info)
-	for i, row in ipairs(W.next) do
+	for i = 1, math.max(#rows, #W.next) do
 		local r = rows[i]
+		local row = r and SF.Row(i) or W.next[i]
 		row.dungeon = r and r.dungeon
 		if r and r.dungeon then
 			SetLine(row.tag, r.tag)
@@ -552,6 +818,7 @@ function SF.Render(info, mode)
 	W.clock:SetShown(info ~= nil and (info.label or (module and module.label)) == "vorläufig")
 
 	RenderBanner(mode ~= "done" and info or nil)
+	RenderRiddle(mode ~= "done" and info or nil, pending)
 
 	if info then
 		local text, have, need = ST.Step(info, true)
@@ -636,6 +903,9 @@ function SF.Refresh(light)
 	if light == true and before == (cur and cur.key) then
 		return
 	end
+	if SF.bar and before ~= (cur and cur.key) then
+		W.listBox:ScrollToBegin(true) -- a new current step: the list starts at its next step again
+	end
 	if ns.Arrow then
 		ns.Arrow.SetTarget(view.target, view.info)
 	end
@@ -687,7 +957,10 @@ function SF.OnStepChanged(_, cur, prev)
 		if view.rumorShown then -- a rumor goes after the next completed step (design v2, view 4)
 			C.RumorDone(view.rumorShown.id)
 		end
-		view.rumorShown = nil
+		if view.riddleShown then -- the riddle too; the next riddle of the zone follows
+			C.RiddleDone(view.riddleShown.id)
+		end
+		view.rumorShown, view.riddleShown = nil, nil
 		SF.PlayDone(prev)
 		return
 	end
@@ -826,6 +1099,24 @@ function SF.ShowOriginTip(owner)
 	GameTooltip:Show()
 end
 
+function SF.ShowXPTip(owner)
+	local info = view.info
+	if not info then
+		return
+	end
+	local title, lines = ST.XPTip(info, view.balance, C.Forecast())
+	GameTooltip:SetOwner(owner, "ANCHOR_LEFT")
+	GameTooltip:SetText(title, T.RGB(HIGHLIGHT_FONT_COLOR))
+	for _, line in ipairs(lines) do
+		if line.gold then
+			GameTooltip:AddLine(line.text, T.RGB(NORMAL_FONT_COLOR))
+		else
+			GameTooltip:AddLine(line.text, 1, 1, 1, true)
+		end
+	end
+	GameTooltip:Show()
+end
+
 function SF.ShowProvisionalTip(owner)
 	local info = view.info
 	if not info then
@@ -931,9 +1222,10 @@ local function Init()
 	for _, key in ipairs({ "bgAlpha", "scale", "dim", "combat" }) do
 		UI.OnChange(key, SF, SF.ApplyLook)
 	end
-	for _, key in ipairs({ "ahead", "paused", "style", "hint" }) do
+	for _, key in ipairs({ "ahead", "width", "paused", "style", "hint" }) do
 		UI.OnChange(key, SF, SF.Refresh)
 	end
+	UI.OnChange("combat", OnFight, OnFight)
 	UI.OnChange("textSize", SF, function()
 		T.ApplyFontScale()
 		SF.Refresh()

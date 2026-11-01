@@ -155,11 +155,18 @@ local function Build()
 
 	-- Display
 	local disp, dispLayout = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_DISPLAY)
-	Slider(disp, "ahead", L.OPT_AHEAD, L.TIP_AHEAD, 0, 3, 1, function(v)
+	Slider(disp, "ahead", L.OPT_AHEAD, L.TIP_AHEAD, 0, ns.StepFrame and ns.StepFrame.MAX_AHEAD or 10, 1, function(v)
 		return tostring(math.floor(v + 0.5))
 	end)
 	Slider(disp, "bgAlpha", L.OPT_BGALPHA, L.TIP_BGALPHA, 0, 80, 5, Percent)
 	Check(disp, "dim", L.OPT_DIM, L.TIP_DIM)
+	if M.defs.questwatch then -- Blizzard's quest tracker (owner reading 15)
+		Dropdown(disp, "tracker", L.OPT_TRACKER, L.TIP_TRACKER, {
+			{ "keep", L.TRACKER_keep, L.TIP_TRACKER_keep },
+			{ "route", L.TRACKER_route, L.TIP_TRACKER_route },
+			{ "hide", L.TRACKER_hide, L.TIP_TRACKER_hide },
+		})
+	end
 	Button(dispLayout, L.BTN_RESET_LABEL, L.BTN_RESET, UI.ResetPositions, L.TIP_BTN_RESET)
 
 	-- Arrow and map

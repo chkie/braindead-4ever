@@ -123,6 +123,13 @@ local function Steps()
 			)
 		),
 	}
+	-- More steps for the size states (owner reading 14): the list holds 20, the rest scrolls.
+	local order = { Q.echo, Q.skir, Q.report, Q.milly, Q.harvest, Q.grapes, Q.defias, Q.bandanas }
+	for i = 5, 24 do
+		local q = order[(i - 5) % #order + 1]
+		local fmt = i % 2 == 1 and T("%s annehmen", "Accept %s") or T("%s abgeben", "Turn in %s")
+		s[#s + 1] = Step(i, fmt:format(ST.Quest(q)), q)
+	end
 	return s
 end
 
@@ -159,8 +166,24 @@ local function Source(kind)
 		if kind == "reach" then
 			b = { level = 9, toLevel = 1600, step = { xp = 480, source = "log" } }
 			b.zone = { nextMap = src.westfall, shortfall = 640, enough = false, kills = 9 }
+		elseif kind == "forecast" then
+			b.level = 5 -- two levels above the plan of the demo steps (level 3)
 		end
 		return b
+	end
+	-- Time forecast: the example of docs/ROUTE-RUNTIME.md §Time forecast, or no runs yet.
+	function src.Forecast()
+		if kind == "forecast" then
+			return {
+				state = "ready",
+				seconds = 41200,
+				level = 30,
+				runs = 7,
+				plan = { module = "preview", delta = 240 },
+				nextLevel = { state = "ready", seconds = 1800, perHour = 12000 },
+			}
+		end
+		return { state = "collecting", nextLevel = { state = "collecting" } }
 	end
 	function src.Pending()
 		return kind == "abandon" and src.pending or nil
@@ -219,6 +242,26 @@ local function Source(kind)
 				),
 			}
 		end
+	end
+	-- Hint level 1: a riddle from the real templates for the player's zone; hint level 2: an area around
+	-- the player's position on the world map (Welle 5b, design v2 view 4).
+	function src.Riddle()
+		if kind == "riddle" then
+			local zone = ST.MapName(C_Map.GetBestMapForUnit("player")) or ns.L.ZONE_FALLBACK
+			return { id = "preview-riddle", text = ns.Discover.Riddle(ns.L, "book", zone, "s") }
+		end
+	end
+	function src.Finds(map)
+		if kind ~= "area" then
+			return {}
+		end
+		local pos = C_Map.GetPlayerMapPosition(map, "player")
+		local x, y = 0.5, 0.5
+		if pos and pos.GetXY then
+			x, y = pos:GetXY()
+		end
+		local area = ns.Discover.Area("book:preview", x * 10000, y * 10000)
+		return { { key = "book:preview", kind = "book", map = map, show = "area", area = area } }
 	end
 	local hidden = false
 	function src.DungeonHint()
@@ -300,6 +343,12 @@ P.STATES = {
 	"abandon",
 	"dungeon",
 	"rumor",
+	"riddle",
+	"area",
+	"narrow",
+	"wide",
+	"forecast",
+	"collecting",
 	"arrow <degrees>",
 	"arrival",
 	"colorblind",
@@ -308,14 +357,28 @@ P.STATES = {
 	"off",
 }
 
+-- The size states change the player's size; "off" puts it back.
+local function SetSize(width, ahead)
+	if not P.size then
+		P.size = { width = UI.Get("width"), ahead = UI.Get("ahead") }
+	end
+	UI.Set("width", width)
+	UI.Set("ahead", ahead)
+end
+
 function P.Run(state, arg)
 	if ns.Arrow then
 		ns.Arrow.colorblind = ns.Theme.Colorblind()
 	end
 	UI.DB().mini = nil
 	if state == "off" or state == "" then
+		if P.size then
+			UI.Set("width", P.size.width)
+			UI.Set("ahead", P.size.ahead)
+			P.size = nil
+		end
 		C.Use(nil)
-		SF.View().rumorShown = nil
+		SF.View().rumorShown, SF.View().riddleShown = nil, nil
 		if ns.Arrow then
 			ns.Arrow.SetExtra(nil)
 		end
@@ -324,8 +387,11 @@ function P.Run(state, arg)
 	end
 	local src = Use(state)
 	SF.SetMessage(nil)
-	if state == "rumor" and UI.Get("style") == "arrow" then
-		print("Pathmark preview: rumors come with the play styles hints and self (settings, Play style)")
+	if (state == "rumor" or state == "riddle") and UI.Get("style") == "arrow" then
+		print("Pathmark preview: rumors and riddles come with the play styles hints and self (settings, Play style)")
+	end
+	if state == "riddle" then
+		SF.View().riddleShown = nil -- the demo riddle replaces a live one
 	end
 	if state == "tooltip" then
 		SF.ShowOriginTip(SF.frame.cur)
@@ -349,6 +415,10 @@ function P.Run(state, arg)
 		SF.SetMessage(ns.L.STATUS_NEW_VERSION)
 	elseif state == "skip" then
 		SF.AskSkip()
+	elseif state == "narrow" then
+		SetSize(SF.MIN_WIDTH, 3) -- German umlauts and two-line steps at the narrowest width (T19)
+	elseif state == "wide" then
+		SetSize(SF.MAX_WIDTH, SF.MAX_AHEAD) -- ten steps visible, the rest scrolls
 	elseif state == "arrow" then
 		ArrowAt(tonumber(arg) or 8, 38)
 	elseif state == "arrival" then
@@ -383,6 +453,8 @@ ns.Commands.preview = function(rest)
 	SF.Refresh()
 	if state == "tooltip" then
 		SF.ShowOriginTip(SF.frame.cur)
+	elseif state == "forecast" or state == "collecting" then
+		SF.ShowXPTip(SF.frame.xpHit) -- the tooltip of the XP line
 	elseif state == "combat" then
 		SF.frame:SetAlpha(UI.COMBAT_ALPHA)
 	end
