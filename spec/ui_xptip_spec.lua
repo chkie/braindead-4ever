@@ -83,6 +83,33 @@ describe("XP line tooltip", function()
 		assert.are.equal(2, #lines)
 	end)
 
+	it("lists the quests skipped earlier (Welle 7): the number, five names, the rest as a number", function()
+		local ns = S.login()
+		local ST = ns.StepText
+		local _, lines = ST.XPTip({ lv = 3 }, { level = 3 }, nil, { 33, 783, 7, 900001, 900002, 900003, 900004 })
+		assert.are.equal("7 quests skipped earlier:", lines[3].text)
+		assert.is_true(lines[3].gold)
+		assert.matches("Wolves Across the Border", lines[4].text)
+		assert.matches("A Threat Within", lines[5].text)
+		assert.are.equal("and 2 more", lines[9].text)
+		assert.are.equal(9, #lines)
+		ns.Route.Earlier = function()
+			return { 33 }
+		end
+		local shown = hover(ns)
+		assert.are.equal("1 quest skipped earlier:", shown[4])
+		assert.matches("Wolves Across the Border", shown[5])
+		assert.are.equal("Time forecast", shown[6])
+		ns.Route.Earlier = function()
+			return {}
+		end
+		assert.are.equal("Time forecast", hover(ns)[4], "no line without skipped quests")
+		local de = S.login({ locale = "deDE" })
+		_, lines = de.StepText.XPTip({ lv = 3 }, { level = 3 }, nil, { 33, 783, 7, 1, 2, 3 })
+		assert.are.equal("6 Quests früher übersprungen:", lines[3].text)
+		assert.are.equal("und 1 weitere", lines[9].text)
+	end)
+
 	it("speaks German", function()
 		local ns = S.login({ locale = "deDE" })
 		local lines = hover(ns)

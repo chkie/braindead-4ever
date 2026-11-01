@@ -29,7 +29,9 @@ local L, U, R = ns.L, ns.Util, ns.Routes
 local V = R.VERB
 local Num, Str = U.Num, U.Str
 
-local ST = {}
+local ST = {
+	EARLIER_SHOWN = 5, -- names in the list "skipped earlier" of the XP tooltip (chosen value)
+}
 ns.StepText = ST
 
 -- Index of the sources bit field per verb (docs/ROUTE-FORMAT.md §Compiled form); status follows it.
@@ -316,7 +318,7 @@ end
 -- Tooltip of the XP line (Welle 5b, owner guideline 7 and wish 13): planned level of this step against
 -- the character's level, then the time forecast. Values only from data; a part without enough real runs
 -- says "collecting data". Returns title and a list of { text, gold } lines.
-function ST.XPTip(info, b, f)
+function ST.XPTip(info, b, f, earlier)
 	local lines = {}
 	local function add(text, gold)
 		lines[#lines + 1] = { text = text, gold = gold }
@@ -332,6 +334,18 @@ function ST.XPTip(info, b, f)
 				or d == -1 and L.DEV_BELOW_1
 				or L.DEV_BELOW_N:format(-d)
 			add(L.TT_OWN_LEVEL:format(level, dev))
+		end
+	end
+	-- Quests the route passed on entry although they were not done (Welle 7, Polestar #86): the
+	-- number, then the first EARLIER_SHOWN names.
+	local skipped = earlier and #earlier or 0
+	if skipped > 0 then
+		add(skipped == 1 and L.TT_EARLIER_1 or L.TT_EARLIER_N:format(skipped), true)
+		for i = 1, math.min(skipped, ST.EARLIER_SHOWN) do
+			add(ST.Quest(earlier[i]))
+		end
+		if skipped > ST.EARLIER_SHOWN then
+			add(L.TT_MORE:format(skipped - ST.EARLIER_SHOWN))
 		end
 	end
 	if f and f.state ~= "done" then
@@ -372,6 +386,25 @@ function ST.Reach(b)
 	)
 end
 
+-- Replanning question (Welle 7): "You are 3 levels above the plan. Adjust the route?" or the switch
+-- point "Wetlands fits your level better (planned from level 20). Go there next?".
+function ST.Offer(o)
+	if o.kind == "switch" then
+		local c = o.choice or {}
+		local text = L.SWITCH_ASK:format(ST.MapName(c.map) or L.ZONE_FALLBACK, c.plan or 0)
+		if c.gain and c.gain >= 60 then
+			text = text .. " " .. L.SWITCH_GAIN:format(ST.Duration(c.gain))
+		end
+		return text
+	end
+	return L.OVER_ASK:format(o.gap or 0)
+end
+
+-- Status line after "adjust": how many quests were left out.
+function ST.Adjusted(n)
+	return n == 1 and L.ADJUSTED_1 or L.ADJUSTED_N:format(n)
+end
+
 -- Right-click menu: "Undo: checked off “Wolves …”".
 function ST.Undo(act)
 	if not act then
@@ -381,7 +414,7 @@ function ST.Undo(act)
 	if act.kind == "unknown" or not fmt or fmt == "ACT_" .. tostring(act.kind) then
 		return L.UNDO
 	end
-	if act.kind == "back" then
+	if act.kind == "back" or act.kind == "adjust" or act.kind == "switch" then
 		return L.UNDO_ACTION:format(fmt)
 	end
 	return L.UNDO_ACTION:format(fmt:format(act.quest and ST.Quest(act.quest) or ""))

@@ -34,6 +34,7 @@ Routes\Discover.lua
 Routes\Dungeon.lua
 Routes\Forecast.lua
 Routes\Runtime.lua
+Routes\Replan.lua
 Routes\Guide.lua
 Routes\Explore.lua
 UI\Core.lua

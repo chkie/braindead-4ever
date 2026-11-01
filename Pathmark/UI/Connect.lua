@@ -144,6 +144,21 @@ function C.SetMode(mode)
 	return call("SetMode", mode) == true
 end
 
+-- Open question of the replanning (Welle 7): "over the plan" or a switch point, or nil.
+function C.Offer()
+	return call("Offer")
+end
+
+-- yes = true takes the question's proposal, false keeps the route; true if answered.
+function C.AnswerOffer(yes)
+	return call("AnswerOffer", yes) == true
+end
+
+-- Quests the route passed on entry although they were not done (Welle 7), list of quest IDs.
+function C.Earlier()
+	return call("Earlier") or {}
+end
+
 -- Quests the route follows (set of quest IDs, skipped ones and their follow-ups left out).
 function C.RouteQuests()
 	return call("Quests") or {}

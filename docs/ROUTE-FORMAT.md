@@ -226,6 +226,16 @@ Added with Welle 4 (additive, format stays 1):
   maps = { [1411] = 1, [1453] = 0 },         -- continent of every uiMap of goto points and dungeon givers
 ```
 
+Interface for Welle 7 (additive, format stays 1; filled by the route builder of Welle 6b, until then absent):
+
+```lua
+  alts = {                                   -- alternative modules per switch point (docs/ROUTE-RUNTIME.md §Replanning)
+    ["a-speed-core-01-1436"] = {             -- the module that starts at the switch point
+      { key = "<module key>", plan = 16, map = 1437, gain = 900 },
+    },                                       -- module key (in `modules`, own r/c filter), planned level,
+  },                                         -- uiMap it leads to, seconds saved against the replaced module
+```
+
 `quests` (added 2026-11-01, additive, format stays 1) comes from `data/facts`: quest level (0 if unknown), full quest XP (0 if unknown) and the prerequisite groups of `pre` (one quest per group is enough; breadcrumbs are never in it). The route runtime uses it for skipping follow-up quests and for the XP balance.
 
 Elements are flat arrays `{ verb, arguments..., sources, status [, roots] }`:

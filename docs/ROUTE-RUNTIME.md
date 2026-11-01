@@ -2,7 +2,7 @@
 
 The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `Pathmark/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
 
-Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip).
+Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip; Welle 7: replanning).
 
 | File | What it does |
 | --- | --- |
@@ -12,12 +12,13 @@ Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Las
 | `Pathmark/Routes/Dungeon.lua` | Dungeon hint (Welle 4). Pure Lua over the runtime and the compiled dungeon tables. |
 | `Pathmark/Routes/Forecast.lua` | Time forecast (Welle 4). Pure Lua. |
 | `Pathmark/Routes/Runtime.lua` | The rules below. Pure Lua: the client state comes in through a world table, so the tests run the same code. |
+| `Pathmark/Routes/Replan.lua` | Replanning (Welle 7): over the plan, switch points with alternative modules, reorder in the block. Adds methods to the runtime; pure Lua. |
 | `Pathmark/Routes/Guide.lua` | Module `route`: picks the route, feeds game events in, saves progress, offers `ns.Route`. |
 | `Pathmark/Routes/Explore.lua` | Module `explore`: own finds, finds of other players, the catalog; offers `ns.Explore`. |
 
 ## Module `route`
 
-Core module (runs in safe mode). Required: `C_QuestLog.IsQuestFlaggedCompleted`, `C_QuestLog.GetLogIndexForQuestID`, `C_QuestLog.IsComplete`, `C_Map.GetBestMapForUnit`, `UnitLevel`, `UnitRace`, `UnitClass`, `UnitFactionGroup`, `UnitXP`, `UnitXPMax`; events `PLAYER_LOGIN`, `QUEST_ACCEPTED`, `QUEST_REMOVED`, `QUEST_LOG_UPDATE`. Optional: `GetQuestLogRewardXP` (undocumented), `GetXPExhaustion`, `C_Map.GetMapInfo`, `C_Item.GetItemCount` and the events `PLAYER_LOGOUT`, `QUEST_TURNED_IN`, `QUEST_WATCH_UPDATE`, `QUEST_LOG_CRITERIA_UPDATE`, `UNIT_QUEST_LOG_CHANGED`, `ZONE_CHANGED_NEW_AREA`, `BAG_UPDATE_DELAYED`, `PLAYER_LEVEL_UP`, `PLAYER_XP_UPDATE`, `UPDATE_EXHAUSTION`, `UI_INFO_MESSAGE`, `HEARTHSTONE_BOUND`. The probe checks them as `mod.route.*`.
+Core module (runs in safe mode). Required: `C_QuestLog.IsQuestFlaggedCompleted`, `C_QuestLog.GetLogIndexForQuestID`, `C_QuestLog.IsComplete`, `C_Map.GetBestMapForUnit`, `UnitLevel`, `UnitRace`, `UnitClass`, `UnitFactionGroup`, `UnitXP`, `UnitXPMax`; events `PLAYER_LOGIN`, `QUEST_ACCEPTED`, `QUEST_REMOVED`, `QUEST_LOG_UPDATE`. Optional: `GetQuestLogRewardXP` (undocumented), `GetXPExhaustion`, `C_Map.GetMapInfo`, `C_Item.GetItemCount` and the events `PLAYER_LOGOUT`, `QUEST_TURNED_IN`, `QUEST_WATCH_UPDATE`, `QUEST_LOG_CRITERIA_UPDATE`, `UNIT_QUEST_LOG_CHANGED`, `ZONE_CHANGED_NEW_AREA`, `BAG_UPDATE_DELAYED`, `PLAYER_LEVEL_UP`, `PLAYER_XP_UPDATE`, `UPDATE_EXHAUSTION`, `UI_INFO_MESSAGE`, `HEARTHSTONE_BOUND`, and since Welle 7 `UnitPosition` and `InCombatLockdown` (reorder in the block). The probe checks them as `mod.route.*`.
 
 At `PLAYER_LOGIN` the module reads faction (`UnitFactionGroup`), race ID and class ID (third return values of `UnitRace` and `UnitClass`; the two Skyborne races differ only there) and builds the route with `ns.Routes.Steps(faction, mode, raceID, classID)`. A race without a start module (new races are announced) gives no route; the problem report then says `no route for <faction> <race>/<class>`.
 
@@ -40,6 +41,10 @@ PathmarkCharDB.route = {
     undo = { ... },                    -- up to 20 snapshots of the fields above
     split = { m = "<module>", secs = 0, clean = true }, -- current module run (time forecast)
     dungeons = { [instanceID] = true },                -- dungeon hints the player skipped
+    earlier = { questID, ... },        -- Welle 7: quests the anchor rule passed though not done (route order)
+    offers = { ["over:<key>"] = "y" | "n", ["switch:<key>"] = "y" | "n" }, -- replanning questions answered
+    alts = { ["<module>"] = "<alternative module>" },  -- modules chosen at switch points
+    orders = { ["<segment id>"] = "<step id>,<step id>,..." }, -- reordered blocks (§Replanning)
   },
   rate = { secs = 0, xp = 0 },         -- own XP rate from active play, last 2 hours (time forecast)
 }
@@ -70,11 +75,11 @@ A step key is `<module>/<step id>`; step IDs are chosen by the route author and 
 
 A step is **done** when every counted element is done or the player checked it, **skipped** when the player skipped it, when all its quests are skipped, or (travel step) when every step of the zone it leads into is skipped, and **open** otherwise. An element of a skipped quest counts as done.
 
-**Current step.** From the saved anchor the route moves forward over every step that is done, skipped or passed. Passed means: planned more than 5 levels below the character (chosen value; such quests give at most 80 % XP) unless a quest of the step is in the log; a travel step or a step without quests whose next quest step shows server progress; on a first start without saved progress, every step before the last step with server progress, unless a quest of it is in the log. So the route starts at the right step at any level and moves on when the player grinds instead of questing. A step the player went back to is never passed by these rules.
+**Current step.** From the saved anchor the route moves forward over every step that is done, skipped or passed. Passed means: planned more than 5 levels below the character (chosen value; such quests give at most 80 % XP) unless a quest of the step is in the log; a travel step or a step without quests whose next quest step shows server progress; every step before the entry anchor (§Replanning), unless a quest of it is in the log. During play the level rule never passes a travel step into a new zone: a zone change is the player's choice (switch point, §Replanning). So the route starts at the right step at any level and moves on when the player grinds instead of questing. A step the player went back to is never passed by these rules.
 
 **Skip.** Skipping a step skips the step and every quest it names that is not handed in yet, and with them every quest that needs them: a quest is skipped when one of its prerequisite groups has only skipped quests left (one quest per group is enough, as in the route data). The rule repeats until nothing changes, so a chain of any length goes at once. A quest handed in is never skipped. For the new Forever quests of levels 21 to 30 the sources state no prerequisites yet (Polestar 0 of 112), so the chain is incomplete there until our measurements fill it.
 
-**Back** reopens the nearest earlier step that the player checked, skipped, marked by an event or that the route passed by itself; a skip made there is taken back with all its follow-up quests. Steps the server state has done stay done. **Undo** restores the state before the last check, skip, back or answer.
+**Back** reopens the nearest earlier step that the player checked, skipped, marked by an event or that the route passed by itself; a skip made there is taken back with all its follow-up quests. Steps the server state has done stay done. **Undo** restores the state before the last check, skip, back or answer, with the block order before it (a reorder that followed a skip goes back with the skip).
 
 **Abandoned quest** (owner wish 10). When a quest the route had counted as taken (its accept step lies behind the current step) leaves the log without being handed in, the runtime asks: `QuestAbandoned` fires and `Pending()` returns the quest. Nothing moves until the answer: `ResolveAbandon("reaccept")` goes back to the quest giver, `ResolveAbandon("skip")` skips the quest with its follow-up quests. Taking the quest again in the game also answers the question. Both answers can be undone.
 
@@ -105,6 +110,9 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.Forecast()` | time forecast (§Time forecast) |
 | `Route.Quests()` | set `{ [questID] = true }` of the route's quests without the skipped ones and their follow-up quests (Welle 5b, Blizzard's quest tracker) |
 | `Route.Observe(...)`, `Route.ObserveFind(find)`, `Route.Candidates(questID)`, `Route.Wants(questID)` | used by the collector and the exchange, not by the window |
+| `Route.Offer()` | open replanning question (§Replanning), or nil |
+| `Route.AnswerOffer(yes)` | answers it: true takes it, false keeps the route; the question does not come again; true if answered |
+| `Route.Earlier()` | quest IDs the route passed on entry although they were neither done nor in the log, in route order; `{}` when none |
 | `Route.Runtime()` | the runtime object, for diagnostics and tests only |
 
 Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step, chain }`. `chain` is `"incomplete"` when a quest of the step has prerequisites nobody knows yet (show the status text `L.STATUS_COLLECTING`, "collecting data": skipping may leave a follow-up quest the game will not offer), else nil. `kind` is `"quest"`, `"travel"` or `"other"`; `label` is the module's label (`vorläufig` or `stabil`); `quests` lists the quest IDs; `step` is the compiled step (read only, layout in docs/ROUTE-FORMAT.md). Quest and item names are not part of it: the window reads them from the client in the player's language. Every call builds new info tables: call on the events below, not on every frame (brain chapter 12, no tables per frame).
@@ -114,7 +122,8 @@ Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step,
 | Event | Arguments after `owner` | When |
 | --- | --- | --- |
 | `StepChanged` | `current, previous` (step info or nil) | the current step changed |
-| `RouteRecalculated` | `reason`: `start`, `skip`, `back`, `undo`, `reaccept`, `missing`, `prereq` | the route was set up again, the skip set changed, or players confirmed prerequisites (`prereq`) |
+| `RouteRecalculated` | `reason`: `start`, `skip`, `back`, `undo`, `reaccept`, `skipquest`, `missing`, `prereq`, `adjust`, `switch`, `reorder` | the route was set up again, the skip set changed, players confirmed prerequisites (`prereq`), or the replanning changed the route (`adjust`, `switch`, `reorder`) |
+| `OfferChanged` | question or nil | the open replanning question changed |
 | `XPBalance` | balance | after a step change, XP or level change, at most once per 0.1 s |
 | `QuestAbandoned` | `questID` | an abandon question waits for the answer |
 
@@ -249,6 +258,43 @@ Known data limits: the Deadmines quests at Sentinel Hill need the Defias chain (
 
 **Measuring.** Active play: the time between two game events the route module handles, each gap counted up to 5 minutes. A module run is clean when it starts at the module's first step and every step up to its end is done (not skipped, not passed by the route); a clean run goes to the collector as `split` (module, seconds, mode). All thresholds are chosen values.
 
+## Replanning (Welle 7)
+
+Owner guideline 7: "three levels ground, the route checks again". Method and sources: brain chapter 21 §6 (three stages after the addons RestedXP, Journey and Polestar #86), budget chapter 12. The route is optimized offline; in the client only stage 1 computes, stage 2 chooses between variants built offline, and every zone change is the player's choice. Every threshold below is a chosen value, to be measured in the client.
+
+| Value | Chosen | Where |
+| --- | --- | --- |
+| Share of the route quests up to the anchor that must be done or in the log | 0.5 (Polestar #86: "about half") | `RT.ANCHOR_SHARE` |
+| Quests kept in the list "skipped earlier"; names in the tooltip | 200; 5 | `RT.EARLIER_MAX`, `ST.EARLIER_SHOWN` |
+| Levels above (or below) the plan that open a question | 3 | `RT.OVER_LEVEL` |
+| Turn-in share under which "adjust" leaves a quest out | 0.8 (R01) | `RT.DROP_SHARE` |
+| Reorder: time per frame; new order at least this much shorter; quest log limit | 2 ms (chapter 21 §6.2); 5 %; 20 or the plan's own peak | `RT.REORDER_BUDGET`, `RT.REORDER_GAIN`, `RT.LOG_CAP` |
+| Reorder: open steps at least; at most | 3; 80 | `RT.REORDER_MIN`, `RT.REORDER_MAX` |
+
+**Entry anchor** (stage 0, Polestar #86, chapter 21 Code E). On a first start, after a level-up and on re-entry the route looks for the furthest step from the current one with a turn-in or with objective progress of one of its quests. A quest that is only in the log does not count, so a carried breadcrumb cannot throw the player ahead. The anchor holds only when at least half of the route quests up to it are handed in or in the log; else the route stays where the other rules put it. Steps before the anchor count as passed unless a quest of them is in the log. Accepts before the anchor whose quest is neither done nor in the log go to the list "N quests skipped earlier" (`Route.Earlier()`, XP tooltip); a quest leaves the list when it is done, taken or skipped. After a dungeon this is enough: dungeon quests are seen by their turn-in. No anchor is looked for while an abandon question waits or after the player went back.
+
+**Over the plan.** Three levels or more above the planned level of the current quest step, the route asks once per block: "You are N levels above the plan. Adjust the route?" (`Route.Offer()`, `kind = "over"`). Yes leaves out the quests of the rest of the block that are not taken yet and whose turn-in would give less than 80 % XP at the character's level (R01, `XP.QuestXP`); a quest stays when leaving it out would cut the chain to a quest that stays. Undo brings them back. No keeps the route.
+
+**Switch point** (stage 2). At a travel step into a new zone, never in the middle of a block, when the character is 3 levels or more away from the plan of the block ahead, the route offers the option nearest to his level: a later block of the route (`jump`, only above the plan; the blocks between are skipped and come back with undo) or an alternative module built offline (`module`). On a tie the option with the larger time gain wins, so a module that keeps the zones wins against a jump. The search stops at a class detour (R24). The level rule never passes the travel step meanwhile. Yes on a module saves the choice in `alts`, the route is put together again with the module in place of the replaced one (inserts after it stay) and starts at its first step; a module switch cannot be undone, the undo list starts empty.
+
+```lua
+{ kind = "over", id = "over:<key>", key, gap = 3, plan = 10, level = 13, drop = { questID, ... } }
+{ kind = "switch", id = "switch:<key>", key, level = 16, plan = 13, map = 1436,
+  choice = { kind = "jump", to = "<key>", map = 1433, plan = 16, dev = 0 }   -- or
+           { kind = "module", module = "<key>", map = 1437, plan = 16, dev = 0, gain = 900 },
+  options = { { kind = "stay", plan = 13, dev = 3 }, ... } }
+```
+
+**Alternative modules** (interface for Welle 6b). The compiled data may hold `alts = { ["<module>"] = { { key, plan, map, gain }, ... } }` (docs/ROUTE-FORMAT.md): for the module that starts at a switch point, modules built offline for another level band, with their planned level, the uiMap they lead to and the time gain in seconds against the replaced module (shown from one minute on). The runtime offers only modules the data holds and whose race and class filter fits. Without `alts` the switch point offers jumps only.
+
+**Reorder in the block** (stage 1, chapter 21 Code G). After a skip, an abandoned quest skipped, "adjust" or an entry in the middle of a block, the steps from the current one to the end of its segment are ordered again from the player's position (`UnitPosition`): nearest neighbour with precedence (accept, objectives, turn-in of a quest in this order; a prerequisite's turn-in before the follow-up's accept; a step planned above the character's level behind the steps planned lower), then 2-opt over reversals that keep the precedence and the quest log limit. A segment is a run of steps of one module on one continent with only accept, complete, turn-in, notes and at most one goto; any other step (travel, collect, hearthstone, flight path, trainer, level, kinds that come later) keeps its place and ends the segment. Steps that are done, skipped or passed move along as free acts without a way to walk, so a step reopened later (back, undo of a mark, a quest abandoned and taken again) never stands behind a step that needs it. The new order is kept only when it is at least 5 % shorter; it is saved per segment and survives `/reload`.
+
+The work runs as a coroutine, one slice of at most 2 ms per frame (`debugprofilestop`), never in a fight (`InCombatLockdown`): the job waits and runs after it. Building the job is one frame, the ordering starts in the next. When the route changes while the job runs, it starts again from the new current step. Nothing runs while the player went back or a question waits.
+
+**Measured** (offline, stock Lua 5.1 on a Mac, real Alliance route from Northshire, `spec/route_replan_spec.lua`): whole job 1.7 ms at 40 points and 6.7 ms at 80 points (brain chapter 21: 0.66 and 7.37 ms); in slices 5 frames, worst frame 2.0 ms; at 10 reorders per hour and 60 frames per second 0.0003 ms per frame on average (budget 0.1 ms). Random tests (`spec/route_random_spec.lua`, 3 × 2500 actions with moving, fights and the job after every action): no invalid state, 4 to 8 reorders applied per seed. The binding numbers come from the client (`C_AddOnProfiler`).
+
+Not built here (waits for the owner's decision on full zones, chapter 21 §6.3 to §6.5): stall detection with the offer "do this objective later", the spread over equally fast variants per character.
+
 ## Not built here
 
 Arrival detection for steps with only a `goto` (the route data has none) and hearthstone use (no `hs` element in the data); guidance inside dungeons (after 1.0).
@@ -270,5 +316,7 @@ The windows (`Pathmark/UI/`) read the logic only through the adapter `UI/Connect
 | `Explore.Ask(key, 3)` | "Show location": waypoint pin and arrow goal for this one find |
 | `Route.Forecast`, step info `lv`, `Balance().level` | tooltip of the XP line (Welle 5b): planned level at this step and the character's deviation, then route end, the section against the median and the next level; "collecting data" while a part has too few runs |
 | `Route.Quests` | option "Blizzard's quest tracker" (Welle 5b): with "only quests of the route" the tracker follows the route's quests in the log |
+| `Route.Offer`, `AnswerOffer`, `OfferChanged` | Welle 7: the replanning question as a banner with two buttons ("Adjust" or "Go there", "Keep route"); no new question in a fight; after "Adjust" the status line counts the quests left out |
+| `Route.Earlier` | Welle 7: "N quests skipped earlier" with the first five names in the tooltip of the XP line |
 
 Since Welle 5b also: `show = "riddle"` of the player's zone as the line "Hint: …" in the step window (one at a time, the next after a completed step) and `show = "area"` as a circle on the world map with the tooltip "Area".

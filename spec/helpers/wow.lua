@@ -807,6 +807,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/Routes/Dungeon.lua",
 		"Pathmark/Routes/Forecast.lua",
 		"Pathmark/Routes/Runtime.lua",
+		"Pathmark/Routes/Replan.lua",
 		"Pathmark/Routes/Guide.lua",
 		"Pathmark/Routes/Explore.lua",
 		"Pathmark/UI/Core.lua",

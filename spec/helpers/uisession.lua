@@ -41,6 +41,9 @@ function S.login(opts)
 		table.insert(files, 2, "Pathmark/Locales/deDE.lua") -- the TOC loads it only in German clients
 	end
 	local ns = wow.loadFiles(files)
+	if opts.loaded then
+		opts.loaded(ns) -- the addon files are loaded, nothing has run yet (e.g. to change route data)
+	end
 	wow.fire("ADDON_LOADED", "Pathmark")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)

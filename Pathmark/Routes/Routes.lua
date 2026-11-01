@@ -89,8 +89,10 @@ local function applies(t, raceID, classID)
 end
 R.Applies = applies
 
--- Module keys in route order for one race and class, or nil.
-function R.ModuleKeys(data, mode, raceID, classID)
+-- Module keys in route order for one race and class, or nil. swap (optional, Welle 7 stage 2): the
+-- player's choices at switch points, { [module key] = key of the alternative module that replaces it };
+-- a replacement the data does not hold is ignored. Inserts after a replaced module stay after it (R24).
+function R.ModuleKeys(data, mode, raceID, classID, swap)
 	local c = data and data.compose[mode]
 	if not c then
 		return nil
@@ -105,7 +107,11 @@ function R.ModuleKeys(data, mode, raceID, classID)
 	if not start then
 		return nil
 	end
-	local keys = { start }
+	local function pick(key)
+		local alt = swap and swap[key]
+		return alt and data.modules and data.modules[alt] and alt or key
+	end
+	local keys = { pick(start) }
 	local function inserts(anchor)
 		for _, ins in ipairs(c.inserts) do
 			if ins.after == anchor and applies(ins, raceID, classID) then
@@ -115,7 +121,7 @@ function R.ModuleKeys(data, mode, raceID, classID)
 	end
 	inserts("start")
 	for _, key in ipairs(c.core) do
-		keys[#keys + 1] = key
+		keys[#keys + 1] = pick(key)
 		inserts(key)
 	end
 	return keys
@@ -123,13 +129,13 @@ end
 
 -- The steps of one race and class in order: { { module = key, step = stepTable }, ... }.
 -- Step tables are the compiled data itself (read only). Elements with their own filter are
--- rare; a caller checks them with R.Applies(element, raceID, classID).
-function R.Steps(faction, mode, raceID, classID)
+-- rare; a caller checks them with R.Applies(element, raceID, classID). swap: see R.ModuleKeys.
+function R.Steps(faction, mode, raceID, classID, swap)
 	local data = R.Load(faction)
 	if not data then
 		return nil
 	end
-	local keys = R.ModuleKeys(data, mode, raceID, classID)
+	local keys = R.ModuleKeys(data, mode, raceID, classID, swap)
 	if not keys then
 		return nil
 	end

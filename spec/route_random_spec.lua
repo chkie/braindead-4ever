@@ -1,6 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Random sequences on the real Elwynn route (owner wish 10, 2026-11-01): accept, abandon, play, check,
--- skip, back, undo, answer the abandon question, level up and /reload in any order. After every action
+-- skip, back, undo, answer the abandon question, level up and /reload in any order; since Welle 7 also
+-- moving around, fights and the reorder job, which runs up to ten frame slices after every action
+-- (an action every 170 ms, so a long job spans several actions and often gets stale). After every action
 -- the route must be valid. The generator is seeded, so a failure repeats with the same sequence.
 local wow = require("spec.helpers.wow")
 
@@ -28,7 +30,7 @@ local function Random(seed)
 end
 
 local function newWorld()
-	local w = { flagged = {}, log = {}, level = 1, map = 1429 }
+	local w = { flagged = {}, log = {}, level = 1, map = 1429, x = 0, y = 0, combat = false }
 	w.api = {
 		IsFlagged = function(q)
 			return w.flagged[q] == true
@@ -48,6 +50,12 @@ local function newWorld()
 		XP = function()
 			return 0, 400, 0
 		end,
+		Position = function()
+			return w.x, w.y, 0
+		end,
+		InCombat = function()
+			return w.combat
+		end,
 	}
 	return w
 end
@@ -59,6 +67,7 @@ describe("Route runtime under random actions", function()
 		"Pathmark/Routes/Data_Alliance.lua",
 		"Pathmark/Routes/XP.lua",
 		"Pathmark/Routes/Runtime.lua",
+		"Pathmark/Routes/Replan.lua",
 	})
 	local RT = ns.Runtime
 	local data = ns.Routes.Load("Alliance")
@@ -67,6 +76,61 @@ describe("Route runtime under random actions", function()
 	local steps = {}
 	for i = 1, 160 do
 		steps[i] = all[i]
+	end
+
+	local planIndex = {}
+	for i, e in ipairs(steps) do
+		planIndex[e.module .. "/" .. e.step.id] = i
+	end
+
+	-- Reordering only permutes movable steps inside their segment; every step keeps its index entry,
+	-- the accept index stays right, and open steps keep accept, objectives, turn-in and prerequisite order.
+	local function checkOrder(rt, label)
+		local n = #rt.steps
+		assert.are.equal(#steps, n, label .. ": step count")
+		local first = {}
+		for i, step in ipairs(rt.steps) do
+			assert.are.equal(i, rt.index[step.key], label .. ": index of " .. step.key)
+			local seg = rt.segAt[planIndex[step.key]]
+			if seg then
+				assert.is_true(i >= seg.first and i <= seg.last, label .. ": " .. step.key .. " left its segment")
+			else
+				assert.are.equal(planIndex[step.key], i, label .. ": " .. step.key .. " moved")
+			end
+			for _, el in ipairs(step.els) do
+				if el[1] == V.ACCEPT and not first[el[2]] then
+					first[el[2]] = i
+				end
+			end
+		end
+		assert.are.same(first, rt.accepts, label .. ": accept index")
+		local ctx = rt:Context()
+		local stage, turnin = {}, {}
+		for i = rt.cur, n do
+			local step = rt.steps[i]
+			if rt:StepState(i, ctx) == "open" and not rt:Passed(i, ctx) then
+				for _, el in ipairs(step.els) do
+					local v, q = el[1], el[2]
+					if v <= V.TURNIN then
+						assert.is_true((stage[q] or 0) <= v, label .. ": " .. q .. " out of order at " .. step.key)
+						stage[q] = v
+						if v == V.ACCEPT then
+							for _, group in ipairs(rt:Groups(q)) do
+								for _, m in ipairs(group) do
+									local t = turnin[m]
+									assert.is_true(t == nil or t < i, label .. ": " .. q .. " before its prerequisite")
+								end
+							end
+						end
+					end
+				end
+				for _, el in ipairs(step.els) do
+					if el[1] == V.TURNIN then
+						turnin[el[2]] = i
+					end
+				end
+			end
+		end
 	end
 
 	local function check(rt, w, label)
@@ -99,6 +163,17 @@ describe("Route runtime under random actions", function()
 			assert.is_true(u.index > rt.cur, label .. ": upcoming before current")
 			assert.are.equal("open", rt:StepState(u.index), label .. ": upcoming " .. u.key)
 		end
+		checkOrder(rt, label)
+	end
+
+	-- Plan positions of the route's goto points, to stand somewhere on the route.
+	local spots = {}
+	for _, e in ipairs(steps) do
+		for _, el in ipairs(e.step) do
+			if el[1] == 5 then
+				spots[#spots + 1] = { el[3], el[4] }
+			end
+		end
 	end
 
 	for _, seed in ipairs({ 1, 20261101, 424242 }) do
@@ -109,6 +184,11 @@ describe("Route runtime under random actions", function()
 			local rt = RT.New(steps, data.quests, w.api, saved, { race = 1, class = 1, modules = data.modules })
 			rt:Evaluate()
 			local counts = {}
+			local t = 0
+			local function clock()
+				t = t + 0.000002 -- every clock call stands for 2 µs of work (about the measured cost)
+				return t
+			end
 
 			local function randomStep()
 				local i = math.min(#rt.steps, rt.cur + rand(6) - 2)
@@ -182,8 +262,15 @@ describe("Route runtime under random actions", function()
 				end,
 				function()
 					local key = rt:Current() and rt:Current().key
+					local order = {}
+					for i, step in ipairs(rt.steps) do
+						order[i] = step.key
+					end
 					saved = deepcopy(saved)
 					rt = RT.New(steps, data.quests, w.api, saved, { race = 1, class = 1, modules = data.modules })
+					for i, step in ipairs(rt.steps) do
+						assert.are.equal(order[i], step.key, "reload changed the order")
+					end
 					rt:Evaluate()
 					local now = rt:Current() and rt:Current().key
 					if not saved.pending then
@@ -194,9 +281,18 @@ describe("Route runtime under random actions", function()
 					end
 					return "reload"
 				end,
+				function()
+					local p = spots[rand(#spots)]
+					w.x, w.y = p[1] + rand(401) - 201, p[2] + rand(401) - 201
+					return "move"
+				end,
+				function()
+					w.combat = not w.combat
+					return "fight"
+				end,
 			}
 			-- Playing the current step is the most common action, as in the game.
-			local weights = { 6, 2, 1, 2, 2, 1, 2, 1, 1, 1 }
+			local weights = { 6, 2, 1, 2, 2, 1, 2, 1, 1, 1, 2, 1 }
 			local total = 0
 			for _, x in ipairs(weights) do
 				total = total + x
@@ -209,12 +305,27 @@ describe("Route runtime under random actions", function()
 				end
 				local name = actions[pick]()
 				counts[name] = (counts[name] or 0) + 1
+				local before = rt.reordered
+				for _ = 1, 10 do
+					if not rt:RunJob(clock, 0.002) then
+						break
+					end
+				end
+				if rt.reordered ~= before then
+					counts.reorder = (counts.reorder or 0) + 1
+				end
 				rt:Evaluate()
 				check(rt, w, ("seed %d action %d (%s)"):format(seed, k, name))
 			end
-			for _, name in ipairs({ "play", "abandon", "check", "skip", "back", "undo", "resolve", "reload" }) do
+			for _, name in ipairs({ "play", "abandon", "check", "skip", "back", "undo", "resolve", "reload", "move" }) do
 				assert.is_true((counts[name] or 0) > 50, name .. " ran only " .. tostring(counts[name]))
 			end
+			-- measured 4 to 8 applied reorders per seed (the rest: no clear gain, a question waits, the player
+			-- went back, the current step is no movable quest step); every action after one runs on the new order
+			assert.is_true((counts.reorder or 0) >= 3, "reordered only " .. tostring(counts.reorder))
+			io.stdout:write(
+				("\n[replan] seed %d: %d reorders applied in %d actions"):format(seed, counts.reorder or 0, ACTIONS)
+			)
 		end)
 	end
 end)
