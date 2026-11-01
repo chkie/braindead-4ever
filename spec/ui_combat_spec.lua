@@ -30,7 +30,8 @@ local function everything(ns)
 	grip.scripts.OnMouseDown(grip, "LeftButton")
 	grip.scripts.OnMouseUp(grip, "LeftButton")
 	-- Blizzard's quest tracker (owner reading 15): a quest off the route with Blizzard's own mark, then
-	-- the option to hidden: both want RemoveQuestWatch and the tracker's alpha
+	-- the option from "only quests of the route" (see Login) to hidden: both want RemoveQuestWatch and
+	-- the tracker's alpha
 	wow.world.questLog[#wow.world.questLog + 1] = { questID = 90001 }
 	wow.fire("QUEST_ACCEPTED", 90001)
 	wow.world.watch(90001, true)
@@ -38,9 +39,15 @@ local function everything(ns)
 	wow.advance(1)
 end
 
+-- The player chose "only quests of the route" (owner reading 16 made "hidden" the default), so the
+-- switch to hidden happens in the fight.
+local function Login()
+	return S.login({ hint = false, saved = { ui = { tracker = "route", rev = 1 } } })
+end
+
 describe("Combat lockdown", function()
 	it("lets no restricted call through in a fight and runs them after it", function()
-		local ns = S.login({ hint = false })
+		local ns = Login()
 		S.combat(true)
 		everything(ns)
 		assert.are.same({}, wow.blocked)
@@ -70,7 +77,7 @@ describe("Combat lockdown", function()
 	end)
 
 	it("counter-check: without the guard the same fight records blocked calls", function()
-		local ns = S.login({ hint = false })
+		local ns = Login()
 		-- take the guard out: everything runs at once and the fight is not noticed for the looks
 		ns.UI.OutOfCombat = function(_, fn, ...)
 			fn(...)
@@ -93,5 +100,6 @@ describe("Combat lockdown", function()
 		assert.is_true(seen["Frame:StartSizing"], "sizing not caught")
 		assert.is_true(seen["C_QuestLog.RemoveQuestWatch"], "RemoveQuestWatch not caught")
 		assert.is_true(seen["ObjectiveTrackerFrame:SetAlpha"], "tracker alpha not caught")
+		assert.is_true(seen["Frame:StartMoving"], "window drag not caught") -- owner reading 16
 	end)
 end)

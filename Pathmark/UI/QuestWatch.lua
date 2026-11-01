@@ -22,7 +22,8 @@ of the Ace3 libraries used as well as that of the covered work.
 -- SPDX-License-Identifier: GPL-3.0-or-later WITH AdditionRef-Pathmark-Ace3-Exception
 
 -- UI/QuestWatch.lua: module "questwatch", the option "Blizzard's quest tracker" (owner reading point
--- 15, Welle 5b task 8): unchanged | only the quests of the route (default) | hidden.
+-- 15, Welle 5b task 8): unchanged | only the quests of the route | hidden (default since Welle 5c, owner
+-- reading 16: while Pathmark guides, the step window takes the tracker's place).
 --   * Before the first change the check marks (watch list) of the character are saved; "unchanged",
 --     the guidance pause, a module turned off and every logout put them back. The logout covers an
 --     addon switched off in the AddOns list: the next session without Pathmark finds the old marks.
@@ -310,6 +311,7 @@ M.Define("questwatch", {
 		UI.OutOfCombat("questwatch", function()
 			pcall(QW.Restore)
 		end)
+		UI.Changed("tracker") -- the tracker shows again: the step window moves beside it (owner reading 16)
 	end,
 	events = {
 		PLAYER_LOGIN = function()

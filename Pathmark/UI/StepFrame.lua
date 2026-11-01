@@ -54,7 +54,18 @@ local SF = {
 	DONE_DELAY = 0.9, -- the checked line stays this long before the next one moves up
 	DETAIL_EVERY = 0.5, -- distance in the detail line at most twice per second
 	POPUP = "PATHMARK_SKIP_CHAIN",
-	DEFAULT = { "TOPRIGHT", -80, -260 },
+	-- Default place (owner readings 16 and 17): where Blizzard's quest tracker stands, top right, with a
+	-- gap to the right action bars and the minimap; left of the tracker while the tracker shows. Measured
+	-- from Blizzard's frames at every placement (SF.DefaultPoint); the fixed values are the fallback.
+	-- Sources: Gethe/wow-ui-source live 12.1.5 (d07eb00) and forever 1.60.1 (ca8368f), same in both.
+	GAP = 10, -- Blizzard's gap below the minimap cluster (Mainline/EditModeManagerOverrides.lua)
+	TOP = 260, -- RIGHT_CONTAINER_OFFSET_Y, top of the tracker's container (Mainline/EditModePresetLayouts.lua)
+	BARS = 105, -- room of the right bars: |offset 55| + width 45 + 5 (Shared/EditModeUtil.lua, 45 = action button)
+	TRACKER = 260, -- width of ObjectiveTrackerFrame (ObjectiveTrackerContainerTemplate)
+	MINIMAP = 256, -- height of MinimapCluster (Blizzard_Minimap/Mainline/Minimap.xml)
+	-- Right bars (EditModeManagerFrameMixin:GetRightActionBars) count shown or not; bars 6 to 8 only when
+	-- they stand at the right edge.
+	BARS_RIGHT = { "MultiBarRight", "MultiBarLeft", "MultiBar5", "MultiBar6", "MultiBar7" },
 }
 ns.StepFrame = SF
 
@@ -271,7 +282,130 @@ local function Build()
 		SF.OnSized(width, height)
 	end)
 	SF.BuildGrip()
-	UI.Mover(W, "window", L.EDIT_WINDOW, SF.DEFAULT, true)
+	UI.Mover(W, "window", L.EDIT_WINDOW, SF.DefaultPoint, { mouse = true, drag = SF.CanDrag })
+end
+
+-- Position --------------------------------------------------------------------------------------------
+
+-- Free drag (owner reading 16): left button on the header band, not locked, not while sizing. The
+-- fight is checked by UI.CanMove.
+function SF.CanDrag()
+	if not W or SF.sizing or UI.Get("lock") or not GetCursorPosition then
+		return false
+	end
+	local _, y = GetCursorPosition()
+	local scale, top = W:GetEffectiveScale(), W:GetTop()
+	if type(y) ~= "number" or type(scale) ~= "number" or scale <= 0 or type(top) ~= "number" then
+		return false
+	end
+	return y / scale >= top - SF.HEADER
+end
+
+-- Does Blizzard's quest tracker show? Not with "hidden", unless the module that hides it is off or
+-- the first start is still open (the option starts after it, UI/QuestWatch.lua QW.Mode).
+function SF.TrackerShown()
+	if UI.Get("tracker") ~= "hide" or not UI.DB().setupDone then
+		return true
+	end
+	local state = M.state.questwatch
+	return state ~= nil and state ~= "on" and state ~= "planned"
+end
+
+local function Overlaps(a1, a2, b1, b2)
+	return a1 < b2 and b1 < a2
+end
+
+-- Left edge of the action bars that stand at the right screen edge, one next to the other.
+local function BarsLeft(screenR)
+	local rects = {}
+	for _, name in ipairs(SF.BARS_RIGHT) do
+		local l, r = UI.Rect(_G[name])
+		if l then
+			rects[#rects + 1] = { l, r }
+		end
+	end
+	local wall, moved = screenR, true
+	while moved do
+		moved = false
+		for _, b in ipairs(rects) do
+			if b[1] < wall and b[2] >= wall - SF.GAP then
+				wall, moved = b[1], true
+			end
+		end
+	end
+	return math.min(wall, screenR - SF.BARS) -- room for both right bars, shown or not
+end
+
+-- Top of the column right..right-width: below the minimap cluster when it stands above, never higher
+-- than the top of Blizzard's right container.
+local function TopFor(screenT, right, width)
+	local top = screenT - SF.TOP
+	local l, r, _, b = UI.Rect(_G.MinimapCluster)
+	if not l then
+		return math.min(top, screenT - SF.MINIMAP - SF.GAP)
+	end
+	if Overlaps(right - width, right, l, r) and b > screenT / 2 then
+		top = math.min(top, b - SF.GAP)
+	end
+	return top
+end
+
+-- Default anchor of the step window: { "TOPRIGHT", x, y } against UIParent's top right corner.
+function SF.DefaultPoint()
+	local screenR, screenT = UIParent:GetRight(), UIParent:GetTop()
+	if type(screenR) ~= "number" or type(screenT) ~= "number" or ns.Util.IsSecret(screenR) then
+		return { "TOPRIGHT", -(SF.BARS + SF.GAP), -(SF.MINIMAP + SF.GAP) }
+	end
+	local s = 1
+	if W then
+		local ws, ps = W:GetEffectiveScale(), UIParent:GetEffectiveScale()
+		if type(ws) == "number" and type(ps) == "number" and ps > 0 then
+			s = ws / ps
+		end
+	end
+	local width = SF.Width() * s
+	local height = math.max(tonumber(W and W:GetHeight()) or 0, SF.HEADER) * s
+	local right = BarsLeft(screenR) - SF.GAP
+	local top = TopFor(screenT, right, width)
+	if SF.TrackerShown() then
+		local l, r, t, b = UI.Rect(_G.ObjectiveTrackerFrame)
+		if not l then -- Blizzard's default place of the tracker
+			l, r, t, b = screenR - SF.BARS - SF.TRACKER, screenR - SF.BARS, screenT - SF.TOP, 0
+		end
+		if Overlaps(right - width, right, l, r) and Overlaps(top - height, top, b, t) then
+			right = l - SF.GAP
+			top = TopFor(screenT, right, width)
+		end
+	end
+	-- rounded away from the corner, so the gaps hold at every window scale
+	return { "TOPRIGHT", math.floor((right - screenR) / s), math.floor((top - screenT) / s) }
+end
+
+-- Places the window at its default again when it has no saved place (login, layout, tracker option,
+-- scale). Not during a drag or sizing, and like every position change not in a fight.
+function SF.PlaceDefault()
+	local m = UI.movers.window
+	if not W or not m or m.moving or SF.sizing or UI.Position("window") then
+		return
+	end
+	UI.OutOfCombat("place-window", function()
+		if not (m.moving or SF.sizing or UI.Position("window")) then
+			UI.Place("window")
+		end
+	end)
+end
+
+-- Blizzard lays out its bars in its own handler of the same event: measure one frame later.
+local placeQueued = false
+function SF.QueuePlace()
+	if placeQueued then
+		return
+	end
+	placeQueued = true
+	C_Timer.After(0, function()
+		placeQueued = false
+		Guard.Call("window", SF.PlaceDefault)
+	end)
 end
 
 -- Scroll list of the next steps: Blizzard's WowScrollBox with a MinimalScrollBar and a linear view
@@ -1226,6 +1360,10 @@ local function Init()
 		UI.OnChange(key, SF, SF.Refresh)
 	end
 	UI.OnChange("combat", OnFight, OnFight)
+	-- default place: Blizzard's tracker shown or not, window scale and width, after Edit Mode
+	for _, key in ipairs({ "tracker", "scale", "width", "editing" }) do
+		UI.OnChange(key, SF.PlaceDefault, SF.PlaceDefault)
+	end
 	UI.OnChange("textSize", SF, function()
 		T.ApplyFontScale()
 		SF.Refresh()
@@ -1266,8 +1404,17 @@ M.Define("window", {
 			"PlaySound",
 			"BreakUpLargeNumbers",
 			"UnitPosition",
+			"GetCursorPosition",
 		},
-		events = { "QUEST_DATA_LOAD_RESULT", "CVAR_UPDATE", "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED" },
+		events = {
+			"QUEST_DATA_LOAD_RESULT",
+			"CVAR_UPDATE",
+			"PLAYER_REGEN_DISABLED",
+			"PLAYER_REGEN_ENABLED",
+			"EDIT_MODE_LAYOUTS_UPDATED",
+			"DISPLAY_SIZE_CHANGED",
+			"UI_SCALE_CHANGED",
+		},
 	},
 	init = Init,
 	events = {
@@ -1276,7 +1423,13 @@ M.Define("window", {
 			SF.Invalidate()
 			SF.Refresh()
 		end,
-		PLAYER_ENTERING_WORLD = SF.Queue,
+		PLAYER_ENTERING_WORLD = function()
+			SF.Queue()
+			SF.QueuePlace() -- without a saved place the default is computed again at every login
+		end,
+		EDIT_MODE_LAYOUTS_UPDATED = SF.QueuePlace,
+		DISPLAY_SIZE_CHANGED = SF.QueuePlace,
+		UI_SCALE_CHANGED = SF.QueuePlace,
 		ZONE_CHANGED_NEW_AREA = SF.Queue,
 		QUEST_LOG_UPDATE = SF.Queue,
 		QUEST_DATA_LOAD_RESULT = SF.Queue,

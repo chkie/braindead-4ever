@@ -167,6 +167,7 @@ local function Build()
 			{ "hide", L.TRACKER_hide, L.TIP_TRACKER_hide },
 		})
 	end
+	Check(disp, "lock", L.OPT_LOCK, L.TIP_LOCK) -- the header band drags the window (owner reading 16)
 	Button(dispLayout, L.BTN_RESET_LABEL, L.BTN_RESET, UI.ResetPositions, L.TIP_BTN_RESET)
 
 	-- Arrow and map

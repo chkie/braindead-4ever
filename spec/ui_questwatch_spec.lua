@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Option "Blizzard's quest tracker" (owner reading point 15, Welle 5b task 8): unchanged | only the
--- quests of the route (default) | hidden. The check marks of the character are saved first and come
+-- quests of the route | hidden (default since Welle 5c, owner reading 16). The check marks of the character are saved first and come
 -- back with "unchanged", the pause, a module turned off and at logout; a mark the player sets stays,
 -- one he removes stays removed; marks Blizzard sets by itself after an accept are not the player's;
 -- nothing happens in a fight; an error turns only this module off.
@@ -27,9 +27,11 @@ local function sorted(list)
 	return out
 end
 
--- Login with quests in the log and marks set before Pathmark changed anything.
+-- Login with quests in the log and marks set before Pathmark changed anything. Without opts.saved the
+-- player chose "only quests of the route" after Welle 5c (rev 1), so the choice stays.
 local function login(opts)
 	opts = opts or {}
+	opts.saved = opts.saved or { ui = { tracker = "route", rev = 1 } }
 	local quests, marks = opts.log or { 33, 783, OTHER[1] }, opts.marks or { 33, OTHER[1] }
 	local race = opts.race
 	opts.before = function(W)
@@ -55,7 +57,25 @@ local function accept(q)
 end
 
 describe("Blizzard's quest tracker", function()
-	it("saves the marks, then follows only the quests of the route (default)", function()
+	it("hides Blizzard's quest tracker by default and brings it back with the pause and at logout", function()
+		local ns = login({ saved = {} })
+		assert.are.equal("hide", ns.UI.Get("tracker"))
+		assert.are.same({}, wow.world.watches)
+		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
+		assert.are.same({ 33, OTHER[1] }, ns.QuestWatch.State().saved)
+		ns.UI.SetPaused(true)
+		wow.advance(1)
+		assert.are.same({ 33, OTHER[1] }, sorted(wow.world.watches))
+		assert.are.equal(1, _G.ObjectiveTrackerFrame.alpha)
+		ns.UI.SetPaused(false)
+		wow.advance(1)
+		assert.are.same({}, wow.world.watches)
+		wow.fire("PLAYER_LOGOUT")
+		assert.are.same({ 33, OTHER[1] }, sorted(wow.world.watches))
+		assert.are.equal(1, _G.ObjectiveTrackerFrame.alpha)
+	end)
+
+	it("saves the marks, then follows only the quests of the route (chosen)", function()
 		local ns = login()
 		assert.is_true(ns.Modules.IsActive("questwatch"))
 		assert.are.equal("route", ns.UI.Get("tracker"))

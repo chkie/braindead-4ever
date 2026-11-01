@@ -27,6 +27,8 @@ U.AUDITED = {
 	"C_QuestLog.AddQuestWatch",
 	"C_QuestLog.RemoveQuestWatch",
 	"ObjectiveTrackerFrame:SetAlpha",
+	-- Welle 5c: windows move by drag outside Edit Mode, never in a fight (ENTWURF-LESUNG point 16)
+	"Frame:StartMoving",
 }
 
 local function Color(r, g, b)
@@ -72,6 +74,14 @@ function U.install(M, W, opts)
 	end
 	M.audit = audit
 	M.knownEvents.CVAR_UPDATE = true
+	for _, e in ipairs({
+		"MODIFIER_STATE_CHANGED",
+		"EDIT_MODE_LAYOUTS_UPDATED",
+		"DISPLAY_SIZE_CHANGED",
+		"UI_SCALE_CHANGED",
+	}) do
+		M.knownEvents[e] = true
+	end
 	-- Named frames and fonts of the last session (the client starts a new UI session empty).
 	for _, name in ipairs({
 		"PathmarkSetupFrame",
@@ -253,6 +263,7 @@ function U.install(M, W, opts)
 		self.movable = on
 	end
 	function Frame:StartMoving()
+		audit("Frame:StartMoving")
 		if not rawget(self, "movable") then
 			error("Frame is not movable", 2)
 		end
@@ -281,6 +292,12 @@ function U.install(M, W, opts)
 	end
 	function Frame:GetTop()
 		return rawget(self, "top") or 700
+	end
+	function Frame:GetRight()
+		return rawget(self, "right") or (self:GetLeft() + (self:GetWidth() or 0))
+	end
+	function Frame:GetBottom()
+		return rawget(self, "bottom") or (self:GetTop() - (self:GetHeight() or 0))
 	end
 	function Frame:SetEnabled(on)
 		self.enabled = on and true or false
@@ -600,9 +617,18 @@ function U.install(M, W, opts)
 	}
 	_G.Minimap = NewWidget("Frame")
 	_G.Minimap:SetSize(140, 140)
+	W.cursor = { 0, 0 }
 	_G.GetCursorPosition = function()
-		return 0, 0
+		return W.cursor[1], W.cursor[2]
 	end
+	W.shift = false
+	_G.IsShiftKeyDown = function()
+		return W.shift == true
+	end
+	M.layout = function(o)
+		U.layout(M, W, o)
+	end
+	U.layout(M, W, {})
 
 	-- Mixins and pools
 	_G.Mixin = function(obj, ...)
@@ -875,6 +901,65 @@ function U.install(M, W, opts)
 	_G.CreateSettingsListSectionHeaderInitializer = function(name, tooltip)
 		return { kind = "header", name = name, tooltip = tooltip }
 	end
+end
+
+-- Screen and Blizzard's frames at the top right in Retail measures (Welle 5c, owner readings 16 and 17).
+-- Formulas and numbers from Gethe/wow-ui-source live 12.1.5 (d07eb00), forever 1.60.1 (ca8368f):
+--   * UIParent 1920x1080 units at UI scale 0.711 on a 1080p screen ("1080"), 1366x768 at scale 1
+--     ("768"); left and bottom 0.
+--   * MinimapCluster 256x256 at TOPRIGHT (Blizzard_Minimap/Mainline/Minimap.xml).
+--   * MultiBarRight and MultiBarLeft: 12 buttons of 45 with padding 2 in one column, 45x562 (Mainline/
+--     ActionButtonTemplate.xml, EditModePresetLayouts.lua IconPadding 2). EditModeManagerFrameMixin:
+--     UpdateRightActionBarPositions anchors them RIGHT of UIParent at x -5 and -55 (bar width 45 + 5),
+--     y -77, and scales them by the space between MinimapCluster:GetBottom() - 10 and
+--     MicroButtonAndBagsBar:GetTop() + 24 (bags bar 232x80 at BOTTOMRIGHT -6/6, MicroMenuContainer.xml).
+--     A bar's GetLeft counts in its own scale, so the stand-in returns its edges divided by that scale.
+--   * ObjectiveTrackerFrame 260 wide in the right container: TOPRIGHT at x -(GetRightActionBarWidth()
+--     + 5), y -260 (EditModeUtil.lua, RIGHT_CONTAINER_OFFSET_Y), down to the screen bottom.
+-- o.screen = "1080" (default) | "768"; o.bars = right bars shown, 2 (default) | 1 | 0.
+function U.layout(M, W, o)
+	local NewWidget = M.NewWidget
+	local w, h = 1920, 1080
+	if o.screen == "768" then
+		w, h = 1366, 768
+	end
+	local function frame(name)
+		local f = _G[name]
+		if not (type(f) == "table" and f.events) then
+			f = NewWidget("Frame", name)
+		end
+		return f
+	end
+	local function place(f, l, r, t, b, scale)
+		scale = scale or 1
+		f.left, f.right, f.top, f.bottom = l / scale, r / scale, t / scale, b / scale
+		f.w, f.h, f.scale = (r - l) / scale, (t - b) / scale, scale
+	end
+	local ui = _G.UIParent
+	ui.left, ui.right, ui.top, ui.bottom, ui.w, ui.h = 0, w, h, 0, w, h
+	ui.shown = true
+	place(frame("MinimapCluster"), w - 256, w, h, h - 256)
+	local avail = (h - 256 - 10) - (6 + 80 + 24)
+	local barH = 12 * 45 + 11 * 2
+	local scale = barH > avail and avail / barH or 1
+	local bars = o.bars or 2
+	local cy = h / 2 - 77 * scale
+	for i, name in ipairs({ "MultiBarRight", "MultiBarLeft" }) do
+		local f = frame(name)
+		local right = w - (i == 1 and 5 or 55) * scale
+		place(f, right - 45 * scale, right, cy + barH / 2 * scale, cy - barH / 2 * scale, scale)
+		f.shown = i <= bars
+	end
+	-- bars 6 to 8 stand in the middle (EditModePresetLayouts.lua ExtraBar1..3: TOP at CENTER, 0/-50/-100)
+	for i, name in ipairs({ "MultiBar5", "MultiBar6", "MultiBar7" }) do
+		local width = 12 * 45 + 11 * 2
+		local top = h / 2 - (i - 1) * 50
+		place(frame(name), w / 2 - width / 2, w / 2 + width / 2, top, top - 45)
+	end
+	local barsWidth = ({ [0] = 0, [1] = 5 + 45, [2] = 55 + 45 })[bars] or 0
+	local tracker = frame("ObjectiveTrackerFrame")
+	place(tracker, w - barsWidth - 5 - 260, w - barsWidth - 5, h - 260, 0)
+	W.screen = { w = w, h = h, barScale = scale }
 end
 
 return U

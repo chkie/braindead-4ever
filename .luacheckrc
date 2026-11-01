@@ -122,6 +122,7 @@ read_globals = {
 	"CreateVector2D",
 	"GetCursorPosition",
 	"GetPlayerFacing",
+	"IsShiftKeyDown", -- Welle 5c: the arrow moves with Shift held (owner reading 16)
 	"MapCanvasDataProviderMixin",
 	"MapCanvasPinMixin",
 	"Minimap",

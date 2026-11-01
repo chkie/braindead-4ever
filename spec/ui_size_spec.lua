@@ -159,7 +159,7 @@ describe("Step window size", function()
 		assert.are.same({ 300, 3 }, { saved.ui.width, saved.ui.ahead })
 		assert.are.equal(300, W.w)
 		assert.are.equal(3, #ns.StepFrame.VisibleRows())
-		assert.are.same({ -80, -260 }, { W.points[1][4], W.points[1][5] })
+		assert.are.same({ -115, -266 }, { W.points[1][4], W.points[1][5] }) -- default place (ui_place_spec)
 	end)
 
 	it("cannot be sized in a fight; a fight ends a drag", function()

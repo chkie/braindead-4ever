@@ -250,7 +250,8 @@ L.BEHIND = "behind you"
 -- Positions (Edit Mode)
 L.EDIT_WINDOW = "Pathmark: step window"
 L.EDIT_ARROW = "Pathmark: arrow"
-L.EDITMODE_HINT = "Move the step window and the arrow in Edit Mode: game menu (Esc), %s"
+L.EDITMODE_HINT =
+	"Drag the step window by its header, the arrow with Shift held, or move both in Edit Mode: game menu (Esc), %s"
 -- Minimap button
 L.MM_LEFT_PAUSE = "Left-click: pause guidance"
 L.MM_LEFT_RESUME = "Left-click: resume guidance"
@@ -298,7 +299,8 @@ L.BTN_SETUP = "Run again"
 L.TIP_BTN_SETUP = "Opens the setup dialog from the first start."
 L.BTN_POSITION_LABEL = "Windows"
 L.BTN_POSITION = "Position"
-L.TIP_BTN_POSITION = "You move the step window and arrow in Blizzard's Edit Mode."
+L.TIP_BTN_POSITION =
+	"Drag the step window by its header and the arrow with Shift held, or move both in Blizzard's Edit Mode."
 L.PAGE_PLAY = "Play style"
 L.OPT_STYLE = "Play style"
 L.TIP_STYLE =
@@ -328,7 +330,10 @@ L.TRACKER_route = "Only quests of the route"
 L.TRACKER_hide = "Hidden"
 L.TIP_TRACKER_keep = "Pathmark leaves the quest tracker as you set it."
 L.TIP_TRACKER_route = "The tracker follows the quests of the route; other quests leave it unless you mark them."
-L.TIP_TRACKER_hide = "Blizzard's quest tracker stays hidden while Pathmark guides you."
+L.TIP_TRACKER_hide =
+	"Blizzard's quest tracker stays hidden while Pathmark guides you, and the step window takes its place."
+L.OPT_LOCK = "Lock window"
+L.TIP_LOCK = "Keeps the step window in place when you drag its header; Edit Mode still moves it."
 L.BTN_RESET_LABEL = "Position"
 L.BTN_RESET = "Reset"
 L.TIP_BTN_RESET = "Moves the step window and arrow back to their starting position and size."

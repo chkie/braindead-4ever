@@ -100,7 +100,8 @@ describe("Settings", function()
 			textSize = true,
 			style = "hints",
 			hint = 1,
-			tracker = "route",
+			tracker = "hide", -- owner reading 16
+			lock = false,
 		}
 		for key, value in pairs(expect) do
 			assert.are.equal(value, ns.UI.Get(key), key)

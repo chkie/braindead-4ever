@@ -48,7 +48,15 @@ local UI = {
 		textSize = true, -- follow Blizzard's text size (userFontScale)
 		style = "hints", -- play style: arrow | hints | self (closing the setup picks "hints")
 		hint = 1, -- hint level 0..3
-		tracker = "route", -- Blizzard's quest tracker: keep | route | hide (owner reading 15)
+		tracker = "hide", -- Blizzard's quest tracker: keep | route | hide (owner readings 15 and 16)
+		lock = false, -- "Lock window": the header band no longer drags the step window (owner reading 16)
+	},
+	-- Revision of the defaults in PathmarkDB.ui.rev. UI.DB fills every default into the saved table, so
+	-- a value equal to an old default was never chosen: it takes the new default, any other value is the
+	-- player's choice and stays. REVISIONS[n] lists the defaults that revision n replaced.
+	REV = 1,
+	REVISIONS = {
+		[1] = { tracker = "route" }, -- Welle 5c: Blizzard's quest tracker hidden while Pathmark guides
 	},
 	-- Presets of the "Anzeigeumfang" dropdown: each sets these options (brain chapter 18 pattern D).
 	SCOPES = {
@@ -80,6 +88,7 @@ function UI.DB()
 	end
 	local t = db.ui
 	if filled ~= t then -- once per table and session; the flag is not saved
+		UI.Migrate(t)
 		for k, v in pairs(UI.DEFAULTS) do
 			if t[k] == nil then
 				t[k] = v
@@ -88,6 +97,21 @@ function UI.DB()
 		filled = t
 	end
 	return t
+end
+
+-- Lifts a saved option table to UI.REV (see UI.REVISIONS). A saved position is never touched.
+function UI.Migrate(t)
+	local from = tonumber(t.rev) or 0
+	for rev = from + 1, UI.REV do
+		for key, old in pairs(UI.REVISIONS[rev] or {}) do
+			if t[key] == old then
+				t[key] = nil -- the default fills in
+			end
+		end
+	end
+	if from < UI.REV then
+		t.rev = UI.REV
+	end
 end
 
 function UI.Get(key)
@@ -186,19 +210,28 @@ end
 
 -- Combat state for the windows: listeners of the pseudo key "combat" get true or false.
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
-frame:SetScript("OnEvent", function(_, event)
-	if event == "PLAYER_REGEN_ENABLED" then
+frame:SetScript("OnEvent", function(_, event, key)
+	if event == "MODIFIER_STATE_CHANGED" then
+		if (key == "LSHIFT" or key == "RSHIFT") and IsShiftKeyDown then
+			Guard.Call("ui", UI.OnShift, IsShiftKeyDown() == true)
+		end
+	elseif event == "PLAYER_REGEN_ENABLED" then
 		UI.fighting = false
 		for _, l in ipairs(listeners.combat or {}) do
 			Guard.Call("ui", l.fn, l.owner, "combat", false)
 		end
+		Guard.Call("ui", UI.OnShift, UI.shift == true)
 		Flush()
 	else
 		UI.fighting = true
 		frame:RegisterEvent("PLAYER_REGEN_ENABLED")
+		for name in pairs(UI.movers or {}) do -- a drag ends where the fight starts
+			Guard.Call("ui", UI.StopMove, name)
+		end
 		for _, l in ipairs(listeners.combat or {}) do
 			Guard.Call("ui", l.fn, l.owner, "combat", true)
 		end
+		Guard.Call("ui", UI.OnShift, UI.shift == true) -- the arrow lets go of the mouse
 	end
 end)
 
@@ -230,25 +263,62 @@ function UI.Listen(f, event)
 end
 
 -- Positions ---------------------------------------------------------------------------------------
--- Windows hang on UIParent (rule N6). They move in Blizzard's Edit Mode: Blizzard fires
--- "EditMode.Enter" and "EditMode.Exit" through EventRegistry (wow-ui-source forever,
--- Blizzard_EditMode/Shared/EditModeManager.lua); while it is open the windows can be dragged and show
--- a frame with their name. Positions are saved in PathmarkDB.ui.pos.
+-- Windows hang on UIParent (rule N6). They move three ways (owner reading 16): the step window by
+-- dragging its header band, the arrow while Shift is held (it stays click-free otherwise, rule P7), and
+-- both in Blizzard's Edit Mode. Blizzard fires "EditMode.Enter" and "EditMode.Exit" through
+-- EventRegistry in EditModeManagerFrameMixin:EnterEditMode and :ExitEditMode (wow-ui-source
+-- Blizzard_EditMode/Shared/EditModeManager.lua: live 12.1.5 lines 100 and 119, forever 1.60.1 lines 105
+-- and 124); while it is open the windows show a frame with their name. Nothing moves in a fight.
+-- Positions are saved in PathmarkDB.ui.pos; a window without one stands at its default, and a default
+-- given as a function is computed again at every placement.
 
 UI.movers = {}
+
+-- Rectangle of a frame in UIParent units (left, right, top, bottom), nil when the frame has none yet
+-- or a value is secret. GetLeft and the others count in the frame's own scale.
+function UI.Rect(f)
+	if not (f and f.GetLeft and f.GetEffectiveScale and UIParent) then
+		return nil
+	end
+	local l, r, t, b = f:GetLeft(), f:GetRight(), f:GetTop(), f:GetBottom()
+	local s, p = f:GetEffectiveScale(), UIParent:GetEffectiveScale()
+	for _, v in ipairs({ l, r, t, b, s, p }) do
+		if type(v) ~= "number" or ns.Util.IsSecret(v) then
+			return nil
+		end
+	end
+	if p <= 0 then
+		return nil
+	end
+	local k = s / p
+	return l * k, r * k, t * k, b * k
+end
+
+-- Saved position of a window, nil while it stands at its default.
+function UI.Position(key)
+	local pos = UI.DB().pos
+	pos = type(pos) == "table" and pos[key]
+	if type(pos) == "table" and pos[1] then
+		return pos
+	end
+end
 
 function UI.Place(key)
 	local m = UI.movers[key]
 	if not m then
 		return
 	end
-	local pos = (UI.DB().pos or {})[key]
+	local pos = UI.Position(key)
 	local f = m.frame
 	f:ClearAllPoints()
-	if type(pos) == "table" and pos[1] then
+	if pos then
 		f:SetPoint(pos[1], UIParent, pos[2] or pos[1], pos[3] or 0, pos[4] or 0)
 	else
-		f:SetPoint(m.default[1], UIParent, m.default[1], m.default[2], m.default[3])
+		local d = m.default
+		if type(d) == "function" then
+			d = d()
+		end
+		f:SetPoint(d[1], UIParent, d[1], d[2], d[3])
 	end
 end
 
@@ -265,8 +335,65 @@ local function Save(key)
 	end
 end
 
--- win, key, label shown in Edit Mode, default { point, x, y }, mouse = mouse on outside Edit Mode.
-function UI.Mover(win, key, label, default, mouse)
+-- Mouse of a window: always (step window), in Edit Mode, while Shift is held outside a fight (arrow),
+-- and as long as a drag runs.
+local function Mouse(m)
+	local shift = m.shift and UI.shift and not UI.Fighting()
+	m.frame:EnableMouse(UI.editing or m.mouse == true or shift or m.moving == true)
+end
+
+-- May the window be dragged now? Never in a fight; in Edit Mode always; otherwise when its own rule
+-- says so (header band and not locked, Shift held).
+function UI.CanMove(key)
+	local m = UI.movers[key]
+	if not m or UI.Fighting() then
+		return false
+	end
+	if UI.editing then
+		return true
+	end
+	return m.drag ~= nil and m.drag(m.frame) == true
+end
+
+function UI.StartMove(key)
+	local m = UI.movers[key]
+	if not m or m.moving or not UI.CanMove(key) then
+		return false
+	end
+	m.frame:StartMoving()
+	m.frame:SetUserPlaced(false) -- own saving (brain chapter 04 §4)
+	m.moving = true
+	return true
+end
+
+-- Drag released (or a fight starts): the place is saved. Without a running drag nothing is saved, so a
+-- refused drag never turns the default into a saved position.
+function UI.StopMove(key)
+	local m = UI.movers[key]
+	if not (m and m.moving) then
+		return false
+	end
+	m.moving = false
+	m.frame:StopMovingOrSizing()
+	Save(key)
+	Mouse(m)
+	return true
+end
+
+function UI.OnShift(down)
+	UI.shift = down
+	for _, m in pairs(UI.movers) do
+		if m.shift then
+			Mouse(m)
+		end
+	end
+end
+
+-- win, key, label shown in Edit Mode, default { point, x, y } or a function returning one; opts:
+-- mouse = takes the mouse outside Edit Mode, drag(frame) = true when a drag may start outside Edit
+-- Mode, shift = takes the mouse only while Shift is held.
+function UI.Mover(win, key, label, default, opts)
+	opts = opts or {}
 	local overlay = CreateFrame("Frame", nil, win)
 	overlay:SetAllPoints()
 	overlay:Hide()
@@ -277,30 +404,35 @@ function UI.Mover(win, key, label, default, mouse)
 	overlay.label = overlay:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	overlay.label:SetPoint("CENTER")
 	overlay.label:SetText(label)
-	UI.movers[key] = { frame = win, overlay = overlay, default = default, mouse = mouse }
+	local m = {
+		frame = win,
+		overlay = overlay,
+		default = default,
+		mouse = opts.mouse == true,
+		drag = opts.drag,
+		shift = opts.shift == true,
+	}
+	UI.movers[key] = m
 	win:SetClampedToScreen(true)
-	win:SetScript("OnDragStart", function(self)
-		if UI.editing and not UI.InCombat() then
-			self:StartMoving()
-			self:SetUserPlaced(false) -- own saving (brain chapter 04 §4)
-		end
+	win:SetMovable(true)
+	win:RegisterForDrag("LeftButton")
+	win:SetScript("OnDragStart", function()
+		UI.StartMove(key)
 	end)
-	win:SetScript("OnDragStop", function(self)
-		self:StopMovingOrSizing()
-		Save(key)
+	win:SetScript("OnDragStop", function()
+		UI.StopMove(key)
 	end)
+	if m.shift and not UI.listensShift then
+		UI.listensShift = UI.Listen(frame, "MODIFIER_STATE_CHANGED")
+	end
+	Mouse(m)
 	UI.Place(key)
 end
 
 function UI.SetEditing(on)
 	UI.editing = on and true or false
 	for _, m in pairs(UI.movers) do
-		local f = m.frame
-		f:SetMovable(UI.editing)
-		f:EnableMouse(UI.editing or m.mouse == true)
-		if UI.editing then
-			f:RegisterForDrag("LeftButton")
-		end
+		Mouse(m)
 		m.overlay:SetShown(UI.editing)
 	end
 	UI.Changed("editing")
