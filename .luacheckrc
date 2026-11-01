@@ -23,6 +23,7 @@ read_globals = {
 	C_QuestLog = {
 		fields = {
 			"GetInfo",
+			"GetLogIndexForQuestID",
 			"GetNumQuestLogEntries",
 			"GetQuestObjectives",
 			"IsComplete",

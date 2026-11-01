@@ -36,11 +36,11 @@ describe("Report", function()
 		end
 	end)
 
-	it("says '-' for the step until the guide engine sets it, and survives a withheld position", function()
+	it("names the current route step and survives a withheld position", function()
 		local ns = wow.session()
 		wow.world.player.x = nil
 		local text = ns.Report.Build()
-		assert.matches("Step: -", text, 1, true)
+		assert.matches("Step: a-speed-start-elwynn/a33", text, 1, true)
 		assert.matches("Position: map 1429 | no coordinate", text, 1, true)
 		assert.matches("Errors:\n  none", text, 1, true)
 	end)
@@ -70,6 +70,35 @@ describe("Probe", function()
 		assert.are.equal("OK", result(ns, "comm.prefix").result)
 		assert.are.equal("with surname separator", result(ns, "comm.nameformat").detail)
 		assert.are.equal("MISSING", result(ns, "atlas.arrow").result) -- no atlas stand-in: shows up as missing
+	end)
+
+	it("measures the Classic XP assumptions: level table, kill XP, quest XP", function()
+		local ns = probe()
+		local P = wow.world.player -- level 5
+		ns.Probe.Run()
+		assert.are.same({ "FAILED", "level 5: client 400, Classic 2800" }, {
+			result(ns, "xp.curve").result,
+			result(ns, "xp.curve").detail,
+		})
+		P.xpMax = 2800
+		assert.are.equal("OK", ns.Probe.Check("xp.curve").result)
+		assert.is_nil(result(ns, "xp.kill"), "manual check, not part of a run")
+		assert.are.equal("FAILED", ns.Probe.Check("xp.kill").result)
+		-- kill of a level 5 creature: 5 * 5 + 45 = 70
+		wow.world.units.target = { guid = "Creature-0-1-0-2-299-0", level = 5, classification = "normal" }
+		P.xp = P.xp + 70
+		wow.fire("PLAYER_XP_UPDATE", "player")
+		local kill = ns.Probe.Check("xp.kill")
+		assert.are.equal("OK", kill.result)
+		assert.matches("gain 70 at level 5, target level 5 normal: Classic 70", kill.detail, 1, true)
+		-- quest 783: route data 40 XP at quest level 1, full at level 5
+		wow.world.questLog = { { questID = 783, rewardXP = 40 } }
+		assert.are.equal("OK", ns.Probe.Check("xp.quest").result)
+		wow.world.questLog = { { questID = 783, rewardXP = 55 } }
+		assert.are.same({ "FAILED", "quest 783 level 1 at level 5: client 55, data 40" }, {
+			ns.Probe.Check("xp.quest").result,
+			ns.Probe.Check("xp.quest").detail,
+		})
 	end)
 
 	it("reports a Forever-only function as missing in the Retail test bed", function()

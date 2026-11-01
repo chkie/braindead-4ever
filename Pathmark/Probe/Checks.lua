@@ -659,6 +659,84 @@ local CHECKS = {
 	{ id = "time.xpmax", kind = "func", name = "UnitXPMax", args = Player },
 	{ id = "time.rested", kind = "func", name = "GetXPExhaustion" },
 	{ id = "time.played", kind = "event", name = "TIME_PLAYED_MSG" },
+
+	-- XP balance (owner wish 9): the Classic rules in Routes/XP.lua are assumptions for Forever ------
+	{
+		-- XP curve: the client's XP for the current level against the Classic table.
+		id = "xp.curve",
+		kind = "test",
+		name = "UnitXPMax against the Classic level table",
+		run = function()
+			local level, max = U.Num(UnitLevel("player")), U.Num(UnitXPMax("player"))
+			local classic = level and ns.XP.TO_LEVEL[level]
+			if not (level and max and classic) then
+				return false, ("level %s, client %s: no Classic value"):format(tostring(level), tostring(max))
+			end
+			return max == classic, ("level %d: client %d, Classic %d"):format(level, max, classic)
+		end,
+	},
+	{
+		-- Kill XP: kill a creature solo, keep its corpse targeted, then /pathmark probe check xp.kill.
+		id = "xp.kill",
+		kind = "test",
+		manual = true,
+		name = "last XP gain against the Classic kill formula",
+		run = function()
+			local gain = ns.Route and ns.Route.LastGain()
+			local level, mob = U.Num(UnitLevel("player")), U.Num(UnitLevel("target"))
+			if not (gain and level and mob and mob > 0) then
+				return false, "needs a kill with the creature still targeted"
+			end
+			local class = U.Str(UnitClassification("target")) or "?"
+			local expect = ns.XP.KillXP(level, mob, class == "elite" or class == "rareelite")
+			-- Rested kills give double (chapter 06 §8); both count as a match.
+			local pass = math.abs(gain.xp - expect) <= 1 or math.abs(gain.xp - 2 * expect) <= 1
+			return pass,
+				("gain %d at level %d, target level %d %s: Classic %d, rested %d, rested pool %d"):format(
+					gain.xp,
+					level,
+					mob,
+					class,
+					expect,
+					2 * expect,
+					U.Num(GetXPExhaustion()) or 0
+				)
+		end,
+	},
+	{
+		-- Quest XP: the client's reward of the first quest in the log that the route knows, against
+		-- the route data (Polestar) with the Classic level reduction.
+		id = "xp.quest",
+		kind = "test",
+		name = "GetQuestLogRewardXP against the route data",
+		run = function()
+			local fn = Probe.Lookup("GetQuestLogRewardXP")
+			local rt = ns.Route and ns.Route.Runtime()
+			local level = U.Num(UnitLevel("player"))
+			if type(fn) ~= "function" or not rt or not level then
+				return false, "needs GetQuestLogRewardXP, an active route and the level"
+			end
+			local shown = U.Num((C_QuestLog.GetNumQuestLogEntries())) or 0
+			for i = 1, shown do
+				local info = C_QuestLog.GetInfo(i)
+				local q = info and not info.isHeader and U.Num(info.questID)
+				local data = q and rt.quests[q]
+				if data and data[2] > 0 then
+					local client = U.Num((fn(q)))
+					local expect = ns.XP.QuestXP(data[2], data[1], level)
+					return client == expect,
+						("quest %d level %d at level %d: client %s, data %d"):format(
+							q,
+							data[1],
+							level,
+							tostring(client),
+							expect
+						)
+				end
+			end
+			return false, "no quest of the route in the log"
+		end,
+	},
 }
 
 for _, c in ipairs(CHECKS) do

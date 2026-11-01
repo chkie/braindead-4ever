@@ -28,6 +28,9 @@ Core\Report.lua
 Routes\Routes.lua
 Routes\Data_Alliance.lua
 Routes\Data_Horde.lua
+Routes\XP.lua
+Routes\Runtime.lua
+Routes\Guide.lua
 # Developer API probe: the packager drops this block and .pkgmeta ignores the folder.
 #@do-not-package@
 Probe\Probe.lua
