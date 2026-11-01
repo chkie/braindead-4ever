@@ -447,9 +447,17 @@ end
 
 -- Undo -----------------------------------------------------------------------------------------
 
-function RT:Push()
+-- kind names the action for the right-click menu ("undo: ..."): check, skip, back, reaccept, skipquest.
+function RT:Push(kind, key, quest)
 	local s, u = self.saved, self.saved.undo
-	u[#u + 1] = { marks = copy(s.marks), roots = copy(s.roots), anchor = s.anchor, pin = s.pin, pending = s.pending }
+	u[#u + 1] = {
+		marks = copy(s.marks),
+		roots = copy(s.roots),
+		anchor = s.anchor,
+		pin = s.pin,
+		pending = s.pending,
+		act = kind and { kind = kind, key = key, quest = quest } or nil,
+	}
 	while #u > RT.UNDO_MAX do
 		table.remove(u, 1)
 	end
@@ -466,6 +474,18 @@ function RT:Undo()
 	s.anchor, s.pin, s.pending = snap.anchor, snap.pin, snap.pending
 	self:Changed("undo")
 	return true
+end
+
+-- The action the next Undo takes back: { kind, key, quest }, { kind = "unknown" } for undo entries
+-- saved before actions were named, nil when there is nothing to undo.
+function RT:LastAction()
+	local u = self.saved.undo
+	local snap = u[#u]
+	if not snap then
+		return nil
+	end
+	local act = snap.act
+	return act and copy(act) or { kind = "unknown" }
 end
 
 function RT:Changed(reason)
@@ -489,7 +509,7 @@ function RT:Check(key)
 	if not key then
 		return false
 	end
-	self:Push()
+	self:Push("check", key, self.steps[self.index[key]].quests[1])
 	self.saved.marks[key] = "c"
 	self:Evaluate()
 	return true
@@ -501,7 +521,7 @@ function RT:Skip(key)
 	if not key then
 		return false
 	end
-	self:Push()
+	self:Push("skip", key, self.steps[self.index[key]].quests[1])
 	local s = self.saved
 	s.marks[key] = "s"
 	for _, q in ipairs(self.steps[self.index[key]].quests) do
@@ -511,6 +531,51 @@ function RT:Skip(key)
 	end
 	self:Changed("skip")
 	return true
+end
+
+-- Quests that skipping the given quests would take with them (not the quests themselves), sorted.
+-- Changes nothing: the roots are added for the computation and removed again.
+function RT:FollowUps(list)
+	local s, flagged = self.saved, self.world.IsFlagged
+	local before = self:Blocked()
+	local added, own = {}, {}
+	for _, q in ipairs(list) do
+		own[q] = true
+		if not s.roots[q] and not flagged(q) then
+			s.roots[q] = "_preview"
+			added[#added + 1] = q
+		end
+	end
+	local after = self:Blocked()
+	for _, q in ipairs(added) do
+		s.roots[q] = nil
+	end
+	local out = {}
+	for q in pairs(after) do
+		if not before[q] and not own[q] then
+			out[#out + 1] = q
+		end
+	end
+	table.sort(out)
+	return out
+end
+
+-- Follow-up quests a Skip(key) would take with it (default: current step); nil for an unknown key.
+function RT:SkipPreview(key)
+	key = Key(self, key)
+	if not key then
+		return nil
+	end
+	return self:FollowUps(self.steps[self.index[key]].quests)
+end
+
+-- Follow-up quests of the quest an open abandon question is about; nil without a question.
+function RT:AbandonPreview()
+	local q = self.saved.pending
+	if not q then
+		return nil
+	end
+	return self:FollowUps({ q })
 end
 
 -- Back: reopens the nearest earlier step that the player marked or the route passed by itself; a
@@ -538,7 +603,7 @@ function RT:Back()
 			local st = self:StepState(j, empty)
 			s.marks[step.key] = mark
 			if st ~= "done" then
-				self:Push()
+				self:Push("back", step.key, step.quests[1])
 				s.marks[step.key] = nil
 				for q, k in pairs(s.roots) do
 					if k == step.key then
@@ -610,9 +675,9 @@ function RT:ResolveAbandon(choice)
 	if not q or (choice ~= "reaccept" and choice ~= "skip") then
 		return false
 	end
-	self:Push()
-	s.pending = nil
 	local key = self.steps[self.accepts[q]].key
+	self:Push(choice == "skip" and "skipquest" or "reaccept", key, q)
+	s.pending = nil
 	if choice == "skip" then
 		s.roots[q] = key
 	else

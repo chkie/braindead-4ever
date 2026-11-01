@@ -161,9 +161,9 @@ function Frame:GetAttribute(k)
 	return self.attributes[k]
 end
 
-local function NewWidget(kind, name, template)
+local function NewWidget(kind, name, template, parent)
 	local f = setmetatable(
-		{ type = kind, name = name, template = template, events = {}, scripts = {}, attributes = {} },
+		{ type = kind, name = name, template = template, parent = parent, events = {}, scripts = {}, attributes = {} },
 		FrameMeta
 	)
 	M.frames[#M.frames + 1] = f
@@ -173,13 +173,21 @@ local function NewWidget(kind, name, template)
 	return f
 end
 
-function Frame:CreateFontString()
-	return NewWidget("FontString")
+function Frame:CreateFontString(_, layer, template)
+	local fs = NewWidget("FontString", nil, template, self)
+	fs.layer = layer
+	return fs
 end
 
-function Frame:CreateTexture()
-	return NewWidget("Texture")
+function Frame:CreateTexture(_, layer)
+	local t = NewWidget("Texture", nil, nil, self)
+	t.layer = layer
+	return t
 end
+
+-- For the UI stand-ins in spec/helpers/ui.lua.
+M.Frame = Frame
+M.NewWidget = NewWidget
 
 local function join(...)
 	local parts = {}
@@ -292,8 +300,8 @@ function M.reset(opts)
 	_G.print = function(...)
 		M.printed[#M.printed + 1] = join(...)
 	end
-	_G.CreateFrame = function(frameType, name, _, template)
-		return NewWidget(frameType, name, template)
+	_G.CreateFrame = function(frameType, name, parent, template)
+		return NewWidget(frameType, name, template, parent)
 	end
 	_G.UIParent = NewWidget("Frame")
 	_G.UISpecialFrames = {}
@@ -693,6 +701,8 @@ function M.reset(opts)
 	_G.PathmarkCollectDB = opts.collect
 	_G.PathmarkCharDB = opts.char
 	_G.PathmarkCopyFrame = nil
+	-- Interface stand-ins (settings, menus, fonts, atlases, map, minimap): spec/helpers/ui.lua.
+	require("spec.helpers.ui").install(M, W, opts)
 end
 
 -- Schedule a callback on the fake clock. interval makes it a ticker. Returns a handle with Cancel.
@@ -799,10 +809,23 @@ function M.addonFiles(withProbe)
 		"Pathmark/Routes/Runtime.lua",
 		"Pathmark/Routes/Guide.lua",
 		"Pathmark/Routes/Explore.lua",
+		"Pathmark/UI/Core.lua",
+		"Pathmark/UI/Theme.lua",
+		"Pathmark/UI/Nav.lua",
+		"Pathmark/UI/Connect.lua",
+		"Pathmark/UI/StepText.lua",
+		"Pathmark/UI/Menu.lua",
+		"Pathmark/UI/StepFrame.lua",
+		"Pathmark/UI/Arrow.lua",
+		"Pathmark/UI/MapPins.lua",
+		"Pathmark/UI/Minimap.lua",
+		"Pathmark/UI/Setup.lua",
+		"Pathmark/UI/Settings.lua",
 	}
 	if withProbe then
 		files[#files + 1] = "Pathmark/Probe/Probe.lua"
 		files[#files + 1] = "Pathmark/Probe/Checks.lua"
+		files[#files + 1] = "Pathmark/Probe/Preview.lua"
 	end
 	files[#files + 1] = "Pathmark/Core/Boot.lua"
 	return files

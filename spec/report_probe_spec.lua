@@ -57,7 +57,12 @@ describe("Probe", function()
 
 	it("measures functions, values, events and tests in one run", function()
 		local ns = probe()
+		-- Functions the client lacks show up as missing (the UI stand-ins have both).
+		_G.GetPlayerFacing = nil
+		local atlas = _G.C_Texture
+		_G.C_Texture = nil
 		SlashCmdList.PATHMARK("probe run")
+		_G.C_Texture = atlas
 		assert.matches("checks saved", wow.output(), 1, true)
 		assert.are.same({ "OK", "free" }, { result(ns, "ver.build").result, result(ns, "ver.build").context })
 		assert.matches('"1.60.1", "70532"', result(ns, "ver.build").detail, 1, true)
@@ -69,7 +74,7 @@ describe("Probe", function()
 		assert.are.equal("OK", result(ns, "enc.zlib").result)
 		assert.are.equal("OK", result(ns, "comm.prefix").result)
 		assert.are.equal("with surname separator", result(ns, "comm.nameformat").detail)
-		assert.are.equal("MISSING", result(ns, "atlas.arrow").result) -- no atlas stand-in: shows up as missing
+		assert.are.equal("MISSING", result(ns, "atlas.arrow").result)
 	end)
 
 	it("measures the Classic XP assumptions: level table, kill XP, quest XP", function()

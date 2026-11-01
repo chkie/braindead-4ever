@@ -69,7 +69,7 @@ Records go into a ring buffer of text chunks (`Collector/Store.lua`): one line p
 | NPC names in the client language, zone changes, position samples, deaths, group size, hearthstone bind | built | |
 | Export as `PM1` text (JSON, Deflate, Base64, length and Adler-32), only data not exported yet, acknowledged after Ctrl+C | built | `/pathmark export [all]`; Zlib only after `enc.zlib` passed in the client |
 | Website decoder for the export (`decoder/decode.mjs`) | built | round trip Lua to Node decoder in `spec/export_spec.lua`; browser paste test with the `enc.deflate` text |
-| Report a problem: version, build, module states, step, position, quest log, error buffer, marked player note | built | `/pathmark report [note]`; right-click menu comes with AP 6 |
+| Report a problem: version, build, module states, step, position, quest log, error buffer, marked player note | built | `/pathmark report [note]` and the step window's right-click menu; missing atlases are listed too |
 | Two hours of simulated play without a Lua error, data anonymous | built | `spec/collect_spec.lua`; the acceptance "Forever start" needs two hours in the Forever client |
 
 ## In-game exchange (data contribution, M11)
@@ -94,22 +94,22 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Feature | Stage | Status | Probe checks |
 | --- | --- | --- | --- |
 | Client and restrictions: build, project ID, secret values, restriction state, locales, game rules, script budget, SavedVariables after a cold start | all | built (probe) | `ver.build`, `ver.project`, `ver.camelot`, `ver.secretfn`, `ver.secrets`, `ver.restrict`, `ver.locales`, `ver.preset`, `ver.hardcore`, `ver.selffound`, `ver.rulesevent`, `ver.throttle`, `sv.coldstart` |
-| M1 Step display: current step and the next three, progress detected automatically, skip and back | MVP | built (logic; window with AP 6) | `quest.count`, `quest.info`, `quest.objectives`, `quest.flagged`, `quest.ready`, `quest.max`, `quest.trivial`, `quest.elite`, `quest.timers`, `quest.completed`, `quest.autocomplete`, `quest.progressev`, `quest.finished` |
-| M2 Navigation: arrow, map and minimap markers, TomTom | MVP | planned | `nav.map`, `nav.pos`, `nav.world`, `nav.facing`, `nav.worldpos`, `nav.canwaypoint`, `nav.setwaypoint`, `nav.mappoint`, `nav.supertrack`, `nav.nextwaypoint`, `nav.questsonmap`, `nav.maprestrict`, `nav.tomtom`, `nav.cvar`, `nav.range`, `nav.reached`, `nav.supertrackev`, `nav.waypointev`, `nav.moving` |
+| M1 Step display: current step and the next three, progress detected automatically, skip and back | MVP | built (logic and window, offline; Retail screenshots pending) | `quest.count`, `quest.info`, `quest.objectives`, `quest.flagged`, `quest.ready`, `quest.max`, `quest.trivial`, `quest.elite`, `quest.timers`, `quest.completed`, `quest.autocomplete`, `quest.progressev`, `quest.finished` |
+| M2 Navigation: arrow, map and minimap markers, TomTom | MVP | built (arrow, map and minimap pins, offline; TomTom not built) | `nav.map`, `nav.pos`, `nav.world`, `nav.facing`, `nav.worldpos`, `nav.canwaypoint`, `nav.setwaypoint`, `nav.mappoint`, `nav.supertrack`, `nav.nextwaypoint`, `nav.questsonmap`, `nav.maprestrict`, `nav.tomtom`, `nav.cvar`, `nav.range`, `nav.reached`, `nav.supertrackev`, `nav.waypointev`, `nav.moving` |
 | M3 Matching route by faction, race and class, entry at any level | MVP | planned | `route.race`, `route.class`, `route.faction`, `route.level`, `route.maxlevel`, `route.xpoff` |
 | M4 Quest and item names from the client, NPC names from the collectors | MVP | planned | `name.quest`, `name.loadquest`, `name.questload`, `name.item`, `name.itemload`, `name.map`, `name.npc`, `name.npctooltip`, `name.creatureid` |
 | M5 Hints on the way: trainer, hearthstone, flight master, supplies, sleeping bag | MVP | planned | `hint.bind`, `hint.binder`, `hint.trainer`, `hint.junk` |
-| M6 Report a problem with one click | MVP | built | `mod.report.*` (command `/pathmark report`; the click comes with AP 6) |
+| M6 Report a problem with one click | MVP | built | `mod.report.*` (command `/pathmark report` and the right-click menu) |
 | M7 Discoveries recorded by the collector | MVP | built | `find.giverguid`, `find.giverquest`, `find.rewardxp`, `find.questxp`, `find.lootsource`, `find.lootcount`, `find.fishing`, `find.lootnpc`, `find.booknpc`, `find.booktitle`, `find.taxiid`, `find.taxinodes`, `find.taxiworld`, `find.flightstate`, `find.newtaxi`, `find.ontaxi`, `find.rareclass`, `find.rarecombat`, `find.targetguid`, `find.targetname`, `find.creatureid`, `find.vignettes`, `find.vignetteev`, `find.legacyconst`, `find.legacy1187`, `find.legacy1188`, `find.legacy1189`, `find.combatlog`, `mod.collector.*` |
 | M8 Quest item button, if the probe reports the call as allowed | MVP if the probe is green | planned | `qitem.info`, `qitem.use`, `qitem.cvar`, `qitem.button` |
 | M9 Routes 1 to 30 for all 56 combinations as building blocks | MVP | built | no client API; computed routes, see "Routes and route data" below |
-| M10 Status per value (unconfirmed, confirmed) and per section (provisional) | MVP | built | in the route data (AP 5); shown in the addon with AP 6 |
+| M10 Status per value (unconfirmed, confirmed) and per section (provisional) | MVP | built | in the route data (AP 5); shown in the step window: clock symbol per section, origin tooltip per step |
 | M11 Data contribution through addon messages, export as extra | MVP | built | `comm.prefix`, `comm.lockdown`, `comm.outgoing`, `comm.trial`, `comm.veteran`, `comm.join`, `comm.filter`, `comm.channel`, `comm.nameformat`, `comm.stats`, `comm.burst`, `comm.restrictev`, `comm.noticeev`, `enc.json`, `enc.deflate`, `enc.zlib`, `enc.base64space`, `export.window`, `mod.exchange.*` |
-| M12 Interface: setup dialog, settings, looks Modern and Classic | MVP | planned | `ui.settings`, `ui.opensettings`, `ui.editmode`, `ui.helptip`, `ui.compartment`, `atlas.header`, `atlas.nub`, `atlas.check`, `atlas.glow`, `atlas.collapse`, `atlas.parchment`, `atlas.arrow`, `atlas.pin`, `atlas.minipin`, `atlas.questnormal`, `atlas.questturnin`, `atlas.barbg`, `atlas.barfill`, `atlas.indicator`, `font.header`, `font.line`, `font.small`, `font.med3`, `font.highlight`, `color.normal`, `color.highlight`, `color.tracker`, `color.dimred`, `sound.complete`, `sound.option`, `sound.select` |
-| M13 Accessibility: scaling, contrast, shape and color, key bindings, gamepad does not break | MVP | planned | `ui.textsize`, `ui.gamepad`, `cvar.contrast`, `cvar.colorblind`, `cvar.fontscale`, `cvar.instant`, `cvar.gamepad` |
+| M12 Interface: setup dialog, settings, one look (Modern; Classic dropped, LK-1101) | MVP | built (setup, settings, one look Modern per LK-1101; offline) | `ui.settings`, `ui.opensettings`, `ui.editmode`, `ui.helptip`, `ui.compartment`, `atlas.header`, `atlas.nub`, `atlas.check`, `atlas.glow`, `atlas.collapse`, `atlas.parchment`, `atlas.arrow`, `atlas.pin`, `atlas.minipin`, `atlas.questnormal`, `atlas.questturnin`, `atlas.barbg`, `atlas.barfill`, `atlas.indicator`, `font.header`, `font.line`, `font.small`, `font.med3`, `font.highlight`, `color.normal`, `color.highlight`, `color.tracker`, `color.dimred`, `sound.complete`, `sound.option`, `sound.select` |
+| M13 Accessibility: scaling, contrast, shape and color, key bindings, gamepad does not break | MVP | built (scaling, text size, contrast, colorblind; key bindings not built) | `ui.textsize`, `ui.gamepad`, `cvar.contrast`, `cvar.colorblind`, `cvar.fontscale`, `cvar.instant`, `cvar.gamepad` |
 | M14 Safety for the start without a test: error buffer, runtime probe, safe mode, start guard, version notice | MVP | built (version notice planned) | `safe.eventvalid`, `safe.errorhandler`, `safe.debugstack`, `safe.blocked`, `safe.forbidden`, `safe.scripterrors` |
-| XP balance (owner wish 9): XP to the next level, XP of the step, route to the next zone against the need, kills as an estimate | MVP | built (logic; window with AP 6) | `xp.curve`, `xp.kill`, `xp.quest` |
-| Performance budget: 10 MB, under 0.1 ms per frame | MVP | planned | `perf.profiler`, `perf.average`, `perf.memory` |
+| XP balance (owner wish 9): XP to the next level, XP of the step, route to the next zone against the need, kills as an estimate | MVP | built (logic and XP line, offline) | `xp.curve`, `xp.kill`, `xp.quest` |
+| Performance budget: 10 MB, under 0.1 ms per frame | MVP | built (offline measurement; client measurement pending) | `perf.profiler`, `perf.average`, `perf.memory` |
 | Game modes Speed, Explorer, Hardcore-safe | 1.0 | planned | no client API beyond M1 and `ver.hardcore` |
 | Hint levels | 1.0 | built (logic; window with Welle 5) | no client API |
 | Time forecast | 1.0 | built (logic; window with Welle 5) | `time.xp`, `time.xpmax`, `time.rested`, `time.played` |
@@ -147,7 +147,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 
 ## Route runtime (step logic, owner wishes 9 and 10)
 
-The logic behind the step window, without the window (it waits for the design approval). Interface and rules: `docs/ROUTE-RUNTIME.md`. Module `route` (core); its requirements are checked as `mod.route.*`.
+The logic behind the step window. Interface and rules: `docs/ROUTE-RUNTIME.md`. Module `route` (core); its requirements are checked as `mod.route.*`.
 
 | Feature | Status | Note |
 | --- | --- | --- |
@@ -159,13 +159,13 @@ The logic behind the step window, without the window (it waits for the design ap
 | Abandoned quest: question with two ways (take it again, skip with follow-up quests); nothing moves before the answer | built | owner wish 10 |
 | XP balance (to the next level, step, route to the next zone, kills) | built | Classic rules (`Routes/XP.lua`) as estimates until `xp.curve`, `xp.kill` and `xp.quest` pass in the Forever client |
 | Random test: 7,500 random actions (accept, abandon, play, check, skip, back, undo, answer, level, reload), route valid after each | built | `spec/route_random_spec.lua`, seeded |
-| Step window, right-click menu ("undo" there), texts | planned | AP 6, after the design approval |
-| Dungeon hint (owner wish 11) | built (logic; window with Welle 5) | see the Welle 4 section below |
+| Step window, right-click menu ("undo" there), texts | built | Welle 5, see "Interface" below |
+| Dungeon hint (owner wish 11) | built (logic and window) | see the Welle 4 section and "Interface" below |
 | Detection in the client (Retail test bed, then Forever) | planned | release gate T2 |
 
 ## Explorer mode, dungeon hint, prerequisites from player data, time forecast (Welle 4)
 
-Logic without a window (the window comes with Welle 5). Interface and rules: `docs/ROUTE-RUNTIME.md` §Explorer mode, §Dungeon hint, §Prerequisites from player data, §Time forecast. Module `explore` (not core); its requirements are checked as `mod.explore.*`.
+The step window shows it since Welle 5 (section "Interface" below). Interface and rules: `docs/ROUTE-RUNTIME.md` §Explorer mode, §Dungeon hint, §Prerequisites from player data, §Time forecast. Module `explore` (not core); its requirements are checked as `mod.explore.*`.
 
 | Feature | Status | Note |
 | --- | --- | --- |
@@ -181,3 +181,26 @@ Logic without a window (the window comes with Welle 5). Interface and rules: `do
 | ATT prerequisites for the new quests 21 to 30 | built | secured 37 of 113 before, 42 of 113 with ATT; simulated player runs (12 players) secure 111 to 113 of 113 without a wrong prerequisite (`tools/tests/test_own_data.py`) |
 | Time forecast: route time from the median of real module runs (at least 5), comparison with the plan, time to the next level from the own XP rate (at least 10 minutes of play) | built | state `collecting` until then, shown as "collecting data"; no module times measured yet (`times` is empty) |
 | Module runs measured as active play (gaps over 5 minutes count as 5) and recorded as `split` for the pipeline | built | thresholds are chosen values; `observe.py` builds `times` from the exports |
+
+## Interface (Welle 5, design v2)
+
+The windows of the approved design v2 (owner approval 2026-11-01; one look "Modern", decision LK-1101; arrow colors decision PF-1101). Fonts are copies of Blizzard's font objects (Friz Quadrata), graphics are Blizzard atlases checked with `C_Texture.GetAtlasInfo`, settings use Blizzard's settings panel. Every text exists in English and German. The windows read the logic only through `UI/Connect.lua`. Offline tests: one per view and state of the design (`spec/ui_*_spec.lua`). Design stage 2, the screenshots in the Retail test bed, follows `docs/TESTING-RETAIL.md`.
+
+| Feature | Status | Note |
+| --- | --- | --- |
+| Step window (module `window`, `mod.window.*`): current step with counter, next three steps (two lines each), XP line, check box, header with zone and step, clock symbol for provisional sections | built | 300 units wide, one background for header and content, fonts 15/13/12 (owner reading points 1 and 2) |
+| Step window states: origin tooltip, done (check, glow, one sound), mini view, combat dim to 60 %, usage hint (HelpTip once, else in the status line), status line, route falls short, skip with follow-up quests (dialog names each one), quest abandoned (two ways), optional dungeon step, rumor line | built | dungeon step from `Route.DungeonHint`, rumor from `ns.Explore` (Welle 4); "collecting data" in the origin tooltip while prerequisites are unconfirmed |
+| Right-click menu: undo with the name of the last action, skip, back, arrow, mini view, report, share data, settings, pause | built | also on the minimap button and in the addon compartment |
+| Arrow (module `arrow`, `mod.arrow.*`): Navigation-Tracked-Arrow with black outline, TomTom color gradient, "behind you" from 135 degrees, colorblind colors, distance five times per second, arrival 12 yd | built | direction 20 times per second, rotation every frame, no allocation per frame (measured offline) |
+| Map pins (module `mappins`, `mod.mappins.*`): goal, quest givers and turn-ins with Blizzard's symbols; minimap pin off by default | built | Blizzard's user waypoint only with "use Blizzard navigation" |
+| Minimap button and addon compartment entry (module `minimap`, `mod.minimap.*`) | built | the own logo does not exist yet (concept §3.2); until then Blizzard's waypoint atlas stands in |
+| First start (module `setup`, `mod.setup.*`): one question with three cards, closing picks "With hints", once per account, never in combat | built | `/pathmark setup` and the settings reopen it |
+| Settings (module `settings`, `mod.settings.*`): main page with four options and two buttons; Play style, Display, Arrow and Map, Accessibility, Credits | built | tooltips one sentence each, positive labels, dependent options greyed out |
+| Positions through Blizzard's Edit Mode (`EditMode.Enter`/`EditMode.Exit`), reset on the Display page | built | Edit Mode layouts per UI type in Forever (gamepad) are not followed yet |
+| Size 75 to 200 %, Blizzard's text size (`userFontScale`), quest text contrast raises the background to 80 % | built | |
+| No protected call in combat: settings, setup window, HelpTip, waypoint and sound wait for the end of the fight | built | `spec/ui_combat_spec.lua` with a counter-check: without the guard the test records 13 blocked calls |
+| Performance offline (Lua 5.1, stand-ins): arrow 0.001 ms per frame without allocation; step window 0.0001 ms per frame; quest log updates refresh only the window's texts (0.06 ms, at most 5 per second: 0.005 ms per frame); a step or route change refreshes window, pins and arrow (0.5 ms) and recomputes XP balance and dungeon hint (0.46 ms); interface code about 0.2 MB | built | `spec/ui_perf_spec.lua`; binding values: `C_AddOnProfiler` in the client (release gate T16) |
+| Developer preview `/pathmark preview <state>` for every design state | built | developer build only (`Pathmark/Probe/Preview.lua`) |
+| Screenshots in the Retail test bed (design stage 2) | planned | owner, `docs/TESTING-RETAIL.md` |
+| Riddle text and area hint on the map (hint levels 1 and 2), time forecast view | planned | the logic (Welle 4) delivers them; design v2 has no place for them yet |
+| Key bindings (`Bindings.xml`), TomTom hand-over | planned | concept §2.7 and §2.3, not part of this plan |

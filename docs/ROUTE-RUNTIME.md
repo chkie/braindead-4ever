@@ -1,8 +1,8 @@
 # Route runtime
 
-The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. There is no window yet: it waits for the owner's approval of the design (AP 6). This document is the interface the window will use.
+The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `Pathmark/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
 
-Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast).
+Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding).
 
 | File | What it does |
 | --- | --- |
@@ -92,6 +92,10 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.Pending()` | quest ID of an open abandon question, or nil |
 | `Route.ResolveAbandon(choice)` | `"reaccept"` or `"skip"`; true if answered |
 | `Route.Balance()` | XP balance (below) |
+| `Route.SkipPreview(key?)` | quest IDs a skip of the step would take with it (follow-up quests, not the step's own), sorted; changes nothing; nil for an unknown key |
+| `Route.AbandonPreview()` | follow-up quests of the quest an open abandon question is about, or nil |
+| `Route.LastAction()` | the action the next `Undo` takes back: `{ kind, key, quest }` with kind `check`, `skip`, `back`, `reaccept`, `skipquest`; `{ kind = "unknown" }` for undo entries saved before; nil without one |
+| `Route.Module(key)` | compiled module (read only) of a module key or a step key, for the "provisional" symbol and the origin tooltip |
 | `Route.Mode()`, `Route.SetMode(mode)` | `"speed"` or `"explorer"`; switching rebuilds the route |
 | `Route.RegisterCallback(event, owner, fn)`, `Route.UnregisterCallback(event, owner)` | `fn(owner, ...)`, one per owner and event |
 | `Route.LastGain()` | `{ xp, level, at }` of the last XP gain (probe check `xp.kill`) |
@@ -246,4 +250,22 @@ Known data limits: the Deadmines quests at Sentinel Hill need the Defias chain (
 
 ## Not built here
 
-The step window, its right-click menu and texts (Welle 5); arrival detection for steps with only a `goto` (the route data has none) and hearthstone use (no `hs` element in the data); guidance inside dungeons (after 1.0).
+Arrival detection for steps with only a `goto` (the route data has none) and hearthstone use (no `hs` element in the data); guidance inside dungeons (after 1.0).
+
+## Window binding (Welle 5)
+
+The windows (`Pathmark/UI/`) read the logic only through the adapter `UI/Connect.lua`; a change of an interface above lands there.
+
+| Logic | What the window shows |
+| --- | --- |
+| `Route.Current`, `Upcoming`, `Balance`, `StepState` | step window: current step, next steps, XP line, "route falls short" note |
+| `Route.Check`, `Skip`, `Back`, `Undo`, `LastAction`, `SkipPreview` | check box, right-click menu ("Undo: …"), skip dialog that names every follow-up quest |
+| `Route.Pending`, `AbandonPreview`, `ResolveAbandon` | abandoned quest: fail symbol and the two buttons |
+| `Route.Module` | clock symbol for provisional sections and its tooltip |
+| step info `chain = "incomplete"` | a line "Follow-up quests: collecting data" in the step's origin tooltip |
+| `Route.DungeonHint`, `SkipDungeon` | the first hint as an optional step among the next steps, behind the step where its first giver is passed; right-click skips it |
+| `Explore.Styles`, `SetStyle`, `Level`, `SetLevel` | first start and settings page "Play style"; style and hint level are kept account-wide on the settings page and handed to `ns.Explore` at login and on every change |
+| `Explore.List`, `FindsChanged` | a new rumor (`show = "rumor"`) once in the step window with "Show location"; finds with `show = "point"` on the world map (own finds with the check) |
+| `Explore.Ask(key, 3)` | "Show location": waypoint pin and arrow goal for this one find |
+
+Not shown, because design v2 has no place for them: the riddle text and the area hint on the map (`show = "riddle"` and `"area"`) and the time forecast (`Route.Forecast`).

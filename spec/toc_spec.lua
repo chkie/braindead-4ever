@@ -15,6 +15,14 @@ local ALLOWED_NEW_GLOBALS = {
 	PathmarkCollectDB = true,
 	PathmarkCharDB = true,
 	SLASH_PATHMARK1 = true,
+	-- Interface (Welle 5): font copies of Blizzard objects (CreateFont needs a name) and the setup
+	-- window (Escape closes frames by name).
+	PathmarkFontHeader = true,
+	PathmarkFontStep = true,
+	PathmarkFontLine = true,
+	PathmarkFontSmall = true,
+	PathmarkFontStatus = true,
+	PathmarkSetupFrame = true,
 }
 
 local function fileExists(path)
@@ -93,7 +101,7 @@ describe("TOC files", function()
 						inside[#inside + 1] = line
 					end
 				end
-				assert.are.same({ "Probe\\Probe.lua", "Probe\\Checks.lua" }, inside)
+				assert.are.same({ "Probe\\Probe.lua", "Probe\\Checks.lua", "Probe\\Preview.lua" }, inside)
 				for _, line in ipairs(toc.files) do
 					if line.path:match("^Probe") then
 						assert.is_truthy(block:find(line.path, 1, true), line.path .. " outside the block")

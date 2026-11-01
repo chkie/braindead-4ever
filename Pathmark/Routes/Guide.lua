@@ -46,6 +46,7 @@ local api = {} -- optional client functions
 local listeners = {} -- event -> { { owner, fn }, ... }
 local rt, root -- runtime; PathmarkCharDB.route
 local store -- prerequisite observations, account-wide (PathmarkDB.prereq)
+local modules -- compiled modules of the played faction (read only)
 local turnedIn = {} -- quests handed in this session (QUEST_TURNED_IN), the flag can lag behind
 local levelSeen -- PLAYER_LEVEL_UP payload; UnitLevel can lag behind
 local evalQueued, balanceQueued = false, false
@@ -245,6 +246,7 @@ local function Build()
 	end
 	local data = R.Load(faction)
 	R.Release()
+	modules = data.modules
 	local saved = root[mode]
 	if type(saved) ~= "table" or saved.v ~= Route.SAVE_FORMAT or saved.race ~= raceID or saved.class ~= classID then
 		saved = { v = Route.SAVE_FORMAT, race = raceID, class = classID }
@@ -325,6 +327,29 @@ function Route.Balance()
 	return Call(function()
 		return rt:Balance()
 	end)
+end
+
+-- For the step window: follow-up quests a skip takes with it, before anything moves.
+function Route.SkipPreview(key)
+	return Call(rt and rt.SkipPreview, rt, key)
+end
+
+function Route.AbandonPreview()
+	return Call(rt and rt.AbandonPreview, rt)
+end
+
+-- The action Undo takes back ({ kind, key, quest }), nil when there is nothing to undo.
+function Route.LastAction()
+	return Call(rt and rt.LastAction, rt)
+end
+
+-- Compiled module (read only) of a module key or a step key "<module>/<step id>": label, version,
+-- levels, steps. For the step window's "provisional" symbol and origin tooltip.
+function Route.Module(key)
+	if not modules or type(key) ~= "string" then
+		return nil
+	end
+	return modules[key] or modules[key:match("^(.-)/[^/]*$") or ""]
 end
 
 function Route.Mode()
