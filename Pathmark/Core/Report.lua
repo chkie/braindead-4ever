@@ -34,7 +34,7 @@ local Num, Str = U.Num, U.Str
 local Report = {}
 ns.Report = Report
 
--- Current route step, set by the guide engine (AP 6). Until then the report says "-".
+-- Current route step, set by the route module (Routes/Guide.lua). Without a route the report says "-".
 function Report.Step()
 	local fn = ns.CurrentStep
 	local step = type(fn) == "function" and fn() or nil
@@ -104,6 +104,12 @@ function Report.Build(note)
 	else
 		for line in errors:gmatch("[^\n]+") do
 			add("  %s", line)
+		end
+	end
+	-- Interface: atlases the client did not have (UI/Theme.lua, rule N2).
+	if ns.Theme and ns.Theme.ReportLines then
+		for _, line in ipairs(ns.Theme.ReportLines()) do
+			add("%s", line)
 		end
 	end
 	if type(note) == "string" and note ~= "" then

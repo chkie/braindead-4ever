@@ -10,8 +10,9 @@ By opening a pull request you agree that your contribution is licensed under the
 
 ## Rules for addon code
 
-- No new global variables. The only globals are the SavedVariables `PathmarkDB`, `PathmarkCollectDB` and `PathmarkCharDB`, the slash command entries `SLASH_PATHMARK1` and `SlashCmdList.PATHMARK`, and the named copy window `PathmarkCopyFrame` (Escape closes frames by name). The developer probe adds `PathmarkProbeItemButton` in developer builds only. Everything else lives in the addon namespace (`local ADDON, ns = ...`).
+- No new global variables. The only globals are the SavedVariables `PathmarkDB`, `PathmarkCollectDB` and `PathmarkCharDB`, the slash command entries `SLASH_PATHMARK1` and `SlashCmdList.PATHMARK`, the named copy window `PathmarkCopyFrame` and setup window `PathmarkSetupFrame` (Escape closes frames by name), and the font copies `PathmarkFontHeader`, `PathmarkFontStep`, `PathmarkFontLine`, `PathmarkFontSmall`, `PathmarkFontStatus` (`CreateFont` needs a name). The developer probe adds `PathmarkProbeItemButton` in developer builds only. Everything else lives in the addon namespace (`local ADDON, ns = ...`).
 - Every text a player can see lives in `Pathmark/Locales/` and exists in `enUS.lua` and `deDE.lua`.
+- Interface code (`Pathmark/UI/`) reads the route and discovery logic only through `UI/Connect.lua`. Graphics only as Blizzard atlases through `ns.Theme.SetAtlas`, fonts only as copies of Blizzard font objects, colors from Blizzard's constants. Anything that may be protected, opens a window or plays a sound goes through `ns.UI.OutOfCombat` (tested in `spec/ui_combat_spec.lua`).
 - Never call `seterrorhandler`. Run event handlers through `ns.Guard.Wrap` or `ns.Guard.Call`.
 - A feature is a module (`ns.Modules.Define`) that declares the API functions and events it needs. If one is missing in a client, only that module turns off.
 - Decide by API existence (`ns.Modules.Optional("C_X.Y")`), never by TOC or interface version.

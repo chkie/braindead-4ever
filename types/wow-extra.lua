@@ -39,3 +39,95 @@ LE_PARTY_CATEGORY_INSTANCE = 2
 ---@param showServerName? boolean
 ---@return string?
 function GetUnitName(unit, showServerName) end
+
+-- Interface (UI/, Welle 5). FrameXML globals the pinned annotations do not declare; names checked in
+-- the Forever inventories (Ketho BlizzardInterfaceResources branch forever, wow-ui-source forever).
+
+---Blizzard settings panel (Blizzard_Settings_Shared, 11.0.2+ signatures).
+---@type table<string, any>
+Settings = {}
+
+---@param name string
+---@param buttonText string
+---@param buttonClick function
+---@param tooltip string?
+---@param addSearchTags boolean
+---@return table
+function CreateSettingsButtonInitializer(name, buttonText, buttonClick, tooltip, addSearchTags) end
+
+---@param name string
+---@param tooltip string?
+---@return table
+function CreateSettingsListSectionHeaderInitializer(name, tooltip) end
+
+---@type table<string, any>
+MinimalSliderWithSteppersMixin = {}
+
+---Context help bubble (Blizzard_SharedXML/HelpTip.lua).
+---@type table<string, any>
+HelpTip = {}
+
+---Dialogs by name (Blizzard_StaticPopup).
+---@type table<string, table>
+StaticPopupDialogs = {}
+
+---@param which string
+---@param text_arg1? string
+---@param text_arg2? string
+---@param data? any
+---@return table?
+function StaticPopup_Show(which, text_arg1, text_arg2, data) end
+
+---Addon compartment at the minimap (Blizzard_Minimap/Mainline/AddonCompartment.lua).
+---@type table<string, any>
+AddonCompartmentFrame = {}
+
+---@type table<string, any>
+UIErrorsFrame = {}
+
+---World map (Blizzard_WorldMap) with its pin pools.
+---@type table<string, any>
+WorldMapFrame = {}
+
+---@type table<string, any>
+MapCanvasDataProviderMixin = {}
+
+---@type table<string, any>
+MapCanvasPinMixin = {}
+
+---@type table<string, any>
+UiMapPoint = {}
+
+---Frame pools (Blizzard_SharedXMLBase/Pools.lua).
+---@param frameType string
+---@param parent? table
+---@return table
+function CreateFramePool(frameType, parent) end
+
+---@param template string
+---@return table
+function CreateUnsecuredRegionPoolInstance(template) end
+
+---Tracker colors (Blizzard_ObjectiveTrackerShared.lua): Normal, Complete, Failed, ...
+---@type table<string, table>
+OBJECTIVE_TRACKER_COLOR = {}
+
+---Sound kit IDs (Mainline/SoundKitConstants.lua).
+---@type table<string, number>
+SOUNDKIT = {}
+
+---GlobalStrings (deDE / enUS values in brain chapter 18 §1.7).
+---@type string
+IN_GAME_NAVIGATION_RANGE = "%s |4yd:yds"
+---@type string
+NAVIGATION_DESTINATION_REACHED_MESSAGE = ""
+---@type string
+HUD_EDIT_MODE_MENU = ""
+---@type string
+CANCEL = ""
+---@type string
+OPTIONAL = ""
+---@type string
+LFG_TYPE_DUNGEON = ""
+---@type string
+XP = ""

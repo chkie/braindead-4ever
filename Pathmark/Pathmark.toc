@@ -36,9 +36,22 @@ Routes\Forecast.lua
 Routes\Runtime.lua
 Routes\Guide.lua
 Routes\Explore.lua
-# Developer API probe: the packager drops this block and .pkgmeta ignores the folder.
+UI\Core.lua
+UI\Theme.lua
+UI\Nav.lua
+UI\Connect.lua
+UI\StepText.lua
+UI\Menu.lua
+UI\StepFrame.lua
+UI\Arrow.lua
+UI\MapPins.lua
+UI\Minimap.lua
+UI\Setup.lua
+UI\Settings.lua
+# Developer API probe and UI preview: the packager drops this block and .pkgmeta ignores the folder.
 #@do-not-package@
 Probe\Probe.lua
 Probe\Checks.lua
+Probe\Preview.lua
 #@end-do-not-package@
 Core\Boot.lua
