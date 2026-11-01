@@ -1,0 +1,14 @@
+{
+ "commit": "f8d538affb14581a9667907fda73222a57d47ff2",
+ "commitDate": "2026-11-01T01:50:51-05:00",
+ "copyright": "Copyright (c) 2026 AllTheThings WoW Addon (MIT License, LICENSE in the source repository)",
+ "files": [
+  "quests.jsonl"
+ ],
+ "license": "MIT",
+ "name": "All The Things, Forever database",
+ "repository": "https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever",
+ "selection": "every q() entry under .contrib/.db/forever/zones, evaluated in a Lua 5.1 sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
+ "source": "att",
+ "status": "unbestätigt"
+}

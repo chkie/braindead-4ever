@@ -1,0 +1,16 @@
+{
+ "clientBuild": "1.60.1.70532",
+ "commit": "463c52c8a65babd48f88f74cb69d640b2025fbe3",
+ "commitDate": "2026-10-31T09:12:21+01:00",
+ "files": [
+  "quests.jsonl",
+  "ui_map.jsonl"
+ ],
+ "license": "GPL-3.0-only",
+ "name": "Polestar forever-db",
+ "repository": "https://github.com/fitzforge/polestar/tree/next/forever-db",
+ "selection": "quests with min_level <= 30 and level <= 34; tables quest, quest_start, quest_end, quest_prereq, quest_objective, spawn, item_source, ui_map; no titles or names",
+ "source": "polestar",
+ "status": "unbestätigt",
+ "version": "2026.10.1"
+}

@@ -1,0 +1,90 @@
+Pathmark – third-party data
+
+Pathmark's code is licensed under GPL-3.0-or-later with the additional permission in
+LICENSE-EXCEPTION.md. The route data is a separate part with its own terms, because it
+contains data from the projects below:
+
+  data/sources/polestar/   Polestar forever-db           GPL-3.0-only
+  data/sources/eglink/     EG Link output, WoW: Forever  CC BY 4.0
+  data/sources/att/        All The Things                MIT
+  data/facts/, data/routes/, Pathmark/Routes/Data_*.lua  merged from all three: GPL-3.0-only
+
+These data files do not carry the Ace3 permission of LICENSE-EXCEPTION.md: it can only be
+granted by the copyright holders, and the Polestar data is not ours. Data from these projects
+starts with the status "unbestätigt" (unconfirmed) and is replaced as soon as our own in-game
+measurements cover it. The source form of the compiled data (Pathmark/Routes/Data_*.lua) is
+the route files in data/routes and the tools in tools/routekit, published at
+https://github.com/chkie/pathmark.
+
+Which version of each source was used is recorded in data/sources/<source>/SOURCE.json and in
+the #sources line of every route file.
+
+-------------------------------------------------------------------------------------------
+Polestar forever-db
+https://github.com/fitzforge/polestar/tree/next/forever-db
+
+The database tables used (quest, quest_start, quest_end, quest_prereq, quest_objective, spawn,
+item_source, ui_map) are licensed under the GNU General Public License version 3 only
+(datapackage.json). Polestar's own credits, which also apply to the values taken from it:
+
+- EG Link output: World of Warcraft: Forever (https://github.com/JIVESCORP/eg-link-output-wowf),
+  data from Efficient Games (https://efficient.games), licensed under CC BY 4.0.
+- CMaNGOS classic-db (https://github.com/cmangos/classic-db), GPL-3.0.
+- VMaNGOS values (through pfQuest) and Factoruide data (https://github.com/Factoruide),
+  GPL-2.0-or-later.
+- ForeverTDB, the Forever TrinityCore world database
+  (https://github.com/advocaite/TrinityCore/tree/forever), GPL-2.0.
+- QuestieDB (Questie team), credited per its maintainer.
+- World of Warcraft: Forever client tables.
+- pfQuest (https://github.com/shagu/pfQuest), MIT License, Copyright (c) 2017-2021 Eric Mauser
+  (Shagu).
+
+Changed: reduced to quests up to level 34, without titles and names; spawn points reduced to
+giver, turn-in and objective positions.
+
+-------------------------------------------------------------------------------------------
+EG Link output: World of Warcraft: Forever
+https://github.com/JIVESCORP/eg-link-output-wowf
+
+Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0
+(https://creativecommons.org/licenses/by/4.0/).
+
+Changed: reduced to quest facts (who offers and takes a quest and where players stood, which
+faction the server describes a quest for, quest level, minimum level and race mask) and to the
+start positions of new characters; merged over the builds of the products wow_classic_beta and
+wowf; coordinates reordered to north and west. No game text is included.
+
+-------------------------------------------------------------------------------------------
+All The Things (Forever database)
+https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever
+
+Changed: quest facts only (quest IDs, giver IDs, coordinates, prerequisites, races, classes,
+required level, flags), read from the Lua source files; no names or comments.
+
+MIT License
+
+Copyright (c) 2026 AllTheThings WoW Addon
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------------------
+World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks
+of Blizzard Entertainment, Inc. in the U.S. and/or other countries. Quest and NPC IDs and
+coordinates describe the game; no game assets and no game text are included. Pathmark is not
+affiliated with or endorsed by Blizzard Entertainment.

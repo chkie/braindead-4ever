@@ -1,0 +1,48 @@
+{
+ "counts": {
+  "kept": 2247,
+  "no level": 84,
+  "pre conflict": 13,
+  "pre secured": 2008,
+  "pre unknown": 226
+ },
+ "license": "GPL-3.0-only",
+ "note": "Merged from the sources below; contains Polestar forever-db data (GPL-3.0-only), EG Link data (CC BY 4.0) and All The Things data (MIT). Every value starts as unbestätigt.",
+ "prereqCoverageNewQuests": {
+  "att 1-10": "211/313",
+  "att 11-20": "89/171",
+  "att 21-30": "37/94",
+  "att 31-40": "47/113",
+  "polestar 1-10": "199/311",
+  "polestar 11-20": "57/192",
+  "polestar 21-30": "0/112",
+  "polestar 31-40": "0/49"
+ },
+ "rules": {
+  "agreeYards": 10.0,
+  "maxLevel": 34,
+  "maxMinLevel": 30,
+  "silenceCoverage": 0.5
+ },
+ "sources": {
+  "att": {
+   "commit": "f8d538affb14581a9667907fda73222a57d47ff2",
+   "license": "MIT",
+   "name": "All The Things, Forever database",
+   "repository": "https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever"
+  },
+  "eglink": {
+   "commit": "572beca51aba0ed1e485d0530ec0aa7da2ea9abe",
+   "license": "CC-BY-4.0",
+   "name": "EG Link output: World of Warcraft: Forever",
+   "repository": "https://github.com/JIVESCORP/eg-link-output-wowf"
+  },
+  "polestar": {
+   "commit": "463c52c8a65babd48f88f74cb69d640b2025fbe3",
+   "license": "GPL-3.0-only",
+   "name": "Polestar forever-db",
+   "repository": "https://github.com/fitzforge/polestar/tree/next/forever-db",
+   "version": "2026.10.1"
+  }
+ }
+}
