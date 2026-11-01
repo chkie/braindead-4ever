@@ -1,0 +1,37 @@
+-- SPDX-License-Identifier: GPL-3.0-or-later
+-- Test fixture with made-up quest IDs. Prepared error (sperrliste): phrase from the block list.
+#module t-speed-start-elwynn
+#kind start
+#faction Alliance
+#mode speed
+#levels 1-10
+#label vorläufig
+#version 1
+#sources polestar=test eglink=test
+#text Prüfroute Wald von Elwynn
+
+@a1 lv=1
+  accept 900001 | src=polestar,eglink status=unbestätigt
+  goto 1429 -150.0,-8900.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t1 lv=1
+  turnin 900001 | src=polestar status=unbestätigt
+  accept 900002 | src=polestar status=unbestätigt
+  goto 1429 -150.0,-8900.0 | src=polestar status=unbestätigt
+@c2 lv=2
+  complete 900002 | src=polestar status=unbestätigt
+  goto 1429 -100.0,-8800.0 | src=polestar status=unbestätigt
+@t2 lv=2
+  turnin 900002 | src=polestar status=unbestätigt
+  goto 1429 -150.0,-8900.0 | src=polestar status=unbestätigt
+@a3 lv=2 << race=HUMAN
+  accept 900003 | src=polestar status=unbestätigt
+  turnin 900003 | src=polestar status=unbestätigt
+  goto 1429 -150.0,-8900.0 | src=polestar status=unbestätigt
+@n1 lv=3
+  note "Tauche ein in den Wald von Elwynn" | src=plan status=unbestätigt
+@r1436 lv=3
+  travel walk 1436 | src=plan status=unbestätigt
+@a5 lv=3
+  accept 900005 | src=polestar status=unbestätigt
+  turnin 900005 | src=polestar status=unbestätigt
+  goto 1436 1000.0,-10500.0 | src=polestar status=unbestätigt

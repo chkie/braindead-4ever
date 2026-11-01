@@ -1,0 +1,341 @@
+-- SPDX-License-Identifier: GPL-3.0-or-later
+-- Reads the All The Things Forever database (.contrib/.db, MIT) in a Lua 5.1 sandbox and
+-- prints one JSON object per quest. Usage:
+--   lua att_dump.lua <path to .contrib/.db> > quests.jsonl
+-- Only facts are written: quest ID, giver IDs, coordinates (map percent), prerequisites,
+-- races, classes, required level, flags. Names and comments are not read.
+local root = assert(arg[1], "usage: lua att_dump.lua <.contrib/.db>")
+
+-- Placeholder for every unknown global: callable, indexable, arithmetic-safe.
+local Placeholder = {}
+local function placeholder(name)
+	return setmetatable({ _ph = name }, Placeholder)
+end
+Placeholder.__index = function(t, k)
+	return placeholder(rawget(t, "_ph") .. "." .. tostring(k))
+end
+-- Calls of unknown functions become nodes; a node can be concatenated (ATT builds tooltip
+-- code strings with calls like WOWAPI_GetItemCount(id)).
+local NodeMT = {
+	__concat = function()
+		return ""
+	end,
+}
+Placeholder.__call = function(t, ...)
+	return setmetatable({ _k = rawget(t, "_ph"), args = { ... } }, NodeMT)
+end
+for _, mm in ipairs({ "__add", "__sub", "__mul", "__div", "__mod", "__unm", "__concat" }) do
+	Placeholder[mm] = function()
+		return placeholder("arith")
+	end
+end
+
+local env = {}
+local std = {
+	"string",
+	"table",
+	"math",
+	"pairs",
+	"ipairs",
+	"type",
+	"tostring",
+	"tonumber",
+	"select",
+	"unpack",
+	"setmetatable",
+	"getmetatable",
+	"rawget",
+	"rawset",
+	"next",
+	"error",
+	"pcall",
+	"assert",
+}
+for _, k in ipairs(std) do
+	env[k] = _G[k]
+end
+env._G = env
+env.print = function() end
+env.tinsert = function(t, ...)
+	if type(t) == "table" and getmetatable(t) ~= Placeholder then
+		table.insert(t, ...)
+	end
+end
+env.MAP = {}
+setmetatable(env, {
+	__index = function(_, k)
+		return placeholder(k)
+	end,
+})
+
+-- Constructors the dump looks at. Everything else becomes a generic node via the placeholder.
+local function node(kind)
+	return function(...)
+		return { _k = kind, args = { ... } }
+	end
+end
+env.q = node("q")
+env.m = node("m")
+env.maproot = node("maproot")
+env.objective = node("objective")
+
+local function runFile(path)
+	local chunk, err = loadfile(path)
+	if not chunk then
+		return false, err
+	end
+	setfenv(chunk, env)
+	return pcall(chunk)
+end
+
+local function mustRun(path)
+	local ok, err = runFile(path)
+	if not ok then
+		io.stderr:write("constants failed: " .. path .. ": " .. tostring(err) .. "\n")
+		os.exit(2)
+	end
+end
+
+-- raceIDs.lua and classIDs.lua define their constants first and then cross-check them against
+-- export tables this sandbox does not have; the error after the definitions is expected.
+runFile(root .. "/shared/constants/raceIDs.lua")
+runFile(root .. "/shared/constants/classIDs.lua")
+for _, k in ipairs({ "HUMAN", "DWARF", "NIGHTELF", "GNOME", "SKYBORNE_ALLIANCE", "ORC", "UNDEAD", "TAUREN", "TROLL" }) do
+	if type(rawget(env, k)) ~= "number" then
+		io.stderr:write("race constant missing: " .. k .. "\n")
+		os.exit(2)
+	end
+end
+for _, k in ipairs({ "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "SHAMAN", "MAGE", "WARLOCK", "DRUID" }) do
+	if type(rawget(env, k)) ~= "number" then
+		io.stderr:write("class constant missing: " .. k .. "\n")
+		os.exit(2)
+	end
+end
+mustRun(root .. "/forever/.config/constants/timelines.lua")
+mustRun(root .. "/forever/.config/constants/maps.lua")
+mustRun(root .. "/forever/.config/constants/races.lua")
+
+-- Collect every zone file; maproot/root register their trees through these calls.
+local roots = {}
+env.maproot = function(...)
+	local n = { _k = "maproot", args = { ... } }
+	roots[#roots + 1] = n
+	return n
+end
+env.root = function(...)
+	local n = { _k = "root", args = { ... } }
+	roots[#roots + 1] = n
+	return n
+end
+
+local files = {}
+local p = io.popen('find "' .. root .. '/forever/zones" -name "*.lua" | sort')
+for line in p:lines() do
+	files[#files + 1] = line
+end
+p:close()
+local failed = 0
+for _, f in ipairs(files) do
+	local ok, err = runFile(f)
+	if not ok then
+		failed = failed + 1
+		io.stderr:write("zone file failed: " .. f .. ": " .. tostring(err) .. "\n")
+	end
+end
+
+-- JSON output (numbers, strings, booleans, arrays, objects).
+local function isArray(t)
+	local n = 0
+	for _ in pairs(t) do
+		n = n + 1
+	end
+	return n == #t
+end
+local function json(v)
+	local tv = type(v)
+	if tv == "number" then
+		if v ~= v or v == math.huge or v == -math.huge then
+			return "null"
+		end
+		if v == math.floor(v) and math.abs(v) < 1e15 then
+			return string.format("%d", v)
+		end
+		return string.format("%.4f", v)
+	elseif tv == "string" then
+		return '"' .. v:gsub('[%c"\\]', function(c)
+			return string.format("\\u%04x", c:byte())
+		end) .. '"'
+	elseif tv == "boolean" then
+		return tostring(v)
+	elseif tv == "table" then
+		local out = {}
+		if isArray(v) then
+			for i = 1, #v do
+				out[i] = json(v[i])
+			end
+			return "[" .. table.concat(out, ",") .. "]"
+		end
+		local keys = {}
+		for k in pairs(v) do
+			keys[#keys + 1] = tostring(k)
+		end
+		table.sort(keys)
+		for _, k in ipairs(keys) do
+			out[#out + 1] = json(k) .. ":" .. json(v[k])
+		end
+		return "{" .. table.concat(out, ",") .. "}"
+	end
+	return "null"
+end
+
+local function num(v)
+	return type(v) == "number" and v or nil
+end
+
+local function numList(v)
+	if type(v) == "number" then
+		return { v }
+	end
+	if type(v) ~= "table" or getmetatable(v) == Placeholder then
+		return nil
+	end
+	local out = {}
+	for _, x in ipairs(v) do
+		if type(x) == "number" then
+			out[#out + 1] = x
+		end
+	end
+	return #out > 0 and out or nil
+end
+
+local function coordList(t)
+	local out = {}
+	local function add(c)
+		if type(c) == "table" and type(c[1]) == "number" and type(c[2]) == "number" and type(c[3]) == "number" then
+			out[#out + 1] = { c[1], c[2], c[3] }
+		end
+	end
+	add(t.coord)
+	if type(t.coords) == "table" and getmetatable(t.coords) ~= Placeholder then
+		for _, c in ipairs(t.coords) do
+			add(c)
+		end
+	end
+	return #out > 0 and out or nil
+end
+
+local function providerList(t)
+	local out = {}
+	local function add(pv)
+		if type(pv) == "table" and type(pv[1]) == "string" and type(pv[2]) == "number" then
+			out[#out + 1] = { pv[1], pv[2] }
+		end
+	end
+	add(t.provider)
+	if type(t.providers) == "table" and getmetatable(t.providers) ~= Placeholder then
+		for _, pv in ipairs(t.providers) do
+			add(pv)
+		end
+	end
+	return #out > 0 and out or nil
+end
+
+local function timelineList(t)
+	if type(t.timeline) ~= "table" or getmetatable(t.timeline) == Placeholder then
+		return nil
+	end
+	local out = {}
+	for _, s in ipairs(t.timeline) do
+		if type(s) == "string" then
+			out[#out + 1] = s
+		end
+	end
+	return #out > 0 and out or nil
+end
+
+local count = 0
+local seenTables = {}
+local walk
+
+local function emitQuest(n, ctx)
+	local id = n.args[1]
+	local t = n.args[2]
+	if type(id) ~= "number" then
+		return
+	end
+	if type(t) ~= "table" or getmetatable(t) == Placeholder then
+		t = {}
+	end
+	local objectives = {}
+	if type(t.groups) == "table" then
+		for _, g in ipairs(t.groups) do
+			if type(g) == "table" and g._k == "objective" then
+				local ot = g.args[2]
+				if type(ot) == "table" then
+					objectives[#objectives + 1] = {
+						n = num(g.args[1]),
+						providers = providerList(ot),
+						cr = numList(ot.cr) or numList(ot.crs),
+						coords = coordList(ot),
+					}
+				end
+			end
+		end
+	end
+	local rec = {
+		q = id,
+		zoneMap = ctx.map,
+		side = ctx.side,
+		coords = coordList(t),
+		qg = numList(t.qg) or numList(t.qgs),
+		providers = providerList(t),
+		sourceQuests = numList(t.sourceQuest) or numList(t.sourceQuests),
+		altQuests = numList(t.altQuests),
+		races = numList(t.races),
+		classes = numList(t.classes),
+		lvl = num(t.lvl),
+		breadcrumb = t.isBreadcrumb == true or nil,
+		repeatable = t.repeatable == true or nil,
+		timeline = timelineList(t),
+		objectives = #objectives > 0 and objectives or nil,
+	}
+	io.write(json(rec), "\n")
+	count = count + 1
+	-- nested quests (rare) and faction variants
+	walk(t, ctx)
+end
+
+walk = function(t, ctx)
+	if type(t) ~= "table" or getmetatable(t) == Placeholder or seenTables[t] then
+		return
+	end
+	seenTables[t] = true
+	if t._k == "q" then
+		emitQuest(t, ctx)
+		return
+	end
+	local nctx = ctx
+	if t._k == "maproot" and type(t.args[2]) == "number" then
+		nctx = { map = t.args[2], side = ctx.side }
+	elseif t._k == "m" and type(t.args[1]) == "number" and not ctx.map then
+		nctx = { map = t.args[1], side = ctx.side }
+	end
+	for k, v in pairs(t) do
+		if k == "allianceQuestData" then
+			walk(v, { map = nctx.map, side = "Alliance" })
+		elseif k == "hordeQuestData" then
+			walk(v, { map = nctx.map, side = "Horde" })
+		elseif type(v) == "table" then
+			walk(v, nctx)
+		end
+	end
+end
+
+for _, r in ipairs(roots) do
+	walk(r, {})
+end
+io.stderr:write(string.format("att_dump: %d files, %d failed, %d quest records\n", #files, failed, count))
+if failed > 0 then
+	os.exit(3)
+end

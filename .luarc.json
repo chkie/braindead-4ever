@@ -21,7 +21,8 @@
     ".git",
     ".lua",
     ".luarocks",
-    "spec"
+    "spec",
+    "tools"
   ],
   "workspace.checkThirdParty": false,
   "diagnostics.neededFileStatus": {
