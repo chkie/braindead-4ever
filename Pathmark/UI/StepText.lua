@@ -184,18 +184,28 @@ function ST.Step(info, withObjective)
 	return table.concat(parts, L.JOIN), have, need, quest
 end
 
+-- Zone name of the header: the step's zone, else the player's map.
+function ST.HeaderZone(info)
+	return ST.MapName(ST.ZoneMap(info)) or ST.MapName(Num(C_Map.GetBestMapForUnit("player"))) or ""
+end
+
 -- "Elwynn Forest • 4/48"; the word "step" is in the tooltip.
 function ST.Header(info)
-	local zone = ST.MapName(ST.ZoneMap(info)) or ST.MapName(Num(C_Map.GetBestMapForUnit("player"))) or ""
+	local zone = ST.HeaderZone(info)
 	if not info then
 		return zone
 	end
 	return L.HEADER:format(zone, info.index, info.total)
 end
 
--- "Wolves in the fields • 42 yd": place (zone of the target) and distance.
-function ST.Detail(target, dist)
+-- "Westfall • 42 yd": place (zone of the target) and distance. The route data has no NPC or place text,
+-- so when the target lies in the zone the header already names, the line says only how far it is
+-- ("Orgrimmar • 48" repeated the header, Welle 5d Q3).
+function ST.Detail(target, dist, zone)
 	local place = target and ST.MapName(target.map)
+	if place and place == zone then
+		return dist and L.DETAIL_DIST:format(ns.Theme.Distance(dist)) or ""
+	end
 	if place and dist then
 		return L.DETAIL:format(place, ns.Theme.Distance(dist))
 	end
@@ -289,7 +299,7 @@ function ST.XP(b)
 		return ns.Theme.Wrap(HIGHLIGHT_FONT_COLOR, v)
 	end
 	local word = XP or "XP"
-	local parts = { L.XP_LEVEL:format(W(b.level)) }
+	local parts = { L.XP_LEVEL:format(W(b.level)) } -- XP_TOGO and XP_STEP hold number and "EP" together (Q5)
 	if not b.stopped then
 		parts[#parts + 1] = L.XP_TOGO:format(W(ns.Theme.Number(b.toLevel)), word)
 		local s = b.step
@@ -373,17 +383,19 @@ function ST.XPTip(info, b, f, earlier)
 end
 
 -- "The route falls short of Westfall …" when the route to the next zone does not reach its level.
+-- Without a name for the zone (the client does not know the map) the sentence names no zone instead of
+-- a placeholder (Welle 5d, M8: "bis ?").
 function ST.Reach(b)
 	local z = b and b.zone
 	if not z or z.enough ~= false or not z.shortfall or z.shortfall <= 0 then
 		return nil
 	end
-	return L.REACH:format(
-		ST.MapName(z.nextMap) or L.ZONE_FALLBACK,
-		ns.Theme.Number(z.shortfall),
-		ns.Theme.Number(z.kills or 0),
-		tostring(b.level)
-	)
+	local shortfall, kills = ns.Theme.Number(z.shortfall), ns.Theme.Number(z.kills or 0)
+	local zone = ST.MapName(z.nextMap)
+	if not zone then
+		return L.REACH_NEXT:format(shortfall, kills, tostring(b.level))
+	end
+	return L.REACH:format(zone, shortfall, kills, tostring(b.level))
 end
 
 -- Replanning question (Welle 7): "You are 3 levels above the plan. Adjust the route?" or the switch

@@ -12,9 +12,9 @@ local function everything(ns)
 	local W = ns.StepFrame.frame
 	W.box:Click() -- step done: sound and glow must wait
 	wow.advance(1)
+	ns.StepFrame.ShowHintOnce() -- HelpTip (before the windows it waits behind, Welle 5d M13)
 	S.item(S.menu(ns), "Settings").fn() -- Settings.OpenToCategory
 	SlashCmdList.PATHMARK("setup") -- setup window
-	ns.StepFrame.ShowHintOnce() -- HelpTip
 	ns.UI.Set("blizzNav", true) -- user waypoint and super tracking
 	ns.UI.Set("blizzNav", false)
 	ns.UI.Set("blizzNav", true)
@@ -61,7 +61,11 @@ describe("Combat lockdown", function()
 		assert.are.same({}, wow.blocked)
 		assert.are.same({ ns.settingsCategoryID }, wow.world.settings.opened)
 		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
-		assert.are.equal(1, #wow.world.helptips)
+		-- the usage hint came after the fight and waits behind settings and first start (M13)
+		assert.is_false(_G.HelpTip:IsShowing(ns.StepFrame.frame))
+		_G.PathmarkSetupFrame:Hide()
+		_G.SettingsPanel:Hide()
+		assert.is_true(_G.HelpTip:IsShowing(ns.StepFrame.frame))
 		assert.is_table(wow.world.waypoint)
 		assert.are.same({}, wow.world.watches) -- the tracker pass ran after the fight
 		assert.are.equal(0, ns.UI.Waiting())

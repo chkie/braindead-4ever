@@ -8,7 +8,8 @@
 -- alphabet: roman FRIZQT__, russian FRIZQT___CYR, korean 2002, simplified Chinese ARKai_T, traditional
 -- Chinese blei00d. All five have every printable ASCII character. Of the rest:
 --   in all five:        “ ” – • …
---   missing:            · (FRIZQT___CYR), „ (ARKai_T, blei00d), ä ö ü Ä Ö Ü ß (blei00d)
+--   missing:            · (FRIZQT___CYR), „ (ARKai_T, blei00d), ä ö ü Ä Ö Ü ß (blei00d),
+--                       no-break space U+00A0 (ARKai_T; measured again 2026-11-02, Welle 5d)
 -- English texts are the fallback for every client language, so they may use only what all five fonts
 -- have. German texts load only in the German client (TOC: AllowLoadTextLocale deDE), which uses
 -- FRIZQT__.
@@ -21,6 +22,7 @@ for c in pairs(ALL_FONTS) do
 	LATIN[c] = true
 end
 LATIN["„"] = true
+LATIN["\194\160"] = true -- no-break space: FRIZQT__ has it, ARKai_T does not (English must not use it)
 
 -- Characters of a UTF-8 string that are neither printable ASCII nor in the allowed set.
 local function bad(text, allowed)

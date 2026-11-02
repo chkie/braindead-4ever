@@ -39,6 +39,7 @@ local S = {
 	DELAY = 2,
 	CARD_W = 168,
 	CARD_H = 150,
+	SUB_LINES = 2, -- every subtitle takes two lines, so the three card texts start on one line (S7)
 }
 ns.Setup = S
 
@@ -66,6 +67,11 @@ local function Card(parent, style, index)
 	b.sub = Text(b, "GameFontHighlightSmall", w)
 	b.sub:SetPoint("TOPLEFT", b.title, "BOTTOMLEFT", 0, -4)
 	b.sub:SetText(L["STYLE_SUB_" .. style])
+	-- "Entdecker-Route ohne Hinweise" wraps, and the third card's text stood a line lower (Welle 5d S7)
+	local _, size = b.sub:GetFont()
+	b.sub:SetJustifyV("TOP")
+	b.sub:SetMaxLines(S.SUB_LINES)
+	b.sub:SetHeight(S.SUB_LINES * math.ceil((tonumber(size) or 10) * 1.2))
 	b.text = Text(b, "GameFontHighlight", w)
 	b.text:SetPoint("TOPLEFT", b.sub, "BOTTOMLEFT", 0, -8)
 	b.text:SetText(L["STYLE_TEXT_" .. style])
@@ -148,6 +154,7 @@ local function Finish()
 		ns.StepFrame.ShowHintOnce()
 	end
 	if ns.StepFrame then
+		ns.StepFrame.ResumeHint()
 		ns.StepFrame.Refresh()
 		ns.StepFrame.PlaceDefault() -- the tracker hides now: the window takes its place (Welle 5c)
 	end
@@ -177,8 +184,9 @@ function S.Closed()
 	Finish()
 end
 
--- force = reopen from the settings or the slash command.
-function S.Open(force)
+-- force = reopen from the settings or the slash command. firstLook (developer preview): the footer of
+-- the first start, which names what closing picks; closing a reopened window still changes nothing.
+function S.Open(force, firstLook)
 	if UI.DB().setupDone and not force then
 		return false
 	end
@@ -192,7 +200,10 @@ function S.Open(force)
 		S.done, S.choice = false, nil
 		S.reopened = UI.DB().setupDone == true
 		d.detected:SetText(S.DetectedLine())
-		d.foot:SetText(S.reopened and L.SETUP_FOOT_AGAIN or L.SETUP_FOOT)
+		d.foot:SetText((S.reopened and not firstLook) and L.SETUP_FOOT_AGAIN or L.SETUP_FOOT)
+		if ns.StepFrame then
+			ns.StepFrame.SuspendHint() -- the usage hint waits behind the first start (Welle 5d, M13)
+		end
 		d:Show()
 	end)
 	return true

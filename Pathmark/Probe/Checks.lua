@@ -637,6 +637,13 @@ local CHECKS = {
 	{ id = "font.small", kind = "value", name = "GameFontNormalSmall" },
 	{ id = "font.med3", kind = "value", name = "GameFontNormalMed3" },
 	{ id = "font.highlight", kind = "value", name = "GameFontHighlight" },
+	-- Welle 5d: outline fonts of the arrow text, the arrow gives way to dialogs, the usage hint waits
+	-- behind Blizzard's settings
+	{ id = "font.outline", kind = "value", name = "GameFontHighlightOutline" },
+	{ id = "font.normaloutline", kind = "value", name = "GameFontNormalOutline" },
+	{ id = "ui.popupshown", kind = "exists", name = "StaticPopup_ForEachShownDialog" },
+	{ id = "ui.helptiphide", kind = "exists", name = "HelpTip.Hide" },
+	{ id = "ui.settingspanel", kind = "value", name = "SettingsPanel" },
 	{ id = "color.normal", kind = "value", name = "NORMAL_FONT_COLOR" },
 	{ id = "color.highlight", kind = "value", name = "HIGHLIGHT_FONT_COLOR" },
 	{ id = "color.tracker", kind = "value", name = "OBJECTIVE_TRACKER_COLOR" },

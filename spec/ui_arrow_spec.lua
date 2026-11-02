@@ -91,6 +91,68 @@ describe("Arrow", function()
 		end
 	end)
 
+	-- Welle 5d, M10: on screen the colorblind arrow was dark green at 5 degrees and gold at 90, because
+	-- the gold atlas multiplied the vertex color. What the client draws must be the palette itself.
+	it("draws blue, white and orange on screen, not the gold atlas tinted (M10)", function()
+		local ns = S.login({
+			before = function(W)
+				W.cvars.colorblindMode = "1"
+			end,
+		})
+		local F = arrow(ns)
+		local t = goal(ns)
+		assert.are.equal("ADD", F.lift.blend)
+		assert.are.equal("Navigation-Tracked-Arrow", F.lift.atlas)
+		local function drawn(deg)
+			S.face(ns, t, deg)
+			frames(ns, 15)
+			assert.are.equal(F.tex.rotation, F.lift.rotation)
+			return S.drawnArrow(F)
+		end
+		local blue = drawn(5)
+		assert.is_true(blue[3] >= 0.9 and blue[3] > blue[2] + 0.2 and blue[3] > blue[1] + 0.5, "blue")
+		local white = drawn(90)
+		assert.is_true(white[1] >= 0.9 and white[2] >= 0.9 and white[3] >= 0.9, "white")
+		local orange = drawn(170)
+		assert.is_true(orange[1] >= 0.9 and orange[2] > 0.35 and orange[2] < 0.7 and orange[3] < 0.1, "orange")
+		-- the normal palette too: green, yellow, red at full strength
+		ns.Arrow.colorblind = false
+		local green, yellow, red = drawn(0), drawn(90), drawn(160)
+		assert.is_true(green[2] >= 0.9 and green[1] < 0.1, "green")
+		assert.is_true(yellow[1] >= 0.9 and yellow[2] >= 0.9 and yellow[3] < 0.1, "yellow")
+		assert.is_true(red[1] >= 0.9 and red[2] < 0.1, "red")
+		-- arrival: Blizzard's check in its own colors, without the additive copy
+		S.place(t.wx + 8, t.wy)
+		frames(ns, 4)
+		assert.is_false(F.tex.desaturated)
+		assert.is_false(rawget(F.lift, "shown"))
+	end)
+
+	-- Welle 5d, M3: the goal and the distance stood at 1.6:1 to 1.8:1 against a bright sky with a 1 px
+	-- shadow. Blizzard's outline fonts put a black edge around every glyph.
+	it("writes goal, distance and “behind you” in Blizzard's outline fonts (M3)", function()
+		local ns = S.login()
+		local F = arrow(ns)
+		assert.are.equal("GameFontHighlightOutline", F.title.template)
+		assert.are.equal("GameFontNormalOutline", F.dist.template)
+		assert.are.equal("GameFontNormalOutline", F.hint.template)
+	end)
+
+	-- Welle 5d, M12: Blizzard's dialogs stand at the top center like the arrow; its text showed through.
+	it("hides while one of Blizzard's dialogs is open (M12)", function()
+		local ns = S.login()
+		local F = arrow(ns)
+		frames(ns, 4)
+		assert.are.equal(1, F.alpha)
+		ns.StepFrame.AskSkip()
+		assert.is_truthy(wow.popup)
+		frames(ns, 4)
+		assert.are.equal(0, F.alpha)
+		_G.StaticPopup_Hide(wow.popup.which)
+		frames(ns, 4)
+		assert.are.equal(1, F.alpha)
+	end)
+
 	it("shows the distance with Blizzard's format, at most five times per second", function()
 		local ns = S.login()
 		local F = arrow(ns)
@@ -243,8 +305,7 @@ describe("Positions in Edit Mode", function()
 		assert.is_true(rawget(ns.UI.movers.window.overlay, "shown"))
 		W.scripts.OnDragStart(W)
 		assert.is_true(W.moving)
-		W:ClearAllPoints()
-		W:SetPoint("TOPLEFT", _G.UIParent, "TOPLEFT", 100, -50)
+		S.drop(W, 100, 1030)
 		W.scripts.OnDragStop(W)
 		assert.are.same({ "TOPLEFT", "TOPLEFT", 100, -50 }, ns.UI.DB().pos.window)
 		_G.EventRegistry:TriggerEvent("EditMode.Exit")

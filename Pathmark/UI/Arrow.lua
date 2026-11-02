@@ -24,8 +24,15 @@ of the Ace3 libraries used as well as that of the covered work.
 -- UI/Arrow.lua: module "arrow" (design v2, view 2). Atlas Navigation-Tracked-Arrow at 44x36 with a
 -- black outline (same atlas, black, a bit larger), top center at y -140. Color after TomTom: green up to
 -- 20 degrees, yellow at 90, red from 135 with the text "behind you" (decision PF-1101); blue, white,
--- orange with Blizzard's colorblind mode. Below: goal in one line (GameFontHighlight, width 220) and the
--- distance with Blizzard's IN_GAME_NAVIGATION_RANGE (GameFontNormal), at most five times per second.
+-- orange with Blizzard's colorblind mode. The atlas itself is orange gold (file 3308452, fill about
+-- 194/113/0, blue channel 0), and SetVertexColor multiplies: blue came out dark green, white came out
+-- gold (Welle 5d, M10). So the arrow is drawn desaturated, and a second desaturated copy with additive
+-- blending brings the gray (about 0.48) back to full brightness: the colors on screen are the palette.
+-- Below: goal in one line (GameFontHighlightOutline, width 220) and the distance with Blizzard's
+-- IN_GAME_NAVIGATION_RANGE (GameFontNormalOutline), at most five times per second. Blizzard's outline
+-- fonts, because a 1 px shadow left the text at 1.6:1 to 1.8:1 against a bright sky (Welle 5d, M3).
+-- The arrow hides while one of Blizzard's dialogs (StaticPopup) is open: they share the top center of
+-- the screen (Welle 5d, M12).
 -- Arrival at 12 yd (5..30): check atlas and "Reached destination", hidden after 1 s.
 -- Cost: the direction (UnitPosition) is computed at most 20 times per second, the rotation (facing)
 -- every frame from the last direction; nothing allocates in OnUpdate (concept §2.3, brain chapter 12).
@@ -56,6 +63,12 @@ local compAcc, textAcc = 0, 0
 local shownYd
 local arrivedAt, arrived
 
+-- Blizzard's outline fonts (Blizzard_Fonts_Shared/Shared/FontStyles.xml, live and forever), else the
+-- shadowed ones.
+local function Font(outline, plain)
+	return _G[outline] and outline or plain
+end
+
 local function Build()
 	F = CreateFrame("Frame", nil, UIParent)
 	A.frame = F
@@ -69,19 +82,26 @@ local function Build()
 	T.SetAtlas(F.outline, "arrow")
 	F.outline:SetVertexColor(0, 0, 0, 1) -- black outline (concept §2.3)
 
-	F.tex = F:CreateTexture(nil, "ARTWORK")
+	F.tex = F:CreateTexture(nil, "ARTWORK", nil, 0)
 	F.tex:SetPoint("CENTER")
 	F.tex:SetSize(A.SIZE_W, A.SIZE_H)
 	T.SetAtlas(F.tex, "arrow")
+	-- additive copy over the arrow: doubles the desaturated gray, so the vertex color shows in full
+	F.lift = F:CreateTexture(nil, "ARTWORK", nil, 1)
+	F.lift:SetPoint("CENTER")
+	F.lift:SetSize(A.SIZE_W, A.SIZE_H)
+	T.SetAtlas(F.lift, "arrow")
+	F.lift:SetBlendMode("ADD")
+	F.lift:SetDesaturated(true)
 
-	F.title = F:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+	F.title = F:CreateFontString(nil, "OVERLAY", Font("GameFontHighlightOutline", "GameFontHighlight"))
 	F.title:SetPoint("TOP", F, "BOTTOM", 0, -4)
 	F.title:SetWidth(220)
 	F.title:SetWordWrap(false)
 	F.title:SetMaxLines(1)
-	F.dist = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	F.dist = F:CreateFontString(nil, "OVERLAY", Font("GameFontNormalOutline", "GameFontNormal"))
 	F.dist:SetPoint("TOP", F.title, "BOTTOM", 0, -2)
-	F.hint = F:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+	F.hint = F:CreateFontString(nil, "OVERLAY", Font("GameFontNormalOutline", "GameFontNormal"))
 	F.hint:SetPoint("TOP", F.dist, "BOTTOM", 0, -2)
 
 	F:SetScript("OnUpdate", function(_, elapsed)
@@ -109,7 +129,38 @@ end
 
 local function ShowArrowLook()
 	T.SetAtlas(F.tex, "arrow")
+	F.tex:SetDesaturated(true)
+	F.lift:Show()
 	F.outline:Show()
+end
+
+-- Direction and color of the arrow look: the arrow, its additive copy and the outline turn together.
+local function Paint(rel, dev)
+	F.tex:SetRotation(rel)
+	F.lift:SetRotation(rel)
+	F.outline:SetRotation(rel)
+	local r, g, b = T.ArrowColor(dev, A.colorblind)
+	F.tex:SetVertexColor(r, g, b)
+	F.lift:SetVertexColor(r, g, b)
+end
+
+local function ArrowAlpha(a)
+	F.tex:SetAlpha(a)
+	F.lift:SetAlpha(a)
+end
+
+-- Is one of Blizzard's dialogs open (StaticPopup_ForEachShownDialog, Blizzard_StaticPopup live and
+-- forever)? A named function, so the check allocates nothing.
+local covered = false
+local function MarkCovered()
+	covered = true
+end
+function A.Covered()
+	covered = false
+	if StaticPopup_ForEachShownDialog then
+		StaticPopup_ForEachShownDialog(MarkCovered)
+	end
+	return covered
 end
 
 local function Visible()
@@ -158,12 +209,14 @@ end
 local function Arrive()
 	arrived, arrivedAt = true, GetTime()
 	T.SetAtlas(F.tex, "check")
+	F.tex:SetDesaturated(false)
 	F.tex:SetVertexColor(1, 1, 1, 1)
 	F.tex:SetRotation(0)
+	F.lift:Hide()
 	F.outline:Hide()
 	F.dist:SetText(NAVIGATION_DESTINATION_REACHED_MESSAGE or "")
 	F.hint:SetText("")
-	if A.extra then
+	if A.extra and not A.holdArrival then -- the developer preview keeps its goal while it holds the check
 		A.extra = nil
 	end
 end
@@ -174,9 +227,9 @@ function A.Update(elapsed)
 		return
 	end
 	if arrived then
-		if arrivedAt and GetTime() - arrivedAt >= A.ARRIVED_FOR then
+		if arrivedAt and GetTime() - arrivedAt >= (A.holdArrival or A.ARRIVED_FOR) then
 			arrivedAt = nil
-			F.tex:SetAlpha(0)
+			ArrowAlpha(0)
 			F.title:SetAlpha(0)
 			F.dist:SetAlpha(0)
 		end
@@ -184,10 +237,11 @@ function A.Update(elapsed)
 	compAcc = compAcc + elapsed
 	if compAcc >= A.COMPUTE_EVERY then
 		compAcc = 0
+		F:SetAlpha(A.Covered() and 0 or 1)
 		local d, a = Nav.Vector(target)
 		dist, angle = d, d and a or nil
 		if not d then
-			F.tex:SetAlpha(0)
+			ArrowAlpha(0)
 			F.outline:SetAlpha(0)
 			F.dist:SetText("")
 			F.hint:SetText("")
@@ -200,7 +254,7 @@ function A.Update(elapsed)
 		elseif arrived and d > radius + A.CLEAR_EXTRA then
 			arrived, arrivedAt = false, nil
 			ShowArrowLook()
-			F.tex:SetAlpha(1)
+			ArrowAlpha(1)
 			F.title:SetAlpha(1)
 			F.dist:SetAlpha(1)
 		end
@@ -212,11 +266,9 @@ function A.Update(elapsed)
 	if not rel then
 		return
 	end
-	F.tex:SetAlpha(1)
+	ArrowAlpha(1)
 	F.outline:SetAlpha(1)
-	F.tex:SetRotation(rel)
-	F.outline:SetRotation(rel)
-	F.tex:SetVertexColor(T.ArrowColor(dev, A.colorblind))
+	Paint(rel, dev)
 	textAcc = textAcc + elapsed
 	if textAcc >= A.TEXT_EVERY then
 		textAcc = 0
@@ -243,10 +295,8 @@ function A.Demo(deg, yd)
 		return
 	end
 	ShowArrowLook()
-	F.tex:SetAlpha(1)
-	F.tex:SetRotation(rel)
-	F.outline:SetRotation(rel)
-	F.tex:SetVertexColor(T.ArrowColor(dev, A.colorblind))
+	ArrowAlpha(1)
+	Paint(rel, dev)
 	F.dist:SetText(T.Distance(yd or 38))
 	F.hint:SetText(dev >= T.BEHIND and L.BEHIND or "")
 end
@@ -263,7 +313,10 @@ M.Define("arrow", {
 	requires = {
 		funcs = { "UnitPosition", "GetPlayerFacing", "C_Map.GetWorldPosFromMapPos", "CreateVector2D" },
 	},
-	optional = { funcs = { "IsShiftKeyDown" }, events = { "CVAR_UPDATE", "MODIFIER_STATE_CHANGED" } },
+	optional = {
+		funcs = { "IsShiftKeyDown", "StaticPopup_ForEachShownDialog" },
+		events = { "CVAR_UPDATE", "MODIFIER_STATE_CHANGED" },
+	},
 	init = Init,
 	events = {
 		CVAR_UPDATE = function(_, _, name)

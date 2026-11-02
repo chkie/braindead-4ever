@@ -40,6 +40,8 @@ describe("Developer preview", function()
 		assert.are.equal(0, W.detail.alpha)
 		SlashCmdList.PATHMARK("preview combat")
 		assert.are.equal(0.6, W.alpha)
+		-- Welle 5d, M5: after the mini state the button shows "−" again
+		assert.are.equal("UI-QuestTrackerButton-Collapse-All", W.toggle.tex.atlas)
 		SlashCmdList.PATHMARK("preview help")
 		assert.are.equal(1, #wow.world.helptips)
 		SlashCmdList.PATHMARK("preview menu")
@@ -51,7 +53,7 @@ describe("Developer preview", function()
 	end)
 
 	it("reach, skip, abandon, dungeon, rumor", function()
-		local _, W = preview("reach")
+		local ns, W = preview("reach")
 		assert.are.equal(
 			"The route falls short of Westfall. About 640 XP missing, roughly 9 level 9 enemies.",
 			W.reach.text
@@ -65,13 +67,17 @@ describe("Developer preview", function()
 			W.banner.text
 		)
 		assert.are.equal("UI-QuestTracker-Objective-Fail", W.icon.atlas)
+		-- Welle 5d, M9: the note and the marked step name the same quest; the symbol stands at the step
+		assert.matches("^“Kobold Camp Cleanup”: kill Kobold Vermin", W.step.text)
+		assert.are.equal("step", ns.StepFrame.View().failAt)
+		assert.are.same({ "CENTER", W.box }, { W.icon.points[1][1], W.icon.points[1][2] })
 		SlashCmdList.PATHMARK("preview dungeon")
 		assert.are.equal("Optional • Dungeon • Level 18–24", W.next[2].tag.text)
 		assert.are.equal(
 			"The Deadmines: accept “The Defias Brotherhood” and “Red Silk Bandanas”",
 			W.next[2].text.text
 		)
-		local ns = S.login({ probe = true, style = "hints" })
+		ns = S.login({ probe = true, style = "hints" })
 		SlashCmdList.PATHMARK("preview rumor")
 		assert.are.equal("Rumor: Someone found something in the Riverglades.", ns.StepFrame.frame.banner.text)
 		SlashCmdList.PATHMARK("preview off")
@@ -139,9 +145,89 @@ describe("Developer preview", function()
 		assert.are.same({}, ns.Connect.Earlier())
 	end)
 
+	-- Welle 5d, S8: the preview's area had radii in map units and came out as an oval of 1.5:1.
+	it("area: a round circle, sized from the map's world size (S8)", function()
+		local ns = preview("area", { style = "hints" })
+		ns.MapPins.Refresh()
+		local pin
+		for _, p in ipairs(_G.WorldMapFrame.pins) do
+			if p.kind == "area" then
+				pin = p
+			end
+		end
+		assert.is_table(pin, "no area pin")
+		assert.is_true(math.abs(pin.w / pin.h - 1) < 0.02, ("circle %.1f x %.1f"):format(pin.w, pin.h))
+	end)
+
+	-- Welle 5d, K2 and task 19: every state starts from a clean window.
+	it("clears the state before: hint, dialog, rumor, demo arrow, size, mini (K2)", function()
+		local ns, W = preview("help", { style = "hints" })
+		assert.is_true(_G.HelpTip:IsShowing(W))
+		SlashCmdList.PATHMARK("preview normal")
+		assert.is_false(_G.HelpTip:IsShowing(W))
+		assert.is_true(ns.UI.DB().hintsSeen.rightclick) -- the real hint stays as it was
+		SlashCmdList.PATHMARK("preview skip")
+		assert.is_table(wow.popup)
+		SlashCmdList.PATHMARK("preview abandon")
+		assert.is_nil(wow.popup)
+		SlashCmdList.PATHMARK("preview rumor")
+		assert.is_true(rawget(W.banner, "shown"))
+		SlashCmdList.PATHMARK("preview normal")
+		assert.is_false(rawget(W.banner, "shown"))
+		SlashCmdList.PATHMARK("preview arrow 90")
+		assert.is_table(ns.Arrow.extra)
+		SlashCmdList.PATHMARK("preview normal")
+		assert.is_nil(ns.Arrow.extra)
+		SlashCmdList.PATHMARK("preview wide")
+		assert.are.equal(500, W.w)
+		SlashCmdList.PATHMARK("preview normal")
+		assert.are.same({ 300, 3 }, { ns.UI.Get("width"), ns.UI.Get("ahead") })
+		SlashCmdList.PATHMARK("preview setup")
+		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+		SlashCmdList.PATHMARK("preview normal")
+		assert.is_false(rawget(_G.PathmarkSetupFrame, "shown"))
+		SlashCmdList.PATHMARK("preview mini")
+		SlashCmdList.PATHMARK("preview normal")
+		assert.are.equal("UI-QuestTrackerButton-Collapse-All", W.toggle.tex.atlas)
+		assert.are.equal(1, W.alpha)
+		assert.are.same({}, wow.errors)
+	end)
+
+	it("dungeon: the player's level fits the dungeon's band (K2)", function()
+		local _, W = preview("dungeon")
+		assert.are.equal("Optional • Dungeon • Level 18–24", W.next[2].tag.text)
+		assert.matches("^Level |cffffffff18|r", W.xp.text)
+	end)
+
+	it("arrival holds the check ten seconds for the picture, then fades (task 19)", function()
+		local ns = preview("arrival")
+		local F = ns.Arrow.frame
+		ns.Arrow.Update(0.25)
+		assert.are.equal("UI-QuestTracker-Tracker-Check", F.tex.atlas)
+		assert.are.equal("Reached destination", F.dist.text)
+		wow.advance(5)
+		ns.StepFrame.Refresh()
+		ns.Arrow.Update(0.25)
+		assert.are.equal("UI-QuestTracker-Tracker-Check", F.tex.atlas)
+		assert.are_not.equal(0, rawget(F.tex, "alpha"))
+		wow.advance(6)
+		ns.Arrow.Update(0.25)
+		assert.are.equal(0, rawget(F.tex, "alpha"))
+	end)
+
+	it("riddle: the line of hint level 1 with a riddle for the player's zone (task 19)", function()
+		local _, W = preview("riddle", { style = "hints" })
+		assert.is_true(rawget(W.riddle, "shown"))
+		assert.matches("^Hint: ", W.riddle.text)
+	end)
+
 	it("setup and settings windows; unknown states list the choices", function()
 		local ns = preview("setup")
 		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+		-- Welle 5d, S6: the first start's footer, with what closing picks
+		assert.matches("Closing picks “With hints”%.$", _G.PathmarkSetupFrame.foot.text)
+		_G.PathmarkSetupFrame:Hide()
+		assert.are.equal("arrow", ns.UI.Get("style")) -- closing the preview changes nothing
 		SlashCmdList.PATHMARK("preview settings")
 		assert.are.same({ ns.settingsCategoryID }, wow.world.settings.opened)
 		SlashCmdList.PATHMARK("preview nonsense")

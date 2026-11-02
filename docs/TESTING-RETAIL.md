@@ -2,7 +2,7 @@
 
 Design stage 2 (concept §2.12): the addon runs in the Retail 12.1.5 test bed and every view of the approved design v2 is captured as a screenshot. The developer preview puts each window into each state of the design, also states the test bed cannot reach by itself (abandoned quest with follow-ups, optional dungeon, rumor, route falls short).
 
-Last update: 2026-11-01
+Last update: 2026-11-02
 
 ## 1. Install
 
@@ -18,38 +18,38 @@ The live route in Retail uses Forever quest IDs and maps, so quest names may sho
 
 ## 2. One command per design state
 
-`/pathmark preview <state>`; `/pathmark preview off` returns to the live route. `/pathmark preview` alone lists the states.
+`/pathmark preview <state>`; `/pathmark preview off` returns to the live route. `/pathmark preview` alone lists the states. Every state starts from a clean window (Welle 5d): the usage hint, the skip dialog, the first start, rumor and riddle lines, a demo arrow and a demo size of the state before are gone.
 
 | Design view and state | Command | Look for |
 | --- | --- | --- |
-| 1 Step window, normal | `/pathmark preview normal` | header and content same width, "3/8" in gold behind the goal, next three steps dimmed and wrapping, XP line |
+| 1 Step window, normal | `/pathmark preview normal` | the gold lines of the header band end at the window edges like the dark background; "3/8" in gold behind the goal and on the line of the last word; detail line with the distance and its unit ("48 m entfernt", the zone only when it differs from the header); next three steps dimmed and wrapping, the last one with its descenders whole ("abgeben"); no scroll bar at three steps; XP line with "EP" never alone on a line; text readable on bright sky (background 70 %) |
 | 1 Tooltip origin | `/pathmark preview tooltip` (or hover the step); hover the clock symbol for "provisional" | GameTooltip with "Where the data comes from" |
 | 1 Step done | `/pathmark preview done` (or click the check box) | check symbol, short glow inside the window, one sound, next step after about one second |
-| 1 Mini view | `/pathmark preview mini` (or the collapse button in the header) | only the current step |
+| 1 Mini view | `/pathmark preview mini` (or the collapse button in the header) | only the current step, the button shows "+", no scroll bar below the window; the next state shows "−" again |
 | 1 In combat | `/pathmark preview combat`, better: attack a creature | window at 60 %, no glow or sound in the fight |
 | 1 Usage hint | `/pathmark preview help` | HelpTip "Right-click the window …" with "Got It" |
 | 1 Right-click menu | `/pathmark preview menu` (or right-click the window) | "Undo: checked off …" on top |
-| 1 Status line | `/pathmark preview status` | "New version available" at the bottom |
-| 1 Route falls short | `/pathmark preview reach` | gold note with missing XP and enemies |
-| 1 Skip with follow-ups | `/pathmark preview skip` | dialog listing the follow-up quests, "Skip" and "Cancel" |
-| 1 Quest abandoned | `/pathmark preview abandon` | fail symbol, red step, "Accept again" and "Skip with follow-ups" |
-| 1 Optional dungeon | `/pathmark preview dungeon` | gold tag with Blizzard's words for optional and dungeon and the level range 18–24 on the second next step |
+| 1 Status line | `/pathmark preview status` | "New version available" at the bottom; the header band stays where it was in "normal" (the window grows downwards only) |
+| 1 Route falls short | `/pathmark preview reach` | gold note with Westfall, missing XP and enemies; never "?" |
+| 1 Skip with follow-ups | `/pathmark preview skip` | dialog listing the follow-up quests, "Skip" and "Cancel"; the arrow is hidden while the dialog is open |
+| 1 Quest abandoned | `/pathmark preview abandon` | the note and the marked step name the same quest ("Kobold Camp Cleanup"); fail symbol at the step, step text white with "3/8" in white, "Accept again" and "Skip with follow-ups" |
+| 1 Optional dungeon | `/pathmark preview dungeon` | gold tag with Blizzard's words for optional and dungeon and the level range 18–24 on the second next step; XP line at level 18 |
 | 1 XP line tooltip with forecast (Welle 5b) | `/pathmark preview forecast` (or hover the XP line) | "Level and time": planned level 3, "Your level: 5, 2 levels above the plan", gold "Time forecast" with route end, section against the median, next level with XP per hour |
 | 1 XP line tooltip without runs (Welle 5b) | `/pathmark preview collecting` | the same tooltip with "collecting data" instead of times |
 | 1 Over the plan (Welle 7) | `/pathmark preview over`, then "Adjust" | banner "You are 3 levels above the plan. Adjust the route?" with "Adjust" and "Keep route"; after "Adjust" the status line "2 quests left out: …" and no buttons |
 | 1 Switch point (Welle 7) | `/pathmark preview switch` | banner "Westfall fits your level better (planned from level 9). Go there next? About 25 min faster." with "Go there" and "Keep route" |
 | 1 Quests skipped earlier (Welle 7) | `/pathmark preview earlier` (or hover the XP line) | tooltip of the XP line with gold "7 quests skipped earlier:", five quest names and "and 2 more" |
 | 1 Size: narrowest (Welle 5b) | `/pathmark preview narrow`, best in a German client | 260 units wide; umlauts whole, next steps wrap to two lines, nothing cut in the middle of a word |
-| 1 Size: widest, ten steps (Welle 5b) | `/pathmark preview wide`; then drag the grip at the bottom right up and down, `/pathmark preview off` restores the size | 500 units wide, ten next steps, Blizzard's thin scroll bar on the right; the mouse wheel scrolls to steps 11 to 20; while dragging the height, "Show steps ahead" in the settings (Display) follows; in a fight the grip does nothing |
-| 2 Arrow colors | `/pathmark preview arrow 0`, `arrow 55`, `arrow 90`, `arrow 120`, `arrow 160` | green, yellow-green, yellow, orange-red, red with "behind you"; stand still while taking the shot |
-| 2 Arrival | `/pathmark preview arrival` | check and "Reached destination", gone after one second |
-| 2 Colorblind | `/pathmark preview colorblind 5`, `colorblind 90`, `colorblind 170`; also Blizzard's settings, Accessibility, colorblind mode | blue, white, orange |
+| 1 Size: widest, ten steps (Welle 5b) | `/pathmark preview wide`; then drag the grip at the bottom right up and down, the next state or `/pathmark preview off` restores the size | 500 units wide, ten next steps, Blizzard's thin scroll bar on the right (only with more than three steps ahead); the mouse wheel scrolls to steps 11 to 20; while dragging the height, "Show steps ahead" in the settings (Display) follows; in a fight the grip does nothing |
+| 2 Arrow colors | `/pathmark preview arrow 0`, `arrow 55`, `arrow 90`, `arrow 120`, `arrow 160` | green, yellow-green, yellow, orange-red, red with "behind you"; goal and distance with a black outline, readable on bright sky; stand still while taking the shot. The tip is the corner opposite the notched edge: at 55 and 120 degrees a base corner can look like the tip (measured on the first screenshots, Welle 5d M11) |
+| 2 Arrival | `/pathmark preview arrival` | check and "Reached destination", held ten seconds in the preview (one second live) |
+| 2 Colorblind | `/pathmark preview colorblind 5`, `colorblind 90`, `colorblind 170`; also Blizzard's settings, Accessibility, colorblind mode | blue, white, orange in full brightness (not dark green and gold) |
 | 2 Map | open the world map (M) and the minimap after `/pathmark preview normal`; minimap pins: settings, Arrow and Map | waypoint pin; quest symbols come with the live route in Forever |
-| 3 First start | `/pathmark preview setup` | one question, three cards, footer |
+| 3 First start | `/pathmark preview setup` | one question, three cards whose texts start on one line, footer ending with "Closing picks “With hints”."; no usage hint over the window |
 | 4 Rumor | play style "With hints" (settings, Play style), then `/pathmark preview rumor` | "Rumor: Someone found something in …" with "Show location" |
 | 4 Riddle (hint level 1, Welle 5b) | play style "With hints", then `/pathmark preview riddle` | gold line "Hint: A book waits to be read in the south of …" above the current step, same look as the rumor line |
-| 4 Area (hint level 2, Welle 5b) | `/pathmark preview area`, then open the world map (M) | gold ring with a faint gold disc around your position, about 100 yards across; hover shows "Area" and "A book lies within the marked circle."; zoom in and out: the circle grows and shrinks with the map; clicks on the map still work inside it |
-| 5 Settings | `/pathmark preview settings` (or Esc, Options, AddOns, Pathmark) | main page and the five sub pages |
+| 4 Area (hint level 2, Welle 5b) | `/pathmark preview area`, then open the world map (M) | a round gold ring (not an oval) with a faint gold disc around your position, about 100 yards across; hover shows "Area" and "A book lies within the marked circle."; zoom in and out: the circle grows and shrinks with the map; clicks on the map still work inside it |
+| 5 Settings | `/pathmark preview settings` (or Esc, Options, AddOns, Pathmark) | main page and the five sub pages; a usage hint still open waits until the settings close |
 
 ## 3. Blizzard's quest tracker (Welle 5b, owner reading points 15 and 16)
 

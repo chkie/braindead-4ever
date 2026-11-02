@@ -212,14 +212,26 @@ function T.Number(n)
 	return (n < 0 and "-" or "") .. out
 end
 
--- Yards with Blizzard's own format: deDE "%s |4m" (the value stays yards), enUS "%s |4yd:yds".
+-- Yards with Blizzard's own format: deDE "%s |4m" (the value stays yards), enUS "%s |4yd:yds". A |4
+-- code without a colon lost its word in the client: "48" without "m" in every German screenshot of
+-- design stage 2 (Welle 5d, Q2). Such a code becomes the plain word; "|4yd:yds" stays for the client.
+local rangeFormat, rangeSource
+local function RangeFormat()
+	local fmt = IN_GAME_NAVIGATION_RANGE or "%s yd"
+	if fmt ~= rangeSource then
+		rangeSource = fmt
+		rangeFormat = fmt:find("|4[^:;]*$") and fmt:gsub("|4([^:;]*)$", "%1") or fmt
+	end
+	return rangeFormat
+end
+
 function T.Distance(yd)
 	yd = math.floor(yd + 0.5)
 	local s = tostring(yd)
 	if yd >= 1000 and AbbreviateNumbers then
 		s = AbbreviateNumbers(yd)
 	end
-	return (IN_GAME_NAVIGATION_RANGE or "%s yd"):format(s)
+	return RangeFormat():format(s)
 end
 
 -- Sound ---------------------------------------------------------------------------------------------

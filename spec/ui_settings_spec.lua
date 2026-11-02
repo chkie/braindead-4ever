@@ -90,7 +90,7 @@ describe("Settings", function()
 			scale = 100,
 			sound = true,
 			ahead = 3,
-			bgAlpha = 35,
+			bgAlpha = 70,
 			dim = true,
 			arrival = 12,
 			pins = true,

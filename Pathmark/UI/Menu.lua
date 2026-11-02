@@ -37,6 +37,12 @@ function Menu.OpenSettings()
 		if ns.settingsCategoryID and Settings and Settings.OpenToCategory then
 			Settings.OpenToCategory(ns.settingsCategoryID)
 		end
+		if ns.StepFrame then -- Blizzard's settings may load only now: watch them, the hint waits (M13)
+			ns.StepFrame.WatchSettings()
+			if ns.StepFrame.HintBlocked() then
+				ns.StepFrame.SuspendHint()
+			end
+		end
 	end)
 end
 

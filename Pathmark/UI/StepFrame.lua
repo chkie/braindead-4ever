@@ -22,7 +22,8 @@ of the Ace3 libraries used as well as that of the covered work.
 -- SPDX-License-Identifier: GPL-3.0-or-later WITH AdditionRef-Pathmark-Ace3-Exception
 
 -- UI/StepFrame.lua: module "window", the step display of design v2 (view 1). One background for the
--- whole window (black, 35 %), header band and content on the same width and edges (owner reading 1),
+-- whole window (black, 70 % since Welle 5d), header band and content on the same width and edges (owner
+-- reading 1),
 -- 300 units wide, fonts 15/13/12 (owner reading 2). States: normal, origin tooltip, done (check, glow,
 -- sound), mini, combat (60 %), usage hint (HelpTip), right-click menu, status line, route falls short,
 -- skip with follow-ups (StaticPopup), quest abandoned, optional dungeon step, rumor line; check box;
@@ -42,9 +43,21 @@ local SF = {
 	MAX_AHEAD = 10,
 	LIST_MAX = 20, -- next steps in the scroll list (chosen value)
 	LIST_GAP = 12, -- space between the current step and the list
+	-- Room below the last visible row for the descenders of g, p, y: GetStringHeight ends at the line,
+	-- and the scroll box clips at its edge ("abgeben", "besiegen" lost their lower part, Welle 5d M7).
+	-- Smaller than ROW_GAP, so nothing of the next row shows.
+	DESCENT = 4,
+	-- Next steps are dimmed (rule R4). Contrast on white ground behind 70 % black (WCAG formula, Welle 5d
+	-- M1): white at 0.6 gives 4.3:1, at 0.7 about 4.9:1; the dungeon step at 0.78 gives 6.0:1.
+	NEXT_ALPHA = 0.7,
+	DUNGEON_ALPHA = 0.78,
 	ROW_GAP = 6,
 	ROW_PAN = 20, -- one mouse wheel notch scrolls about one line
 	HEADER = 36,
+	-- The header atlas has transparent edges: drawn part from 3.0 % to 94.1 % of its width (alpha above
+	-- 20 of 255 in files 5320671 and 5320674, Welle 5d). The band reaches past the window by these parts,
+	-- so its gold lines end at the window edges like the content (owner reading 1, Q1).
+	HEADER_TRIM = { 0.030, 0.059 },
 	ICON = 19,
 	LEFT = 8, -- body padding left
 	RIGHT = 12, -- body padding right
@@ -289,7 +302,7 @@ local function Build()
 		SF.OnSized(width, height)
 	end)
 	SF.BuildGrip()
-	UI.Mover(W, "window", L.EDIT_WINDOW, SF.DefaultPoint, { mouse = true, drag = SF.CanDrag })
+	UI.Mover(W, "window", L.EDIT_WINDOW, SF.DefaultPoint, { mouse = true, drag = SF.CanDrag, top = true })
 end
 
 -- Position --------------------------------------------------------------------------------------------
@@ -509,9 +522,16 @@ local function PlaceIn(region, x, y)
 	region:SetPoint("TOPLEFT", W.list, "TOPLEFT", x, -y)
 end
 
+-- The collapse button follows the mini view on every draw, whoever changed it (Welle 5d, M5: the
+-- developer preview cleared the mini flag without it, and the button kept showing "+").
+local function ToggleLook()
+	T.SetAtlas(W.toggle.tex, UI.DB().mini and "expand" or "collapse")
+end
+
 -- Anchors every visible part from top to bottom and sizes the window to its content.
 function SF.Layout()
 	local mini = UI.DB().mini == true
+	ToggleLook()
 	local total = SF.Width()
 	local x = TextX()
 	local width = total - x - SF.RIGHT
@@ -519,6 +539,11 @@ function SF.Layout()
 	if not SF.sizing then
 		W:SetWidth(total)
 	end
+	local trimL, trimR = SF.HEADER_TRIM[1], SF.HEADER_TRIM[2]
+	local band = total / (1 - trimL - trimR)
+	W.header:ClearAllPoints()
+	W.header:SetPoint("TOPLEFT", W, "TOPLEFT", -band * trimL, 0)
+	W.header:SetPoint("TOPRIGHT", W, "TOPRIGHT", band * trimR, 0)
 
 	-- banner
 	local bannerShown = W.banner:IsShown()
@@ -538,6 +563,12 @@ function SF.Layout()
 			end
 		end
 		y = y + rowH + 10
+	end
+	W.icon:ClearAllPoints()
+	if bannerShown and view.failAt == "banner" then
+		W.icon:SetPoint("TOPLEFT", W, "TOPLEFT", SF.LEFT, -(SF.HEADER + 10))
+	else
+		W.icon:SetPoint("CENTER", W.box, "CENTER")
 	end
 	if W.riddle:IsShown() and not mini then
 		W.riddle:SetWidth(width)
@@ -591,12 +622,12 @@ function SF.Layout()
 	SF.rowTops, SF.rowBottoms = tops, bottoms
 	W.list:SetHeight(math.max(ly, 1))
 	local shown = math.min(SF.Ahead(), #bottoms)
-	local listH = shown > 0 and bottoms[shown] or 0
+	local listH = shown > 0 and (bottoms[shown] + SF.DESCENT) or 0
 	local listTop = y + SF.LIST_GAP
 	SF.listTop = listTop
 	if SF.sizing then
 		local maxH = bottoms[math.min(SF.MAX_AHEAD, #bottoms)] or 0
-		listH = Clamp((W:GetHeight() or 0) - listTop - SF.below, 0, maxH)
+		listH = Clamp((W:GetHeight() or 0) - listTop - SF.below, 0, maxH + SF.DESCENT)
 	end
 	if listH > 0 then
 		y = listTop
@@ -614,6 +645,7 @@ function SF.Layout()
 		SF.bar:ClearAllPoints()
 		SF.bar:SetPoint("TOPRIGHT", W.listBox, "TOPRIGHT", -2, 0)
 		SF.bar:SetPoint("BOTTOMRIGHT", W.listBox, "BOTTOMRIGHT", -2, 0)
+		SF.ShowBar(listH > 0 and not mini and (SF.sizing or SF.Ahead() > UI.DEFAULTS.ahead))
 		W.listBox:FullUpdate(ScrollBoxConstants and ScrollBoxConstants.UpdateImmediately or true)
 	end
 	local fixedTop = y - listH - (listH > 0 and SF.LIST_GAP or 0)
@@ -651,9 +683,9 @@ function SF.Layout()
 	W.xp:SetAlpha(mini and 0 or 1)
 	W.reach:SetAlpha(mini and 0 or 1)
 	for _, row in ipairs(W.next) do
-		row.text:SetAlpha(mini and 0 or row.alpha or 0.6)
+		row.text:SetAlpha(mini and 0 or row.alpha or SF.NEXT_ALPHA)
 		row.tag:SetAlpha(mini and 0 or 1)
-		row.bullet:SetAlpha(mini and 0 or row.alpha or 0.6)
+		row.bullet:SetAlpha(mini and 0 or row.alpha or SF.NEXT_ALPHA)
 	end
 	local height = y + 12
 	-- what lies below the list: a height drag changes only the list
@@ -678,7 +710,24 @@ function SF.BackgroundAlpha()
 	if contrast >= 1 then
 		return 0.8 -- concept §2.8: high-contrast quest text raises the window background to 80 %
 	end
-	return (UI.Get("bgAlpha") or 35) / 100
+	return (UI.Get("bgAlpha") or UI.DEFAULTS.bgAlpha) / 100
+end
+
+-- Scroll bar of the list (Welle 5d): only while the window is drawn larger than the default steps
+-- ahead or being sized (design v2 shows it only then, Q4), never in the mini view, where it hung below
+-- the window (M6). Blizzard's bar shows itself when the list can scroll only while hideIfUnscrollable is
+-- on; with it off, "explicit Show or Hide calls from owning code" stay (ScrollBar.lua, live and
+-- forever). The mouse wheel scrolls the box either way.
+function SF.ShowBar(on)
+	local bar = SF.bar
+	if not bar then
+		return
+	end
+	bar:SetHideIfUnscrollable(on == true)
+	if not on then
+		bar:Hide()
+	end
+	SF.barWanted = on == true
 end
 
 function SF.ApplyLook()
@@ -689,7 +738,7 @@ function SF.ApplyLook()
 	W:SetScale((UI.Get("scale") or 100) / 100)
 	local dim = UI.Fighting() and UI.Get("dim")
 	W:SetAlpha(dim and UI.COMBAT_ALPHA or 1)
-	T.SetAtlas(W.toggle.tex, UI.DB().mini and "expand" or "collapse")
+	ToggleLook()
 end
 
 function SF.SetMini(on)
@@ -761,14 +810,9 @@ function SF.StopSizing()
 		return false
 	end
 	W:StopMovingOrSizing()
-	local left, top = W:GetLeft(), W:GetTop()
 	local width = math.floor(Clamp(W:GetWidth() or SF.WIDTH, SF.MIN_WIDTH, SF.MAX_WIDTH) + 0.5)
 	SF.sizing = false
-	if left and top then
-		W:ClearAllPoints()
-		W:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", left, top)
-		UI.SavePosition("window")
-	end
+	UI.SavePosition("window") -- held at the top edge (UI.AnchorTop), the top stays where it is
 	UI.Set("width", width)
 	SF.Refresh()
 	return true
@@ -820,14 +864,39 @@ local function SetLine(fs, text)
 	fs:SetShown(text ~= nil and text ~= "")
 end
 
-local function Counter(have, need, done)
+-- " 3/8" in gold behind the goal. plain: in the step's own color (abandoned quest, S5: the counter of a
+-- failed step is no progress any more).
+local function Counter(have, need, done, plain)
 	if not need then
 		return ""
 	end
 	if done then
 		have = need
 	end
-	return " " .. T.Wrap(NORMAL_FONT_COLOR, ("%d/%d"):format(have or 0, need))
+	local text = ("%d/%d"):format(have or 0, need)
+	-- L.NBSP keeps the counter with the last word (deDE: U+00A0, K1); "3/8" stood alone on a line
+	return L.NBSP .. (plain and text or T.Wrap(NORMAL_FONT_COLOR, text))
+end
+
+-- Does a step concern quest q (accept, objectives, turn-in)? The abandon question marks the current
+-- step only when it is about the abandoned quest (Welle 5d, M9); the runtime asks about a quest whose
+-- accept step lies behind the current step, so the current step is often another quest.
+function SF.StepHasQuest(info, q)
+	if not (info and q) then
+		return false
+	end
+	for _, v in ipairs(info.quests or {}) do
+		if v == q then
+			return true
+		end
+	end
+	local V = ns.Routes.VERB
+	for _, el in ipairs(info.step or {}) do
+		if (el[1] == V.ACCEPT or el[1] == V.COMPLETE or el[1] == V.TURNIN) and el[2] == q then
+			return true
+		end
+	end
+	return false
 end
 
 local function RenderBanner(info)
@@ -931,11 +1000,11 @@ local function RenderNext(info)
 		row.dungeon = r and r.dungeon
 		if r and r.dungeon then
 			SetLine(row.tag, r.tag)
-			row.alpha = 0.78
+			row.alpha = SF.DUNGEON_ALPHA
 			row.text:SetMaxLines(4)
 		else
 			SetLine(row.tag, nil)
-			row.alpha = 0.6
+			row.alpha = SF.NEXT_ALPHA
 			row.text:SetMaxLines(2)
 		end
 		SetLine(row.text, r and r.text or nil)
@@ -968,12 +1037,17 @@ function SF.Render(info, mode)
 	view.info, view.mode = info, mode
 	local pending = info and mode ~= "done" and C.Pending()
 	W.title:SetText(ST.Header(info))
+	view.zone = ST.HeaderZone(info)
 	local module = info and C.Module(info.key)
 	W.clock:SetShown(info ~= nil and (info.label or (module and module.label)) == "vorläufig")
 
 	RenderBanner(mode ~= "done" and info or nil)
 	RenderRiddle(mode ~= "done" and info or nil, pending)
 
+	-- The fail symbol stands at the step when the step is about the abandoned quest, else in front of
+	-- the abandon note (Welle 5d, M9).
+	local here = pending and SF.StepHasQuest(info, pending)
+	view.failAt = pending and (here and "step" or "banner") or nil
 	if info then
 		local text, have, need = ST.Step(info, true)
 		if need then
@@ -984,11 +1058,11 @@ function SF.Render(info, mode)
 		if mode == "done" and T.Colorblind() then
 			text = text .. L.DONE_MARK
 		end
-		W.step:SetText(text .. Counter(have, need, mode == "done"))
+		W.step:SetText(text .. Counter(have, need, mode == "done", here))
 		W.step:Show()
-		if pending then
-			W.step:SetTextColor(T.Tracker("Failed"))
-		elseif mode == "done" then
+		-- An abandoned step keeps white text: Blizzard's DIM_RED stays under 2.5:1 behind any background
+		-- opacity on bright ground (Welle 5d, M2); the fail symbol and the gold note carry the state.
+		if mode == "done" then
 			W.step:SetTextColor(T.Tracker("Complete"))
 		else
 			W.step:SetTextColor(T.RGB(HIGHLIGHT_FONT_COLOR))
@@ -996,7 +1070,7 @@ function SF.Render(info, mode)
 		view.target = Nav.Target(info)
 		local dist = view.target and Nav.Vector(view.target)
 		view.dist = dist and math.floor(dist + 0.5)
-		SetLine(W.detail, ST.Detail(view.target, dist))
+		SetLine(W.detail, ST.Detail(view.target, dist, view.zone))
 		-- icon: check box (open), check (done), fail (abandoned)
 		W.box:SetShown(mode ~= "done" and not pending)
 		W.tick:Hide()
@@ -1300,6 +1374,49 @@ end
 
 -- Usage hint once per account after the setup, never in combat (concept §2.4, rule O5). Without a
 -- HelpTip (help switched off, gamepad UI, kiosk) the sentence goes once into the status line.
+-- The hint waits while Blizzard's settings or the first start are open; it lay over the slider "Size"
+-- and on the corner of the first start (Welle 5d, M13). Only "Got It" counts as seen: a hide for a
+-- window in front (HelpTip:Hide closes without acknowledging when acknowledgeOnHide is off, HelpTip.lua
+-- HelpTipTemplateMixin:Close, live and forever) brings it back afterwards.
+function SF.HintBlocked()
+	local panel = _G.SettingsPanel
+	if panel and panel.IsShown and panel:IsShown() then
+		return true
+	end
+	local setup = ns.Setup and ns.Setup.frame
+	return setup ~= nil and setup:IsShown() == true
+end
+
+function SF.SuspendHint()
+	if W and HelpTip and HelpTip.IsShowing and HelpTip:IsShowing(W, L.HELP_RIGHTCLICK) then
+		HelpTip:Hide(W, L.HELP_RIGHTCLICK)
+		view.hintWaiting = true
+	end
+end
+
+function SF.ResumeHint()
+	if view.hintWaiting and not SF.HintBlocked() then
+		view.hintWaiting = nil
+		SF.ShowHintOnce()
+	end
+end
+
+-- Blizzard's settings window: hide the hint while it is open, show it again after. HookScript runs
+-- after Blizzard's own handler.
+function SF.WatchSettings()
+	local panel = _G.SettingsPanel
+	if SF.watching or not (panel and panel.HookScript) then
+		return
+	end
+	SF.watching = true
+	panel:HookScript("OnShow", function()
+		Guard.Call("window", SF.SuspendHint)
+	end)
+	panel:HookScript("OnHide", function()
+		Guard.Call("window", SF.ResumeHint)
+	end)
+end
+
 function SF.ShowHintOnce()
 	local db = UI.DB()
 	db.hintsSeen = type(db.hintsSeen) == "table" and db.hintsSeen or {}
@@ -1310,6 +1427,10 @@ function SF.ShowHintOnce()
 		if db.hintsSeen.rightclick or not W then
 			return
 		end
+		if SF.HintBlocked() then
+			view.hintWaiting = true
+			return
+		end
 		local shown = HelpTip
 			and HelpTip.Show
 			and HelpTip:Show(W, {
@@ -1317,7 +1438,6 @@ function SF.ShowHintOnce()
 				buttonStyle = HelpTip.ButtonStyle and HelpTip.ButtonStyle.GotIt,
 				targetPoint = HelpTip.Point and HelpTip.Point.LeftEdgeCenter,
 				system = ADDON,
-				acknowledgeOnHide = true,
 				onAcknowledgeCallback = function()
 					db.hintsSeen.rightclick = true
 				end,
@@ -1352,7 +1472,7 @@ function SF.Tick(elapsed)
 	local yd = dist and math.floor(dist + 0.5)
 	if yd ~= view.dist then
 		view.dist = yd
-		W.detail:SetText(ST.Detail(t, dist))
+		W.detail:SetText(ST.Detail(t, dist, view.zone))
 	end
 end
 
@@ -1407,6 +1527,7 @@ local function Init()
 		T.ApplyFontScale()
 		SF.Refresh()
 	end)
+	SF.WatchSettings()
 	if EventRegistry and EventRegistry.RegisterCallback then
 		EventRegistry:RegisterCallback("TextSizeManager.OnTextScaleUpdated", function()
 			T.ApplyFontScale()
