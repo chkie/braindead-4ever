@@ -1,5 +1,5 @@
 {
- "note": "Shared cases for the experience rules; Pathmark/Routes/XP.lua (spec/route_xp_spec.lua) and tools/routekit/xp.py (tools/tests/test_sim.py) must agree. kill: level, creature level, elite, expected XP without rested bonus. quest: full XP, quest level, level, expected XP. Expected values are hand-computed from the sources named in XP.lua.",
+ "note": "Shared cases for the experience rules; Pathmark/Routes/XP.lua (spec/route_xp_spec.lua) and tools/routekit/xp.py (tools/tests/test_xp.py) must agree. kill: level, creature level, elite, expected XP without rested bonus. quest: full XP, quest level, level, expected XP. Expected values are hand-computed from the sources named in XP.lua.",
  "kill": [
   { "name": "forever-bugs #138: level 10 against level 5 gives 20, 40 rested as measured (Classic: 27, 54 rested)", "level": 10, "mob": 5, "elite": false, "xp": 20 },
   { "name": "same level: 20 * 5 + 45", "level": 20, "mob": 20, "elite": false, "xp": 145 },

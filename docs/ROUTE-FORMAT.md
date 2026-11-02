@@ -7,29 +7,27 @@ Format version: 1 (2026-11-01).
 ## Pipeline
 
 ```
-foreign data (cloned outside the repo)      our route logic
-        |  python3 -m tools.routekit import          data/plan/*.toml
-        v                                            |
+foreign data (cloned outside the repo)
+        |  python3 -m tools.routekit import
+        v
 data/sources/<source>/   ----merge---->  data/facts/quests.jsonl
-                                                     |  build
-                                                     v
-                                      data/routes/<faction>/*.route + COMPOSE
-                                                     |  lint (all 56 combinations)
-                                                     |  compile
-                                                     v
-                                      Pathmark/Routes/Data_<Faction>.lua
+
+data/routes/<faction>/*.route + COMPOSE        (the source form of the route data)
+        |  lint (all 56 combinations, against data/facts)
+        |  compile
+        v
+Pathmark/Routes/Data_<Faction>.lua
 ```
+
+The route files are the source form of the compiled data: they are read and changed as text, and `compile` turns them into the Lua tables. Everything needed for that is in this repository. The tools that plan and measure the routes are kept outside it; they are not needed to lint, compile or change a route.
 
 | Command (from the repository root) | What it does |
 | --- | --- |
 | `python3 -m tools.routekit import --polestar DIR --eglink DIR --att DIR` | reads the three sources from local clones and writes `data/sources/` |
 | `python3 -m tools.routekit merge` | merges the sources into `data/facts/` with sources and status per value |
-| `python3 -m tools.routekit build` | builds the module files from `data/plan/` and `data/facts/`, then lints all combinations and leaves out quests that cause errors until the linter is clean |
 | `python3 -m tools.routekit lint [FILES]` | checks route files; without arguments all files and all 56 combinations |
 | `python3 -m tools.routekit compile` | writes `Pathmark/Routes/Data_Alliance.lua` and `Data_Horde.lua` |
 | `python3 -m tools.routekit check` | lint, then compile into a temporary folder and compare with the committed files (CI) |
-| `python3 -m tools.routekit stats` | steps and quests per combination and level band |
-| `python3 -m tools.routekit metrics` | simulates every combination in both modes and reports the route metrics in Modellstunden ([ROUTE-METRICS.md](ROUTE-METRICS.md)) |
 
 The tools need Python 3.11 or later (standard library only). Reading All The Things needs Lua 5.1 (`scripts/setup.sh` installs it in `.tools/`).
 
@@ -151,12 +149,12 @@ The route of a combination: the first `start` module whose filter applies, then 
 ## Building blocks and modes
 
 - **Start modules**: one per start zone and faction (Elwynn Forest, Dun Morogh, Teldrassil, Durotar, Mulgore, Tirisfal Glades, Zephras Isle for each faction). Start zones per race are measured by EG Link (`data/sources/eglink/starts.jsonl`). Class quests inside the start zone are steps with a class filter.
-- **Core route**: one per faction, split into zone blocks with a level band each (`data/plan/<faction>.toml`). Class quests that stay inside a block's zone are steps with a class filter.
+- **Core route**: one per faction, split into zone blocks with a level band each. Class quests that stay inside a block's zone are steps with a class filter.
 - **Class inserts**: per race and class, the class quests in zones the route does not visit (capitals, Moonglade); placed after the start module or after the core block whose level band reaches the quest's minimum level. Their travel steps carry `!return "Klassenquest"`.
 - **Speed** (`#mode speed`): no quest without a secured prerequisite, no breadcrumbs.
 - **Explorer** (`#mode explorer`): also quests with an unknown or conflicting prerequisite and breadcrumbs. Known prerequisites are still enforced.
 
-The builder orders the actions of a block greedily: the cheapest next action (accept, objectives, turn-in), cost in yards plus 600 yards for every level an accept would raise the planned level; quest log at most 20; quests more than 4 levels below the block start are skipped; quest level at most 2 above the planned level. The planned level never goes down. These are computed routes, not played ones. The route simulator (`tools/routekit/sim.py`, parameters in `data/plan/params.toml`) plays them and prices them in Modellstunden; `docs/ROUTE-METRICS.md` holds the metrics of every combination. From Welle 6b the builder uses the simulator; until then, and until our own measurements arrive, the planned levels stay planning values.
+These are computed routes, not played ones. Until our own measurements arrive, the planned levels (`lv`) stay planning values. How the routes measure: [ROUTE-METRICS.md](ROUTE-METRICS.md).
 
 ## Linter
 
@@ -256,4 +254,4 @@ The compiled files are generated; CI recompiles and fails if they differ from th
 
 ## Licence of the data
 
-`data/sources/polestar`, `data/facts`, `data/routes` and the compiled files contain Polestar data and are GPL-3.0-only, without the Ace3 permission of `LICENSE-EXCEPTION.md`. `data/sources/eglink` is CC BY 4.0, `data/sources/att` MIT. `data/plan` and `tools` are our own work under GPL-3.0-or-later. Details: `NOTICE`.
+`data/sources/polestar`, `data/facts`, `data/routes` and the compiled files contain Polestar data and are GPL-3.0-only, without the Ace3 permission of `LICENSE-EXCEPTION.md`. `data/sources/eglink` is CC BY 4.0, `data/sources/att` MIT. `tools` is our own work under GPL-3.0-or-later. Details: `NOTICE`.

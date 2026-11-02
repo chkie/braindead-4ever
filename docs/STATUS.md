@@ -149,10 +149,8 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Route data loaded only for the played faction | built | function per faction; `ns.Routes.Release()` drops the other faction's builder; measured offline (Lua 5.1): 1.56 MB for the Alliance data after release |
 | Example route Elwynn Forest (human, levels 1–10) runs through | built | `spec/routes_spec.lua` |
 | Start zones per race in the Forever client | planned | EG Link measured 20 of 56 combinations in the beta; confirm on 2026-11-05 |
-| Route simulator: model time, level and XP, quest log (35 working limit, 40 hard), hearthstone, flights, transports, objective kills, grind fill; all 56 combinations in both modes reach level 30 | built | `tools/routekit/sim.py`, parameters with source and Forever status in `data/plan/params.toml`; times are Modellstunden, not a forecast of play time (Welle 6a) |
-| Route metrics P1 to P11, G1 to G12 and the checkable rules of DR 22a, per combination and mode | built | `python3 -m tools.routekit metrics`; baseline in `docs/ROUTE-METRICS.md`; deterministic (same digest in two runs and across processes) |
-| CI job "Route quality" | built (reports only) | writes the metrics into the job summary; limits become required in Welle 6b |
-| Planned levels from XP simulation | planned | Welle 6b: the builder uses the simulator; levels are planning values until then |
+| Route measurement: all 56 combinations in both modes priced in Modellstunden (model hours) up to level 30 | built | results in `docs/ROUTE-METRICS.md`; the measuring tools are kept outside this repository and are not needed to build the addon or the route data |
+| Planned levels from measured XP | planned | levels are planning values until then |
 | Quest facts in the compiled data: quest level, full XP (Polestar), prerequisite groups | built | `quests` table, docs/ROUTE-FORMAT.md §Compiled form |
 
 ## Route runtime (step logic, owner wishes 9 and 10)

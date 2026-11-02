@@ -42,6 +42,8 @@ Pathmark also shares how long each level and each route part took you: active se
 | `tools/` | route tools: importers, linter, compiler (Python 3, Lua 5.1) |
 | `NOTICE` | credits and licences of the data from other projects |
 
+The route files in `data/routes` are the source form of the compiled route data in `Pathmark/Routes/Data_*.lua`; everything needed to rebuild it from them is in this repository. The tools that plan and measure the routes are kept outside it.
+
 How to set up the tools and run the checks: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
@@ -83,5 +85,7 @@ Pathmark teilt außerdem, wie lange du für jede Stufe und jeden Routenabschnitt
 ### Lizenz
 
 GPL-3.0-or-later mit einer Zusatzerlaubnis für die Ace3-Bibliotheken, siehe [LICENSE](LICENSE) und [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md).
+
+Die Routendateien in `data/routes` sind die Quellform der kompilierten Routendaten in `Pathmark/Routes/Data_*.lua`; alles, was man braucht, um sie daraus neu zu erzeugen, liegt in diesem Repository. Die Werkzeuge, mit denen die Routen geplant und vermessen werden, liegen außerhalb.
 
 World of Warcraft, Warcraft und Blizzard Entertainment sind Marken oder eingetragene Marken von Blizzard Entertainment, Inc. in den USA und/oder anderen Ländern. Pathmark ist nicht mit Blizzard Entertainment verbunden und wird nicht von Blizzard Entertainment unterstützt.
