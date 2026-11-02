@@ -1905,6 +1905,11 @@ def emit_module(planner, m, sources, universe_races):
         if s["posv"] is not None:
             out.append(build._goto_line(VERB[a0["verb"]], a0["q"], s["posv"], facts))
         for fid, fmap, fx, fy, fsrc in later:
+            # a flight master on a city map inside the step's zone (Ironforge in Dun Morogh) is
+            # addressed on the zone's map: the same world point, no zone change (R13)
+            smap = s["posv"][0] if s["posv"] is not None else None
+            if smap is not None and lint.zone_key(fmap) != s["zone"] and facts.frames.contains(smap, fy, fx):
+                fmap = smap
             out.append("@%s lv=%d" % (new_id("fp%d" % fid), s["lv"]))
             out.append("  fp | src=plan status=unbestätigt")
             out.append("  goto %d %.1f,%.1f r=10 | src=%s status=unbestätigt" % (fmap, fx, fy, fsrc))
@@ -2794,3 +2799,283 @@ class Repair:
             return False
         m.xp_marks[a] = to
         return True
+
+
+# --- enforcement of the hard rules (decision of 2026-11-02, point 3) --------------------------------
+
+ENFORCE_ORDER = ("gates", "r13", "r04", "r05", "p6_later", "r06", "r07", "p5_wasted", "p5_returns", "p6_never", "r18",
+                 "long_legs")
+
+
+def _hard(rows, params):
+    """Breaches of the hard rules and limits the gate checks without a guard (lower is better)."""
+    n = 0
+    lim6 = params.lim("g6_walk_ratio")
+    for r in rows:
+        ru = r["rules"]
+        n += sum(ru.get(k, 0) for k in ("R01", "R02", "R04", "R05", "R06", "R07", "R09", "R10", "R11", "R12", "R13",
+                                        "R17", "R18", "R19", "R22", "R23", "R26", "R28", "R30"))
+        n += r["p4_long"] + r["p5_wasted"] + r["p6_never"] + r["p6_later"] + r["p7_open_end"]
+        n += r["p8_above"] + r["p8_gray"] + r["p8_outliers"] + r["g1_errors"] + r["g2_stuck"]
+        n += 0 if r["g7_dev"] is None or abs(r["g7_dev"]) <= params.lim("g7_arrival") else 1
+        n += 1 if (r.get("g6_max_ratio") or 0) > lim6 else 0
+    return n
+
+
+def _guards(rows):
+    return sum(1 for r in rows if guard_breach(r))
+
+
+def _score(rows, params):
+    """(guard breaches as a set of (combination, guard), guard excess, fatal errors, hard breaches)."""
+    gs, excess, fatal = set(), 0.0, 0
+    for r in rows:
+        fatal += r["g1_errors"] + r["g2_stuck"] + r["p7_open_end"] + r["rules"].get("R23", 0) + r["rules"].get("R30", 0)
+        if not r.get("baseline"):
+            continue
+        for g, v in (("P3", r.get("p3_worse_draws") or 0), ("P4", r.get("p4_vs_base") or 0), ("P5", r.get("p5_vs_base") or 0),
+                     ("P9", r.get("p9_vs_base") or 0), ("P11", r.get("p11_vs_base") or 0)):
+            if v > 0:
+                gs.add((r["label"], g))
+                excess += v
+    return gs, round(excess, 6), fatal, _hard(rows, params)
+
+
+def _better(new, old):
+    """A change stays when no combination breaks a new guard, no new linter, simulator or quest log
+    error appears, and the hard breaches or the guard excess fall without the other rising."""
+    if not new[0] <= old[0] or new[2] > old[2]:
+        return False
+    return (new[3] < old[3] and new[1] <= old[1]) or (new[1] < old[1] and new[3] <= old[3])
+
+
+def _fmt_score(score):
+    return "guards %d (excess %s), fatal %d, hard %d" % (len(score[0]), score[1], score[2], score[3])
+
+
+class Enforcer(Repair):
+    """Fixes the hard rules one kind after the other on the emitted route (the CI metrics read
+    what broke). A fix names actions by verb and quest, never by an index of a simulated run, so
+    fixes of one kind apply one after the other. A batch of one kind stays when the hard breaches
+    fall and no guard against the start route breaks; otherwise every fix of the batch is tried
+    alone and stays under the same condition. Counted in rounds, never in seconds."""
+
+    def ident(self, run, i, forward=True):
+        """(verb, q) of the quest action at run index i, or the nearest one after (before) it."""
+        A = run.actions
+        rng = range(i, len(A)) if forward else range(min(i, len(A) - 1), -1, -1)
+        for k in rng:
+            a = A[k]
+            if a["verb"] in VCODE and a["q"] is not None:
+                return (VCODE[a["verb"]], a["q"])
+        return None
+
+    def items(self, rows, runs, kind):
+        """Distinct fixes of one kind over all combinations, by action identity."""
+        out, seen = [], set()
+        for row, run in zip(rows, runs):
+            for item in row.get("detail", {}).get(kind, []):
+                if kind == "r04":
+                    key = item
+                elif kind in ("r05",):
+                    key = (item[0], self.ident(run, item[1], forward=False))
+                elif kind in ("p6_later", "p6_never", "r06"):
+                    key = (item[0], self.ident(run, item[1]))
+                elif kind == "r07":
+                    key = (self.ident(run, item[0], forward=False), self.ident(run, item[1]))
+                elif kind in ("p5_wasted", "p5_returns"):
+                    if kind == "p5_returns" and not (row.get("p5_vs_base") or 0) > 0:
+                        continue  # only for a combination over its start route (guard P5b)
+                    key = tuple((self.ident(run, i, forward=False), self.ident(run, j, forward=False)) for i, j in item)
+                elif kind == "r13":
+                    key = (item[0], self.ident(run, item[1] - 1, forward=False), run.actions[min(item[1], len(run.actions) - 1)]["zone"])
+                elif kind == "gates":
+                    if item[2]:
+                        continue
+                    key = (self.ident(run, item[0] - 1, forward=False) if item[0] < len(run.actions) else "END", item[1])
+                elif kind == "r18":
+                    key = (self.ident(run, item[0]), tuple(item[1]))
+                elif kind == "long_legs":
+                    key = item[0]
+                else:
+                    continue
+                if key not in seen:
+                    seen.add(key)
+                    out.append(key)
+        return out
+
+    def early_at(self, q, m, i):
+        """An accept of q at index i of module m: for the combinations at its level there
+        (finalize drops it for the others, or makes it the accept when everybody is)."""
+        if m is None or m.kind == "class" or not self.zone_ok(("a", q), m) or self.pl.Q.get(q) is None:
+            return False
+        ma, ia = self.locate("a", q)
+        if ma is None:
+            return False
+        if (m.kind == "start") != (ma.kind == "start") or (m.kind == "start" and m is not ma):
+            return False  # the start modules keep their quests: arrival window (G7)
+        old = self.locate("A", q)
+        if old[0] is not None:
+            if old[0] is m and old[1] == i - 1:
+                return False
+            del old[0].acts[old[1]]
+            del old[0].lv[old[1]]
+            if old[0] is m and old[1] < i:
+                i -= 1
+        m.acts.insert(i, ("A", q))
+        m.lv.insert(i, self.lv_at(m, i))
+        if not self.order_ok(q):
+            del m.acts[i]
+            del m.lv[i]
+            return False
+        return True
+
+    def at(self, act):
+        if act is None or act == "END":
+            return None, None
+        return self.locate(*act)
+
+    def apply(self, kind, key):
+        pl = self.pl
+        if kind == "gates":
+            act, to = key
+            if act == "END":
+                m = [x for x in pl.modules if x.kind == "core"][-1]
+                for v, q in reversed(m.acts):
+                    if m.aud.get(q, (None, None)) == (None, None) and (v != "c" or pl.Q[q].objs):
+                        if m.xp_marks.get((v, q), 0) < to:
+                            m.xp_marks[(v, q)] = to
+                            return True
+                        return False
+                return False
+            m, i = self.at(act)
+            if m is None or m.xp_marks.get(act, 0) >= to:
+                return False
+            m.xp_marks[act] = to
+            return True
+        if kind == "r13":
+            fid, act, zone = key
+            fm = pl.flight_master(fid)
+            m, i = self.at(act)
+            if fm is None or m is None:
+                return False
+            lst = m.fps.setdefault(act, [])
+            if any(x[0] == fid for x in lst):
+                return False
+            lst.append(fm)
+            return True
+        if kind == "r04":
+            q, f = key
+            mt, it = self.locate("t", q)
+            return self.early_at(f, mt, it + 1) if mt is not None else False
+        if kind == "r05":
+            q, act = key
+            m, i = self.at(act)
+            return self.early_at(q, m, i + 1) if m is not None else False
+        if kind == "p6_later":
+            q, act = key
+            m, i = self.at(act)
+            return self.early_at(q, m, i) if m is not None else False
+        if kind == "p6_never":
+            q, act = key
+            m, i = self.at(act)
+            if m is None or self.lv_at(m, i) < _req(pl.Q[q]) if pl.Q.get(q) else True:
+                return False
+            return self._insert_quest(q, m, i)
+        if kind == "r06":
+            q, act = key
+            m, i = self.at(act)
+            mc, ic = self.locate("c", q)
+            if m is None or mc is None or m.kind == "class":
+                return False
+            return self.move(("c", q), m, i)
+        if kind == "r07":
+            a1, a2 = key
+            m1, k1 = self.at(a1)
+            if m1 is None or a2 is None:
+                return False
+            return self.move(a2, m1, k1 + 1)
+        if kind in ("p5_wasted", "p5_returns"):
+            ok = False
+            for ai, aj in key:
+                if ai is None or aj is None or ai == aj:
+                    continue
+                mj, ij = self.at(aj)
+                if mj is None:
+                    continue
+                if ai[0] == "a":
+                    ok = self.early_at(ai[1], mj, ij + 1) or ok
+                else:
+                    ok = self.move(ai, mj, ij + 1) or ok
+            return ok
+        if kind == "r18":
+            act, qs = key
+            m, i = self.at(act)
+            if m is None:
+                return False
+            ok = False
+            for q in qs:
+                if pl.Q.get(q) is None:
+                    continue
+                if self.locate("a", q)[0] is not None:
+                    ok = self.early_at(q, m, i) or ok
+                elif self.lv_at(m, i) >= _req(pl.Q[q]):
+                    ok = self._insert_quest(q, m, i) or ok
+            return ok
+        if kind == "long_legs":
+            return self.fix_p4(None, (key,))
+        return False
+
+    def measure(self):
+        rows, runs = self.evaluate()
+        return _score(rows, self.pl.p), rows, runs
+
+    def settle(self):
+        self.pl.group_spots()
+        self.pl.finalize()
+
+    def run(self, rounds=4, log=None):
+        pl = self.pl
+        self.settle()
+        score, rows, runs = self.measure()
+        self.history = [_fmt_score(score)]
+        for rnd in range(rounds):
+            before = score
+            for kind in ENFORCE_ORDER:
+                keys = self.items(rows, runs, kind)
+                if not keys:
+                    continue
+                snap = self.snapshot()
+                done = [k for k in keys if self.apply(kind, k)]
+                if not done:
+                    continue
+                self.settle()
+                new, rows2, runs2 = self.measure()
+                if _better(new, score):
+                    score, rows, runs = new, rows2, runs2
+                    if log:
+                        log("enforce %s: %d fixes as a batch, %s" % (kind, len(done), _fmt_score(score)))
+                    continue
+                # one by one
+                self.restore(snap)
+                self.settle()
+                kept = 0
+                for k in done:
+                    snap = self.snapshot()
+                    if not self.apply(kind, k):
+                        continue
+                    self.settle()
+                    new, rows2, runs2 = self.measure()
+                    if _better(new, score):
+                        score, rows, runs = new, rows2, runs2
+                        kept += 1
+                    else:
+                        self.restore(snap)
+                        self.settle()
+                if log:
+                    log("enforce %s: %d of %d fixes one by one, %s" % (kind, kept, len(done), _fmt_score(score)))
+            self.history.append(_fmt_score(score))
+            if score[1:] == before[1:] and score[0] == before[0]:
+                break
+        pl.report["enforce"] = self.history
+        return score

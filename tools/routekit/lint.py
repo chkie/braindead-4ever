@@ -277,8 +277,11 @@ def lint_module(mod, facts):
                     cands = [p for qq in step_quests for p in facts.positions(qq)]
                     if any(e.verb == "fp" for e in st.elements):
                         cands += facts.flight_masters()
+                    # world coordinates: a source position on another map of the same instance (a
+                    # city map inside its zone) names the same point
                     ok = any(
-                        zone_key(p[0]) == zone_key(m) and geo.dist((p[2], p[1]), (wy, wx)) <= AGREE_YARDS and set(ext) <= p[3]
+                        (zone_key(p[0]) == zone_key(m) or facts.frames.instance(p[0]) in (facts.frames.instance(m),) and facts.frames.instance(m) is not None)
+                        and geo.dist((p[2], p[1]), (wy, wx)) <= AGREE_YARDS and set(ext) <= p[3]
                         for p in cands
                     )
                     if not ok:

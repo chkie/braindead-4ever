@@ -588,6 +588,14 @@ def evaluate(ctx, run):
             i2 = run.quest.get(q2, {}).get("a")
             if i2 is None or i2 <= t_idx or step_of[i2] == step_of[t_idx]:
                 continue
+            # DR 22a R04, check: "Abgabe an NPC X ohne direkt folgende Annahme der verfügbaren
+            # Folgequest": the accept follows directly when nothing but actions at the same NPC lies
+            # between (a step has one planned level, so a follow-up that needs the turn-in's XP
+            # stands in the next step at the same NPC)
+            tpos = acts[t_idx]["pos"]
+            if tpos is not None and all(a2["pos"] is not None and a2["pos"][0] == tpos[0]
+                                        and geo.dist(a2["pos"][1:], tpos[1:]) <= SAME_NPC for a2 in acts[t_idx + 1:i2 + 1]):
+                continue
             if not _available(f.q.get(q2) or {"q": q2}, run, t_idx + 1, lv_after, log_after, p["quest_log_work"]):
                 continue
             starts = {e.get("id") for e in ((f.q.get(q2) or {}).get("start") or {}).get("v", []) if e.get("k") == "npc"}
