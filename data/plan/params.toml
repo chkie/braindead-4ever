@@ -544,6 +544,13 @@ date = "2026-11-02"
 forever = "gewählt"
 note = "Tries of the order search with the return weight, per block and per module after the repair."
 
+[opt.enforce_rounds]
+value = 4
+source = "chosen: rounds of the enforcement of the hard rules after the repair (decision of 2026-11-02, point 3); measured 2026-11-02 on the dev plans: the second round keeps 0 to 1 further fixes, the third none"
+date = "2026-11-02"
+forever = "gewählt"
+note = "A round tries every rule kind as a batch, then fix by fix; a fix stays when no guard breaks for any combination, no linter, simulator or quest log error appears and the hard breaches or the guard excess fall."
+
 [opt.guard_rounds]
 value = 3
 source = "chosen: rounds of polish and P5 repairs after the order rules while a combination returns more often than on its start route"

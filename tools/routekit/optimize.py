@@ -1194,6 +1194,7 @@ class Planner:
         self.trim_inserts()
         if self.sources is not None and self.repair_rounds:
             Repair(self, self.sources).run(self.repair_rounds)
+            Enforcer(self, self.sources).run(self.p.raw.get("opt", {}).get("enforce_rounds", {}).get("value", 4))
         return self.modules
 
     def plan_starts(self):
@@ -2177,6 +2178,8 @@ def derive_explorer(speed, facts, params, plan, exclude, sources):
     rep.rounds(3, ("gates", "r13"))
     rep.restore(rep.best[1])
     pl.finalize()
+    enforcer = Enforcer(pl, sources)
+    enforcer.run(params.raw.get("opt", {}).get("enforce_rounds", {}).get("value", 4))
     # the guards against the start route hold in explorer too: while one breaks, the new quest with
     # the largest extra time leaves the route again (never one another quest needs; counted)
     dropped = []
@@ -2849,6 +2852,16 @@ def _better(new, old):
     return (new[3] < old[3] and new[1] <= old[1]) or (new[1] < old[1] and new[3] <= old[3])
 
 
+def _why(new, old):
+    """Why a fix did not stay: the guard it breaks or the rise of hard breaches."""
+    gs = sorted({g for _, g in new[0] - old[0]})
+    if gs:
+        return "bricht Wächter %s (%d Kombinationen)" % (",".join(gs), len(new[0] - old[0]))
+    if new[2] > old[2]:
+        return "Linter-, Simulator- oder Questlog-Fehler +%d" % (new[2] - old[2])
+    return "harte Verstöße %+d, Wächter-Überschuss %+.2f" % (new[3] - old[3], new[1] - old[1])
+
+
 def _fmt_score(score):
     return "guards %d (excess %s), fatal %d, hard %d" % (len(score[0]), score[1], score[2], score[3])
 
@@ -3036,6 +3049,7 @@ class Enforcer(Repair):
 
     def run(self, rounds=4, log=None):
         pl = self.pl
+        self.tried = {}
         self.settle()
         score, rows, runs = self.measure()
         self.history = [_fmt_score(score)]
@@ -3070,6 +3084,7 @@ class Enforcer(Repair):
                         score, rows, runs = new, rows2, runs2
                         kept += 1
                     else:
+                        self.tried[(kind, repr(k))] = _why(new, score)
                         self.restore(snap)
                         self.settle()
                 if log:
@@ -3078,4 +3093,15 @@ class Enforcer(Repair):
             if score[1:] == before[1:] and score[0] == before[0]:
                 break
         pl.report["enforce"] = self.history
+        # what is left, and why its fix did not stay (the evidence behind the measured exceptions)
+        left = {}
+        for kind in ENFORCE_ORDER:
+            for k in self.items(rows, runs, kind):
+                snap = self.snapshot()
+                applied = self.apply(kind, k)
+                self.restore(snap)
+                why = self.tried.get((kind, repr(k))) if applied else "kein Platz für die Korrektur (Gebiet, Stufe, Modul)"
+                left.setdefault(kind, []).append([repr(k), why or "nicht versucht"])
+        self.settle()
+        pl.report["enforce_left"] = left
         return score
