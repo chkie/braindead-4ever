@@ -415,6 +415,16 @@ def _gain(env, st, amount):
         st.t += env.lvl_over
 
 
+def entry_grind(env, st, level):
+    """State at the start of a module with a level floor: the character grinds to `level` at the
+    last place of the module before (the simulator grinds before it walks to the step). Returns
+    (state, grind seconds); st itself is not changed."""
+    if not level or st.level >= level:
+        return st, 0.0
+    st = st.copy()
+    return st, _grind_to(env, st, level)
+
+
 def _grind_to(env, st, level, per_level=None):
     sec = 0.0
     while st.level < level:
@@ -1001,6 +1011,7 @@ class Module:
         self.travel_first = None
         self.anchor = None
         self.last = False
+        self.min_lv = None  # level the module starts at: ground at the end of the module before (P9 band)
         self.entry = self.exit = None
         self.after = {}  # combination -> (state, done) after this module
         self.aud_early = {}  # q -> filter of an early accept ("A"): combinations already at its level
@@ -1278,11 +1289,13 @@ class Planner:
         visits = self.beam_zones(st, ref, self.zone_budget or 7, self.section_caps())
         seq = [v[0] for v in visits]
         self.seq = seq
+        self.core_min_lv = {i: v[6] for i, v in enumerate(visits) if len(v) > 6 and v[6]}
         self.report["zones"] = [game.ZONES.get(z, z) for z in seq]
         blocks = [(v[0], list(v[3])) for v in visits]
         cur = st.copy()
         for i, (z, acts) in enumerate(blocks):
             key = "%s-%s-core-%02d-%d" % (self.px, self.mode, i + 1, z)
+            cur, _ = entry_grind(self.env, cur, self.core_min_lv.get(i))
             todo = {q: full_todo(self.Q[q]) for q in quests_of(acts)}
             b = Block(self.env, key, cur, todo)
             b.acts = acts
@@ -1297,18 +1310,64 @@ class Planner:
         cur = st.copy()
         for i, (z, acts0) in enumerate(blocks):
             key = "%s-%s-core-%02d-%d" % (self.px, self.mode, i + 1, z)
+            cur, _ = entry_grind(self.env, cur, self.core_min_lv.get(i))
             extra = self.inside([z], lambda R: R.q not in taken and not applicable(R, *ref)
                                 and any(applicable(R, *c) for c in universe))
             acts = self.add_filtered(acts0, cur, extra)
             taken |= set(quests_of(acts))
             cur = replay(self.env, cur, [a for a in acts if applicable(self.Q[a[1]], *ref)]).end
             m = Module(key, "core", z)
+            m.min_lv = self.core_min_lv.get(i)
             m.travel_first = z
             if z in seq[:i]:
                 m.ret = "neue Quests"  # R09: a return needs quests that were not possible before
             m.acts = acts
             out.append(m)
         return out
+
+    def group_spots(self):
+        """Actions at one spot (within NEAR yards of each other, one after the other) go into the
+        order turn-ins, accepts, objectives, precedence kept (accept < objectives < turn-in of a
+        quest, a prerequisite's turn-in before the follow-up's accept): accepts and turn-ins at one
+        NPC then share a step (R04, R05), and an accept takes the XP of the turn-ins there first.
+        Returns the number of modules changed."""
+        env, Q = self.env, self.Q
+        rank = {"t": 0, "a": 1, "A": 1, "c": 2}
+        changed = 0
+        for m in self.modules + list(getattr(self, "inserts", [])):
+            acts = m.acts
+            out, i = [], 0
+            while i < len(acts):
+                p0 = pos_of(env, acts[i])
+                j = i + 1
+                while j < len(acts) and dist(p0, pos_of(env, acts[j])) <= NEAR:
+                    j += 1
+                run = acts[i:j]
+                if len(run) > 2:
+                    left = list(run)
+                    placed = set()
+                    order = []
+                    while left:
+                        pick = None
+                        for k, (v, q) in enumerate(left):
+                            before = [(v2, q2) for (v2, q2) in left[:k] if q2 == q]
+                            if before:
+                                continue  # an earlier action of the same quest is still waiting
+                            if v in ("a", "A") and any(("t", g) in left for grp in Q[q].pre for g in grp):
+                                continue  # a prerequisite is handed in here later
+                            if pick is None or rank[v] < rank[left[pick][0]]:
+                                pick = k
+                        if pick is None:
+                            pick = 0
+                        order.append(left.pop(pick))
+                        placed.add(order[-1])
+                    run = order
+                out.extend(run)
+                i = j
+            if out != acts:
+                m.acts = out
+                changed += 1
+        return changed
 
     def trim_inserts(self):
         """Guard P9 for the class inserts: an insert in another zone adds zone sections; while a
@@ -1370,6 +1429,7 @@ class Planner:
             for c in combos:
                 mine_idx = [i for i, a in enumerate(m.acts) if a[0] != "A" and c in aud.get(a[1], (None, None, set()))[2]]
                 mine = [m.acts[i] for i in mine_idx]
+                state[c], _ = entry_grind(self.env, state[c], getattr(m, "min_lv", None))
                 entries.setdefault(m.key, []).append(state[c].flevel())
                 r = replay(self.env, state[c], mine, record=True)
                 for i, lv in zip(mine_idx, r.levels):
@@ -1501,6 +1561,8 @@ class Planner:
         for env in self._draw_envs:
             st, t = st0, 0.0
             for v in path:
+                st, pre = entry_grind(env, st, v[6] if len(v) > 6 else None)
+                t += pre
                 r = replay(env, st, v[3])
                 t += r.T
                 st = r.end
@@ -1539,6 +1601,9 @@ class Planner:
 
         end, cap_a, cap_b = caps if caps else (None, budget, 0)
 
+        def band_a(seq):
+            return sum(1 for v in seq if int(math.floor(v[4] + 1e-9)) <= end)
+
         def fits(seq):
             """Sections of a path per band within the caps (a visit counts in each band it touches)."""
             if end is None:
@@ -1561,18 +1626,26 @@ class Planner:
                     if len(cs) < 3:
                         continue
                     seen_b = set()
+                    # band of the first RestedXP levels used up: the visit starts above it, the
+                    # character grinds there at the end of the visit before (announced, R17/R19)
+                    floor_lv = end + 1 if caps and seq and band_a(seq) >= cap_a and s.level <= end else None
+                    s_in, pre = entry_grind(env, s, floor_lv)
+                    pre_cost = pre * env.w_grind + env.gate_sec if pre else 0.0
                     for gl, gv in gates:
-                        b = Block(env, "beam-%d" % z, s, cs).construct(gate_levels=gl, gate_value=gv)
+                        b = Block(env, "beam-%d" % z, s_in, cs).construct(gate_levels=gl, gate_value=gv)
                         sig = tuple(b.acts)
                         if len(quests_of(b.acts)) < 3 or sig in seen_b:
                             continue
                         seen_b.add(sig)
                         e = b.res.end
-                        path = seq + [(z, gl, gv, b.acts, s.flevel(), replay(env, s, b.acts[:-1]).end.flevel())]
+                        # planned levels of the visit: at its first action (after a grind gate) and
+                        # before its last one
+                        lv0 = replay(env, s_in, b.acts[:1]).end.flevel()
+                        path = seq + [(z, gl, gv, b.acts, lv0, replay(env, s_in, b.acts[:-1]).end.flevel(), floor_lv)]
                         if not fits(path):
                             continue
                         over = (env.w_over - env.w_grind) * b.res.acc.over_cap(env.grind_cap)
-                        c = cum + b.res.T + b.res.pen + over + (env.w_zone if seq else 0.0)
+                        c = cum + pre_cost + b.res.T + b.res.pen + over + (env.w_zone if seq else 0.0)
                         new.append((c, path, e))
             if not new:
                 break
@@ -1598,9 +1671,14 @@ class Planner:
             for k in sorted({len(x[1]) for x in done_paths}):
                 if k <= len(best[1]):
                     continue
-                cand = min((x for x in done_paths if len(x[1]) == k), key=key)
-                t_cand = self.draw_times(st, cand[1])
-                gain = [b - c for b, c in zip(t_best, t_cand)]
+                # every path of the beam with k visits; the one with the largest smallest gain
+                top = None
+                for cand in sorted((x for x in done_paths if len(x[1]) == k), key=key):
+                    t_cand = self.draw_times(st, cand[1])
+                    gain = [b - c for b, c in zip(t_best, t_cand)]
+                    if top is None or min(gain) > min(top[2]):
+                        top = (cand, t_cand, gain)
+                cand, t_cand, gain = top
                 ok = all(g > 1e-6 for g in gain)
                 worth.append({"visits": k, "zones": [game.ZONES.get(v[0], v[0]) for v in cand[1]],
                               "gain_min_h": round(min(gain) / 3600.0, 3), "gain_max_h": round(max(gain) / 3600.0, 3),
@@ -1623,7 +1701,9 @@ class Planner:
         j = 0.0
         over = 0.0
         zones = 0
-        for _, acts in blocks:
+        for i, (_, acts) in enumerate(blocks):
+            st, pre = entry_grind(env, st, getattr(self, "core_min_lv", {}).get(i))
+            j += pre * env.w_grind + (env.gate_sec if pre else 0.0)
             r = replay(env, st, acts, record=record)
             out.append(r)
             j += r.T + r.pen
@@ -2020,6 +2100,7 @@ def derive_explorer(speed, facts, params, plan, exclude, sources):
         x.acts = list(m.acts)
         x.for_races, x.for_classes = m.for_races, m.for_classes
         x.travel_first, x.ret, x.last = m.travel_first, m.ret, m.last
+        x.min_lv = getattr(m, "min_lv", None)
         x.xp_marks = dict(m.xp_marks)
         x.fps = {k: list(v) for k, v in m.fps.items()}
         mods.append(x)
@@ -2301,6 +2382,7 @@ class Repair:
             return None
         st = prev.after[pl.ref][0].copy()
         st.done = set(prev.after[pl.ref][1])
+        st, _ = entry_grind(pl.env, st, getattr(m, "min_lv", None))
         return st
 
     def snapshot(self):

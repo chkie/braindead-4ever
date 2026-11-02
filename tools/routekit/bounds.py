@@ -4,8 +4,10 @@ exceptions in data/plan/route-exceptions.toml.
 
   python3 -m tools.routekit bounds
 
-1. Zone budget (guard P9): the core may change zones as often as the start route of the
-   combination with the fewest changes. XP of every quest that lies inside one core zone
+1. Zone budget (guard P9, decision of 2026-11-02): the core may have as many zone sections as
+   the smallest cap of the faction's combinations allows, up to the end level of the RestedXP
+   Forever guides (max(RestedXP's sections, the start route's) minus the start zone) and above
+   it (the start route's plus limit.p9_sections_extra). XP of every quest that lies inside one core zone
    (giver, objectives, ender; quest level 9 to 31, quest XP + objective kills at the quest's
    level, Forever kill rule) in the richest zones the budget allows, against the XP from the
    arrival window to level 30. Taking every one of these quests is an upper bound no route
@@ -40,6 +42,28 @@ def zones_of(r):
     return zs | {lint.zone_key(o["pos"][0]) for o in r.get("obj", []) if o.get("pos")}
 
 
+def zone_budget(baseline, races, params):
+    """Core zone visits guard P9 allows a faction (speed): (total, end level, up to it, above it).
+    The start module is one section (one start zone per race)."""
+    from . import metrics
+
+    secs = metrics.load_sections()
+    extra = params.lim("p9_sections_extra")
+    ends, ca, cb = [], [], []
+    for race in races:
+        for cls in game.COMBOS[race]:
+            label = "%s/%s" % (game.RACES[race][0], game.CLASSES[cls])
+            b = baseline["combos"].get("speed/" + label)
+            if not b:
+                continue
+            sa, sb = b["p9_sections"]
+            sec = secs.get(label, {})
+            ends.append(sec.get("end", 30))
+            ca.append(max(sec.get("sections", sa + extra), sa) - 1)
+            cb.append(sb + extra)
+    return min(ca) + min(cb), min(ends), min(ca), min(cb)
+
+
 def collect(facts, baseline, plans, params):
     out = {}
     for plan in plans:
@@ -61,9 +85,7 @@ def collect(facts, baseline, plans, params):
                 if z in starts or z in {1453, 1454, 1455, 1456, 1457, 1458}:
                     continue
                 per_zone[z] = per_zone.get(z, 0.0) + qx + kx
-        names = {game.RACES[r][0] for r in races}
-        budget = min(c["p9_changes"] for k, c in baseline["combos"].items()
-                     if k.split("/")[0] == "speed" and k.split("/")[1] in names)
+        budget, end, cap_a, cap_b = zone_budget(baseline, races, params)
         richest = sorted(per_zone.items(), key=lambda kv: -kv[1])[:budget]
         need = xp.total_to(30) - xp.total_to(11)
         allowed = starts | {z for z, _ in richest}
@@ -86,6 +108,7 @@ def collect(facts, baseline, plans, params):
             bands["%d-%d" % (a, b)] = {"need": want, "faction": res["faction"], "budget": res["budget"]}
         out[fac] = {
             "zone_budget": budget,
+            "sections": [end, cap_a, cap_b],
             "richest_zones": [[game.ZONES.get(z, z), round(v)] for z, v in richest],
             "xp_richest": round(sum(v for _, v in richest)),
             "xp_11_to_30": need,
@@ -100,8 +123,9 @@ def main():
         baseline = json.load(fh)
     res = collect(facts, baseline, build.load_plans(), sim.Params.load())
     for fac, r in res.items():
-        print("%s: Wächter P9 erlaubt %d Kerngebiete; reichste: %s" % (
-            fac, r["zone_budget"], ", ".join("%s %d" % (n, v) for n, v in r["richest_zones"])))
+        end, ca, cb = r["sections"]
+        print("%s: Wächter P9 erlaubt dem Kern %d Gebietsabschnitte bis Stufe %d und %d darüber, also höchstens %d Kerngebiete; reichste: %s" % (
+            fac, ca, end, cb, r["zone_budget"], ", ".join("%s %d" % (n, v) for n, v in r["richest_zones"])))
         print("  alle Quests dieser Gebiete (Quest- + Ziel-Kill-XP): %d; nötig von Stufe 11 bis 30: %d (%.2f)" % (
             r["xp_richest"], r["xp_11_to_30"], r["xp_richest"] / r["xp_11_to_30"]))
         for band, b in r["bands"].items():

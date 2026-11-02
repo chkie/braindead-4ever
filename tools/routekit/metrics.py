@@ -709,7 +709,8 @@ def _cross(rows, params, baseline):
         for a, b in BANDS:
             k = "%d-%d" % (a, b)
             best = max(r["g3"][k] for r in rs)
-            ymed = statistics.median(r["g6_yd_per_xp"][k] for r in rs if r["g6_yd_per_xp"][k] is not None)
+            yds = [r["g6_yd_per_xp"][k] for r in rs if r["g6_yd_per_xp"][k] is not None]
+            ymed = statistics.median(yds) if yds else None
             qmax = max(r["g5"][k] for r in rs)
             for r in rs:
                 r.setdefault("g4_gap", {})[k] = best - r["g3"][k]
