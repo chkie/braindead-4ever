@@ -1050,6 +1050,8 @@ class Planner:
         self.repair_rounds = opt.get("repair_rounds", {}).get("value", 12)
         self.sources = None
         self._fms = None
+        self._draw_envs = None
+        self.baseline = None
 
     def flight_master(self, fid):
         """(id, uiMap, west, north, sources) of a flight master of data/facts/finds.jsonl."""
@@ -1178,6 +1180,7 @@ class Planner:
         self.finalize()
         self.inserts = class_inserts(self)
         self.finalize()
+        self.trim_inserts()
         if self.sources is not None and self.repair_rounds:
             Repair(self, self.sources).run(self.repair_rounds)
         return self.modules
@@ -1272,7 +1275,7 @@ class Planner:
         chain (carried quests, worthwhile pick-ups) and quests of other races and classes."""
         ref = self.ref
         universe = sorted(self.universe)
-        visits = self.beam_zones(st, ref, self.zone_budget or 7)
+        visits = self.beam_zones(st, ref, self.zone_budget or 7, self.section_caps())
         seq = [v[0] for v in visits]
         self.seq = seq
         self.report["zones"] = [game.ZONES.get(z, z) for z in seq]
@@ -1306,6 +1309,28 @@ class Planner:
             m.acts = acts
             out.append(m)
         return out
+
+    def trim_inserts(self):
+        """Guard P9 for the class inserts: an insert in another zone adds zone sections; while a
+        combination has more sections in a band than its cap, its last insert leaves the route
+        (reported in dropped_inserts)."""
+        if not self.baseline or not getattr(self, "inserts", None) or self.sources is None:
+            return
+        while True:
+            rows, _ = Repair(self, self.sources).evaluate()
+            over = {(r["race"], r["class"]) for r in rows if (r.get("p9_vs_base") or 0) > 0}
+            drop = []
+            for rtok, ctok in sorted(over):
+                mine = [m for m in self.inserts if game.RACES[next(iter(m.for_races))][0] == rtok
+                        and game.CLASSES[next(iter(m.for_classes))] == ctok]
+                if mine:
+                    drop.append(mine[-1])
+            if not drop:
+                return
+            for m in drop:
+                self.inserts.remove(m)
+                self.report["dropped_inserts"].append("%s: P9 zone sections over the cap" % m.key)
+            self.finalize()
 
     def route_of(self, combo):
         """Modules of a combination in route order (start, its inserts, core with inserts)."""
@@ -1428,13 +1453,76 @@ class Planner:
             m.entries = entries.get(m.key, [])
         self.done_by, self.state_by, self.aud = done_by, state, aud
 
-    def beam_zones(self, st, ref, budget):
+    def section_caps(self):
+        """Zone sections the core may have per level band (guard P9, decision of 2026-11-02): for
+        every combination its cap (up to the end level of the RestedXP Forever guides at most
+        max(RestedXP's sections, the start route's), above it the start route's plus
+        limit.p9_sections_extra) minus the sections of its start module; the core takes the
+        smallest. Returns (end level, cap up to it, cap above it), or None without a baseline."""
+        from . import metrics
+
+        base = (self.baseline or {}).get("combos", {})
+        if not base:
+            return None
+        secs = metrics.load_sections()
+        extra = self.p.lim("p9_sections_extra")
+        ends, cap_a, cap_b = [], [], []
+        start_secs = {}
+        for m in self.modules:
+            if m.kind != "start":
+                continue
+            zs = [z for z in (act_zone(self, a) for a in m.acts) if z is not None]
+            n = sum(1 for i, z in enumerate(zs) if i == 0 or z != zs[i - 1])
+            for r in m.for_races:
+                start_secs[r] = max(1, n)
+        for r, c in sorted(self.universe):
+            label = "%s/%s" % (game.RACES[r][0], game.CLASSES[c])
+            b = base.get("%s/%s" % (self.mode, label))
+            if not b or "p9_sections" not in b:
+                continue
+            sa, sb = b["p9_sections"]
+            sec = secs.get(label, {})
+            ends.append(sec.get("end", self.plan.get("target", 30)))
+            cap_a.append(max(sec.get("sections", sa + extra), sa) - start_secs.get(r, 1))
+            cap_b.append(sb + extra)
+        if not ends:
+            return None
+        return min(ends), max(0, min(cap_a)), min(cap_b)
+
+    def draw_times(self, st0, path):
+        """Model seconds of a core path to the target level (the rest ground) in the 16 held-out
+        parameter draws of P3: the worth test of an additional zone (decision of 2026-11-02)."""
+        from . import metrics
+
+        if self._draw_envs is None:
+            self._draw_envs = [Env(self.f, d, self.Q) for d in metrics._draws(self.p)]
+        target = self.plan.get("target", 30)
+        out = []
+        for env in self._draw_envs:
+            st, t = st0, 0.0
+            for v in path:
+                r = replay(env, st, v[3])
+                t += r.T
+                st = r.end
+            st = st.copy()
+            t0 = st.t
+            _grind_to(env, st, target)
+            out.append(t + st.t - t0)
+        return out
+
+    def beam_zones(self, st, ref, budget, caps=None):
         """Zone visits of the core: beam search over the next zone (not the zone just left; a
-        revisit needs 3 quests, R09), within the zone-change budget of the start route (guard P9).
-        A path costs model time + penalties of its visits (grind gates with the grind weight, grind
-        above the share per level with w_over, w_zone per change) + the rest to the target as grind
-        (w_rest). Every visit is built with several gate settings: no grind, or grind up to
-        `gate_levels` levels when the quests it opens are worth `gate_value` x its XP."""
+        revisit needs 3 quests, R09). A path costs model time + penalties of its visits (grind
+        gates with the grind weight, grind above the share per level with w_over, w_zone per
+        change) + the rest to the target as grind (w_rest). Every visit is built with several gate
+        settings: no grind, or grind up to `gate_levels` levels when the quests it opens are worth
+        `gate_value` x its XP.
+
+        Guard P9 (decision of 2026-11-02): with `caps` (end level, sections up to it, sections
+        above it) a path keeps within the zone sections of every band; the best path with at most
+        `budget` visits (the start route's zone changes) is the start, and a path with one more
+        visit replaces it only when it reaches the target faster in all 16 parameter draws of P3
+        (worth test). Without caps the depth is `budget`."""
         env = self.env
         target = self.plan.get("target", 30)
 
@@ -1449,11 +1537,21 @@ class Planner:
             rest = max(0.0, xp.total_to(target) - (xp.total_to(s.level) + s.xp))
             return w_rest * rest / env.grind_rate(min(s.level, target - 1))
 
+        end, cap_a, cap_b = caps if caps else (None, budget, 0)
+
+        def fits(seq):
+            """Sections of a path per band within the caps (a visit counts in each band it touches)."""
+            if end is None:
+                return len(seq) <= budget
+            a = sum(1 for v in seq if int(math.floor(v[4] + 1e-9)) <= end)
+            b = sum(1 for v in seq if int(math.floor(v[5] + 1e-9)) > end)
+            return a <= cap_a and b <= cap_b
+
         # (cost so far without the rest, path, end state)
         beam = [(0.0, [], st)]
         done_paths = [(rest_cost(st), [], st)]
         gates = self.gate_variants
-        for depth in range(budget):
+        for depth in range(cap_a + cap_b if caps else budget):
             new = []
             for cum, seq, s in beam:
                 for z in zones:
@@ -1470,9 +1568,12 @@ class Planner:
                             continue
                         seen_b.add(sig)
                         e = b.res.end
+                        path = seq + [(z, gl, gv, b.acts, s.flevel(), replay(env, s, b.acts[:-1]).end.flevel())]
+                        if not fits(path):
+                            continue
                         over = (env.w_over - env.w_grind) * b.res.acc.over_cap(env.grind_cap)
                         c = cum + b.res.T + b.res.pen + over + (env.w_zone if seq else 0.0)
-                        new.append((c, seq + [(z, gl, gv, b.acts)], e))
+                        new.append((c, path, e))
             if not new:
                 break
             new.sort(key=lambda x: (x[0] + rest_cost(x[2]), [(v[0], v[1] or 0.0) for v in x[1]]))
@@ -1487,7 +1588,27 @@ class Planner:
             if self.debug:
                 print("beam depth", depth, [(round(x[0] + rest_cost(x[2])), [game.ZONES.get(v[0], v[0]) for v in x[1]], round(x[2].flevel(), 2)) for x in beam])
             done_paths.extend((c + rest_cost(e), p, e) for c, p, e in beam)
-        best = min(done_paths, key=lambda x: (x[0], len(x[1]), [v[0] for v in x[1]]))
+        key = lambda x: (x[0], len(x[1]), [v[0] for v in x[1]])  # noqa: E731
+        best = min((x for x in done_paths if len(x[1]) <= budget), key=key)
+        worth = []
+        if caps:
+            # worth test of every visit beyond the start route's budget: the best path with one more
+            # visit replaces the accepted one only when it is faster in every parameter draw
+            t_best = self.draw_times(st, best[1])
+            for k in sorted({len(x[1]) for x in done_paths}):
+                if k <= len(best[1]):
+                    continue
+                cand = min((x for x in done_paths if len(x[1]) == k), key=key)
+                t_cand = self.draw_times(st, cand[1])
+                gain = [b - c for b, c in zip(t_best, t_cand)]
+                ok = all(g > 1e-6 for g in gain)
+                worth.append({"visits": k, "zones": [game.ZONES.get(v[0], v[0]) for v in cand[1]],
+                              "gain_min_h": round(min(gain) / 3600.0, 3), "gain_max_h": round(max(gain) / 3600.0, 3),
+                              "taken": ok})
+                if ok:
+                    best, t_best = cand, t_cand
+        self.report["zone_caps"] = list(caps) if caps else None
+        self.report["zone_worth"] = worth
         return best[1]
 
     # --- the core as one chain of zone visits -------------------------------------------------------
@@ -1794,15 +1915,8 @@ def class_inserts(planner):
             if not b.acts:
                 continue
             T = b.res.T
-            # guard P9: an insert in another zone adds two zone changes; the combination may not
-            # change zones more often than on its start route
-            base = (getattr(planner, "baseline", None) or {}).get("combos", {}).get(
-                "%s/%s/%s" % (planner.mode, game.RACES[race][0], game.CLASSES[cls]))
-            changes = len([x for x in planner.modules if x.kind == "core"]) + 2 * (len([o for o in out if o.for_races == {race} and o.for_classes == {cls}]) + 1)
-            if base is not None and changes > base["p9_changes"]:
-                planner.report["dropped_inserts"].append("%s %s: %s (P9 %d > %d)" % (
-                    game.RACES[race][0], game.CLASSES[cls], ",".join(str(q) for q in quests_of(b.acts)), changes, base["p9_changes"]))
-                continue
+            # guard P9 (zone sections per band) is checked on the whole route afterwards
+            # (Planner.trim_inserts)
             if T > one or total + T > total_max or b.res.pen > 0:
                 planner.report["dropped_inserts"].append("%s %s: %s (%.0f s)" % (
                     game.RACES[race][0], game.CLASSES[cls], ",".join(str(q) for q in quests_of(b.acts)), T))
@@ -1970,6 +2084,7 @@ def derive_explorer(speed, facts, params, plan, exclude, sources):
     pl.report["explorer_seconds_before_repair"] = round(time.perf_counter() - t0, 1)
     pl.inserts = class_inserts(pl)
     pl.finalize()
+    pl.trim_inserts()
     # the order of the speed route stays; the repair only announces grinds and takes flight paths
     rep = Repair(pl, sources)
     rep.best, rep.history = None, []

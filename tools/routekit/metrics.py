@@ -29,6 +29,7 @@ BANDS = ((1, 10), (11, 20), (21, 30))
 CAPITALS = {1453, 1454, 1455, 1456, 1457, 1458}
 SAME_NPC = build.SAME_SPOT  # yards: two actions this close are at the same NPC (as the builder)
 BASELINE_PATH = repo_path("data", "plan", "metrics-baseline.json")
+SECTIONS_PATH = repo_path("data", "plan", "zone-sections.toml")
 DRAWN = ("detour_eastern_kingdoms", "detour_kalimdor", "detour_other", "flight_overhead_sec", "kill_sec_1",
          "kill_sec_60", "talk_sec", "interact_sec", "escort_sec", "level_overhead_sec", "grind_eff")
 
@@ -109,6 +110,7 @@ class Context:
                 for g in group:
                     self.followups.setdefault(g, []).append(r["q"])
         self.module_errs = {key: lint.lint_module(m, facts) for key, m in sorted(mods.items())}
+        self.sections = load_sections()
         self.flight_masters = []
         for rec in read_jsonl(repo_path("data", "facts", "finds.jsonl")):
             if rec.get("type") != "flightpath":
@@ -138,6 +140,17 @@ class Context:
     def world(self, posv):
         inst = self.f.frames.instance(posv[0])
         return (inst if inst is not None else -1, posv[2], posv[1])
+
+
+def load_sections(path=None):
+    """data/plan/zone-sections.toml: zone sections of RestedXP Forever per combination (guard P9)."""
+    import tomllib
+
+    try:
+        with open(path or SECTIONS_PATH, "rb") as fh:
+            return tomllib.load(fh).get("combo", {})
+    except FileNotFoundError:
+        return {}
 
 
 def _qlevel(r):
@@ -470,11 +483,22 @@ def evaluate(ctx, run):
             continue
         z = lint.zone_key(a["zone"])
         if not visits or visits[-1]["zone"] != z:
-            visits.append({"zone": z, "quests": set(), "verbs": set()})
+            visits.append({"zone": z, "quests": set(), "verbs": set(), "lv": []})
         if a["q"] is not None:
             visits[-1]["quests"].add(a["q"])
         visits[-1]["verbs"].add(a["verb"])
+        if a["lv"] is not None:
+            visits[-1]["lv"].append(a["lv"])
     row["p9_changes"] = max(0, len(visits) - 1)
+    # zone sections per level band (decision of 2026-11-02 on guard P9): up to the end level of the
+    # RestedXP Forever guides of the combination (data/plan/zone-sections.toml) and above it; a
+    # visit counts in every band its planned levels touch
+    sec = ctx.sections.get("%s/%s" % (row["race"], row["class"]), {})
+    end = sec.get("end")
+    spans = [(min(v["lv"]), max(v["lv"])) if v["lv"] else (None, None) for v in visits]
+    row["p9_end"], row["p9_rxp"] = end, sec.get("sections")
+    row["p9_sections"] = [sum(1 for lo, hi in spans if end is None or lo is None or lo <= end),
+                          sum(1 for lo, hi in spans if end is not None and hi is not None and hi > end)]
     row["p9_visits"] = len(visits)
     row["p9_quests_per_visit"] = (sum(len(v["quests"]) for v in visits) / len(visits)) if visits else 0.0
     seen, r09, r26 = set(), 0, 0
@@ -706,15 +730,27 @@ def _cross(rows, params, baseline):
     for r in rows:
         cf = params["class_factor"][r["class"]]
         r["p3_draws_h30"] = [sim.time_from(r["counters30"], d, cf) / 3600.0 for d in draws]
-        base = (baseline or {}).get("combos", {}).get(r["label"])
+        combos = (baseline or {}).get("combos", {})
+        base = combos.get(r["label"])
         r["baseline"] = bool(base)
-        if base:
-            bh = [sim.time_from(base["counters30"], d, cf) / 3600.0 for d in draws]
+        # P3 of the explorer compares with the speed start route (decision of 2026-11-02): the
+        # explorer is the speed route plus finds; the old explorer route took breadcrumbs and
+        # quests with unconfirmed prerequisites and is no reference for "not slower"
+        p3base = combos.get("speed/" + r["label"].split("/", 1)[1]) if r["mode"] == "explorer" else base
+        if base and p3base:
+            bh = [sim.time_from(p3base["counters30"], d, cf) / 3600.0 for d in draws]
             r["p3_worse_draws"] = sum(1 for now, old in zip(r["p3_draws_h30"], bh) if now > old + 1e-6)
             r["p3_max_delta_h"] = round(max(now - old for now, old in zip(r["p3_draws_h30"], bh)), 6)
             r["p4_vs_base"] = r["p4_long"] - base["p4_long"]
             r["p5_vs_base"] = r["p5_returns"] - base["p5_returns"]
-            r["p9_vs_base"] = r["p9_changes"] - base["p9_changes"]
+            # guard P9 (decision of 2026-11-02): zone sections up to the end level of RestedXP
+            # Forever at most as many as RestedXP has there (or the start route, if it had more),
+            # above it at most the start route's plus p9_sections_extra
+            sa, sb = base.get("p9_sections", [base["p9_changes"] + 1, 0])
+            cap = [max(r["p9_rxp"] if r["p9_rxp"] is not None else sa + params.lim("p9_sections_extra"), sa),
+                   sb + params.lim("p9_sections_extra")]
+            r["p9_cap"] = cap
+            r["p9_vs_base"] = max(r["p9_sections"][0] - cap[0], r["p9_sections"][1] - cap[1])
             r["p11_vs_base"] = round(max(r["p11_slow"] - sim.time_from(base["counters30"], params, params["class_factor"]["WARRIOR"]) / 3600.0,
                                    r["p11_fast"] - sim.time_from(base["counters30"], params, params["class_factor"]["HUNTER"]) / 3600.0), 6)
 
@@ -761,7 +797,9 @@ def _metric_table(params):
         ("P7o", "P7 angenommen und nie abgegeben", lambda r: r["p7_open_end"], "high", 0, "limit"),
         ("P8", "P8 Annahme über Stufe + 2, graue Abgabe, Ausreißer", lambda r: r["p8_above"] + r["p8_gray"] + r["p8_outliers"], "high", 0, "limit"),
         ("P9", "P9 Gebietswechsel", lambda r: r["p9_changes"], "high", None, "report"),
-        ("P9b", "P9 Gebietswechsel mehr als Startlösung", lambda r: r.get("p9_vs_base"), "high", 0, "base"),
+        ("P9b", "P9 Gebietsabschnitte über der Obergrenze (RestedXP bzw. Startlösung + 2)", lambda r: r.get("p9_vs_base"), "high", 0, "base"),
+        ("P9a", "P9 Gebietsabschnitte bis zum Ende von RestedXP (Stufe 21/22)", lambda r: r["p9_sections"][0], "high", None, "report"),
+        ("P9c", "P9 Gebietsabschnitte darüber bis Stufe 30", lambda r: r["p9_sections"][1], "high", None, "report"),
         ("P9q", "P9 Quests je Gebietsbesuch", lambda r: r["p9_quests_per_visit"], "low", None, "report"),
         ("P11", "P11 Modellstunden 1–30 Profil langsam (Krieger-Faktor)", lambda r: r["p11_slow"], "high", None, "report"),
         ("P11f", "P11 Modellstunden 1–30 Profil schnell (Jäger-Faktor)", lambda r: r["p11_fast"], "high", None, "report"),
@@ -1075,7 +1113,7 @@ def baseline_of(report):
     combos = {}
     for r in report["rows"]:
         combos[r["label"]] = {"counters30": r["counters30"], "p4_long": r["p4_long"], "p5_returns": r["p5_returns"],
-                              "p9_changes": r["p9_changes"], "h30": round(r["h30"], 4)}
+                              "p9_changes": r["p9_changes"], "p9_sections": r["p9_sections"], "h30": round(r["h30"], 4)}
     return {"format": 1, "note": "Start route of Welle 6 for the comparisons P3, P4, P5, P9 and P11 (tools/routekit/metrics.py). "
             "Counters at level 30 per combination; written with python3 -m tools.routekit metrics --write-baseline.",
             "digest": report["p1"]["digest"], "combos": combos}

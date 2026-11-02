@@ -1,0 +1,234 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Zone sections of the RestedXP Forever guides per race and class (guard P9, decision of 2026-11-02).
+# Counted with `python3 -m tools.routekit rxp DIR` on the Forever guides of
+# github.com/RestedXP/RXPGuides (Guides/forever, commit 1a7324e of 2026-11-01, CC BY-NC-SA 4.0):
+# the guides a combination follows from level 1 along `#next`, with their race and class filters,
+# up to the end of the chain (`end`, level). Counts only, decision FD-1101: no quest, order or text
+# of these guides is in Pathmark. The route may have at most max(sections, start route) zone
+# sections up to `end` and the start route's plus limit.p9_sections_extra above
+# (tools/routekit/metrics.py).
+
+[combo."HUMAN/WARRIOR"]
+end = 21
+sections = 8
+
+[combo."HUMAN/PALADIN"]
+end = 21
+sections = 8
+
+[combo."HUMAN/HUNTER"]
+end = 21
+sections = 6
+
+[combo."HUMAN/ROGUE"]
+end = 21
+sections = 8
+
+[combo."HUMAN/PRIEST"]
+end = 21
+sections = 8
+
+[combo."HUMAN/MAGE"]
+end = 21
+sections = 8
+
+[combo."HUMAN/WARLOCK"]
+end = 21
+sections = 8
+
+[combo."DWARF/WARRIOR"]
+end = 21
+sections = 9
+
+[combo."DWARF/PALADIN"]
+end = 21
+sections = 9
+
+[combo."DWARF/HUNTER"]
+end = 21
+sections = 6
+
+[combo."DWARF/ROGUE"]
+end = 21
+sections = 9
+
+[combo."DWARF/PRIEST"]
+end = 21
+sections = 9
+
+[combo."DWARF/SHAMAN"]
+end = 21
+sections = 9
+
+[combo."NIGHTELF/WARRIOR"]
+end = 21
+sections = 6
+
+[combo."NIGHTELF/HUNTER"]
+end = 21
+sections = 5
+
+[combo."NIGHTELF/ROGUE"]
+end = 21
+sections = 6
+
+[combo."NIGHTELF/PRIEST"]
+end = 21
+sections = 6
+
+[combo."NIGHTELF/DRUID"]
+end = 21
+sections = 6
+
+[combo."GNOME/WARRIOR"]
+end = 21
+sections = 9
+
+[combo."GNOME/ROGUE"]
+end = 21
+sections = 9
+
+[combo."GNOME/PRIEST"]
+end = 21
+sections = 9
+
+[combo."GNOME/MAGE"]
+end = 21
+sections = 9
+
+[combo."GNOME/WARLOCK"]
+end = 21
+sections = 9
+
+[combo."SKYBORNE_A/WARRIOR"]
+end = 21
+sections = 7
+
+[combo."SKYBORNE_A/HUNTER"]
+end = 21
+sections = 5
+
+[combo."SKYBORNE_A/ROGUE"]
+end = 21
+sections = 7
+
+[combo."SKYBORNE_A/MAGE"]
+end = 21
+sections = 7
+
+[combo."SKYBORNE_A/DRUID"]
+end = 21
+sections = 7
+
+[combo."ORC/WARRIOR"]
+end = 22
+sections = 7
+
+[combo."ORC/HUNTER"]
+end = 22
+sections = 5
+
+[combo."ORC/ROGUE"]
+end = 22
+sections = 7
+
+[combo."ORC/SHAMAN"]
+end = 22
+sections = 5
+
+[combo."ORC/MAGE"]
+end = 22
+sections = 7
+
+[combo."ORC/WARLOCK"]
+end = 22
+sections = 7
+
+[combo."UNDEAD/WARRIOR"]
+end = 22
+sections = 5
+
+[combo."UNDEAD/PALADIN"]
+end = 22
+sections = 5
+
+[combo."UNDEAD/ROGUE"]
+end = 22
+sections = 5
+
+[combo."UNDEAD/PRIEST"]
+end = 22
+sections = 5
+
+[combo."UNDEAD/MAGE"]
+end = 22
+sections = 5
+
+[combo."UNDEAD/WARLOCK"]
+end = 22
+sections = 5
+
+[combo."TAUREN/WARRIOR"]
+end = 22
+sections = 4
+
+[combo."TAUREN/HUNTER"]
+end = 22
+sections = 4
+
+[combo."TAUREN/SHAMAN"]
+end = 22
+sections = 4
+
+[combo."TAUREN/DRUID"]
+end = 22
+sections = 4
+
+[combo."TROLL/WARRIOR"]
+end = 22
+sections = 7
+
+[combo."TROLL/HUNTER"]
+end = 22
+sections = 5
+
+[combo."TROLL/ROGUE"]
+end = 22
+sections = 7
+
+[combo."TROLL/PRIEST"]
+end = 22
+sections = 7
+
+[combo."TROLL/SHAMAN"]
+end = 22
+sections = 5
+
+[combo."TROLL/MAGE"]
+end = 22
+sections = 7
+
+[combo."TROLL/WARLOCK"]
+end = 22
+sections = 7
+
+[combo."SKYBORNE_H/WARRIOR"]
+end = 22
+sections = 5
+
+[combo."SKYBORNE_H/HUNTER"]
+end = 22
+sections = 4
+
+[combo."SKYBORNE_H/ROGUE"]
+end = 22
+sections = 5
+
+[combo."SKYBORNE_H/SHAMAN"]
+end = 22
+sections = 5
+
+[combo."SKYBORNE_H/DRUID"]
+end = 22
+sections = 5
+

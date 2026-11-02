@@ -429,6 +429,11 @@ value = 3
 source = "DR 22a R09 start value k = 3"
 forever = "gewählt"
 
+[limit.p9_sections_extra]
+value = 2
+source = "decision of 2026-11-02 on guard P9 (plan Welle 6, Entscheidungen zum Abschluss von 6b, point 2): above the levels the RestedXP Forever guides cover, at most the start route's zone sections plus 2; up to there at most RestedXP's sections (data/plan/zone-sections.toml)"
+forever = "gewählt"
+
 [limit.r13_flight_master_yd]
 value = 65.6
 source = "DR 22a R13 start value r = 60 m"

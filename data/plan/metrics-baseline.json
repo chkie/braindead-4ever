@@ -25,7 +25,11 @@
    "h30": 21.4126,
    "p4_long": 15,
    "p5_returns": 34,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/DWARF/PALADIN": {
    "counters30": {
@@ -52,7 +56,11 @@
    "h30": 25.9368,
    "p4_long": 11,
    "p5_returns": 31,
-   "p9_changes": 10
+   "p9_changes": 10,
+   "p9_sections": [
+    8,
+    3
+   ]
   },
   "explorer/DWARF/PRIEST": {
    "counters30": {
@@ -79,7 +87,11 @@
    "h30": 26.0373,
    "p4_long": 10,
    "p5_returns": 34,
-   "p9_changes": 17
+   "p9_changes": 17,
+   "p9_sections": [
+    15,
+    3
+   ]
   },
   "explorer/DWARF/ROGUE": {
    "counters30": {
@@ -106,7 +118,11 @@
    "h30": 25.1241,
    "p4_long": 14,
    "p5_returns": 33,
-   "p9_changes": 14
+   "p9_changes": 14,
+   "p9_sections": [
+    9,
+    6
+   ]
   },
   "explorer/DWARF/SHAMAN": {
    "counters30": {
@@ -133,7 +149,11 @@
    "h30": 24.0173,
    "p4_long": 13,
    "p5_returns": 32,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    5,
+    5
+   ]
   },
   "explorer/DWARF/WARRIOR": {
    "counters30": {
@@ -160,7 +180,11 @@
    "h30": 26.0982,
    "p4_long": 12,
    "p5_returns": 32,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    5,
+    5
+   ]
   },
   "explorer/GNOME/MAGE": {
    "counters30": {
@@ -187,7 +211,11 @@
    "h30": 24.5761,
    "p4_long": 14,
    "p5_returns": 34,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    9,
+    5
+   ]
   },
   "explorer/GNOME/PRIEST": {
    "counters30": {
@@ -214,7 +242,11 @@
    "h30": 25.2688,
    "p4_long": 13,
    "p5_returns": 34,
-   "p9_changes": 12
+   "p9_changes": 12,
+   "p9_sections": [
+    10,
+    3
+   ]
   },
   "explorer/GNOME/ROGUE": {
    "counters30": {
@@ -241,7 +273,11 @@
    "h30": 25.1241,
    "p4_long": 14,
    "p5_returns": 33,
-   "p9_changes": 14
+   "p9_changes": 14,
+   "p9_sections": [
+    9,
+    6
+   ]
   },
   "explorer/GNOME/WARLOCK": {
    "counters30": {
@@ -268,7 +304,11 @@
    "h30": 23.0455,
    "p4_long": 13,
    "p5_returns": 39,
-   "p9_changes": 21
+   "p9_changes": 21,
+   "p9_sections": [
+    14,
+    8
+   ]
   },
   "explorer/GNOME/WARRIOR": {
    "counters30": {
@@ -295,7 +335,11 @@
    "h30": 26.0982,
    "p4_long": 12,
    "p5_returns": 32,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    5,
+    5
+   ]
   },
   "explorer/HUMAN/HUNTER": {
    "counters30": {
@@ -322,7 +366,11 @@
    "h30": 20.8956,
    "p4_long": 12,
    "p5_returns": 36,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/HUMAN/MAGE": {
    "counters30": {
@@ -349,7 +397,11 @@
    "h30": 24.1339,
    "p4_long": 12,
    "p5_returns": 36,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    9,
+    5
+   ]
   },
   "explorer/HUMAN/PALADIN": {
    "counters30": {
@@ -376,7 +428,11 @@
    "h30": 25.4103,
    "p4_long": 10,
    "p5_returns": 34,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    7,
+    3
+   ]
   },
   "explorer/HUMAN/PRIEST": {
    "counters30": {
@@ -403,7 +459,11 @@
    "h30": 25.1278,
    "p4_long": 12,
    "p5_returns": 37,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    11,
+    3
+   ]
   },
   "explorer/HUMAN/ROGUE": {
    "counters30": {
@@ -430,7 +490,11 @@
    "h30": 24.6715,
    "p4_long": 11,
    "p5_returns": 35,
-   "p9_changes": 14
+   "p9_changes": 14,
+   "p9_sections": [
+    9,
+    6
+   ]
   },
   "explorer/HUMAN/WARLOCK": {
    "counters30": {
@@ -457,7 +521,11 @@
    "h30": 23.0872,
    "p4_long": 12,
    "p5_returns": 37,
-   "p9_changes": 21
+   "p9_changes": 21,
+   "p9_sections": [
+    14,
+    8
+   ]
   },
   "explorer/HUMAN/WARRIOR": {
    "counters30": {
@@ -484,7 +552,11 @@
    "h30": 25.6337,
    "p4_long": 9,
    "p5_returns": 35,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    5,
+    5
+   ]
   },
   "explorer/NIGHTELF/DRUID": {
    "counters30": {
@@ -511,7 +583,11 @@
    "h30": 25.9762,
    "p4_long": 9,
    "p5_returns": 34,
-   "p9_changes": 21
+   "p9_changes": 21,
+   "p9_sections": [
+    19,
+    3
+   ]
   },
   "explorer/NIGHTELF/HUNTER": {
    "counters30": {
@@ -538,7 +614,11 @@
    "h30": 21.1583,
    "p4_long": 14,
    "p5_returns": 32,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/NIGHTELF/PRIEST": {
    "counters30": {
@@ -565,7 +645,11 @@
    "h30": 25.2162,
    "p4_long": 10,
    "p5_returns": 33,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    13,
+    3
+   ]
   },
   "explorer/NIGHTELF/ROGUE": {
    "counters30": {
@@ -592,7 +676,11 @@
    "h30": 24.5604,
    "p4_long": 11,
    "p5_returns": 31,
-   "p9_changes": 14
+   "p9_changes": 14,
+   "p9_sections": [
+    9,
+    6
+   ]
   },
   "explorer/NIGHTELF/WARRIOR": {
    "counters30": {
@@ -619,7 +707,11 @@
    "h30": 25.495,
    "p4_long": 9,
    "p5_returns": 31,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    5,
+    5
+   ]
   },
   "explorer/ORC/HUNTER": {
    "counters30": {
@@ -646,7 +738,11 @@
    "h30": 20.9004,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/ORC/MAGE": {
    "counters30": {
@@ -673,7 +769,11 @@
    "h30": 22.273,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/ORC/ROGUE": {
    "counters30": {
@@ -700,7 +800,11 @@
    "h30": 23.9651,
    "p4_long": 4,
    "p5_returns": 15,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    8,
+    3
+   ]
   },
   "explorer/ORC/SHAMAN": {
    "counters30": {
@@ -727,7 +831,11 @@
    "h30": 23.6855,
    "p4_long": 4,
    "p5_returns": 18,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/ORC/WARLOCK": {
    "counters30": {
@@ -754,7 +862,11 @@
    "h30": 22.8514,
    "p4_long": 4,
    "p5_returns": 15,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "explorer/ORC/WARRIOR": {
    "counters30": {
@@ -781,7 +893,11 @@
    "h30": 25.6206,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/SKYBORNE_A/DRUID": {
    "counters30": {
@@ -808,7 +924,11 @@
    "h30": 25.5207,
    "p4_long": 8,
    "p5_returns": 29,
-   "p9_changes": 19
+   "p9_changes": 19,
+   "p9_sections": [
+    17,
+    3
+   ]
   },
   "explorer/SKYBORNE_A/HUNTER": {
    "counters30": {
@@ -835,7 +955,11 @@
    "h30": 20.7342,
    "p4_long": 13,
    "p5_returns": 28,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/SKYBORNE_A/MAGE": {
    "counters30": {
@@ -862,7 +986,11 @@
    "h30": 23.4024,
    "p4_long": 10,
    "p5_returns": 27,
-   "p9_changes": 11
+   "p9_changes": 11,
+   "p9_sections": [
+    9,
+    3
+   ]
   },
   "explorer/SKYBORNE_A/ROGUE": {
    "counters30": {
@@ -889,7 +1017,11 @@
    "h30": 24.2523,
    "p4_long": 10,
    "p5_returns": 27,
-   "p9_changes": 14
+   "p9_changes": 14,
+   "p9_sections": [
+    9,
+    6
+   ]
   },
   "explorer/SKYBORNE_A/WARRIOR": {
    "counters30": {
@@ -916,7 +1048,11 @@
    "h30": 25.0643,
    "p4_long": 10,
    "p5_returns": 28,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    5,
+    5
+   ]
   },
   "explorer/SKYBORNE_H/DRUID": {
    "counters30": {
@@ -943,7 +1079,11 @@
    "h30": 26.2075,
    "p4_long": 2,
    "p5_returns": 24,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    14,
+    3
+   ]
   },
   "explorer/SKYBORNE_H/HUNTER": {
    "counters30": {
@@ -970,7 +1110,11 @@
    "h30": 20.4948,
    "p4_long": 4,
    "p5_returns": 23,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/SKYBORNE_H/ROGUE": {
    "counters30": {
@@ -997,7 +1141,11 @@
    "h30": 23.5552,
    "p4_long": 2,
    "p5_returns": 21,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    8,
+    3
+   ]
   },
   "explorer/SKYBORNE_H/SHAMAN": {
    "counters30": {
@@ -1024,7 +1172,11 @@
    "h30": 23.1003,
    "p4_long": 2,
    "p5_returns": 22,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/SKYBORNE_H/WARRIOR": {
    "counters30": {
@@ -1051,7 +1203,11 @@
    "h30": 25.1115,
    "p4_long": 3,
    "p5_returns": 22,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/TAUREN/DRUID": {
    "counters30": {
@@ -1078,7 +1234,11 @@
    "h30": 28.5079,
    "p4_long": 9,
    "p5_returns": 23,
-   "p9_changes": 18
+   "p9_changes": 18,
+   "p9_sections": [
+    17,
+    3
+   ]
   },
   "explorer/TAUREN/HUNTER": {
    "counters30": {
@@ -1105,7 +1265,11 @@
    "h30": 22.2242,
    "p4_long": 9,
    "p5_returns": 21,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/TAUREN/SHAMAN": {
    "counters30": {
@@ -1132,7 +1296,11 @@
    "h30": 24.958,
    "p4_long": 10,
    "p5_returns": 23,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    6,
+    3
+   ]
   },
   "explorer/TAUREN/WARRIOR": {
    "counters30": {
@@ -1159,7 +1327,11 @@
    "h30": 27.0969,
    "p4_long": 9,
    "p5_returns": 21,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    6,
+    3
+   ]
   },
   "explorer/TROLL/HUNTER": {
    "counters30": {
@@ -1186,7 +1358,11 @@
    "h30": 20.9004,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/TROLL/MAGE": {
    "counters30": {
@@ -1213,7 +1389,11 @@
    "h30": 24.1832,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    10,
+    5
+   ]
   },
   "explorer/TROLL/PRIEST": {
    "counters30": {
@@ -1240,7 +1420,11 @@
    "h30": 25.381,
    "p4_long": 4,
    "p5_returns": 16,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    14,
+    3
+   ]
   },
   "explorer/TROLL/ROGUE": {
    "counters30": {
@@ -1267,7 +1451,11 @@
    "h30": 23.9237,
    "p4_long": 4,
    "p5_returns": 15,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    8,
+    3
+   ]
   },
   "explorer/TROLL/SHAMAN": {
    "counters30": {
@@ -1294,7 +1482,11 @@
    "h30": 23.6855,
    "p4_long": 4,
    "p5_returns": 18,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/TROLL/WARLOCK": {
    "counters30": {
@@ -1321,7 +1513,11 @@
    "h30": 22.8514,
    "p4_long": 4,
    "p5_returns": 15,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "explorer/TROLL/WARRIOR": {
    "counters30": {
@@ -1348,7 +1544,11 @@
    "h30": 25.6206,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "explorer/UNDEAD/MAGE": {
    "counters30": {
@@ -1375,7 +1575,11 @@
    "h30": 24.4143,
    "p4_long": 5,
    "p5_returns": 21,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    10,
+    5
+   ]
   },
   "explorer/UNDEAD/PALADIN": {
    "counters30": {
@@ -1402,7 +1606,11 @@
    "h30": 26.5072,
    "p4_long": 6,
    "p5_returns": 25,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    8,
+    3
+   ]
   },
   "explorer/UNDEAD/PRIEST": {
    "counters30": {
@@ -1429,7 +1637,11 @@
    "h30": 25.2134,
    "p4_long": 3,
    "p5_returns": 24,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "explorer/UNDEAD/ROGUE": {
    "counters30": {
@@ -1456,7 +1668,11 @@
    "h30": 24.2868,
    "p4_long": 6,
    "p5_returns": 20,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    8,
+    3
+   ]
   },
   "explorer/UNDEAD/WARLOCK": {
    "counters30": {
@@ -1483,7 +1699,11 @@
    "h30": 24.4468,
    "p4_long": 5,
    "p5_returns": 22,
-   "p9_changes": 16
+   "p9_changes": 16,
+   "p9_sections": [
+    15,
+    3
+   ]
   },
   "explorer/UNDEAD/WARRIOR": {
    "counters30": {
@@ -1510,7 +1730,11 @@
    "h30": 25.8311,
    "p4_long": 6,
    "p5_returns": 23,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/DWARF/HUNTER": {
    "counters30": {
@@ -1537,7 +1761,11 @@
    "h30": 21.7987,
    "p4_long": 14,
    "p5_returns": 20,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/DWARF/PALADIN": {
    "counters30": {
@@ -1564,7 +1792,11 @@
    "h30": 26.1924,
    "p4_long": 9,
    "p5_returns": 17,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/DWARF/PRIEST": {
    "counters30": {
@@ -1591,7 +1823,11 @@
    "h30": 26.8336,
    "p4_long": 9,
    "p5_returns": 18,
-   "p9_changes": 17
+   "p9_changes": 17,
+   "p9_sections": [
+    15,
+    3
+   ]
   },
   "speed/DWARF/ROGUE": {
    "counters30": {
@@ -1618,7 +1854,11 @@
    "h30": 24.7614,
    "p4_long": 13,
    "p5_returns": 17,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/DWARF/SHAMAN": {
    "counters30": {
@@ -1645,7 +1885,11 @@
    "h30": 24.7402,
    "p4_long": 12,
    "p5_returns": 17,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/DWARF/WARRIOR": {
    "counters30": {
@@ -1672,7 +1916,11 @@
    "h30": 26.8679,
    "p4_long": 9,
    "p5_returns": 17,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    5,
+    4
+   ]
   },
   "speed/GNOME/MAGE": {
    "counters30": {
@@ -1699,7 +1947,11 @@
    "h30": 24.599,
    "p4_long": 12,
    "p5_returns": 17,
-   "p9_changes": 11
+   "p9_changes": 11,
+   "p9_sections": [
+    9,
+    3
+   ]
   },
   "speed/GNOME/PRIEST": {
    "counters30": {
@@ -1726,7 +1978,11 @@
    "h30": 25.5955,
    "p4_long": 10,
    "p5_returns": 18,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    6,
+    3
+   ]
   },
   "speed/GNOME/ROGUE": {
    "counters30": {
@@ -1753,7 +2009,11 @@
    "h30": 24.7614,
    "p4_long": 13,
    "p5_returns": 17,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/GNOME/WARLOCK": {
    "counters30": {
@@ -1780,7 +2040,11 @@
    "h30": 22.8131,
    "p4_long": 12,
    "p5_returns": 21,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    9,
+    7
+   ]
   },
   "speed/GNOME/WARRIOR": {
    "counters30": {
@@ -1807,7 +2071,11 @@
    "h30": 26.8679,
    "p4_long": 9,
    "p5_returns": 17,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    5,
+    4
+   ]
   },
   "speed/HUMAN/HUNTER": {
    "counters30": {
@@ -1834,7 +2102,11 @@
    "h30": 21.4876,
    "p4_long": 12,
    "p5_returns": 27,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/HUMAN/MAGE": {
    "counters30": {
@@ -1861,7 +2133,11 @@
    "h30": 24.3893,
    "p4_long": 11,
    "p5_returns": 26,
-   "p9_changes": 11
+   "p9_changes": 11,
+   "p9_sections": [
+    9,
+    3
+   ]
   },
   "speed/HUMAN/PALADIN": {
    "counters30": {
@@ -1888,7 +2164,11 @@
    "h30": 26.3499,
    "p4_long": 8,
    "p5_returns": 25,
-   "p9_changes": 9
+   "p9_changes": 9,
+   "p9_sections": [
+    7,
+    3
+   ]
   },
   "speed/HUMAN/PRIEST": {
    "counters30": {
@@ -1915,7 +2195,11 @@
    "h30": 25.9511,
    "p4_long": 10,
    "p5_returns": 26,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    11,
+    3
+   ]
   },
   "speed/HUMAN/ROGUE": {
    "counters30": {
@@ -1942,7 +2226,11 @@
    "h30": 24.4537,
    "p4_long": 11,
    "p5_returns": 25,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/HUMAN/WARLOCK": {
    "counters30": {
@@ -1969,7 +2257,11 @@
    "h30": 22.5272,
    "p4_long": 11,
    "p5_returns": 26,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    9,
+    7
+   ]
   },
   "speed/HUMAN/WARRIOR": {
    "counters30": {
@@ -1996,7 +2288,11 @@
    "h30": 26.6269,
    "p4_long": 9,
    "p5_returns": 26,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    5,
+    4
+   ]
   },
   "speed/NIGHTELF/DRUID": {
    "counters30": {
@@ -2023,7 +2319,11 @@
    "h30": 25.8803,
    "p4_long": 7,
    "p5_returns": 24,
-   "p9_changes": 16
+   "p9_changes": 16,
+   "p9_sections": [
+    14,
+    3
+   ]
   },
   "speed/NIGHTELF/HUNTER": {
    "counters30": {
@@ -2050,7 +2350,11 @@
    "h30": 21.624,
    "p4_long": 12,
    "p5_returns": 22,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/NIGHTELF/PRIEST": {
    "counters30": {
@@ -2077,7 +2381,11 @@
    "h30": 26.0245,
    "p4_long": 7,
    "p5_returns": 23,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    13,
+    3
+   ]
   },
   "speed/NIGHTELF/ROGUE": {
    "counters30": {
@@ -2104,7 +2412,11 @@
    "h30": 24.3405,
    "p4_long": 10,
    "p5_returns": 22,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/NIGHTELF/WARRIOR": {
    "counters30": {
@@ -2131,7 +2443,11 @@
    "h30": 26.4228,
    "p4_long": 7,
    "p5_returns": 22,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    5,
+    4
+   ]
   },
   "speed/ORC/HUNTER": {
    "counters30": {
@@ -2158,7 +2474,11 @@
    "h30": 21.2544,
    "p4_long": 7,
    "p5_returns": 14,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/ORC/MAGE": {
    "counters30": {
@@ -2185,7 +2505,11 @@
    "h30": 22.7483,
    "p4_long": 5,
    "p5_returns": 14,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/ORC/ROGUE": {
    "counters30": {
@@ -2212,7 +2536,11 @@
    "h30": 24.6343,
    "p4_long": 4,
    "p5_returns": 14,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    7,
+    3
+   ]
   },
   "speed/ORC/SHAMAN": {
    "counters30": {
@@ -2239,7 +2567,11 @@
    "h30": 24.1193,
    "p4_long": 2,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/ORC/WARLOCK": {
    "counters30": {
@@ -2266,7 +2598,11 @@
    "h30": 23.3044,
    "p4_long": 4,
    "p5_returns": 14,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "speed/ORC/WARRIOR": {
    "counters30": {
@@ -2293,7 +2629,11 @@
    "h30": 26.3782,
    "p4_long": 3,
    "p5_returns": 14,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/SKYBORNE_A/DRUID": {
    "counters30": {
@@ -2320,7 +2660,11 @@
    "h30": 25.4262,
    "p4_long": 7,
    "p5_returns": 18,
-   "p9_changes": 16
+   "p9_changes": 16,
+   "p9_sections": [
+    14,
+    3
+   ]
   },
   "speed/SKYBORNE_A/HUNTER": {
    "counters30": {
@@ -2347,7 +2691,11 @@
    "h30": 21.1183,
    "p4_long": 13,
    "p5_returns": 19,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/SKYBORNE_A/MAGE": {
    "counters30": {
@@ -2374,7 +2722,11 @@
    "h30": 23.9681,
    "p4_long": 10,
    "p5_returns": 17,
-   "p9_changes": 11
+   "p9_changes": 11,
+   "p9_sections": [
+    9,
+    3
+   ]
   },
   "speed/SKYBORNE_A/ROGUE": {
    "counters30": {
@@ -2401,7 +2753,11 @@
    "h30": 24.0375,
    "p4_long": 10,
    "p5_returns": 17,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/SKYBORNE_A/WARRIOR": {
    "counters30": {
@@ -2428,7 +2784,11 @@
    "h30": 26.0884,
    "p4_long": 7,
    "p5_returns": 18,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    5,
+    4
+   ]
   },
   "speed/SKYBORNE_H/DRUID": {
    "counters30": {
@@ -2455,7 +2815,11 @@
    "h30": 25.6564,
    "p4_long": 2,
    "p5_returns": 12,
-   "p9_changes": 12
+   "p9_changes": 12,
+   "p9_sections": [
+    11,
+    3
+   ]
   },
   "speed/SKYBORNE_H/HUNTER": {
    "counters30": {
@@ -2482,7 +2846,11 @@
    "h30": 20.8436,
    "p4_long": 6,
    "p5_returns": 12,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/SKYBORNE_H/ROGUE": {
    "counters30": {
@@ -2509,7 +2877,11 @@
    "h30": 24.274,
    "p4_long": 2,
    "p5_returns": 10,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    7,
+    3
+   ]
   },
   "speed/SKYBORNE_H/SHAMAN": {
    "counters30": {
@@ -2536,7 +2908,11 @@
    "h30": 23.72,
    "p4_long": 3,
    "p5_returns": 11,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/SKYBORNE_H/WARRIOR": {
    "counters30": {
@@ -2563,7 +2939,11 @@
    "h30": 25.8941,
    "p4_long": 2,
    "p5_returns": 11,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/TAUREN/DRUID": {
    "counters30": {
@@ -2590,7 +2970,11 @@
    "h30": 27.4134,
    "p4_long": 10,
    "p5_returns": 20,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "speed/TAUREN/HUNTER": {
    "counters30": {
@@ -2617,7 +3001,11 @@
    "h30": 22.4718,
    "p4_long": 10,
    "p5_returns": 18,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/TAUREN/SHAMAN": {
    "counters30": {
@@ -2644,7 +3032,11 @@
    "h30": 25.4139,
    "p4_long": 9,
    "p5_returns": 19,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    6,
+    3
+   ]
   },
   "speed/TAUREN/WARRIOR": {
    "counters30": {
@@ -2671,7 +3063,11 @@
    "h30": 27.6738,
    "p4_long": 10,
    "p5_returns": 18,
-   "p9_changes": 7
+   "p9_changes": 7,
+   "p9_sections": [
+    6,
+    3
+   ]
   },
   "speed/TROLL/HUNTER": {
    "counters30": {
@@ -2698,7 +3094,11 @@
    "h30": 21.2544,
    "p4_long": 7,
    "p5_returns": 14,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/TROLL/MAGE": {
    "counters30": {
@@ -2725,7 +3125,11 @@
    "h30": 24.3174,
    "p4_long": 5,
    "p5_returns": 14,
-   "p9_changes": 11
+   "p9_changes": 11,
+   "p9_sections": [
+    9,
+    4
+   ]
   },
   "speed/TROLL/PRIEST": {
    "counters30": {
@@ -2752,7 +3156,11 @@
    "h30": 26.1486,
    "p4_long": 3,
    "p5_returns": 15,
-   "p9_changes": 15
+   "p9_changes": 15,
+   "p9_sections": [
+    14,
+    3
+   ]
   },
   "speed/TROLL/ROGUE": {
    "counters30": {
@@ -2779,7 +3187,11 @@
    "h30": 24.6343,
    "p4_long": 4,
    "p5_returns": 14,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    7,
+    3
+   ]
   },
   "speed/TROLL/SHAMAN": {
    "counters30": {
@@ -2806,7 +3218,11 @@
    "h30": 24.1193,
    "p4_long": 2,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/TROLL/WARLOCK": {
    "counters30": {
@@ -2833,7 +3249,11 @@
    "h30": 23.3044,
    "p4_long": 4,
    "p5_returns": 14,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "speed/TROLL/WARRIOR": {
    "counters30": {
@@ -2860,7 +3280,11 @@
    "h30": 26.3782,
    "p4_long": 3,
    "p5_returns": 14,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/UNDEAD/MAGE": {
    "counters30": {
@@ -2887,7 +3311,11 @@
    "h30": 24.7573,
    "p4_long": 6,
    "p5_returns": 15,
-   "p9_changes": 11
+   "p9_changes": 11,
+   "p9_sections": [
+    9,
+    4
+   ]
   },
   "speed/UNDEAD/PALADIN": {
    "counters30": {
@@ -2914,7 +3342,11 @@
    "h30": 26.1862,
    "p4_long": 3,
    "p5_returns": 15,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   },
   "speed/UNDEAD/PRIEST": {
    "counters30": {
@@ -2941,7 +3373,11 @@
    "h30": 26.168,
    "p4_long": 3,
    "p5_returns": 18,
-   "p9_changes": 13
+   "p9_changes": 13,
+   "p9_sections": [
+    12,
+    3
+   ]
   },
   "speed/UNDEAD/ROGUE": {
    "counters30": {
@@ -2968,7 +3404,11 @@
    "h30": 25.2011,
    "p4_long": 5,
    "p5_returns": 14,
-   "p9_changes": 8
+   "p9_changes": 8,
+   "p9_sections": [
+    7,
+    3
+   ]
   },
   "speed/UNDEAD/WARLOCK": {
    "counters30": {
@@ -2995,7 +3435,11 @@
    "h30": 25.1086,
    "p4_long": 5,
    "p5_returns": 15,
-   "p9_changes": 16
+   "p9_changes": 16,
+   "p9_sections": [
+    15,
+    3
+   ]
   },
   "speed/UNDEAD/WARRIOR": {
    "counters30": {
@@ -3022,10 +3466,14 @@
    "h30": 26.8336,
    "p4_long": 2,
    "p5_returns": 16,
-   "p9_changes": 6
+   "p9_changes": 6,
+   "p9_sections": [
+    5,
+    3
+   ]
   }
  },
  "digest": "4f2441017b79881e6886260a4bcb84e5c2be881cbb8e15f27e17c8d8d35a041c",
  "format": 1,
- "note": "Start route of Welle 6 for the comparisons P3, P4, P5, P9 and P11 (tools/routekit/metrics.py). Counters at level 30 per combination; written with python3 -m tools.routekit metrics --write-baseline."
+ "note": "Start route of Welle 6 for the comparisons P3, P4, P5, P9 and P11 (tools/routekit/metrics.py). Counters at level 30 per combination; written with python3 -m tools.routekit metrics --write-baseline. p9_sections (zone sections up to the end level of RestedXP Forever and above, guard P9) added on 2026-11-02 from the same start route (origin/main 65900c1), digest unchanged."
 }
