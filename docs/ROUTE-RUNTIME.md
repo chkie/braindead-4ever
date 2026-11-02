@@ -39,7 +39,7 @@ PathmarkCharDB.route = {
     roots = { [questID] = "<key>" },   -- quests the player skipped, and from which step
     pending = nil,                     -- quest ID of an abandon question without answer
     undo = { ... },                    -- up to 20 snapshots of the fields above
-    split = { m = "<module>", secs = 0, clean = true }, -- current module run (time forecast)
+    split = { m = "<module>", secs = 0, clean = true, full = true, xp = 0, guided = 0 }, -- current module run
     dungeons = { [instanceID] = true },                -- dungeon hints the player skipped
     earlier = { questID, ... },        -- Welle 7: quests the anchor rule passed though not done (route order)
     offers = { ["over:<key>"] = "y" | "n", ["switch:<key>"] = "y" | "n" }, -- replanning questions answered
@@ -47,6 +47,7 @@ PathmarkCharDB.route = {
     orders = { ["<segment id>"] = "<step id>,<step id>,..." }, -- reordered blocks (§Replanning)
   },
   rate = { secs = 0, xp = 0 },         -- own XP rate from active play, last 2 hours (time forecast)
+  lvl = { l = 5, full = true, secs = 0, xp = 0, guided = 0, n = 0, d = 0 }, -- current level section
 }
 PathmarkCharDB.explore = { level = 0, style = "self", found = { ["rare:100"] = "1429;2700;8800" },
                            asked = { ["treasure:3642"] = 3 } }
@@ -257,6 +258,8 @@ Known data limits: the Deadmines quests at Sentinel Hill need the Defias chain (
 **Level part.** Time to the next level from the player's own XP per second of active play (at least 10 minutes, the last 2 hours weigh). Until then `nextLevel.state = "collecting"`.
 
 **Measuring.** Active play: the time between two game events the route module handles, each gap counted up to 5 minutes. A module run is clean when it starts at the module's first step and every step up to its end is done (not skipped, not passed by the route); a clean run goes to the collector as `split` (module, seconds, mode). All thresholds are chosen values.
+
+**Run sections for the exchange** ([RUN-TIMES.md](RUN-TIMES.md)). Every module run from its first step past its last goes to the collector as a run section (`Collector.RecordRun`, kind `m`) with the share of its steps done; every level from one level-up to the next as kind `l`, with the share of the steps the route passed in that level that were done. `full` marks a run that started at the module's first step or a level that started at a level-up (or at level 1 without XP); only those count. `guided` holds the active seconds with the route, the step window on and no guidance pause; under half of the section's seconds the section counts as free play (mode `f`).
 
 ## Replanning (Welle 7)
 

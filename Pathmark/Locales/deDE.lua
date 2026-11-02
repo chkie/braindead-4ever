@@ -268,7 +268,7 @@ L.STYLE_TEXT_hints = "Zu Geheimnissen am Weg bekommst du einen Rätselsatz. Den 
 L.STYLE_TEXT_self = "Auf der Karte steht nur, was du selbst gefunden hast. Funde anderer erfährst du als Gerücht."
 L.HINT_LEVEL_N = "Hinweisstufe %d"
 L.SETUP_DATA =
-	"Was du unterwegs entdeckst, teilt Pathmark im Spiel mit anderen Spielern, die es auch nutzen. So werden die Routen für alle schneller genau."
+	"Pathmark teilt im Spiel, was du unterwegs entdeckst, und deine Spielzeiten mit anderen Spielern, die es auch nutzen. So werden die Routen für alle schneller genau."
 L.SETUP_FOOT = "Jederzeit in den Einstellungen unter „Spielweise“ änderbar. Schließen wählt „Mit Hinweisen“."
 L.SETUP_FOOT_AGAIN = "Jederzeit in den Einstellungen unter „Spielweise“ änderbar."
 L.PERCENT = "%d %%"

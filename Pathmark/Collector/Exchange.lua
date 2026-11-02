@@ -30,6 +30,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- prefix, +1/s), 2 s gap on the channel, nothing sent during chat lockdown or from trial accounts.
 -- Privacy: sender names live in memory for this session only and are never saved. Finds for guild
 -- and channel wait 30 to 90 s, so a message does not tell where a player is right now.
+-- Run times ("s", Collector/Runs.lua): received ones go into the run vault, not into the find buffer;
+-- the vault's sections are passed on over the hidden channel only, one message per 10 s at most, and
+-- only while no own message is due there (own messages first).
 local _, ns = ...
 local U, Proto = ns.Util, ns.Proto
 local M, Guard = ns.Modules, ns.Guard
@@ -59,7 +62,7 @@ local X = {
 	pseen = {}, -- "sender;questID" of received prerequisite observations (session only)
 	muted = {},
 	recent = {}, -- received finds, newest last (session only)
-	stats = { offered = 0, sent = 0, received = 0, confirmed = 0, dropped = 0, bad = 0, results = {} },
+	stats = { offered = 0, sent = 0, received = 0, confirmed = 0, dropped = 0, bad = 0, relayed = 0, results = {} },
 	channel = { slot = 1, state = "waiting", tries = 0 },
 }
 ns.Exchange = X
@@ -185,6 +188,36 @@ local function Enqueue(msg, dist, delay)
 	q[#q + 1] = { msg = msg, dist = dist, at = at }
 end
 
+-- Passes one section of the run vault on (Collector/Runs.lua): only over the hidden channel, only
+-- while no own message is due there (own messages first) and the queue has room, so a relay never
+-- pushes an own message out. Runs.RELAY_GAP keeps it to one message per 10 s, under the channel's
+-- own gap of 2 s.
+function X.Relay()
+	local C = ns.Collector
+	local runs = C and C.runs
+	if not runs or X.channel.state ~= "on" or not X.CanSend() then
+		return false
+	end
+	local q = X.queue
+	if #q >= X.QUEUE_MAX / 2 then
+		return false
+	end
+	local now = GetTime()
+	for _, item in ipairs(q) do
+		if item.dist == "CHANNEL" and item.at <= now then
+			return false -- an own message is due: it goes first
+		end
+	end
+	local msg = runs:NextRelay()
+	if not msg then
+		return false
+	end
+	X.stats.relayed = X.stats.relayed + 1
+	Enqueue(msg, "CHANNEL", false)
+	X.Pump()
+	return true
+end
+
 -- Called by the collector for each discovery. Fields as in Proto.lua; invalid ones are not sent.
 function X.Offer(kind, ...)
 	if not M.IsActive("exchange") then
@@ -225,7 +258,7 @@ local function Heard(find, confirmed)
 	end
 end
 
-local function Receive(prefix, text, _, sender)
+local function Receive(prefix, text, dist, sender)
 	if U.IsSecret(prefix) or U.IsSecret(text) or U.IsSecret(sender) then
 		return
 	end
@@ -245,6 +278,15 @@ local function Receive(prefix, text, _, sender)
 			if b.bad >= X.BAD_MAX then
 				X.muted[who] = true
 			end
+		end
+		return
+	end
+	if find.kind == "s" then
+		-- Run time: own limits per sender in the vault (a relaying player sends many, finds do not count).
+		local C = ns.Collector
+		if C and C.runs then
+			X.stats.received = X.stats.received + 1
+			C.runs:Hear(find, text, who, dist == "CHANNEL")
 		end
 		return
 	end
@@ -477,6 +519,7 @@ local function Init()
 		Guard.Wrap("exchange", function()
 			X.tokens = math.min(X.TOKENS, X.tokens + 1)
 			X.Pump()
+			X.Relay()
 		end)
 	)
 end

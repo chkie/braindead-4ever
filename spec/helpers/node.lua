@@ -61,6 +61,16 @@ function M.decode(text)
 	return out
 end
 
+-- The run table (CSV) of an export text, as `node decoder/cli.mjs --runs` writes it. Returns the CSV
+-- text or nil plus the error.
+function M.runs(text)
+	local out, err = run("decoder/cli.mjs --runs", text)
+	if err:match("^ERROR:") or out == "" then
+		return nil, (err:gsub("%s+$", ""))
+	end
+	return out
+end
+
 -- Parses JSON text into a Lua table through node (keeps the tests free of a Lua JSON decoder):
 -- node prints the value as a Lua table constructor.
 function M.parseJSON(text)

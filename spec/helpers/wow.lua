@@ -254,7 +254,7 @@ local function NewWorld(flavor)
 end
 
 -- Fresh client state. opts: flavor ("forever" | "retail"), locale, version, saved (PathmarkDB),
--- collect (PathmarkCollectDB), char (PathmarkCharDB).
+-- collect (PathmarkCollectDB), char (PathmarkCharDB), player (fields of world.player to change).
 function M.reset(opts)
 	opts = opts or {}
 	local flavor = FLAVORS[opts.flavor or "forever"]
@@ -273,6 +273,9 @@ function M.reset(opts)
 		M.knownEvents[e] = true
 	end
 	local W = NewWorld(M.flavor)
+	for k, v in pairs(opts.player or {}) do -- e.g. a new character: { level = 1, xp = 0 }
+		W.player[k] = v
+	end
 	M.world = W
 	local forever = M.flavor == "forever"
 
@@ -795,6 +798,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/Collector/Store.lua",
 		"Pathmark/Collector/Export.lua",
 		"Pathmark/Collector/Proto.lua",
+		"Pathmark/Collector/Runs.lua",
 		"Pathmark/Collector/Collect.lua",
 		"Pathmark/Collector/Exchange.lua",
 		"Pathmark/Core/Report.lua",

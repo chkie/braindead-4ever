@@ -1,0 +1,10 @@
+{
+  "note": "Proto.ModuleNumber (Lua) and runs.module_number (Python) must agree on these.",
+  "cases": [
+    {"module": "a-speed-start-elwynn", "number": 8500768},
+    {"module": "h-explorer-class-orc-warrior-00", "number": 3999126},
+    {"module": "a-explorer-class-dwarf-paladin-01", "number": 5585232},
+    {"module": "x", "number": 177694},
+    {"module": "", "number": 5382}
+  ]
+}
