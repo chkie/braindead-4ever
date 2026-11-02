@@ -18,35 +18,30 @@
   goto 1424 -921.0,-20.5 r=10 | src=polestar,att status=unbestätigt roots=2
 @a98094 lv=23
   accept 98094 | src=polestar,att status=unbestätigt
+  accept 528 | src=polestar,att status=unbestätigt
   goto 1424 -928.0,-36.5 r=10 | src=polestar,att status=unbestätigt roots=2
 @c98094 lv=23
   complete 98094 | src=polestar status=unbestätigt
-@a528 lv=23
-  accept 528 | src=polestar,att status=unbestätigt
-  goto 1424 -928.0,-36.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@a98095 lv=23
-  accept 98095 | src=polestar,att status=unbestätigt
-  goto 1424 -980.5,-750.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c98095 lv=23
-  complete 98095 | src=polestar status=unbestätigt
-@t98095 lv=23
-  turnin 98095 | src=polestar status=unbestätigt
-  turnin 98094 | src=polestar status=unbestätigt
-  goto 1424 -980.5,-750.5 r=10 | src=polestar status=unbestätigt roots=1
-@c546 lv=24
-  complete 546 | src=polestar status=unbestätigt
-  goto 1424 554.5,-1319.5 r=10 | src=polestar status=unbestätigt roots=1
-@c528 lv=24
+@c528 lv=23
   complete 528 | src=polestar status=unbestätigt
   goto 1424 -23.5,-574.5 r=10 | src=polestar status=unbestätigt roots=1
-@t546 lv=24
-  turnin 546 | src=polestar status=unbestätigt
-  goto 1424 -921.0,-20.5 r=10 | src=polestar status=unbestätigt roots=1
 @t528 lv=24
   turnin 528 | src=polestar status=unbestätigt
   accept 529 | src=polestar,att status=unbestätigt
   xp 24 | src=plan status=unbestätigt
   goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@t98094 lv=24
+  turnin 98094 | src=polestar status=unbestätigt
+  accept 98095 | src=polestar,att status=unbestätigt
+  goto 1424 -980.5,-750.5 r=10 | src=polestar status=unbestätigt roots=1
+@c98095 lv=24
+  complete 98095 | src=polestar status=unbestätigt
+@t98095 lv=24
+  turnin 98095 | src=polestar status=unbestätigt
+  goto 1424 -980.5,-750.5 r=10 | src=polestar status=unbestätigt roots=1
+@c546 lv=24
+  complete 546 | src=polestar status=unbestätigt
+  goto 1424 554.5,-1319.5 r=10 | src=polestar status=unbestätigt roots=1
 @c529 lv=24
   complete 529 | src=polestar status=unbestätigt
   goto 1424 39.0,-547.5 r=10 | src=polestar status=unbestätigt roots=1
@@ -54,6 +49,9 @@
   turnin 529 | src=polestar status=unbestätigt
   accept 532 | src=polestar,att status=unbestätigt
   goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@t546 lv=24
+  turnin 546 | src=polestar status=unbestätigt
+  goto 1424 -921.0,-20.5 r=10 | src=polestar status=unbestätigt roots=1
 @c532 lv=24
   complete 532 | src=polestar status=unbestätigt
   goto 1424 117.0,-488.5 r=10 | src=polestar status=unbestätigt roots=1

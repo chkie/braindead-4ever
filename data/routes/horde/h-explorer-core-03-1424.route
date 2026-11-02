@@ -6,7 +6,7 @@
 #kind core
 #faction Horde
 #mode explorer
-#levels 22-22
+#levels 22-23
 #label vorläufig
 #version 1
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
@@ -23,6 +23,10 @@
 @a498 lv=22
   accept 498 | src=polestar,att status=unbestätigt
   goto 1424 -957.0,-40.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@a527 lv=22
+  accept 527 | src=polestar,att status=unbestätigt
+  xp 22 | src=plan status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar,att status=unbestätigt roots=2
 @c498 lv=22
   complete 498 | src=polestar status=unbestätigt
   goto 1424 -1344.0,-485.5 r=10 | src=polestar status=unbestätigt roots=1
@@ -35,11 +39,9 @@
 @t498 lv=22
   turnin 498 | src=polestar status=unbestätigt
   goto 1424 -957.0,-40.5 r=10 | src=polestar status=unbestätigt roots=1
-@a527 lv=22
-  accept 527 | src=polestar,att status=unbestätigt
+@t549 lv=22
   turnin 549 | src=polestar status=unbestätigt
-  xp 22 | src=plan status=unbestätigt
-  goto 1424 -928.0,-36.5 r=10 | src=polestar,att status=unbestätigt roots=2
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
 @t496 lv=22
   turnin 496 | src=polestar status=unbestätigt
   accept 499 | src=polestar,att status=unbestätigt
@@ -59,15 +61,15 @@
   goto 1424 -899.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
 @c502 lv=22
   complete 502 | src=polestar status=unbestätigt
+@c527 lv=22
+  complete 527 | src=polestar status=unbestätigt
+  goto 1424 51.5,-424.0 r=10 | src=polestar status=unbestätigt roots=1
 @t502 lv=22
   turnin 502 | src=polestar status=unbestätigt
   goto 1424 21.5,-353.5 r=10 | src=polestar status=unbestätigt roots=1
 @a494 lv=22
   accept 494 | src=polestar,att status=unbestätigt
   goto 1424 401.5,-611.0 r=10 | src=polestar,att status=unbestätigt roots=2
-@c527 lv=22
-  complete 527 | src=polestar status=unbestätigt
-  goto 1424 51.5,-424.0 r=10 | src=polestar status=unbestätigt roots=1
 @t494 lv=22
   turnin 494 | src=polestar status=unbestätigt
   turnin 527 | src=polestar status=unbestätigt

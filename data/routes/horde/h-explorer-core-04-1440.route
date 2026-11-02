@@ -23,30 +23,36 @@
 @a216 lv=22
   accept 216 | src=polestar,att,eglink status=unbestätigt
   goto 1440 1014.9,3345.1 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c6442 lv=22
-  complete 6442 | src=polestar status=unbestätigt
-  goto 1440 1218.5,4053.0 r=10 | src=polestar status=unbestätigt roots=1
-@c6462 lv=22
-  complete 6462 | src=polestar status=unbestätigt
-  goto 1440 -656.5,3380.0 r=10 | src=polestar status=unbestätigt roots=1
+@c216 lv=22
+  complete 216 | src=polestar status=unbestätigt
+  goto 1440 -413.0,3287.0 r=10 | src=polestar status=unbestätigt roots=1
 @a6482 lv=23
   accept 6482 | src=polestar,att,eglink status=unbestätigt
   goto 1440 -692.3,3343.6 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @c6482 lv=23
   complete 6482 | src=polestar status=unbestätigt
-@c216 lv=23
-  complete 216 | src=polestar status=unbestätigt
-  goto 1440 -413.0,3287.0 r=10 | src=polestar status=unbestätigt roots=1
+@c6462 lv=23
+  complete 6462 | src=polestar status=unbestätigt
+  goto 1440 -656.5,3380.0 r=10 | src=polestar status=unbestätigt roots=1
+@c6442 lv=23
+  complete 6442 | src=polestar status=unbestätigt
+  goto 1440 1218.5,4053.0 r=10 | src=polestar status=unbestätigt roots=1
+@t6462 lv=23
+  turnin 6462 | src=polestar,eglink status=unbestätigt
+  turnin 6442 | src=polestar,eglink status=unbestätigt
+  goto 1440 1027.2,3334.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @t216 lv=23
   turnin 216 | src=polestar,eglink status=unbestätigt
   goto 1440 1014.9,3345.1 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @fp61 lv=23
   fp | src=plan status=unbestätigt
   goto 1440 -2521.2,2305.2 r=10 | src=att status=unbestätigt
-@t6462 lv=23
-  turnin 6462 | src=polestar,eglink status=unbestätigt
-  turnin 6442 | src=polestar,eglink status=unbestätigt
-  goto 1440 1027.2,3334.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@a25 lv=23
+  accept 25 | src=polestar,att,eglink status=unbestätigt
+  goto 1440 -2547.2,2363.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@a6503 lv=23
+  accept 6503 | src=polestar,att,eglink status=unbestätigt
+  goto 1440 -2402.4,2051.6 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @a98251 lv=23
   accept 98251 | src=polestar,att,eglink status=unbestätigt
   goto 1440 -631.4,2309.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
@@ -62,15 +68,12 @@
 @t98252 lv=23
   turnin 98252 | src=polestar status=unbestätigt
   goto 1440 -545.0,2447.5 r=10 | src=polestar status=unbestätigt roots=1
-@a25 lv=23
-  accept 25 | src=polestar,att,eglink status=unbestätigt
-  goto 1440 -2547.2,2363.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @t6482 lv=23
   turnin 6482 | src=polestar,eglink status=unbestätigt
   goto 1440 -2569.7,2332.9 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@a6503 lv=23
-  accept 6503 | src=polestar,att,eglink status=unbestätigt
-  goto 1440 -2402.4,2051.6 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t6382 lv=23
+  turnin 6382 | src=polestar,eglink status=unbestätigt
+  goto 1440 -2553.3,2307.3 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @c6503 lv=23
   complete 6503 | src=polestar status=unbestätigt
   goto 1440 -2546.5,1952.0 r=10 | src=polestar status=unbestätigt roots=1

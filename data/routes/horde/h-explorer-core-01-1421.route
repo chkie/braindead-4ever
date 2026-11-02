@@ -19,11 +19,11 @@
   goto 1421 1086.6,1407.9 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @c435 lv=10
   complete 435 | src=polestar status=unbestätigt
-@a429 lv=10
-  accept 429 | src=polestar,att,eglink status=unbestätigt
+@t435 lv=10
   turnin 435 | src=polestar,eglink status=unbestätigt
+  accept 429 | src=polestar,att,eglink status=unbestätigt
   accept 449 | src=polestar,att,eglink status=unbestätigt
-  goto 1421 1208.8,1289.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+  goto 1421 1204.9,1288.3 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @c449 lv=10
   complete 449 | src=polestar status=unbestätigt
 @c429 lv=10
@@ -36,6 +36,7 @@
   complete 6321 | src=polestar status=unbestätigt
 @t449 lv=10
   turnin 449 | src=polestar,eglink status=unbestätigt
+  accept 428 | src=polestar,att,eglink status=unbestätigt
   accept 3221 | src=polestar,att,eglink status=unbestätigt
   goto 1421 1628.0,520.9 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @t3221 lv=10
@@ -48,6 +49,9 @@
 @t6321 lv=10 << race=UNDEAD
   turnin 6321 | src=polestar,eglink status=unbestätigt
   goto 1421 1537.5,475.6 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t428 lv=10
+  turnin 428 | src=polestar,eglink status=unbestätigt
+  goto 1421 1204.9,1288.3 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @t430 lv=10
   turnin 430 | src=polestar,eglink status=unbestätigt
   goto 1421 1207.3,1311.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
@@ -67,15 +71,15 @@
 @a477 lv=12
   accept 477 | src=polestar,att,eglink status=unbestätigt
   goto 1421 1599.7,519.6 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c421 lv=12
-  complete 421 | src=polestar status=unbestätigt
-  goto 1421 1230.0,603.0 r=10 | src=polestar status=unbestätigt roots=1
 @a437 lv=12
   accept 437 | src=polestar,att,eglink status=unbestätigt
   goto 1421 1628.3,521.0 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @fp10 lv=12
   fp | src=plan status=unbestätigt
   goto 1421 1534.8,473.9 r=10 | src=att status=unbestätigt
+@c421 lv=12
+  complete 421 | src=polestar status=unbestätigt
+  goto 1421 1230.0,603.0 r=10 | src=polestar status=unbestätigt roots=1
 @t421 lv=12
   turnin 421 | src=polestar,eglink status=unbestätigt
   accept 422 | src=polestar,att,eglink status=unbestätigt

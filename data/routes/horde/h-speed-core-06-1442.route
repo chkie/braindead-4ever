@@ -63,17 +63,17 @@
 @c1087 lv=24
   complete 1087 | src=polestar status=unbestätigt
   goto 1442 1496.5,2506.5 r=10 | src=polestar status=unbestätigt roots=1
-@t6301 lv=24
+@t6301 lv=25
   turnin 6301 | src=polestar,eglink status=unbestätigt
   accept 6381 | src=polestar,att,eglink status=unbestätigt
   goto 1442 929.2,1011.1 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@t1087 lv=24
+@t1087 lv=25
   turnin 1087 | src=polestar,eglink status=unbestätigt
   goto 1442 998.7,947.6 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c6393 lv=24
+@c6393 lv=25
   complete 6393 | src=polestar status=unbestätigt
   goto 1442 1578.5,843.5 r=10 | src=polestar status=unbestätigt roots=1
-@c6282 lv=24
+@c6282 lv=25
   complete 6282 | src=polestar status=unbestätigt
   goto 1442 1655.5,941.5 r=10 | src=polestar status=unbestätigt roots=1
 @c6381 lv=25

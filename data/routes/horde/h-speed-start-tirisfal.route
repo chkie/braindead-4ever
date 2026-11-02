@@ -12,82 +12,92 @@
 #version 1
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
-@a364 lv=1
+@a98601 lv=1
+  accept 98601 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
   accept 364 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 1636.9,1842.6 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+  goto 1420 1637.4,1842.8 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c98601 lv=1 << class=PALADIN
+  complete 98601 | src=polestar status=unbestätigt
 @c364 lv=1
   complete 364 | src=polestar status=unbestätigt
   goto 1420 1551.0,1900.0 r=10 | src=polestar status=unbestätigt roots=1
 @t364 lv=2
   turnin 364 | src=polestar,eglink status=unbestätigt
+  accept 3099 << class=WARLOCK | src=polestar,att,eglink status=unbestätigt
+  accept 3098 << class=MAGE | src=polestar,att,eglink status=unbestätigt
+  accept 3097 << class=PRIEST | src=polestar,att status=unbestätigt
+  accept 376 | src=polestar,att,eglink status=unbestätigt
   accept 3901 | src=polestar,att,eglink status=unbestätigt
-  accept 98601 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
-  goto 1420 1636.9,1842.6 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c98601 lv=2 << class=PALADIN
-  complete 98601 | src=polestar status=unbestätigt
-@a3099 lv=2 << class=WARLOCK
-  accept 3099 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 1638.3,1841.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c3099 lv=2 << class=WARLOCK
-  complete 3099 | src=polestar status=unbestätigt
-@a1470 lv=2
   accept 1470 << class=WARLOCK | src=polestar,att,eglink status=unbestätigt
   accept 98389 | src=polestar,att,eglink status=unbestätigt
-  accept 3098 << class=MAGE | src=polestar,att,eglink status=unbestätigt
-  goto 1420 1633.2,1838.2 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c3098 lv=2 << class=MAGE
-  complete 3098 | src=polestar status=unbestätigt
-@a3097 lv=2 << class=PRIEST
-  accept 3097 | src=polestar,att status=unbestätigt
-  goto 1420 1640.0,1843.0 r=10 | src=polestar,att status=unbestätigt roots=2
-@c3097 lv=2 << class=PRIEST
-  complete 3097 | src=polestar status=unbestätigt
+  goto 1420 1636.9,1842.6 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @c98389 lv=2
   complete 98389 | src=polestar status=unbestätigt
   goto 1420 1923.0,2048.5 r=10 | src=polestar status=unbestätigt roots=1
-@a376 lv=3
-  accept 376 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 1637.0,1844.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c3099 lv=3 << class=WARLOCK
+  complete 3099 | src=polestar status=unbestätigt
+@t3099 lv=3 << class=WARLOCK
+  turnin 3099 | src=polestar,eglink status=unbestätigt
+  goto 1420 1635.5,1838.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@c3097 lv=3 << class=PRIEST
+  complete 3097 | src=polestar status=unbestätigt
+@c3098 lv=3 << class=MAGE
+  complete 3098 | src=polestar status=unbestätigt
+@t3098 lv=3 << class=MAGE
+  turnin 3098 | src=polestar,eglink status=unbestätigt
+  goto 1420 1634.1,1844.2 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @c376 lv=3
   complete 376 | src=polestar status=unbestätigt
   goto 1420 1471.5,1953.0 r=10 | src=polestar status=unbestätigt roots=1
-@c3901 lv=3
-  complete 3901 | src=polestar status=unbestätigt
-  goto 1420 1546.0,1981.0 r=10 | src=polestar status=unbestätigt roots=1
+@t98389 lv=3
+  turnin 98389 | src=polestar,eglink status=unbestätigt
+  turnin 376 | src=polestar,eglink status=unbestätigt
+  turnin 98601 << class=PALADIN | src=polestar,eglink status=unbestätigt
+  turnin 3097 << class=PRIEST | src=polestar status=unbestätigt
+  accept 6395 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 1630.4,1839.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@c6395 lv=3
+  complete 6395 | src=polestar status=unbestätigt
+  goto 1420 1625.0,1877.0 r=10 | src=polestar status=unbestätigt roots=1
+@t6395 lv=4
+  turnin 6395 | src=polestar,eglink status=unbestätigt
+  accept 91208 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
+  xp 5 | src=plan status=unbestätigt
+  goto 1420 1636.7,1844.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@c91208 lv=4 << class=PALADIN
+  complete 91208 | src=polestar status=unbestätigt
+  goto 1420 1746.5,1907.0 r=10 | src=polestar status=unbestätigt roots=1
+@a8 lv=4
+  accept 8 | src=polestar,att,eglink status=unbestätigt
+  xp 3 | src=plan status=unbestätigt
+  goto 1420 1308.5,2126.9 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c8 lv=4
+  complete 8 | src=polestar status=unbestätigt
 @c1470 lv=4 << class=WARLOCK
   complete 1470 | src=polestar status=unbestätigt
   goto 1420 1546.0,1981.0 r=10 | src=polestar status=unbestätigt roots=1
-@t98601 lv=4
-  turnin 98601 << class=PALADIN | src=polestar,eglink status=unbestätigt
-  accept 91208 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
-  turnin 3099 << class=WARLOCK | src=polestar,eglink status=unbestätigt
-  turnin 376 | src=polestar,eglink status=unbestätigt
-  accept 6395 | src=polestar,att,eglink status=unbestätigt
-  turnin 1470 << class=WARLOCK | src=polestar,eglink status=unbestätigt
-  xp 4 | src=plan status=unbestätigt
-  goto 1420 1627.7,1838.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@c3901 lv=4
+  complete 3901 | src=polestar status=unbestätigt
+  goto 1420 1546.0,1981.0 r=10 | src=polestar status=unbestätigt roots=1
 @a380 lv=4
   accept 380 | src=polestar,att,eglink status=unbestätigt
   goto 1420 1583.8,1848.8 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @c380 lv=4
   complete 380 | src=polestar status=unbestätigt
   goto 1420 1753.5,2107.5 r=10 | src=polestar status=unbestätigt roots=1
-@c91208 lv=4 << class=PALADIN
-  complete 91208 | src=polestar status=unbestätigt
-  goto 1420 1746.5,1907.0 r=10 | src=polestar status=unbestätigt roots=1
-@c6395 lv=4
-  complete 6395 | src=polestar status=unbestätigt
-  goto 1420 1625.0,1877.0 r=10 | src=polestar status=unbestätigt roots=1
-@a3902 lv=4
+@a3902 lv=5
   accept 3902 | src=polestar,att,eglink status=unbestätigt
   goto 1420 1602.1,1859.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@t380 lv=4
+@t380 lv=5
   turnin 380 | src=polestar,eglink status=unbestätigt
   accept 381 | src=polestar,att,eglink status=unbestätigt
   goto 1420 1582.8,1847.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c381 lv=4
+@c381 lv=5
   complete 381 | src=polestar status=unbestätigt
   goto 1420 1345.0,1790.5 r=10 | src=polestar status=unbestätigt roots=1
+@c3902 lv=5
+  complete 3902 | src=polestar status=unbestätigt
+  goto 1420 1548.0,1891.5 r=10 | src=polestar status=unbestätigt roots=1
 @t381 lv=5
   turnin 381 | src=polestar,eglink status=unbestätigt
   accept 382 | src=polestar,att,eglink status=unbestätigt
@@ -95,35 +105,22 @@
 @c382 lv=5
   complete 382 | src=polestar status=unbestätigt
   goto 1420 1381.0,1772.5 r=10 | src=polestar status=unbestätigt roots=1
-@c3902 lv=5
-  complete 3902 | src=polestar status=unbestätigt
-  goto 1420 1548.0,1891.5 r=10 | src=polestar status=unbestätigt roots=1
-@t3902 lv=5
-  turnin 3902 | src=polestar,eglink status=unbestätigt
-  goto 1420 1602.1,1859.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@t3097 lv=5
-  turnin 3097 << class=PRIEST | src=polestar status=unbestätigt
-  accept 5651 << class=PRIEST | src=polestar,att status=unbestätigt
-  turnin 6395 | src=polestar,eglink status=unbestätigt
-  turnin 3901 | src=polestar,eglink status=unbestätigt
-  turnin 3098 << class=MAGE | src=polestar,eglink status=unbestätigt
-  turnin 91208 << class=PALADIN | src=polestar,eglink status=unbestätigt
-  accept 91209 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
-  turnin 98389 | src=polestar,eglink status=unbestätigt
-  xp 5 | src=plan status=unbestätigt
-  goto 1420 1627.5,1848.5 r=10 | src=polestar status=unbestätigt roots=1
 @t382 lv=5
   turnin 382 | src=polestar,eglink status=unbestätigt
   goto 1420 1582.8,1847.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@a8 lv=6
-  accept 8 | src=polestar,att,eglink status=unbestätigt
-  xp 3 | src=plan status=unbestätigt
-  goto 1420 1308.5,2126.9 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t3902 lv=5
+  turnin 3902 | src=polestar,eglink status=unbestätigt
+  goto 1420 1602.1,1859.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t3901 lv=5
+  turnin 3901 | src=polestar,eglink status=unbestätigt
+  turnin 1470 << class=WARLOCK | src=polestar,eglink status=unbestätigt
+  turnin 91208 << class=PALADIN | src=polestar,eglink status=unbestätigt
+  accept 91209 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
+  accept 5651 << class=PRIEST | src=polestar,att status=unbestätigt
+  goto 1420 1636.9,1842.6 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @a365 lv=6
   accept 365 | src=polestar,att,eglink status=unbestätigt
   goto 1420 1188.0,2203.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c8 lv=6
-  complete 8 | src=polestar status=unbestätigt
 @c365 lv=6
   complete 365 | src=polestar status=unbestätigt
   goto 1420 1413.0,2316.5 r=10 | src=polestar status=unbestätigt roots=1
@@ -133,191 +130,190 @@
 @c5481 lv=6
   complete 5481 | src=polestar status=unbestätigt
   goto 1420 832.5,2183.5 r=10 | src=polestar status=unbestätigt roots=1
-@t5481 lv=6
-  turnin 5481 | src=polestar,eglink status=unbestätigt
-  accept 5482 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 419.6,2378.4 r=10 | src=eglink status=unbestätigt roots=1
-@a96607 lv=6
-  accept 96607 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 448.2,2166.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c96607 lv=6
-  complete 96607 | src=polestar status=unbestätigt
-@t96607 lv=6
-  turnin 96607 | src=polestar,eglink status=unbestätigt
-  accept 96658 | src=polestar,att,eglink status=unbestätigt
-  accept 97957 | src=polestar,att,eglink status=unbestätigt
-  accept 97954 | src=polestar,att status=unbestätigt
-  accept 97956 | src=polestar,att status=unbestätigt
-  accept 97953 | src=polestar,att status=unbestätigt
-  accept 97951 | src=polestar,att status=unbestätigt
-  accept 97961 | src=polestar,att status=unbestätigt
-  goto 1420 448.2,2166.7 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@c97954 lv=6
-  complete 97954 | src=polestar status=unbestätigt
-@a97955 lv=6
-  accept 97955 | src=polestar,att status=unbestätigt
-  goto 1420 447.5,2166.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c97955 lv=6
-  complete 97955 | src=polestar status=unbestätigt
-@a97952 lv=6
-  accept 97952 | src=polestar,att status=unbestätigt
-  goto 1420 447.5,2166.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c97952 lv=6
-  complete 97952 | src=polestar status=unbestätigt
-@a97958 lv=6
-  accept 97958 | src=polestar,att status=unbestätigt
-  goto 1420 447.5,2166.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c97957 lv=6
-  complete 97957 | src=polestar status=unbestätigt
-@c97958 lv=6
-  complete 97958 | src=polestar status=unbestätigt
-@c97953 lv=6
-  complete 97953 | src=polestar status=unbestätigt
-@a97960 lv=6
-  accept 97960 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 447.0,2168.3 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c97951 lv=6
-  complete 97951 | src=polestar status=unbestätigt
-@c91209 lv=6 << class=PALADIN
-  complete 91209 | src=polestar status=unbestätigt
-  goto 1420 311.0,2252.5 r=10 | src=polestar status=unbestätigt roots=1
-@t91209 lv=6 << class=PALADIN
-  turnin 91209 | src=polestar status=unbestätigt
-  goto 1420 311.0,2252.5 r=10 | src=polestar status=unbestätigt roots=1
-@a99134 lv=6
-  accept 99134 | src=polestar,att,eglink status=unbestätigt
-  accept 99141 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 299.3,2277.0 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c99141 lv=6
-  complete 99141 | src=polestar status=unbestätigt
-@c99134 lv=6
-  complete 99134 | src=polestar status=unbestätigt
-  goto 1420 290.5,2273.0 r=10 | src=polestar status=unbestätigt roots=1
-@t99134 lv=6
-  turnin 99134 | src=polestar,eglink status=unbestätigt
-  turnin 99141 | src=polestar,eglink status=unbestätigt
-  xp 8 | src=plan status=unbestätigt
-  goto 1420 299.3,2277.0 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@a404 lv=6
+  accept 404 | src=polestar,att,eglink status=unbestätigt
+  accept 86784 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 400.7,2289.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t365 lv=6
+  turnin 365 | src=polestar,eglink status=unbestätigt
+  accept 407 | src=polestar,att,eglink status=unbestätigt
+  accept 367 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 344.0,2261.1 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@c86784 lv=6
+  complete 86784 | src=polestar status=unbestätigt
+@t8 lv=6
+  turnin 8 | src=polestar,eglink status=unbestätigt
+  goto 1420 243.2,2267.3 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @a358 lv=6
   accept 358 | src=polestar,att,eglink status=unbestätigt
   goto 1420 269.4,2305.3 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@a375 lv=7
-  accept 375 | src=polestar,att,eglink status=unbestätigt
-  turnin 97955 | src=polestar status=unbestätigt
-  goto 1420 236.5,2252.9 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@t5651 lv=7
-  turnin 5651 << class=PRIEST | src=polestar status=unbestätigt
-  accept 5650 << class=PRIEST | src=polestar,att status=unbestätigt
-  turnin 8 | src=polestar,eglink status=unbestätigt
-  goto 1420 251.0,2265.5 r=10 | src=polestar status=unbestätigt roots=1
-@a367 lv=7
-  accept 367 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 344.0,2261.1 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c97961 lv=7
-  complete 97961 | src=polestar status=unbestätigt
-@t365 lv=7
-  turnin 365 | src=polestar,eglink status=unbestätigt
-  accept 407 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 344.0,2261.1 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c407 lv=7
+@a5650 lv=6 << class=PRIEST
+  accept 5650 | src=polestar,att status=unbestätigt
+  turnin 5651 | src=polestar status=unbestätigt
+  goto 1420 251.0,2265.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@a99141 lv=6
+  accept 99141 | src=polestar,att,eglink status=unbestätigt
+  accept 99134 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 299.3,2277.0 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c91209 lv=6 << class=PALADIN
+  complete 91209 | src=polestar status=unbestätigt
+  goto 1420 311.0,2252.5 r=10 | src=polestar status=unbestätigt roots=1
+@c99134 lv=6
+  complete 99134 | src=polestar status=unbestätigt
+  goto 1420 290.5,2273.0 r=10 | src=polestar status=unbestätigt roots=1
+@c407 lv=6
   complete 407 | src=polestar status=unbestätigt
-@t97957 lv=7
-  turnin 97957 | src=polestar,eglink status=unbestätigt
-  goto 1420 332.5,2265.5 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@t91209 lv=6 << class=PALADIN
+  turnin 91209 | src=polestar status=unbestätigt
+  goto 1420 311.0,2252.5 r=10 | src=polestar status=unbestätigt roots=1
+@c99141 lv=6
+  complete 99141 | src=polestar status=unbestätigt
+@a96607 lv=6
+  accept 96607 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 448.2,2166.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c404 lv=6
+  complete 404 | src=polestar status=unbestätigt
+  goto 1420 638.5,2225.5 r=10 | src=polestar status=unbestätigt roots=1
+@c367 lv=7
+  complete 367 | src=polestar status=unbestätigt
+  goto 1420 -247.5,2403.0 r=10 | src=polestar status=unbestätigt roots=1
+@c96607 lv=7
+  complete 96607 | src=polestar status=unbestätigt
+@t96607 lv=7
+  turnin 96607 | src=polestar,eglink status=unbestätigt
+  accept 97953 | src=polestar,att status=unbestätigt
+  accept 97961 | src=polestar,att status=unbestätigt
+  accept 97958 | src=polestar,att status=unbestätigt
+  accept 97954 | src=polestar,att status=unbestätigt
+  accept 97951 | src=polestar,att status=unbestätigt
+  accept 97955 | src=polestar,att status=unbestätigt
+  accept 97952 | src=polestar,att status=unbestätigt
+  accept 97956 | src=polestar,att status=unbestätigt
+  accept 97957 | src=polestar,att,eglink status=unbestätigt
+  accept 96658 | src=polestar,att,eglink status=unbestätigt
+  accept 97960 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 448.2,2166.7 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@c97958 lv=7
+  complete 97958 | src=polestar status=unbestätigt
+@c97951 lv=7
+  complete 97951 | src=polestar status=unbestätigt
+@c97955 lv=7
+  complete 97955 | src=polestar status=unbestätigt
+@c97954 lv=7
+  complete 97954 | src=polestar status=unbestätigt
+@c97957 lv=7
+  complete 97957 | src=polestar status=unbestätigt
+@c97953 lv=7
+  complete 97953 | src=polestar status=unbestätigt
+@c97952 lv=7
+  complete 97952 | src=polestar status=unbestätigt
+@c96658 lv=7
+  complete 96658 | src=polestar status=unbestätigt
+@c97956 lv=7
+  complete 97956 | src=polestar status=unbestätigt
+@t99141 lv=7
+  turnin 99141 | src=polestar,eglink status=unbestätigt
+  turnin 99134 | src=polestar,eglink status=unbestätigt
+  goto 1420 299.3,2277.0 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@t97955 lv=7
+  turnin 97955 | src=polestar status=unbestätigt
+  accept 375 | src=polestar,att,eglink status=unbestätigt
+  xp 7 | src=plan status=unbestätigt
+  goto 1420 240.0,2246.0 r=10 | src=polestar status=unbestätigt roots=1
+@c375 lv=7
+  complete 375 | src=polestar status=unbestätigt
+  goto 1420 106.5,2326.5 r=10 | src=polestar status=unbestätigt roots=1
 @t97951 lv=7
   turnin 97951 | src=polestar status=unbestätigt
   goto 1420 348.0,2265.5 r=10 | src=polestar status=unbestätigt roots=1
-@a86784 lv=7
-  accept 86784 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 394.9,2289.8 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@c86784 lv=7
-  complete 86784 | src=polestar status=unbestätigt
-@a404 lv=7
-  accept 404 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 400.7,2289.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@t86784 lv=7
-  turnin 86784 | src=polestar,eglink status=unbestätigt
-  goto 1420 446.9,2167.9 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@t97961 lv=7
-  turnin 97961 | src=polestar status=unbestätigt
-  goto 1420 657.0,2165.0 r=10 | src=polestar status=unbestätigt roots=1
-@c404 lv=7
-  complete 404 | src=polestar status=unbestätigt
-  goto 1420 638.5,2225.5 r=10 | src=polestar status=unbestätigt roots=1
+@t375 lv=7
+  turnin 375 | src=polestar,eglink status=unbestätigt
+  goto 1420 236.5,2252.9 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @c97960 lv=7
   complete 97960 | src=polestar status=unbestätigt
-@c97956 lv=7
-  complete 97956 | src=polestar status=unbestätigt
-@c96658 lv=7
-  complete 96658 | src=polestar status=unbestätigt
+@c97961 lv=7
+  complete 97961 | src=polestar status=unbestätigt
+@c5650 lv=7 << class=PRIEST
+  complete 5650 | src=polestar status=unbestätigt
+  goto 1420 359.0,2436.5 r=10 | src=polestar status=unbestätigt roots=1
 @c358 lv=7
   complete 358 | src=polestar status=unbestätigt
   goto 1420 513.0,2564.0 r=10 | src=polestar status=unbestätigt roots=1
-@c367 lv=8
-  complete 367 | src=polestar status=unbestätigt
-  goto 1420 -247.5,2403.0 r=10 | src=polestar status=unbestätigt roots=1
+@a398 lv=8
+  accept 398 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 290.9,2283.8 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t97957 lv=8
+  turnin 97957 | src=polestar,eglink status=unbestätigt
+  goto 1420 332.5,2265.5 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@t97961 lv=8
+  turnin 97961 | src=polestar status=unbestätigt
+  goto 1420 657.0,2165.0 r=10 | src=polestar status=unbestätigt roots=1
+@t96658 lv=8
+  turnin 96658 | src=polestar,eglink status=unbestätigt
+  turnin 97953 | src=polestar status=unbestätigt
+  goto 1420 241.0,2284.8 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@t97960 lv=8
+  turnin 97960 | src=polestar,eglink status=unbestätigt
+  goto 1420 73.7,2026.1 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @t97956 lv=8
   turnin 97956 | src=polestar status=unbestätigt
   goto 1420 -2.0,2301.5 r=10 | src=polestar status=unbestätigt roots=1
-@t97960 lv=8
-  turnin 97960 | src=polestar,eglink status=unbestätigt
+@t97958 lv=8
   turnin 97958 | src=polestar status=unbestätigt
-  goto 1420 73.7,2026.1 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@c375 lv=8
-  complete 375 | src=polestar status=unbestätigt
-  goto 1420 106.5,2326.5 r=10 | src=polestar status=unbestätigt roots=1
-@c5650 lv=8 << class=PRIEST
-  complete 5650 | src=polestar status=unbestätigt
-  goto 1420 359.0,2436.5 r=10 | src=polestar status=unbestätigt roots=1
-@t358 lv=8
-  turnin 358 | src=polestar,eglink status=unbestätigt
-  accept 359 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 269.5,2305.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
+  goto 1420 76.5,2026.5 r=10 | src=polestar status=unbestätigt roots=1
+@t404 lv=8
+  turnin 404 | src=polestar,eglink status=unbestätigt
+  accept 426 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 400.7,2289.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t5481 lv=8
+  turnin 5481 | src=polestar,eglink status=unbestätigt
+  goto 1420 419.6,2378.4 r=10 | src=eglink status=unbestätigt roots=1
 @t407 lv=8
   turnin 407 | src=polestar,eglink status=unbestätigt
-  turnin 97953 | src=polestar status=unbestätigt
-  turnin 96658 | src=polestar,eglink status=unbestätigt
   goto 1420 236.8,2292.2 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t86784 lv=8
+  turnin 86784 | src=polestar,eglink status=unbestätigt
+  goto 1420 446.9,2167.9 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @t5650 lv=8
   turnin 5650 << class=PRIEST | src=polestar status=unbestätigt
   accept 362 | src=polestar,att,eglink status=unbestätigt
   goto 1420 251.0,2265.5 r=10 | src=polestar status=unbestätigt roots=1
-@t375 lv=8
-  turnin 375 | src=polestar,eglink status=unbestätigt
-  goto 1420 236.5,2252.9 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@a356 lv=9
-  accept 356 | src=polestar,att,eglink status=unbestätigt
-  turnin 359 | src=polestar,eglink status=unbestätigt
-  accept 360 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 76.8,2024.2 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@t367 lv=9
-  turnin 367 | src=polestar,eglink status=unbestätigt
+@a95314 lv=8
   accept 95314 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 344.0,2261.1 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c95314 lv=9
+  xp 8 | src=plan status=unbestätigt
+  goto 1420 344.4,2263.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c95314 lv=8
   complete 95314 | src=polestar status=unbestätigt
-@t95314 lv=9
+@t95314 lv=8
   turnin 95314 | src=polestar,eglink status=unbestätigt
   goto 1420 345.9,2263.1 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@t404 lv=9
-  turnin 404 | src=polestar,eglink status=unbestätigt
-  accept 426 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 400.7,2289.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c5482 lv=9
-  complete 5482 | src=polestar status=unbestätigt
-  goto 1420 460.0,2636.0 r=10 | src=polestar status=unbestätigt roots=1
-@t5482 lv=9
-  turnin 5482 | src=polestar,eglink status=unbestätigt
-  goto 1420 419.6,2378.4 r=10 | src=eglink status=unbestätigt roots=1
-@a398 lv=9
-  accept 398 | src=polestar,att,eglink status=unbestätigt
-  goto 1420 290.9,2283.8 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@a354 lv=9
+  accept 354 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 243.3,2259.8 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t367 lv=9
+  turnin 367 | src=polestar,eglink status=unbestätigt
+  goto 1420 344.0,2261.1 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t358 lv=9
+  turnin 358 | src=polestar,eglink status=unbestätigt
+  accept 359 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 269.5,2305.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t97952 lv=9
+  turnin 97952 | src=polestar status=unbestätigt
+  goto 1420 296.0,1691.5 r=10 | src=polestar status=unbestätigt roots=1
+@fp11 lv=9
+  fp | src=plan status=unbestätigt
+  goto 1420 263.0,1566.9 r=10 | src=att status=unbestätigt
+@t97954 lv=9
+  turnin 97954 | src=polestar status=unbestätigt
+  goto 1420 150.5,1410.0 r=10 | src=polestar status=unbestätigt roots=1
+@t359 lv=9
+  turnin 359 | src=polestar,eglink status=unbestätigt
+  accept 356 | src=polestar,att,eglink status=unbestätigt
+  accept 360 | src=polestar,att,eglink status=unbestätigt
+  goto 1420 76.8,2024.2 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @t360 lv=9
   turnin 360 | src=polestar,eglink status=unbestätigt
   goto 1420 269.0,2305.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@c398 lv=9
-  complete 398 | src=polestar status=unbestätigt
-  goto 1420 382.5,2910.5 r=10 | src=polestar status=unbestätigt roots=1
 @c356 lv=9
   complete 356 | src=polestar status=unbestätigt
   goto 1420 -422.0,1985.0 r=10 | src=polestar status=unbestätigt roots=1
@@ -334,33 +330,34 @@
 @t1819 lv=10 << class=WARRIOR
   turnin 1819 | src=polestar status=unbestätigt
   goto 1420 403.5,2287.5 r=10 | src=polestar status=unbestätigt roots=1
-@t398 lv=10
-  turnin 398 | src=polestar,eglink status=unbestätigt
-  goto 1420 299.3,2277.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @a1821 lv=10 << class=WARRIOR
   accept 1821 | src=polestar,att status=unbestätigt
   goto 1420 244.5,2262.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c398 lv=9
+  complete 398 | src=polestar status=unbestätigt
+  goto 1420 382.5,2910.5 r=10 | src=polestar status=unbestätigt roots=1
 @c1821 lv=10 << class=WARRIOR
   complete 1821 | src=polestar status=unbestätigt
   goto 1420 698.0,3063.5 r=10 | src=polestar status=unbestätigt roots=1
-@c426 lv=10
+@c354 lv=9
+  complete 354 | src=polestar status=unbestätigt
+  goto 1420 921.5,2954.5 r=10 | src=polestar status=unbestätigt roots=1
+@c426 lv=9
   complete 426 | src=polestar status=unbestätigt
   goto 1420 880.5,2802.5 r=10 | src=polestar status=unbestätigt roots=1
-@c362 lv=10
+@c362 lv=9
   complete 362 | src=polestar status=unbestätigt
   goto 1420 894.0,2609.0 r=10 | src=polestar status=unbestätigt roots=1
-@t426 lv=10
+@t426 lv=9
   turnin 426 | src=polestar,eglink status=unbestätigt
   goto 1420 400.7,2289.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@t1821 lv=10
+@t398 lv=10
+  turnin 398 | src=polestar,eglink status=unbestätigt
+  goto 1420 299.3,2277.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@t354 lv=10
+  turnin 354 | src=polestar,eglink status=unbestätigt
+  turnin 362 | src=polestar,eglink status=unbestätigt
   turnin 1821 << class=WARRIOR | src=polestar status=unbestätigt
   accept 1822 << class=WARRIOR | src=polestar,att status=unbestätigt
   turnin 1822 << class=WARRIOR | src=polestar status=unbestätigt
-  turnin 362 | src=polestar,eglink status=unbestätigt
-  goto 1420 244.5,2262.5 r=10 | src=polestar status=unbestätigt roots=1
-@t97952 lv=10
-  turnin 97952 | src=polestar status=unbestätigt
-  goto 1420 296.0,1691.5 r=10 | src=polestar status=unbestätigt roots=1
-@t97954 lv=10
-  turnin 97954 | src=polestar status=unbestätigt
-  goto 1420 150.5,1410.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1420 243.3,2259.8 r=10 | src=eglink,polestar status=unbestätigt roots=2

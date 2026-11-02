@@ -55,6 +55,10 @@ describe("Replanning: entry anchor", function()
 	local RT = ns.Runtime
 	local data = ns.Routes.Load("Alliance")
 	local steps = ns.Routes.Steps("Alliance", "speed", 1, 1)
+	-- elements with their own race or class filter belong to other combinations (R.Steps keeps them)
+	local function mine(el)
+		return ns.Routes.Applies(el, 1, 1)
+	end
 
 	local function new(w, saved)
 		local rt = RT.New(steps, data.quests, w.api, saved or {}, { race = 1, class = 1, modules = data.modules })
@@ -67,7 +71,7 @@ describe("Replanning: entry anchor", function()
 		local out, seen = {}, {}
 		for i = 1, upTo do
 			for _, el in ipairs(steps[i].step) do
-				if el[1] == verb and not seen[el[2]] then
+				if el[1] == verb and mine(el) and not seen[el[2]] then
 					seen[el[2]] = true
 					out[#out + 1] = { q = el[2], i = i }
 				end
@@ -81,7 +85,7 @@ describe("Replanning: entry anchor", function()
 		local anchor = 0
 		for i = 1, #steps do
 			for _, el in ipairs(steps[i].step) do
-				if el[1] <= V.TURNIN and w.flagged[el[2]] then
+				if el[1] <= V.TURNIN and mine(el) and w.flagged[el[2]] then
 					anchor = i
 				end
 			end
@@ -100,15 +104,20 @@ describe("Replanning: entry anchor", function()
 		return last
 	end
 
-	-- Mixed progress up to step `upTo`: every quest handed in, except every `gap`-th one (never
-	-- taken) and every `logEvery`-th one (still in the log). Returns the gaps.
+	-- Mixed progress up to step `upTo`: every quest taken there, except every `gap`-th one (never
+	-- taken) and every `logEvery`-th one (still in the log); a quest whose turn-in lies after `upTo`
+	-- is still in the log, the others are handed in. Returns the gaps.
 	local function play(w, upTo, gap, logEvery)
+		local turnin = {}
+		for _, a in ipairs(firstOf(V.TURNIN, #steps)) do
+			turnin[a.q] = a.i
+		end
 		local gaps, k = {}, 0
 		for _, a in ipairs(firstOf(V.ACCEPT, upTo)) do
 			k = k + 1
 			if gap and k % gap == 0 then
 				gaps[a.q] = a.i
-			elseif logEvery and k % logEvery == 0 then
+			elseif logEvery and k % logEvery == 0 or (turnin[a.q] or 0) > upTo then
 				w.log[a.q] = { complete = false }
 			else
 				w.flagged[a.q] = true
@@ -235,10 +244,12 @@ describe("Replanning: entry anchor", function()
 		local gaps = play(w, 60, 9)
 		local again = new(w, deepcopy(saved))
 		assert.is_true(again:Current().index > 50, "re-entry at " .. again:Current().key)
-		local n = 0
-		for _ in pairs(gaps) do
-			n = n + 1
+		-- the list holds the gaps taken before the anchor (the last step with a turn-in)
+		local anchor, n = anchorOf(w), 0
+		for _, i in pairs(gaps) do
+			n = n + (i < anchor and 1 or 0)
 		end
+		assert.is_true(n > 0, "the test needs gaps before the anchor")
 		assert.are.equal(n, #again:Earlier())
 		-- in the session: nothing jumps until the level-up asks for a check
 		local w2 = newWorld()
@@ -779,15 +790,43 @@ describe("Replanning: time and frame budget of the reorder", function()
 		io.stdout:write("\n[replan] " .. fmt:format(...))
 	end
 
-	-- A runtime on the first n steps of Northshire and Elwynn (one segment of movable steps), the player
-	-- at the first quest giver, nothing done: n open points.
+	-- The longest segment of movable steps of the real route (a step with an `xp` or `fp` element stays
+	-- in place and ends a segment), with every quest handed in before it.
+	local longest = (function()
+		local w = newWorld()
+		local rt = RT.New(all, data.quests, w.api, {}, { race = 1, class = 1, modules = data.modules })
+		local best
+		for _, seg in ipairs(rt.segs) do
+			if not best or seg.last - seg.first > best.last - best.first then
+				best = seg
+			end
+		end
+		return best
+	end)()
+
+	-- A runtime on n steps of that segment, the player at its first quest giver, nothing of it done:
+	-- n open points.
 	local function route(n)
+		assert.is_true(longest.last - longest.first + 1 >= n, "segment of " .. n .. " movable steps")
 		local steps = {}
 		for i = 1, n do
-			steps[i] = all[i]
+			steps[i] = all[longest.first + i - 1]
 		end
 		local w = newWorld()
+		w.level = steps[1].step.lv
+		for i = 1, longest.first - 1 do
+			for _, el in ipairs(all[i].step) do
+				if el[1] == V.TURNIN and ns.Routes.Applies(el, 1, 1) then
+					w.flagged[el[2]] = true
+				end
+			end
+		end
 		w.api.Position = function()
+			for _, el in ipairs(steps[1].step) do
+				if el[1] == 5 then -- goto: { 5, uiMapID, wx, wy, ... }
+					return el[3], el[4], 0
+				end
+			end
 			return -163, -8869, 0
 		end
 		w.api.InCombat = function()

@@ -6,12 +6,10 @@ start a-speed-start-elwynn << race=HUMAN
 start a-speed-start-dunmorogh << race=DWARF,GNOME
 start a-speed-start-teldrassil << race=NIGHTELF
 start a-speed-start-zephras << race=SKYBORNE_A
-core a-speed-core-01-1439 a-speed-core-02-1436 a-speed-core-03-1413 a-speed-core-04-1439 a-speed-core-05-1433 a-speed-core-06-1440 a-speed-core-07-1437
-insert after a-speed-core-04-1439 a-speed-class-nightelf-priest-03 << race=NIGHTELF class=PRIEST
+core a-speed-core-01-1436 a-speed-core-02-1439 a-speed-core-03-1436 a-speed-core-04-1433 a-speed-core-05-1440 a-speed-core-06-1437 a-speed-core-07-1431 a-speed-core-08-1433
 #mode explorer
 start a-explorer-start-elwynn << race=HUMAN
 start a-explorer-start-dunmorogh << race=DWARF,GNOME
 start a-explorer-start-teldrassil << race=NIGHTELF
 start a-explorer-start-zephras << race=SKYBORNE_A
-core a-explorer-core-01-1439 a-explorer-core-02-1436 a-explorer-core-03-1413 a-explorer-core-04-1439 a-explorer-core-05-1433 a-explorer-core-06-1440 a-explorer-core-07-1437
-insert after a-explorer-core-04-1439 a-explorer-class-nightelf-priest-03 << race=NIGHTELF class=PRIEST
+core a-explorer-core-01-1436 a-explorer-core-02-1439 a-explorer-core-03-1436 a-explorer-core-04-1433 a-explorer-core-05-1440 a-explorer-core-06-1437 a-explorer-core-07-1431 a-explorer-core-08-1433

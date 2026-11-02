@@ -31,10 +31,10 @@
 @a1507 lv=22
   accept 1507 | src=polestar,att status=unbestätigt
   goto 1454 -4357.5,1850.5 r=10 | src=polestar status=unbestätigt roots=1
-@a1508 lv=22
-  accept 1508 | src=polestar,att status=unbestätigt
+@t1507 lv=22
   turnin 1507 | src=polestar status=unbestätigt
-  goto 1454 -4340.5,1839.5 r=10 | src=polestar,att status=unbestätigt roots=2
+  accept 1508 | src=polestar,att status=unbestätigt
+  goto 1454 -4340.5,1839.5 r=10 | src=polestar status=unbestätigt roots=1
 @t1508 lv=22
   turnin 1508 | src=polestar status=unbestätigt
   goto 1454 -4200.0,1718.0 r=10 | src=polestar status=unbestätigt roots=1

@@ -14,29 +14,27 @@
 
 @r1458 lv=22 !return "Klassenquest"
   travel walk 1458 | src=plan status=unbestätigt
-@a1472 lv=22
-  accept 1472 | src=polestar,att status=unbestätigt
-  goto 1458 57.0,1711.5 r=10 | src=polestar,att status=unbestätigt roots=2
 @a65593 lv=22
   accept 65593 | src=polestar status=unbestätigt
   goto 1458 60.0,1783.0 r=10 | src=polestar status=unbestätigt roots=1
 @c65593 lv=22
   complete 65593 | src=polestar status=unbestätigt
+@a1472 lv=22
+  accept 1472 | src=polestar,att status=unbestätigt
+  turnin 65593 | src=polestar status=unbestätigt
+  goto 1458 57.0,1711.5 r=10 | src=polestar,att status=unbestätigt roots=2
 @t1472 lv=22
   turnin 1472 | src=polestar status=unbestätigt
   goto 1458 60.0,1783.0 r=10 | src=polestar status=unbestätigt roots=1
-@t65593 lv=22
-  turnin 65593 | src=polestar status=unbestätigt
-  goto 1458 57.0,1711.5 r=10 | src=polestar status=unbestätigt roots=1
 @r1454 lv=22 !return "Klassenquest"
   travel zeppelin 1454 | src=plan status=unbestätigt
 @a1507 lv=22
   accept 1507 | src=polestar,att status=unbestätigt
   goto 1454 -4357.5,1850.5 r=10 | src=polestar status=unbestätigt roots=1
-@a1508 lv=22
-  accept 1508 | src=polestar,att status=unbestätigt
+@t1507 lv=22
   turnin 1507 | src=polestar status=unbestätigt
-  goto 1454 -4340.5,1839.5 r=10 | src=polestar,att status=unbestätigt roots=2
+  accept 1508 | src=polestar,att status=unbestätigt
+  goto 1454 -4340.5,1839.5 r=10 | src=polestar status=unbestätigt roots=1
 @t1508 lv=22
   turnin 1508 | src=polestar status=unbestätigt
   goto 1454 -4200.0,1718.0 r=10 | src=polestar status=unbestätigt roots=1
