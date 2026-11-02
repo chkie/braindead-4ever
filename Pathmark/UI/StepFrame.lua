@@ -48,7 +48,7 @@ local SF = {
 	-- Smaller than ROW_GAP, so nothing of the next row shows.
 	DESCENT = 4,
 	-- Next steps are dimmed (rule R4). Contrast on white ground behind 70 % black (WCAG formula, Welle 5d
-	-- M1): white at 0.6 gives 4.3:1, at 0.7 about 4.9:1; the dungeon step at 0.78 gives 6.0:1.
+	-- M1): white at 0.6 gives 4.3:1, at 0.7 5.2:1; the dungeon step at 0.78 gives 6.0:1.
 	NEXT_ALPHA = 0.7,
 	DUNGEON_ALPHA = 0.78,
 	ROW_GAP = 6,

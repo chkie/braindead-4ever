@@ -49,7 +49,7 @@ describe("Step window", function()
 			local rows = nextRows(ns)
 			assert.are.equal(3, #rows)
 			for _, row in ipairs(rows) do
-				assert.are.equal(0.7, row.text.alpha) -- Welle 5d, M1: 4.9:1 on white ground behind 70 %
+				assert.are.equal(0.7, row.text.alpha) -- Welle 5d, M1: 5.2:1 on white ground behind 70 %
 				assert.are.equal(2, row.text.maxLines) -- at most two lines (release gate T19)
 			end
 			assert.matches("Level |cffffffff1|r • |cffffffff400|r XP to go", W.xp.text, 1, true)
