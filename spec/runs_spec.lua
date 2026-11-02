@@ -1,12 +1,12 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Run times in the exchange (plan "Laufzeiten im Austausch", 2026-11-02, docs/RUN-TIMES.md): message
 -- kind "s", the run vault (Collector/Runs.lua) with dedup, conflicts, plausibility band and sender
--- limits, relaying under the channel limit, the sections from the route (Routes/Guide.lua), the export
--- with the decoder's run table and tools/routekit/runs.py, and the spread simulation.
+-- limits, relaying under the channel limit, the sections from the route (Routes/Guide.lua) and the export
+-- with the decoder's run table and tools/routekit/runs.py. The spread simulation and the channel budget
+-- are in spec/channel_budget_spec.lua.
 local wow = require("spec.helpers.wow")
 local node = require("spec.helpers.node")
 local json = require("spec.helpers.json")
-local spread = require("spec.helpers.spread")
 
 local DAY = 20762 -- 2026-11-05, the server day of the test world
 
@@ -294,6 +294,7 @@ end
 
 local function receive(msg, sender, dist)
 	wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, dist or "CHANNEL", sender, "", 0, 5, "PathmarkShare", 0)
+	wow.readInbox()
 end
 
 describe("Run times in the exchange", function()
@@ -315,6 +316,7 @@ describe("Run times in the exchange", function()
 
 	it("relays at most one message per 10 s, on the channel only, below the channel's own limit", function()
 		local ns = wow.session()
+		wow.freeChannel()
 		wow.advance(10) -- channel joined
 		wow.world.group.party, wow.world.guild = true, true
 		-- 100 sections from the guild: the channel has not heard them
@@ -340,6 +342,7 @@ describe("Run times in the exchange", function()
 
 	it("lets an own message that is due go first", function()
 		local ns = wow.session()
+		wow.freeChannel()
 		wow.advance(10)
 		for i = 1, 20 do
 			receive(S(ns, ("gu%04d"):format(i), "l", 5, 600, 2800), "Sender " .. i, "GUILD")
@@ -639,57 +642,5 @@ describe("Run times from the game to the analysis", function()
 		assert.are.same({ 1, 900 }, { groups["f/free"].runs, groups["f/free"].seconds })
 		assert.are.equal("l", groups["s/follows"].kind)
 		assert.are.equal(1, groups["s/follows"].section)
-	end)
-end)
-
-describe("Spread simulation", function()
-	it("brings almost every section to every client within a few rounds, at a modest traffic", function()
-		local ns = pure()
-		local r = spread.Run(ns)
-		local lines = {}
-		for i, x in ipairs(r.rounds) do
-			lines[#lines + 1] = ("round %2d: %3d sessions ended, coverage min %.3f median %.3f, %.0f %% of them >= 90 %%"):format(
-				i,
-				x.n,
-				x.min,
-				x.median,
-				x.share90 * 100
-			)
-		end
-		io.stdout:write(
-			("\n[spread] %d clients, %d rounds of 4 h, %d sections produced\n[spread] %s\n"):format(
-				spread.DEFAULTS.clients,
-				spread.DEFAULTS.rounds,
-				r.produced,
-				table.concat(lines, "\n[spread] ")
-			)
-		)
-		io.stdout:write(
-			("[spread] per client and online hour: sent %.1f (relayed %.1f), received %.1f; busiest client sent %.1f, received %.1f\n"):format(
-				r.sentPerHour,
-				r.relayedPerHour,
-				r.receivedPerHour,
-				r.maxSentPerHour,
-				r.maxReceivedPerHour
-			)
-		)
-		io.stdout:write(
-			("[spread] peaks per sender: %d new tokens in a session (limit %d), %d run messages in %d s (limit %d)\n"):format(
-				r.peakNew,
-				ns.Runs.NEW_TOKENS_MAX,
-				r.peakRate,
-				ns.Runs.SENDER_WINDOW,
-				ns.Runs.SENDER_MAX
-			)
-		)
-		-- from round 8 on, every session ends with at least 90 % of the sections that existed at its start
-		for i = 8, spread.DEFAULTS.rounds do
-			assert.is_true(r.rounds[i].min >= 0.9, ("round %d: minimum %.3f"):format(i, r.rounds[i].min))
-		end
-		-- the limits leave honest senders alone
-		assert.is_true(r.peakNew < ns.Runs.NEW_TOKENS_MAX)
-		assert.is_true(r.peakRate <= ns.Runs.SENDER_MAX)
-		-- one relay per 10 s is the most a client can send: 360 per hour
-		assert.is_true(r.maxSentPerHour <= 3600 / ns.Runs.RELAY_GAP + 10)
 	end)
 end)

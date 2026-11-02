@@ -87,7 +87,9 @@ Every installation shares what it discovers with other players who run the addon
 | Receiving: validation, dedup, confirmation by a second player, mute after 5 broken messages or 40 finds in 5 minutes | built | |
 | Run times: a section per level and per route module played from its first step (`s`), own and received ones in the run vault | built | [docs/RUN-TIMES.md](RUN-TIMES.md); token per character, no names |
 | Run vault: 5000 sections, dedup per token and section, conflicting values drop both, plausibility band from the speedrun record pace | built | all limits are chosen values |
-| Relaying run times: each section once per session, hidden channel only, one message per 10 s, own messages first | built | spread simulation with 200 clients in `spec/runs_spec.lua`; in-game traffic not measured yet |
+| Relaying run times: each section once per session, hidden channel only, one message per 10 s at most, own messages first | built | in-game traffic not measured yet |
+| Channel budget: each client sends its share of 0.25 messages per second on the whole channel (runs and finds), estimated players as an upper bound, hard stop at 30 in 60 s; nothing on the channel in a fight or an instance | built | [docs/RUN-TIMES.md](RUN-TIMES.md); simulation with 100 to 20,000 clients in `spec/channel_budget_spec.lua`: at most 0.19 received per second on average, 30 in 60 s (limits 0.5 and 60) |
+| Receiving: the event only queues the raw text (inbox of 100); reading 10 messages per second outside fights, instances and below 20 frames per second | built | 0.5 µs per message on the event, 13 µs reading (offline) |
 | Run times in the export (`runs`), run table in the decoder, medians in `tools/routekit/runs.py` | built | |
 | Two clients exchange a test message (release gate T8) | planned | needs a second player in the game |
 | Catch-up of finds announced while offline | planned | AP 12 |

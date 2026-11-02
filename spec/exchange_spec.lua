@@ -59,6 +59,7 @@ describe("Exchange: sending", function()
 
 	it("sends a find at once to the group and after 30 to 90 s to guild and channel", function()
 		local _, X = start()
+		wow.freeChannel()
 		wow.advance(10) -- channel joined
 		wow.world.group.party, wow.world.guild = true, true
 		loot()
@@ -228,6 +229,7 @@ end)
 describe("Exchange: receiving", function()
 	local function receive(msg, sender, dist)
 		wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, dist or "CHANNEL", sender, "", 0, 5, "PathmarkShare", 0)
+		wow.readInbox()
 	end
 
 	it("stores a find from another player as unconfirmed, without the sender", function()
@@ -261,6 +263,7 @@ describe("Exchange: receiving", function()
 		wow.fire("CHAT_MSG_ADDON", "Questie", "o;1;2843;1429;4231;6512", "PARTY", "Anna Sommer")
 		wow.fire("CHAT_MSG_ADDON", "Pathmark", wow.SECRET, "PARTY", "Anna Sommer")
 		wow.fire("CHAT_MSG_ADDON", "Pathmark", "o;1;2843;1429;4231;6512", "PARTY", wow.SECRET)
+		wow.readInbox()
 		assert.are.equal(0, #netRecords(ns, "rx"))
 		assert.are.same({}, wow.errors)
 	end)

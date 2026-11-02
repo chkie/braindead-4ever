@@ -23,6 +23,7 @@ end
 
 local function hear(msg, sender)
 	wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, "PARTY", sender or "Anna Sommer")
+	wow.readInbox()
 end
 
 -- The player targets a rare himself.

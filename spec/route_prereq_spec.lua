@@ -340,6 +340,7 @@ describe("Simulated runs: three players, the exchange carries the observations",
 			for _, m in ipairs(messages) do
 				wow.fire("CHAT_MSG_ADDON", "Pathmark", m.msg, "PARTY", m.from)
 			end
+			wow.readInbox(ns)
 			if i < 3 then
 				assert.are.equal("incomplete", ns.Route.ChainState(900002))
 			end
