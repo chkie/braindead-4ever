@@ -23,7 +23,8 @@ of the Ace3 libraries used as well as that of the covered work.
 
 -- Collector/Collect.lua: the data collector. Records quests, experience, positions and discoveries
 -- (objects, books, rare enemies, vignettes, flight masters) as text records in a ring buffer
--- (Store.lua) and offers discoveries to the in-game exchange (Exchange.lua).
+-- (Store.lua) and offers discoveries to the in-game exchange (Exchange.lua). Run times of levels and
+-- route modules (Routes/Guide.lua) go to the exchange as "s" messages and into the run vault (Runs.lua).
 -- Patterns after Polestar Recorder (GPL-3.0), QuestieTrace (GPL-3.0) and JourneyTracker (MIT); own code.
 -- Anonymity: never the player's, realm, guild or chat names; player GUIDs are dropped; time inside a
 -- chunk is relative, the date only as a day number. The combat log is never registered (in Forever it
@@ -31,7 +32,7 @@ of the Ace3 libraries used as well as that of the covered work.
 -- Contributing data is part of the addon: the module is core and mandatory (no flag turns it off).
 local _, ns = ...
 local L = ns.L
-local U, Store, Migrate, Export = ns.Util, ns.Store, ns.Migrate, ns.Export
+local U, Store, Migrate, Export, Proto, Runs = ns.Util, ns.Store, ns.Migrate, ns.Export, ns.Proto, ns.Runs
 local M, Guard = ns.Modules, ns.Guard
 local Num, Str, Ref, Pos, ParseGUID = U.Num, U.Str, U.Ref, U.Pos, U.ParseGUID
 
@@ -114,6 +115,44 @@ end
 -- and route mode. The pipeline builds the module times of the time forecast from these.
 function C.RecordSplit(module, seconds, mode)
 	Rec("split", nil, nil, nil, module, math.floor((seconds or 0) + 0.5), mode)
+end
+
+-- One section of the character's run (Routes/Guide.lua): kind "l" (a level) or "m" (a route module),
+-- section (level or Proto.ModuleNumber), module version, active seconds, XP, share of steps done in
+-- route order (0..100), level at the end, mode letter (s, e, f). Token, race, class and day come from
+-- here; nothing names the player. Recorded as own record "run", stored in the run vault and offered
+-- to the exchange. False when the section is invalid or already recorded (never twice).
+function C.RecordRun(kind, section, version, seconds, xp, inOrder, level, mode)
+	local runs = C.runs
+	if not (own and runs) then
+		return false
+	end
+	local _, _, raceID = UnitRace("player")
+	local _, _, classID = UnitClass("player")
+	local fields = U.Pack(
+		C.runToken,
+		Num(raceID),
+		Num(classID),
+		mode,
+		kind,
+		section,
+		version or 0,
+		math.floor((seconds or 0) + 0.5),
+		math.max(0, math.floor((xp or 0) + 0.5)),
+		math.max(0, math.min(100, math.floor((inOrder or 0) + 0.5))),
+		level,
+		math.floor(GetServerTime() / 86400)
+	)
+	local msg = Proto.Format("s", unpack(fields, 1, fields.n))
+	if not (msg and runs:AddOwn(msg)) then
+		return false
+	end
+	Rec("run", nil, nil, nil, unpack(fields, 1, fields.n))
+	local X = ns.Exchange
+	if X and X.Offer then
+		X.Offer("s", unpack(fields, 1, fields.n))
+	end
+	return true
 end
 
 -- NPC name in the client language, once per NPC and session (Plan: NPC names come from the collectors).
@@ -428,18 +467,19 @@ local function Save()
 	end
 	if root ~= C.root then
 		for k, v in pairs(C.root) do
-			if root[k] == nil and k ~= "own" and k ~= "net" then
+			if root[k] == nil and k ~= "own" and k ~= "net" and k ~= "runs" then
 				root[k] = v
 			end
 		end
 	end
 	root.own = own:Rebind(root.own)
 	root.net = net:Rebind(root.net)
+	root.runs = C.runs:Rebind(root.runs)
 	own:Flush()
 	net:Flush()
 	PathmarkCollectDB, C.root = root, root
 	if type(PathmarkCharDB) ~= "table" then
-		PathmarkCharDB = { id = C.charId }
+		PathmarkCharDB = { id = C.charId, run = C.runToken }
 	end
 end
 C.Save = Save
@@ -515,15 +555,28 @@ local function Init()
 	end
 	root.own = type(root.own) == "table" and root.own or {}
 	root.net = type(root.net) == "table" and root.net or {}
+	root.runs = type(root.runs) == "table" and root.runs or {}
 	PathmarkCollectDB, C.root = root, root
 
 	PathmarkCharDB = type(PathmarkCharDB) == "table" and PathmarkCharDB or {}
 	PathmarkCharDB.id = Str(PathmarkCharDB.id) or U.NewId(10)
 	C.charId = PathmarkCharDB.id
+	-- Run token: rolled once per character, from nothing else (the run vault and the exchange use it
+	-- only to keep one value per section and character).
+	local tok = Str(PathmarkCharDB.run)
+	PathmarkCharDB.run = tok and tok:match("^[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]$") or U.NewId(6)
+	C.runToken = PathmarkCharDB.run
 
 	own = Store.New(root.own, GetTime, GetServerTime, { STORE_BYTES = C.OWN_BYTES })
 	net = Store.New(root.net, GetTime, GetServerTime, { STORE_BYTES = C.NET_BYTES })
 	C.own, C.net = own, net
+	C.runs = Runs.New(root.runs, {
+		clock = GetTime,
+		epoch = GetServerTime,
+		curve = function()
+			return ns.XP and ns.XP.TO_LEVEL
+		end,
+	})
 end
 
 local function Stop()
@@ -860,8 +913,9 @@ local events = {
 	end,
 }
 
--- Export text of the chunks not exported yet (all = everything still in the buffer).
--- Returns text, ownLast, netLast, more | nil, reason.
+-- Export text of the chunks not exported yet (all = everything still in the buffer), with the run
+-- sections of the vault not exported yet under their own key "runs" (messages as in Proto.lua).
+-- Returns text, ownLast, netLast, more, runsLast | nil, reason.
 function C.BuildExport(all)
 	if not own then
 		return nil, L.EXPORT_OFF
@@ -870,7 +924,8 @@ function C.BuildExport(all)
 	net:Rotate()
 	local ownChunks, ownLast = own:Chunks(all and 0 or own.db.acked, C.EXPORT_RAW_MAX)
 	local netChunks, netLast = net:Chunks(all and 0 or net.db.acked, C.EXPORT_RAW_MAX / 2)
-	if #ownChunks == 0 and #netChunks == 0 then
+	local runList, runsLast = C.runs:Since(all and 0 or C.runs.db.acked)
+	if #ownChunks == 0 and #netChunks == 0 and #runList == 0 then
 		return nil, L.EXPORT_NOTHING
 	end
 	local payload = {
@@ -880,13 +935,14 @@ function C.BuildExport(all)
 		addon = ns.version,
 		own = ownChunks,
 		net = netChunks,
+		runs = runList,
 	}
 	local text, err = Export.Build(payload, Export.GameCodec(C.CODEC))
 	if not text then
 		return nil, L.EXPORT_FAILED:format(err)
 	end
 	local more = #(own:Chunks(ownLast, 1)) > 0 or #(net:Chunks(netLast, 1)) > 0
-	return text, ownLast, netLast, more
+	return text, ownLast, netLast, more, runsLast
 end
 
 function C.ShowExport(all)
@@ -898,7 +954,7 @@ function C.ShowExport(all)
 		print(L.MSG_AFTER_COMBAT)
 		return
 	end
-	local text, ownLast, netLast, more = C.BuildExport(all)
+	local text, ownLast, netLast, more, runsLast = C.BuildExport(all)
 	if not text then
 		print(ownLast)
 		return
@@ -908,6 +964,7 @@ function C.ShowExport(all)
 		onCopy = function()
 			own:Ack(ownLast)
 			net:Ack(netLast)
+			C.runs:Ack(runsLast)
 		end,
 	})
 end

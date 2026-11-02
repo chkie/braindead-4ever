@@ -10,6 +10,7 @@
   python3 -m tools.routekit stats          counts per combination and level band
   python3 -m tools.routekit metrics        simulate all 56 combinations, report P1-P11, G1-G12, R rules
   python3 -m tools.routekit observe PATHS  player exports -> data/sources/own (run merge after)
+  python3 -m tools.routekit runs CSV...     run times from the exchange: medians per section, class, mode
 
 Foreign repositories are read from wherever they were cloned; nothing outside data/ is written
 by the importers.
@@ -44,6 +45,9 @@ def main(argv=None):
     met.add_argument("--write-baseline", action="store_true", help="store this run as the start route (data/plan)")
     obs = sub.add_parser("observe")
     obs.add_argument("paths", nargs="+")
+    rn = sub.add_parser("runs")
+    rn.add_argument("paths", nargs="+")
+    rn.add_argument("--json", help="write the medians as JSON")
     args = ap.parse_args(argv)
 
     if args.cmd == "import":
@@ -85,6 +89,17 @@ def main(argv=None):
         from . import observe
 
         print(observe.run(args.paths))
+        return 0
+    if args.cmd == "runs":
+        from . import runs
+
+        counts, out = runs.run(args.paths, args.json)
+        print(counts)
+        for g in out:
+            print(
+                "%s %-8s class %2d mode %s %-7s runs %4d median %6d s %7d XP/h  %s"
+                % (g["kind"], g["section"], g["class"], g["mode"], g["group"], g["runs"], g["seconds"], g["xpPerHour"], g["module"] or "")
+            )
         return 0
     if args.cmd == "stats":
         from . import stats

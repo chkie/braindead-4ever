@@ -22,6 +22,7 @@ Collector\Migrate.lua
 Collector\Store.lua
 Collector\Export.lua
 Collector\Proto.lua
+Collector\Runs.lua
 Collector\Collect.lua
 Collector\Exchange.lua
 Core\Report.lua

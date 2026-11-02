@@ -291,7 +291,7 @@ L.STYLE_TEXT_hints = "Secrets along the way come with a riddle. You find the spo
 L.STYLE_TEXT_self = "The map shows only what you found yourself. Finds by others reach you as rumors."
 L.HINT_LEVEL_N = "Hint level %d"
 L.SETUP_DATA =
-	"Pathmark shares what you discover with other players who use it, so the routes get accurate faster for everyone."
+	"Pathmark shares what you discover and your play times with other players who use it, so the routes get accurate faster for everyone."
 L.SETUP_FOOT = "You can change this any time under “Play style” in the settings. Closing picks “With hints”."
 L.SETUP_FOOT_AGAIN = "You can change this any time under “Play style” in the settings."
 -- Settings

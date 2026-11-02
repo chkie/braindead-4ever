@@ -162,20 +162,91 @@ Route.world = world
 
 -- Play time (time forecast, docs/ROUTE-RUNTIME.md §Time forecast) --------------------------------
 
--- Active play since the last game event, added to the own XP rate (per character) and to the run of
--- the current module. xp: XP gained with this event.
+local MODE_LETTER = { speed = "s", explorer = "e" }
+
+-- Whether the player follows the route right now: a route, the step window on, no guidance pause.
+-- Run sections played mostly otherwise count as free play (mode "f", docs/RUN-TIMES.md).
+local function Following()
+	if not rt then
+		return false
+	end
+	local UI = ns.UI
+	if UI and UI.Paused and UI.Paused() then
+		return false
+	end
+	return M.IsActive("window")
+end
+
+-- Mode letter of a section: the route mode when the guidance was on for at least half of its active
+-- seconds (chosen share), else "f".
+local function ModeOf(part)
+	if root and MODE_LETTER[root.mode] and (part.guided or 0) * 2 >= (part.secs or 0) then
+		return MODE_LETTER[root.mode]
+	end
+	return "f"
+end
+
+-- Active play since the last game event, added to the own XP rate (per character), to the run of
+-- the current module and to the current level section. xp: XP gained with this event.
 local function Active(xp)
 	local now = GetTime()
 	local d = lastActive and math.max(0, math.min(now - lastActive, Fc.IDLE_CAP)) or 0
 	lastActive = now
+	local guided = Following() and d or 0
 	if root then
 		root.rate = type(root.rate) == "table" and root.rate or {}
 		Fc.Add(root.rate, d, xp)
+		local lv = root.lvl
+		if type(lv) == "table" and lv.full then
+			lv.secs, lv.xp, lv.guided = (lv.secs or 0) + d, (lv.xp or 0) + (xp or 0), (lv.guided or 0) + guided
+		end
 	end
 	local sp = rt and rt.saved.split
 	if type(sp) == "table" then
 		sp.secs = (sp.secs or 0) + d
+		sp.xp, sp.guided = (sp.xp or 0) + (xp or 0), (sp.guided or 0) + guided
 	end
+end
+
+-- Level sections (Collector/Runs.lua): one section per level, from one level-up to the next, saved
+-- per character so a /reload keeps its seconds. A section counts only when it started at a level-up
+-- (or at level 1 without XP); the level the addon first sees is partial and never reported.
+local function StartLevel(level, full)
+	if root then
+		root.lvl = { l = level, full = full or nil, secs = 0, xp = 0, guided = 0, n = 0, d = 0 }
+	end
+end
+
+local function LevelUp(level)
+	if not (root and level) then
+		return
+	end
+	local lv = root.lvl
+	if type(lv) == "table" and lv.l == level then
+		return -- the same level-up twice
+	end
+	if type(lv) == "table" and lv.full and lv.l == level - 1 then
+		local C = ns.Collector
+		if C and C.RecordRun then
+			local inOrder = (lv.n or 0) > 0 and 100 * (lv.d or 0) / lv.n or 0
+			C.RecordRun("l", lv.l, 0, lv.secs, lv.xp, inOrder, level, ModeOf(lv))
+		end
+	end
+	StartLevel(level, true)
+end
+
+-- At login: continue the saved section of this level, else start a partial one (a new character at
+-- level 1 without XP starts a full one).
+local function ResumeLevel()
+	local level = Num(UnitLevel("player"))
+	if not (root and level) then
+		return
+	end
+	local lv = root.lvl
+	if type(lv) == "table" and lv.l == level then
+		return
+	end
+	StartLevel(level, level == 1 and Num(UnitXP("player")) == 0)
 end
 
 -- Module runs: a run is clean when it starts at the module's first step and every step up to its end
@@ -191,6 +262,16 @@ local function Split(cur, prev)
 	local ranges = rt.ranges
 	local from = prev and prev.index
 	local to = cur and cur.index or #rt.steps + 1
+	-- Steps the route passed in this level section, and how many of them were done (in route order).
+	local lv = root and root.lvl
+	if type(lv) == "table" and from and to > from then
+		for j = from, to - 1 do
+			lv.n = (lv.n or 0) + 1
+			if rt:StepState(j) == "done" then
+				lv.d = (lv.d or 0) + 1
+			end
+		end
+	end
 	if sp and from and to > from then
 		for j = from, to - 1 do
 			if rt.steps[j] and rt.steps[j].module == sp.m and rt:StepState(j) ~= "done" then
@@ -201,13 +282,30 @@ local function Split(cur, prev)
 	if sp and cur and sp.m == cur.module then
 		return
 	end
-	if sp and sp.clean and ranges[sp.m] and to > ranges[sp.m].last then
+	local r = sp and ranges[sp.m]
+	if sp and r and to > r.last then
 		local C = ns.Collector
-		if C and C.RecordSplit then
+		if sp.clean and C and C.RecordSplit then
 			C.RecordSplit(sp.m, sp.secs or 0, root and root.mode)
 		end
+		-- Every run from the module's first step past its last goes to the exchange, with the share of
+		-- its steps done (a clean run: 100).
+		if sp.full and C and C.RecordRun then
+			local done = 0
+			for j = r.first, r.last do
+				if rt:StepState(j) == "done" then
+					done = done + 1
+				end
+			end
+			local m = modules and modules[sp.m]
+			local version = m and Num(m.version) or 0
+			local inOrder = 100 * done / (r.last - r.first + 1)
+			local number = ns.Proto.ModuleNumber(sp.m)
+			C.RecordRun("m", number, version, sp.secs, sp.xp, inOrder, world.Level(), ModeOf(sp))
+		end
 	end
-	s.split = cur and { m = cur.module, secs = 0, clean = ranges[cur.module].first == cur.index } or nil
+	local first = cur and ranges[cur.module].first == cur.index
+	s.split = cur and { m = cur.module, secs = 0, xp = 0, guided = 0, clean = first, full = first or nil } or nil
 end
 
 -- Replanning job (Routes/Replan.lua): one slice of at most JOB_BUDGET per frame, nothing in a fight.
@@ -686,6 +784,7 @@ local events = {
 		lastXP, lastMax = Num(UnitXP("player")), Num(UnitXPMax("player"))
 		lastActive = GetTime() -- time offline is no play
 		Build()
+		ResumeLevel()
 	end,
 	PLAYER_LOGOUT = function()
 		-- Write the live table back into whatever PathmarkCharDB holds now (Polestar trap, chapter 15).
@@ -739,6 +838,8 @@ local events = {
 	BAG_UPDATE_DELAYED = QueueEvaluate,
 	PLAYER_LEVEL_UP = function(_, _, level)
 		levelSeen = Num(level)
+		Active() -- the seconds up to the level-up belong to the old level
+		LevelUp(levelSeen)
 		if rt then
 			rt:Recheck() -- played without the route meanwhile? (brain chapter 21 §6.1)
 		end

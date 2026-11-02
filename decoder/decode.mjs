@@ -73,3 +73,80 @@ export async function decodeExport(text) {
 	}
 	return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(all));
 }
+
+/** Columns of the run table (docs/RUN-TIMES.md), in message order, plus where the row came from. */
+export const RUN_COLUMNS = [
+	"token",
+	"race",
+	"class",
+	"mode",
+	"kind",
+	"section",
+	"version",
+	"seconds",
+	"xp",
+	"in_order",
+	"level",
+	"day",
+	"source",
+];
+
+const RUN_FIELD = [
+	/^[0-9a-z]{6}$/,
+	/^\d{1,7}$/,
+	/^\d{1,7}$/,
+	/^[sef]$/,
+	/^[lm]$/,
+	/^\d{1,7}$/,
+	/^\d{1,7}$/,
+	/^\d{1,7}$/,
+	/^\d{1,7}$/,
+	/^\d{1,3}$/,
+	/^\d{1,3}$/,
+	/^\d{1,7}$/,
+];
+
+/**
+ * The twelve fields of a run section, or null when one is malformed.
+ * @param {string[]} f
+ * @returns {string[] | null}
+ */
+function runFields(f) {
+	if (f.length < RUN_FIELD.length) return null;
+	const out = f.slice(0, RUN_FIELD.length);
+	return out.every((v, i) => RUN_FIELD[i].test(v)) ? out : null;
+}
+
+/**
+ * Run sections of a decoded export as CSV (header line first): the player's own sections (records
+ * "run" in the "own" chunks) and the run vault ("runs", messages "s;1;..." as in Collector/Proto.lua).
+ * One row per token, kind and section; the same values twice count once, different values for the
+ * same key drop both (as the run vault in the addon does).
+ * @param {any} payload
+ * @returns {string}
+ */
+export function runsCSV(payload) {
+	/** @type {Map<string, string[] | null>} */
+	const rows = new Map();
+	const add = (/** @type {string[] | null} */ f, /** @type {string} */ source) => {
+		if (!f) return;
+		const key = `${f[0]};${f[4]};${f[5]}`;
+		const row = [...f, source];
+		const old = rows.get(key);
+		if (old === undefined) rows.set(key, row);
+		else if (old && old.slice(0, f.length).join(",") !== f.join(",")) rows.set(key, null);
+	};
+	for (const chunk of payload?.own ?? []) {
+		for (const line of String(chunk).split("\n")) {
+			const f = line.split("\t");
+			if (f[0] === "run") add(runFields(f.slice(5)), "own");
+		}
+	}
+	for (const msg of payload?.runs ?? []) {
+		const f = String(msg).split(";");
+		if (f[0] === "s" && f[1] === "1") add(runFields(f.slice(2)), "net");
+	}
+	const lines = [RUN_COLUMNS.join(",")];
+	for (const row of rows.values()) if (row) lines.push(row.join(","));
+	return lines.join("\n") + "\n";
+}

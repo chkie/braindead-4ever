@@ -24,6 +24,8 @@ Pathmark records what you do while leveling, in your own game folder: quests acc
 
 What you discover, Pathmark shares in the game with other players who use it, through addon messages: IDs and map positions only, to your group at once, to your guild and other players 30 to 90 seconds later. This is part of the addon and cannot be switched off. Addon messages show the game's sender name to the receiving addon; Pathmark never stores it.
 
+Pathmark also shares how long each level and each route part took you: active seconds, experience, race and class as numbers, whether you followed the route, the level and the day. These run times carry a random token that Pathmark rolls once per character and derives from nothing else; it only serves to count each level of a character once. Other copies of Pathmark keep them and pass them on, so the routes can be measured against real play ([format](docs/RUN-TIMES.md)).
+
 `/pathmark export` shows your data as a text to copy, for the website that comes later. `/pathmark report` builds a problem report without names.
 
 ## Repository layout
@@ -73,6 +75,8 @@ Quest-IDs, Koordinaten und Zeiten stammen nie aus einem KI-Modell. Jede Angabe t
 Pathmark zeichnet beim Leveln in deinem eigenen Spielordner auf, was du tust: angenommene und abgegebene Quests mit ihrem Ort, Erfahrung, geplünderte Objekte, seltene Gegner, Flugmeister und ähnliche Funde. Darin steht kein Name deines Charakters, deines Realms, deiner Gilde oder anderer Spieler, und kein Chat. Zeiten zählen relativ zur Sitzung, das Datum nur als Tag.
 
 Was du entdeckst, teilt Pathmark im Spiel mit anderen Spielern, die es auch nutzen, über Addon-Nachrichten: nur Kennungen und Kartenpositionen, an deine Gruppe sofort, an deine Gilde und andere Spieler 30 bis 90 Sekunden später. Das gehört zum Addon und lässt sich nicht ausschalten. Addon-Nachrichten zeigen dem empfangenden Addon den Absendernamen des Spiels; Pathmark speichert ihn nie.
+
+Pathmark teilt außerdem, wie lange du für jede Stufe und jeden Routenabschnitt gebraucht hast: aktive Sekunden, Erfahrung, Volk und Klasse als Zahl, ob du der Route gefolgt bist, die Stufe und den Tag. Diese Spielzeiten tragen eine zufällige Kennung, die Pathmark einmal je Charakter würfelt und aus nichts anderem ableitet; sie dient nur dazu, jede Stufe eines Charakters einmal zu zählen. Andere Pathmark-Installationen bewahren sie auf und geben sie weiter, damit sich die Routen am echten Spiel messen lassen ([Format](docs/RUN-TIMES.md)).
 
 `/pathmark export` zeigt deine Daten als Text zum Kopieren, für die Website, die später kommt. `/pathmark report` erstellt einen Fehlerbericht ohne Namen.
 

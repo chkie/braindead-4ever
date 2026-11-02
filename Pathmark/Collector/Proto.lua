@@ -36,6 +36,14 @@ of the Ace3 libraries used as well as that of the covered work.
 --   p  prerequisite observation (Routes/Prereq.lua): token, questID, link (quest turned in directly
 --      before at the giver, 0 = none), unlock (0/1), done IDs, missing IDs (lists of at most 10
 --      quest IDs separated by ".", may be empty). No position: it says nothing about where a player is.
+--   s  run time of one section (Collector/Runs.lua, docs/RUN-TIMES.md): token, raceID, classID, mode,
+--      section kind, section, version, seconds, xp, in order, level, day. No position either.
+--      token    run token, random per character (never derived from name, realm, GUID or install ID)
+--      mode     s = speed route, e = explorer route, f = free play (no route, window closed, paused)
+--      section  kind l = a level (section = the level played through), m = a route module
+--               (section = Proto.ModuleNumber(key), version = the module's version, 0 for levels)
+--      seconds  active play; xp gained in the section; in order = share of the section's route steps
+--               done in route order, 0..100; level = character level at the end; day = server day
 -- giverKind: c = creature, o = game object, i = item, n = none (giverID 0).
 -- Readers skip unknown kinds and other protocol versions without counting them as broken, so a
 -- newer addon version can add kinds without muting older ones.
@@ -49,9 +57,14 @@ Proto.VERSION = 1
 
 local GIVER = { c = true, o = true, i = true, n = true }
 local CLASS = { r = true, e = true, w = true }
+local MODE = { s = true, e = true, f = true }
+local SECTION = { l = true, m = true }
+-- Field types parsed as text, everything else as a number.
+local TEXT = { giver = true, class = true, tok = true, ids = true, mode = true, section = true }
 
 -- Field types: "id" 1..9999999, "gid" 0..9999999, "map" 1..999999, "xy" 0..10000, "giver", "class",
--- "tok" six characters [0-9a-z], "flag" 0 or 1, "ids" up to 10 IDs joined by "." (may be empty)
+-- "tok" six characters [0-9a-z], "flag" 0 or 1, "ids" up to 10 IDs joined by "." (may be empty),
+-- "mode" s/e/f, "section" l/m, "pct" 0..100, "lvl" 1..100
 local KINDS = {
 	q = { "id", "giver", "gid", "map", "xy", "xy" },
 	t = { "id", "giver", "gid", "map", "xy", "xy" },
@@ -61,6 +74,7 @@ local KINDS = {
 	f = { "id", "id", "map", "xy", "xy" },
 	v = { "id", "map", "xy", "xy" },
 	p = { "tok", "id", "gid", "flag", "ids", "ids" },
+	s = { "tok", "id", "id", "mode", "section", "id", "gid", "id", "gid", "pct", "lvl", "gid" },
 }
 Proto.KINDS = KINDS
 
@@ -71,6 +85,10 @@ local function Valid(ftype, v)
 		return GIVER[v] == true
 	elseif ftype == "class" then
 		return CLASS[v] == true
+	elseif ftype == "mode" then
+		return MODE[v] == true
+	elseif ftype == "section" then
+		return SECTION[v] == true
 	elseif ftype == "tok" then
 		return type(v) == "string" and v:match("^[0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z][0-9a-z]$") ~= nil
 	elseif ftype == "ids" then
@@ -104,6 +122,10 @@ local function Valid(ftype, v)
 		return n >= 1 and n <= 999999
 	elseif ftype == "xy" then
 		return n >= 0 and n <= 10000
+	elseif ftype == "pct" then
+		return n >= 0 and n <= 100
+	elseif ftype == "lvl" then
+		return n >= 1 and n <= 100
 	end
 	return false
 end
@@ -156,7 +178,7 @@ function Proto.Parse(msg)
 		if not ftype or not Valid(ftype, part) then
 			return nil, "bad"
 		end
-		find[i] = (ftype == "giver" or ftype == "class" or ftype == "tok" or ftype == "ids") and part or tonumber(part)
+		find[i] = TEXT[ftype] and part or tonumber(part)
 	end
 	if i ~= #spec then
 		return nil, "bad"
@@ -173,6 +195,8 @@ function Proto.Key(find)
 		return table.concat({ k, find[1], find[2], find[3], find[4] }, ";")
 	elseif k == "p" then
 		return table.concat({ k, find[2], find[1] }, ";")
+	elseif k == "s" then
+		return table.concat({ k, find[1], find[5], find[6] }, ";") -- token and section
 	elseif k == "f" then
 		return table.concat({ k, find[1], find[2] }, ";")
 	end
@@ -186,4 +210,15 @@ function Proto.Key(find)
 	parts[#parts + 1] = math.floor(x / 100)
 	parts[#parts + 1] = math.floor(y / 100)
 	return table.concat(parts, ";")
+end
+
+-- Number of a route module in "s" messages: messages carry no text, so the module key goes out as a
+-- stable hash (djb2 modulo the prime 9999991, plus 1: 1..9999991). tools/routekit/runs.py computes the
+-- same number and maps it back to the key; a test there keeps all module keys free of collisions.
+function Proto.ModuleNumber(key)
+	local h = 5381
+	for i = 1, #key do
+		h = (h * 33 + key:byte(i)) % 9999991
+	end
+	return h + 1
 end

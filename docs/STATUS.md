@@ -4,7 +4,7 @@ Every feature has one status: **planned**, **built** (code and offline tests pas
 
 Only a person sets **verified in game**, after playing it, never a test or the probe. The probe only measures (`OK`, `MISSING`, `ERROR`, `SECRET`, `FAILED`, `ARGERROR`).
 
-Last update: 2026-11-01
+Last update: 2026-11-02
 
 ## API probe (AP 3)
 
@@ -85,6 +85,10 @@ Every installation shares what it discovers with other players who run the addon
 | No sending during chat lockdown, from trial or veteran accounts | built | |
 | Hidden custom channel with fallback names when the password is refused or the channel is taken over | built | pattern after ForeverItemFinder; channel reach in Forever unconfirmed |
 | Receiving: validation, dedup, confirmation by a second player, mute after 5 broken messages or 40 finds in 5 minutes | built | |
+| Run times: a section per level and per route module played from its first step (`s`), own and received ones in the run vault | built | [docs/RUN-TIMES.md](RUN-TIMES.md); token per character, no names |
+| Run vault: 5000 sections, dedup per token and section, conflicting values drop both, plausibility band from the speedrun record pace | built | all limits are chosen values |
+| Relaying run times: each section once per session, hidden channel only, one message per 10 s, own messages first | built | spread simulation with 200 clients in `spec/runs_spec.lua`; in-game traffic not measured yet |
+| Run times in the export (`runs`), run table in the decoder, medians in `tools/routekit/runs.py` | built | |
 | Two clients exchange a test message (release gate T8) | planned | needs a second player in the game |
 | Catch-up of finds announced while offline | planned | AP 12 |
 
