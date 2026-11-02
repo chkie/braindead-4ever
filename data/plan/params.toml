@@ -457,3 +457,90 @@ value = 2.0
 source = "no source (Polestar priors have their own lower and upper bounds, DR 22b gives only mean and sd)"
 forever = "gewählt"
 note = "Chosen: draws are cut at mean +/- 2 sd and kept above zero."
+
+# --- Optimizer (Welle 6b, tools/routekit/optimize.py) ----------------------------------------------
+# Policy of the route optimizer, not game values. The search is counted in tries and rounds, never
+# in seconds (brain chapter 21 §4.5). Weights are the brain's objective J (§3.3): model seconds +
+# (w_g - 1) x grind + (w_over - w_g) x grind above the share per level.
+
+[opt.weight_settings]
+value = [[1.5, 4.0], [1.5, 2.0], [1.3, 1.3], [1.0, 1.0]]
+source = "brain chapter 21 §3.2/§3.3: w_g 1.5 (Factoruide) to 2.5 (Polestar), 4 above 10 % grind per level (Factoruide); chosen order from most quests to pure model time"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Pairs (w_g, w_over), each with every arrival margin. The build keeps the first plan that meets the guards P3, P4b, P5b, P9b and P11 against the start route and G7; the weights are policy, the guards are hard."
+
+[opt.beam_width]
+value = 8
+source = "DR 22c (beam over zone visits); chosen"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Paths kept per depth of the zone-visit search; the depth is the zone-change budget of the start route (guard P9)."
+
+[opt.gate_variants]
+value = [[0.0, 0.0], [0.5, 3.0], [1.0, 2.0], [2.0, 1.5], [3.0, 1.0], [5.0, 0.8]]
+source = "brain chapter 21 R17/R19 (grind with place and target to open quests); chosen"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Pairs (levels, value): a zone visit may grind up to `levels` levels to open quests worth `value` x the ground XP; (0, 0) = no grind. Every variant is built, the search keeps the cheapest."
+
+[opt.tries_per_quest]
+value = 400
+source = "brain chapter 21 §4.5 (count tries, not seconds); chosen"
+date = "2026-11-01"
+forever = "gewählt"
+note = "ALNS tries per quest of a block, at least 200 and at most tries_max."
+
+[opt.tries_max]
+value = 30000
+source = "brain chapter 21 §4.3 (Ropke/Pisinger: 25,000 iterations); measured 2026-11-02 on the Barrens visit of the Horde (50 quests): walk 96,000 yd after construction, 75,500 yd after 3,000 tries, 66,700 yd after 30,000 tries"
+date = "2026-11-01"
+forever = "gewählt"
+
+[opt.repair_rounds]
+value = 12
+source = "chosen: rounds of the repair against the metrics (simulate, read the broken rules, change, again)"
+date = "2026-11-01"
+forever = "gewählt"
+note = "The best round by hard rule breaches is kept."
+
+[opt.arrive_margins]
+value = [0.05, 0.02]
+source = "chosen (G7: all combinations arrive within one level at the first core block); with 0.02 four Horde hunters and an undead warrior arrived 0.01 to 0.02 above the window in the simulator, with 0.05 the Alliance plans broke a guard more often (builds 2026-11-02)"
+date = "2026-11-02"
+forever = "gewählt"
+note = "Start modules bring every combination into [window + margin, window + 1 - margin]. The build tries each margin with each weight pair and keeps the first plan without guard and G7 breaches."
+
+[opt.arrive_top]
+value = 0.9
+source = "chosen"
+date = "2026-11-01"
+forever = "gewählt"
+note = "The start module of the reference aims at window + 0.9, so combinations with fewer quests of their own stay in the window."
+
+[opt.explorer_detour_sec]
+value = 180.0
+source = "plan Welle 6 task 6 (new Forever quests only with a small detour); P4 limit 180 s (DR 22c §F)"
+date = "2026-11-01"
+forever = "gewählt"
+note = "Model seconds a new Forever quest may add to a module of the explorer route."
+
+[opt.return_sec]
+value = 900.0
+source = "brain chapter 21 §3.2/§3.3: Rückkehr-Gewicht 900 s (Polestar smooth, spotReturn)"
+date = "2026-11-02"
+forever = "gewählt"
+note = "Seconds the order search charges for an avoidable return (P5): an action possible while the character stood within 400 yd of its place, done only after it went farther away."
+
+[opt.polish_tries]
+value = 4000
+source = "chosen; measured 2026-11-02 on the Alliance speed route: 4,000 tries cut the avoidable returns of all 28 combinations from 1,082 to 755, 15,000 tries to 765"
+date = "2026-11-02"
+forever = "gewählt"
+note = "Tries of the order search with the return weight, per block and per module after the repair."
+
+[opt.guard_rounds]
+value = 3
+source = "chosen: rounds of polish and P5 repairs after the order rules while a combination returns more often than on its start route"
+date = "2026-11-02"
+forever = "gewählt"

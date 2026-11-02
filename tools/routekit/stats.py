@@ -30,6 +30,8 @@ def collect(mods, comps, facts):
                     if any(el.verb == "goto" for el in st.elements):
                         c[band, "coord"] += 1
                     for el in st.elements:
+                        if el.filter and not el.filter.applies(race, cls):
+                            continue  # an element of another race or class in a shared step
                         if el.verb == "accept":
                             c[band, "accepts"] += 1
                             if facts.pre(el.args["q"]).get("state") == "secured":

@@ -523,10 +523,10 @@ class Simulator:
         run.quest.setdefault(q, {})["kill_xp"] = gained
 
 
-def load(params=None):
-    """Facts, modules, compositions and parameters of the repository."""
+def load(params=None, routes=None):
+    """Facts, modules, compositions and parameters of the repository (routes: another route root)."""
     facts = lint.Facts.load()
-    mods, comps = lint.load_routes()
+    mods, comps = lint.load_routes(routes)
     return facts, mods, comps, params or Params.load()
 
 

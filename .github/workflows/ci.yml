@@ -58,11 +58,13 @@ jobs:
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
-      # Welle 6a: simulates all 56 combinations in both modes and reports the route metrics
-      # (docs/ROUTE-METRICS.md) in the job summary. No limit fails the job yet; it fails only
-      # when the tool itself breaks: two runs differ (P1) or a parameter has no source.
-      - name: Route quality (report only)
-        run: python3 -m tools.routekit metrics --summary "$GITHUB_STEP_SUMMARY"
+      # Welle 6b: simulates all 56 combinations in both modes, writes the route metrics
+      # (docs/ROUTE-METRICS.md) into the job summary and fails on every breach of a limit, a guard
+      # against the start route, a hard rule of DR 22a or the model check that no measured
+      # exception in data/plan/route-exceptions.toml covers (also when two runs differ, P1, or a
+      # parameter has no source).
+      - name: Route quality (required)
+        run: python3 -m tools.routekit metrics --check --summary "$GITHUB_STEP_SUMMARY"
 
   format:
     name: Format

@@ -1,8 +1,8 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Dungeon hint (owner wish 11, Welle 4 task 2): level band, givers on the way, prerequisites, the XP
 -- balance in speed mode (Forever rules, brain chapter 14 §4.3) and skipping without effect on the
--- route. Real route data for the Deadmines (Alliance) and Ragefire Chasm (Horde), made-up data for
--- the balance rule.
+-- route. Real route data for the Deadmines (Alliance), Ragefire Chasm and Wailing Caverns (Horde),
+-- made-up data for the balance rule.
 local wow = require("spec.helpers.wow")
 
 -- XP from level n to n + 1 (Routes/XP.lua), for a character with no XP in hand.
@@ -56,10 +56,10 @@ local function questSet(h)
 end
 
 describe("Dungeon hint: Deadmines (Alliance)", function()
-	-- Human warrior at level 16 in Westfall (the route plans Westfall for levels 10 to 14).
+	-- Human warrior at level 16 (the route of Welle 6b passes Westfall and Stormwind's edge).
 	local HUMAN = { faction = "Alliance", race = 1, class = 1, level = 16 }
 
-	it("names the Sentinel Hill quests once the Defias chain is done, not the Stormwind ones", function()
+	it("names the Sentinel Hill quests once the Defias chain is done; every giver is on the way", function()
 		local opts = { completed = { 155 } }
 		for k, v in pairs(HUMAN) do
 			opts[k] = v
@@ -73,7 +73,6 @@ describe("Dungeon hint: Deadmines (Alliance)", function()
 		assert.is_table(qs[166], "The Defias Brotherhood finale at Sentinel Hill")
 		assert.is_table(qs[214], "Red Silk Bandanas: after the route hands in 153")
 		for q, e in pairs(qs) do
-			assert.are_not.equal(1453, e.map, "Stormwind is no giver on the way from Westfall: " .. q)
 			assert.is_true(e.yards <= ns.Dungeon.ON_WAY_YARDS, q)
 			assert.are.equal("take", e.state)
 			assert.is_string(e.step)
@@ -81,9 +80,11 @@ describe("Dungeon hint: Deadmines (Alliance)", function()
 		assert.is_true(qs[166].yards <= 50)
 	end)
 
-	it("leaves the Deadmines out while the prerequisites are not on the way", function()
+	it("leaves the Sentinel Hill quests out while their prerequisite is not done", function()
 		local ns = login(HUMAN)
-		assert.is_nil(hint(ns, 63), "166 and 214 need 155, the route does not take the Defias chain")
+		local qs = questSet(hint(ns, 63) or { quests = {} })
+		assert.is_nil(qs[166], "166 needs 155, the route does not take the Defias chain")
+		assert.is_nil(qs[214], "214 needs 155 as well")
 	end)
 
 	it("leaves quests out of other races and classes", function()
@@ -94,7 +95,7 @@ describe("Dungeon hint: Deadmines (Alliance)", function()
 	end)
 end)
 
-describe("Dungeon hint: Ragefire Chasm (Horde)", function()
+describe("Dungeon hint: Ragefire Chasm and Wailing Caverns (Horde)", function()
 	it("names the Thunder Bluff givers for a tauren at level 16", function()
 		local ns = login({ faction = "Horde", race = 6, class = 1, level = 16 })
 		local h = hint(ns, 226)
@@ -103,29 +104,29 @@ describe("Dungeon hint: Ragefire Chasm (Horde)", function()
 		local qs = questSet(h)
 		assert.are.equal(1456, qs[5722].map)
 		assert.are.equal(1456, qs[5723].map)
-		assert.is_true(qs[5722].yards < 400 and qs[5723].yards < 400)
+		assert.is_true(qs[5722].yards <= ns.Dungeon.ON_WAY_YARDS and qs[5723].yards <= ns.Dungeon.ON_WAY_YARDS)
 		assert.is_nil(qs[5728], "Orgrimmar quests need 5727, which no route takes")
 	end)
 
 	it("speed mode: shows the dungeon when the route lacks XP and the dungeon covers part of it", function()
-		-- Orc warrior entering Silverpine at level 16 without XP in hand: the route up to the next zone
-		-- does not reach the planned level; the Undercity giver of Ragefire Chasm is on the way.
+		-- Tauren warrior entering the Thousand Needles block at level 20 without XP in hand: the route
+		-- up to the next zone does not reach the planned level; a Wailing Caverns giver is on the way.
 		local ns = login({
 			faction = "Horde",
-			race = 2,
+			race = 6,
 			class = 1,
-			level = 16,
+			level = 20,
 			mode = "speed",
-			anchor = "h-speed-core-02-1421/r1421",
+			anchor = "h-speed-core-03-1424/r1424",
 		})
 		local b = ns.Route.Balance()
 		assert.is_true(b.zone.shortfall > 0)
-		local h = hint(ns, 226)
-		assert.is_table(h, "Ragefire Chasm in speed mode")
+		local h = hint(ns, 240)
+		assert.is_table(h, "Wailing Caverns in speed mode")
 		assert.is_true(h.justified)
 		assert.are.equal(b.zone.shortfall, h.need)
 		assert.is_true(h.balance > 0)
-		assert.are.equal(1458, questSet(h)[5725].map)
+		assert.are.equal(1456, questSet(h)[962].map, "the Thunder Bluff giver of Wailing Caverns")
 	end)
 
 	it("speed mode: no dungeon when the balance is negative (the route has enough XP)", function()
@@ -166,7 +167,8 @@ describe("Dungeon hint: Ragefire Chasm (Horde)", function()
 	end)
 
 	it("counts a dungeon quest in the log, leaves out handed-in ones", function()
-		local ns = login({ faction = "Horde", race = 6, class = 1, level = 16, log = { 5722 }, completed = { 5723 } })
+		-- undead at level 14: the hint has a third giver (Orgrimmar, 5725) besides the two of Thunder Bluff
+		local ns = login({ faction = "Horde", race = 5, class = 1, level = 14, log = { 5722 }, completed = { 5723 } })
 		local qs = questSet(hint(ns, 226))
 		assert.are.equal("log", qs[5722].state)
 		assert.is_nil(qs[5723])

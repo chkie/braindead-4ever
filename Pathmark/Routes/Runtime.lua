@@ -52,7 +52,9 @@ RT.UNDO_MAX = 20
 RT.LOOKAHEAD = 3 -- an event (flight path, hearthstone bound) counts for the current and next 3 steps
 
 local QUEST = { [V.ACCEPT] = true, [V.COMPLETE] = true, [V.TURNIN] = true }
-local EVENT = { [V.HS] = true, [V.SETHOME] = true, [V.FP] = true }
+-- Plan steps (Welle 6b): done when the game reports the event for this step or one of the next
+-- LOOKAHEAD steps (Guide.lua: hearthstone cast, hearthstone bound, new flight path, trainer window).
+local EVENT = { [V.HS] = true, [V.SETHOME] = true, [V.FP] = true, [V.TRAIN] = true }
 
 local function copy(t)
 	local c = {}
@@ -233,7 +235,7 @@ local function InZone(self, target, map)
 	return false
 end
 
--- true/false for elements that decide whether a step is done, nil for the rest (goto, note, train).
+-- true/false for elements that decide whether a step is done, nil for the rest (goto, note).
 function RT:ElementDone(s, el, ctx)
 	local v, w = el[1], self.world
 	if QUEST[v] then
@@ -727,7 +729,7 @@ function RT:Back()
 	return false
 end
 
--- Event seen in the game (flight path learned, hearthstone set or used): marks the first open step
+-- Event seen in the game (flight path learned, hearthstone set or used, trainer visited): marks the first open step
 -- among the current and the next LOOKAHEAD steps that has this element.
 function RT:MarkEvent(verb)
 	local cur = self.cur

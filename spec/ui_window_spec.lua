@@ -14,6 +14,14 @@ local function shown(region)
 	return rawget(region, "shown") == true
 end
 
+-- The tests follow the route data: the first quest of the human warrior's speed route, its title
+-- as the stand-in client knows it (spec/helpers/uisession.lua) and the title in the step after it.
+local function first(ns)
+	local q, title = S.first(ns)
+	local up = ns.Route.Upcoming(1)[1]
+	return q, title, up and wow.world.titles[up.quests[1]]
+end
+
 -- Next steps in the visible part of the scroll list.
 local function nextRows(ns)
 	return ns.StepFrame.VisibleRows()
@@ -41,9 +49,10 @@ describe("Step window", function()
 		it("shows the current step, the next three dimmed, and the XP line", function()
 			assert.is_true(shown(W))
 			local cur = ns.Route.Current()
-			assert.are.equal("a-speed-start-elwynn/a33", cur.key)
+			local q1, t1 = first(ns)
+			assert.are.equal("a-speed-start-elwynn/a" .. q1, cur.key)
 			assert.matches("^Elwynn Forest • 1/%d+$", W.title.text)
-			assert.matches("^Accept “Wolves Across the Border”", W.step.text)
+			assert.are.equal(1, W.step.text:find("Accept “" .. t1 .. "”", 1, true))
 			-- the target lies in the zone the header names: only the distance (Welle 5d, Q3)
 			assert.are.equal("70 |4yd:yds away", W.detail.text)
 			local rows = nextRows(ns)
@@ -104,7 +113,7 @@ describe("Step window", function()
 				objectives = { { text = "Diseased Young Wolf slain: 3/8", numFulfilled = 3, numRequired = 8 } },
 			}
 			local text = ns.StepText.Step({ step = { { 2, q, 1, 0 } } }, true)
-			assert.are.equal("“Wolves Across the Border”: Diseased Young Wolf slain", text)
+			assert.are.equal("“" .. wow.world.titles[q] .. "”: Diseased Young Wolf slain", text)
 			wow.world.questLog = {}
 		end)
 	end)
@@ -114,7 +123,8 @@ describe("Step window", function()
 		local W = frame(ns)
 		W.cur.scripts.OnEnter(W.cur)
 		local lines = wow.world.tooltip.lines
-		assert.are.equal("“Wolves Across the Border”", lines[1])
+		local _, t1 = first(ns)
+		assert.are.equal("“" .. t1 .. "”", lines[1])
 		assert.matches("^Step 1 of %d+$", lines[2])
 		assert.are.equal("Where the data comes from", lines[3])
 		assert.are.equal("Quest giver: ATT and Polestar forever-db, unconfirmed", lines[4])
@@ -132,13 +142,14 @@ describe("Step window", function()
 		it("turns the box into the check, glows, plays one sound, then the next step moves up", function()
 			local ns = S.login()
 			local W = frame(ns)
-			local first = ns.Route.Current().key
+			local key = ns.Route.Current().key
+			local _, t1, t2 = first(ns)
 			W.box:Click()
 			assert.are.equal("UI-QuestTracker-Tracker-Check", W.icon.atlas)
 			assert.is_true(shown(W.icon))
 			assert.is_false(shown(W.box))
 			assert.are.same({ 0.6, 0.6, 0.6 }, W.step.textColor)
-			assert.matches("Wolves Across the Border", W.step.text, 1, true)
+			assert.matches(t1, W.step.text, 1, true)
 			assert.are.equal(1, W.glowAnim.played)
 			assert.are.same({ 878 }, wow.world.sounds)
 			-- glow inside the window edges
@@ -148,20 +159,21 @@ describe("Step window", function()
 				{ W.glow.points[2][1], W.glow.points[2][3], W.glow.points[2][4] }
 			)
 			wow.advance(0.9)
-			assert.are_not.equal(first, ns.Route.Current().key)
+			assert.are_not.equal(key, ns.Route.Current().key)
 			assert.is_true(shown(W.box))
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches(t2, W.step.text, 1, true)
 		end)
 
 		it("comes from the game as well: an accepted quest checks the step", function()
 			local ns = S.login()
 			local W = frame(ns)
-			wow.world.questLog[#wow.world.questLog + 1] = { questID = 33, objectives = {} }
-			wow.fire("QUEST_ACCEPTED", 33)
+			local q1, _, t2 = first(ns)
+			wow.world.questLog[#wow.world.questLog + 1] = { questID = q1, objectives = {} }
+			wow.fire("QUEST_ACCEPTED", q1)
 			wow.advance(0.15)
 			assert.are.equal("UI-QuestTracker-Tracker-Check", W.icon.atlas)
 			wow.advance(1)
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches(t2, W.step.text, 1, true)
 		end)
 
 		it("adds “(done)” in Blizzard's colorblind mode and stays silent with the sound option off", function()
@@ -198,12 +210,13 @@ describe("Step window", function()
 		it("dims to 60 %, checks without glow and sound", function()
 			local ns = S.login()
 			local W = frame(ns)
+			local _, _, t2 = first(ns)
 			S.combat(true)
 			assert.are.equal(0.6, W.alpha)
 			W.box:Click()
 			assert.are.equal(0, W.glowAnim.played)
 			assert.are.same({}, wow.world.sounds)
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches(t2, W.step.text, 1, true)
 			S.combat(false)
 			assert.are.equal(1, W.alpha)
 		end)
@@ -289,15 +302,16 @@ describe("Step window", function()
 
 		it("names the last action and takes it back", function()
 			local ns = S.login()
-			local first = ns.Route.Current().key
+			local key = ns.Route.Current().key
+			local _, t1 = first(ns)
 			frame(ns).box:Click()
 			wow.advance(1)
 			local menu = S.menu(ns)
 			local undo = menu.items[2]
-			assert.are.equal("Undo: checked off “Wolves Across the Border”", undo.text)
+			assert.are.equal("Undo: checked off “" .. t1 .. "”", undo.text)
 			assert.is_true(undo.enabled)
 			undo.fn()
-			assert.are.equal(first, ns.Route.Current().key)
+			assert.are.equal(key, ns.Route.Current().key)
 		end)
 
 		it("switches arrow, mini view and the guidance from the menu", function()
@@ -497,27 +511,28 @@ describe("Step window", function()
 		local function abandoned()
 			local ns = S.login()
 			local W = wow.world
-			W.questLog[#W.questLog + 1] = { questID = 33, objectives = {} }
-			wow.fire("QUEST_ACCEPTED", 33)
+			local q1 = first(ns)
+			W.questLog[#W.questLog + 1] = { questID = q1, objectives = {} }
+			wow.fire("QUEST_ACCEPTED", q1)
 			wow.advance(2)
 			W.questLog = {}
-			wow.fire("QUEST_REMOVED", 33)
+			wow.fire("QUEST_REMOVED", q1)
 			wow.advance(1.5)
-			return ns
+			return ns, q1, W.titles[q1]
 		end
 
 		it("shows the fail symbol and two ways; nothing moves without a click", function()
-			local ns = abandoned()
+			local ns, q1, t1 = abandoned()
 			local W = frame(ns)
-			assert.are.equal(33, ns.Route.Pending())
-			assert.matches("^“Wolves Across the Border” was abandoned in the quest log%.", W.banner.text)
+			assert.are.equal(q1, ns.Route.Pending())
+			assert.are.equal(1, W.banner.text:find("“" .. t1 .. "” was abandoned in the quest log.", 1, true))
 			assert.is_true(shown(W.btnReaccept))
 			assert.is_true(shown(W.btnSkipChain))
 			assert.are.equal("Accept again", W.btnReaccept.text)
 			assert.are.equal("UI-QuestTracker-Objective-Fail", W.icon.atlas)
 			assert.is_false(shown(W.box))
 			W.box:Click()
-			assert.are.equal(33, ns.Route.Pending())
+			assert.are.equal(q1, ns.Route.Pending())
 		end)
 
 		-- Welle 5d, M9: the note named one quest and the window marked the step of another. The runtime
@@ -544,12 +559,12 @@ describe("Step window", function()
 		end)
 
 		it("“Accept again” leads back to the quest giver", function()
-			local ns = abandoned()
+			local ns, q1, t1 = abandoned()
 			frame(ns).btnReaccept:Click()
 			assert.is_nil(ns.Route.Pending())
-			assert.are.equal("a-speed-start-elwynn/a33", ns.Route.Current().key)
+			assert.are.equal("a-speed-start-elwynn/a" .. q1, ns.Route.Current().key)
 			assert.is_false(shown(frame(ns).banner))
-			assert.are.equal("Undo: accepted “Wolves Across the Border” again", S.menu(ns).items[2].text)
+			assert.are.equal("Undo: accepted “" .. t1 .. "” again", S.menu(ns).items[2].text)
 		end)
 
 		it("“Skip” answers the question with the follow-up quests", function()
@@ -567,13 +582,13 @@ describe("Step window", function()
 	it("optional dungeon step carries the gold tag, the givers' quests, and skips like a step", function()
 		local ns = S.login()
 		local skipped
-		local first = ns.Route.Upcoming(1)[1].index
+		local at = ns.Route.Upcoming(1)[1].index
 		ns.Route.DungeonHint = function()
 			if skipped then
 				return {}
 			end
 			return {
-				{ id = 63, area = 1581, lo = 18, hi = 24, first = first, quests = { { q = 7, state = "take" } } },
+				{ id = 63, area = 1581, lo = 18, hi = 24, first = at, quests = { { q = 7, state = "take" } } },
 			}
 		end
 		ns.Route.SkipDungeon = function(id)
@@ -629,7 +644,8 @@ describe("Step window", function()
 	it("German client: German texts, German quotes and “m” for yards", function()
 		local ns = S.login({ locale = "deDE" })
 		local W = frame(ns)
-		assert.are.equal("„Wölfe an der Grenze“ annehmen", W.step.text)
+		local _, t1 = first(ns)
+		assert.are.equal("„" .. t1 .. "“ annehmen", W.step.text)
 		-- Welle 5d, Q2: "|4m" without a colon lost the "m" in the client; Q3: no zone repeated
 		assert.are.equal("70 m entfernt", W.detail.text)
 		-- Welle 5d, Q5: number and "EP" joined by a no-break space, so "EP" never stands alone

@@ -187,5 +187,45 @@ class OnRouteData(unittest.TestCase):
                 self.assertEqual("erfüllt", s["status"], (s["id"], s["mode"]))
 
 
+class Gate(unittest.TestCase):
+    """The CI job "Route quality" (python3 -m tools.routekit metrics --check): the committed routes
+    pass, every breach is covered by a measured exception; a route made worse breaks it."""
+
+    @classmethod
+    def setUpClass(cls):
+        import json
+
+        cls.facts, cls.mods, cls.comps, cls.params = sim.load()
+        with open(metrics.BASELINE_PATH, encoding="utf-8") as fh:
+            cls.baseline = json.load(fh)
+        cls.exceptions = metrics.load_exceptions()
+
+    def breaches(self, mods, comps):
+        report = metrics.collect(self.facts, mods, comps, self.params, self.baseline)
+        return [b for b in metrics.gate(report, self.params, self.exceptions) if not b["covered"]]
+
+    def test_committed_routes_pass(self):
+        self.assertEqual([], self.breaches(self.mods, self.comps))
+
+    def test_every_exception_names_its_measurement(self):
+        for e in self.exceptions:
+            for k in ("id", "modes", "reason", "measured"):
+                self.assertIn(k, e, e)
+            self.assertTrue("max" in e or "min" in e, e)
+
+    def test_swapped_core_blocks_break_the_gate(self):
+        # counter-check: the Horde speed route with its first two core blocks in the wrong order
+        import copy
+
+        comps = copy.deepcopy(self.comps)
+        core = next(c for c in comps if c.faction == "Horde").modes["speed"]["core"]
+        core[0], core[1] = core[1], core[0]
+        before = {(b["id"], b["label"]) for b in self.breaches(self.mods, self.comps)}
+        open_ = [b for b in self.breaches(self.mods, comps) if (b["id"], b["label"]) not in before]
+        self.assertTrue(open_, "a route in the wrong order must break the gate")
+        self.assertEqual({"speed"}, {b["label"].split("/")[0] for b in open_})
+        self.assertTrue({b["label"].split("/")[1] for b in open_} <= {"ORC", "TROLL", "TAUREN", "UNDEAD", "SKYBORNE_H"})
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -12,6 +12,7 @@ S.TITLES = {
 }
 
 -- opts: locale, saved (PathmarkDB), char, level, xp, xpMax, style (default "arrow" = speed route),
+-- keepPlace (true = the player stays where spec/helpers/ui.lua puts it),
 -- setup (false = first start, setup not done), hint (false = usage hint not seen yet), combat,
 -- before(world) to change the client state before the files load.
 function S.login(opts)
@@ -47,8 +48,20 @@ function S.login(opts)
 	wow.fire("ADDON_LOADED", "Pathmark")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
+	-- the player stands 70 yd south of the first goal of the route (the tests follow the route data)
+	local t = opts.keepPlace == nil and ns.Nav and ns.Route and ns.Nav.Target(ns.Route.Current())
+	if t and t.map == 1429 then
+		P.west, P.north = t.wx, t.wy - 70
+	end
 	wow.advance(0.5)
 	return ns
+end
+
+-- The current step's first quest and its title as the client shows it.
+function S.first(ns)
+	local cur = ns.Route.Current()
+	local q = cur and cur.quests[1]
+	return q, q and wow.world.titles[q], cur
 end
 
 -- Combat on and off like the client: lockdown starts after PLAYER_REGEN_DISABLED, ends before ENABLED.

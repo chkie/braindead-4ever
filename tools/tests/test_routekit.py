@@ -154,7 +154,8 @@ class RepositoryData(unittest.TestCase):
     def test_routes_lint_clean(self):
         facts = lint.Facts.load()
         mods, comps = lint.load_routes()
-        self.assertGreater(len(mods), 100)
+        # start and core modules of both modes and factions, plus class inserts (Welle 6b: about 50)
+        self.assertGreater(len(mods), 30)
         errs = lint.lint_all(mods, comps, facts)
         self.assertEqual([], [str(e) for e in errs[:10]])
 

@@ -60,6 +60,7 @@ local evalQueued, balanceQueued, offerQueued = false, false, false
 local offer -- open question of the replanning (Routes/Replan.lua), or nil
 local driver -- frame whose OnUpdate runs the replanning job one slice per frame
 local lastXP, lastMax
+local HEARTHSTONE_SPELL = 8690
 local lastActive -- GetTime() of the last game event; gaps up to Forecast.IDLE_CAP count as play
 
 -- Callbacks -------------------------------------------------------------------------------------
@@ -865,6 +866,18 @@ local events = {
 			rt:MarkEvent(R.VERB.SETHOME)
 		end
 	end,
+	-- A cast of the hearthstone by the player (spell 8690, Forever client SpellCooldowns, brain
+	-- chapter 14 §4.6). The payload can be secret: Str and Num turn a secret value into nil.
+	UNIT_SPELLCAST_SUCCEEDED = function(_, _, unit, _, spellID)
+		if rt and Str(unit) == "player" and Num(spellID) == HEARTHSTONE_SPELL then
+			rt:MarkEvent(R.VERB.HS)
+		end
+	end,
+	TRAINER_SHOW = function()
+		if rt then
+			rt:MarkEvent(R.VERB.TRAIN)
+		end
+	end,
 }
 
 M.Define("route", {
@@ -907,6 +920,8 @@ M.Define("route", {
 			"UPDATE_EXHAUSTION",
 			"UI_INFO_MESSAGE",
 			"HEARTHSTONE_BOUND",
+			"UNIT_SPELLCAST_SUCCEEDED",
+			"TRAINER_SHOW",
 		},
 	},
 	init = Init,

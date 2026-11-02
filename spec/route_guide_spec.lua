@@ -22,7 +22,7 @@ local COMBOS = {
 	},
 }
 
-local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3, TRAVEL = 6 }
+local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3, TRAVEL = 6, HS = 7, SETHOME = 8, FP = 9, TRAIN = 10, XP = 11 }
 
 -- Plain copy, like SavedVariables written at logout and read at the next login: no shared tables.
 local function deepcopy(t)
@@ -118,6 +118,17 @@ local function play(step, opts)
 		elseif v == V.TRAVEL then
 			W.player.map = el[3]
 			wow.fire("ZONE_CHANGED_NEW_AREA")
+		elseif v == V.XP and W.player.level < el[2] then
+			W.player.level = el[2] -- the announced grind
+			wow.fire("PLAYER_LEVEL_UP", el[2])
+		elseif v == V.FP then
+			wow.fire("UI_INFO_MESSAGE", 0, _G.ERR_NEWTAXIPATH)
+		elseif v == V.SETHOME then
+			wow.fire("HEARTHSTONE_BOUND")
+		elseif v == V.HS then
+			wow.fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-0", 8690)
+		elseif v == V.TRAIN then
+			wow.fire("TRAINER_SHOW")
 		end
 	end
 	wow.advance(1.5)
@@ -238,6 +249,35 @@ describe("Route module", function()
 		end
 	end)
 
+	it("marks a flight path step by the new flight path message and survives secret spell payloads", function()
+		-- the first Horde speed step with an `fp` element (code 9) for an orc warrior
+		local base = login({ faction = "Horde", race = 2, class = 1 })
+		local target
+		for _, s in ipairs(base.Routes.Steps("Horde", "speed", 2, 1)) do
+			for _, el in ipairs(s.step) do
+				if el[1] == V.FP and not target then
+					target = s.module .. "/" .. s.step.id
+				end
+			end
+		end
+		assert.is_string(target, "the route takes a flight path on the way (R13)")
+		local R = base.Route
+		local n = 0
+		while R.Current() and R.Current().key ~= target do
+			assert.is_true(R.Check())
+			n = n + 1
+			assert.is_true(n < 2000)
+		end
+		-- a cast with a secret payload and a trainer window do not move this step
+		wow.fire("UNIT_SPELLCAST_SUCCEEDED", wow.SECRET, wow.SECRET, wow.SECRET)
+		wow.fire("TRAINER_SHOW")
+		assert.are.equal(target, R.Current().key)
+		wow.fire("UI_INFO_MESSAGE", 0, _G.ERR_NEWTAXIPATH)
+		assert.are_not.equal(target, R.Current() and R.Current().key)
+		assert.are.equal("done", R.StepState(target))
+		assert.are.equal("on", base.Modules.state.route, "no error from the new events")
+	end)
+
 	it("asks about an abandoned quest and offers to take it again or skip it", function()
 		local ns = login()
 		local R = ns.Route
@@ -245,20 +285,39 @@ describe("Route module", function()
 		R.RegisterCallback("QuestAbandoned", "test", function(_, q)
 			asked[#asked + 1] = q
 		end)
-		play(R.Current().step) -- accept 33
-		play(R.Current().step) -- accept 783
+		-- the first quest the route takes, accepted in its first step
+		local first = R.Current()
+		local q1 = first.quests[1]
+		play(first.step)
+		assert.is_table(logEntry(q1))
+		assert.are_not.equal(first.key, R.Current().key)
 		local cur = R.Current().key
-		table.remove(wow.world.questLog, 1) -- abandon 33
-		wow.fire("QUEST_REMOVED", 33, false)
+		for i, e in ipairs(wow.world.questLog) do
+			if e.questID == q1 then
+				table.remove(wow.world.questLog, i) -- abandon q1
+				break
+			end
+		end
+		wow.fire("QUEST_REMOVED", q1, false)
 		wow.advance(1.5)
-		assert.are.same({ 33 }, asked)
-		assert.are.equal(33, R.Pending())
+		assert.are.same({ q1 }, asked)
+		assert.are.equal(q1, R.Pending())
 		assert.are.equal(cur, R.Current().key, "nothing moves before the answer")
 		assert.is_true(R.ResolveAbandon("reaccept"))
-		assert.are.equal("a-speed-start-elwynn/a33", R.Current().key)
+		assert.are.equal(first.key, R.Current().key)
 		assert.is_true(R.Undo())
 		assert.is_true(R.ResolveAbandon("skip"))
-		assert.are.equal("skipped", R.StepState("a-speed-start-elwynn/c33"))
+		-- every later step of q1 (objectives, turn-in) is skipped with it
+		local later
+		for _, s in ipairs(ns.Routes.Steps("Alliance", "speed", 1, 1)) do
+			for _, el in ipairs(s.step) do
+				if (el[1] == V.COMPLETE or el[1] == V.TURNIN) and el[2] == q1 and not later then
+					later = s.module .. "/" .. s.step.id
+				end
+			end
+		end
+		assert.is_string(later)
+		assert.are.equal("skipped", R.StepState(later))
 	end)
 
 	it("skips a chain of three quests from the real prerequisites", function()
@@ -302,8 +361,9 @@ describe("Route module", function()
 		R.RegisterCallback("XPBalance", "ui", function(_, b)
 			got[#got + 1] = { "xp", b.toLevel }
 		end)
+		local before = R.Current().id
 		R.Check()
-		assert.are.same({ "ui", "a783", "a33" }, got[1])
+		assert.are.same({ "ui", R.Current().id, before }, got[1])
 		R.Skip()
 		assert.are.same({ "recalc", "skip" }, got[#got])
 		wow.world.player.xp = 250

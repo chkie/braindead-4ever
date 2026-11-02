@@ -289,6 +289,36 @@ describe("Route runtime", function()
 		assert.are.equal("cD", rt:Current().id)
 	end)
 
+	it("marks the plan steps train, hs, sethome and fp done by their game event", function()
+		-- Element codes 7 hs, 8 sethome, 9 fp, 10 train (docs/ROUTE-FORMAT.md).
+		local steps = {
+			step("aA", 1, q(1, A), go(1429)),
+			step("p1", 1, { 10, 16, 0 }, go(1429)),
+			step("p2", 1, { 8, 16, 0 }, go(1429)),
+			step("p3", 1, { 9, 16, 0 }, go(1429)),
+			step("p4", 2, { 7, 16, 0 }),
+			step("cA", 2, q(2, A)),
+		}
+		local w = newWorld()
+		local rt = RT.New(steps, QUESTS, w.api, {}, { race = 1, class = 1 })
+		rt:Evaluate()
+		w:accept(A)
+		rt:Evaluate()
+		assert.are.equal("p1", rt:Current().id, "a train step waits for the trainer window")
+		assert.are.equal("open", rt:StepState(rt.index["m-test/p1"]))
+		-- a hearthstone cast marks p4: it lies within the current and the next three steps
+		assert.is_true(rt:MarkEvent(ns.Routes.VERB.HS))
+		assert.are.equal("p1", rt:Current().id)
+		assert.are.equal("done", rt:StepState(rt.index["m-test/p4"]))
+		assert.is_true(rt:MarkEvent(ns.Routes.VERB.TRAIN))
+		assert.are.equal("p2", rt:Current().id)
+		assert.is_true(rt:MarkEvent(ns.Routes.VERB.SETHOME))
+		assert.are.equal("p3", rt:Current().id)
+		assert.is_true(rt:MarkEvent(ns.Routes.VERB.FP))
+		assert.are.equal("cA", rt:Current().id, "p4 was done by its event before")
+		assert.is_false(rt:MarkEvent(ns.Routes.VERB.TRAIN), "no train step ahead")
+	end)
+
 	it("skips a travel step whose zone block is entirely skipped", function()
 		local steps = route()
 		table.insert(steps, 15, step("r1433", 5, { 6, 1, 1433, 16, 0 }))

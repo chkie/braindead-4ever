@@ -136,11 +136,12 @@ describe("Route data", function()
 				local accepted, turned = {}, {}
 				for _, s in ipairs(R.Steps(faction, mode, race, class)) do
 					for _, el in ipairs(s.step) do
-						local q = el[2]
-						if el[1] == V.ACCEPT then
+						-- elements of a step that serves several races or classes carry their own filter
+						local q = R.Applies(el, race, class) and el[2] or nil
+						if q and el[1] == V.ACCEPT then
 							assert.is_nil(accepted[q], ("%s accepted twice in %s"):format(q, s.module))
 							accepted[q] = true
-						elseif el[1] == V.COMPLETE or el[1] == V.TURNIN then
+						elseif q and (el[1] == V.COMPLETE or el[1] == V.TURNIN) then
 							assert.is_true(accepted[q] == true, ("%s not accepted before %s"):format(q, s.step.id))
 							if el[1] == V.TURNIN then
 								assert.is_nil(turned[q])
@@ -171,9 +172,10 @@ describe("Example route Elwynn Forest", function()
 			last = s.step.lv
 			assert.is_true(s.step.lv >= (first or 1), s.step.id)
 			for _, el in ipairs(s.step) do
-				if el[1] == V.ACCEPT then
+				local mine = R.Applies(el, 1, 1)
+				if mine and el[1] == V.ACCEPT then
 					log[el[2]] = true
-				elseif el[1] == V.TURNIN then
+				elseif mine and el[1] == V.TURNIN then
 					assert.is_true(log[el[2]], s.step.id)
 					log[el[2]] = nil
 					done[#done + 1] = el[2]

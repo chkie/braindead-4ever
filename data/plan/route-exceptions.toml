@@ -1,0 +1,97 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Measured exceptions to the route limits (Welle 6b, docs/ROUTE-METRICS.md §Gate). The CI job "Route
+# quality" fails on every breach of a limit, a guard or a hard rule that no entry covers. An entry
+# covers one metric in the named modes for the named combinations up to the measured value: `max` for
+# a metric that must stay low, `min` for one that must stay high. A route that gets worse than the
+# measured value, or a combination the entry does not name, breaks the job. Guards (P3, P4b, P5b,
+# P9b, P11b) have no exceptions.
+
+[[exception]]
+id = "G3"
+modes = ["explorer"]
+combos = ["DWARF/HUNTER", "DWARF/PALADIN", "DWARF/PRIEST", "DWARF/ROGUE", "DWARF/SHAMAN", "DWARF/WARRIOR", "GNOME/MAGE", "GNOME/PRIEST", "GNOME/ROGUE", "GNOME/WARLOCK", "GNOME/WARRIOR", "HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "NIGHTELF/DRUID", "NIGHTELF/HUNTER", "NIGHTELF/PRIEST", "NIGHTELF/ROGUE", "NIGHTELF/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/HUNTER", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+min = 0.174
+reason = "Band 21–30: auch alle Quests der erlaubten Kerngebiete, nach Quest-XP-Anteil gewählt, erreichen 0,80 nicht (Wächter P9). Die Route grindet den Rest bis 30; dadurch sinkt die Deckung des Bands unter die Schranke."
+measured = "python3 -m tools.routekit bounds (2026-11-02): Schranke Band 21–30 in Start- und P9-Gebieten Allianz 0,793, Horde 0,700"
+date = "2026-11-02"
+
+[[exception]]
+id = "G3"
+modes = ["speed"]
+combos = ["DWARF/HUNTER", "DWARF/PALADIN", "DWARF/PRIEST", "DWARF/ROGUE", "DWARF/SHAMAN", "DWARF/WARRIOR", "GNOME/MAGE", "GNOME/PRIEST", "GNOME/ROGUE", "GNOME/WARLOCK", "GNOME/WARRIOR", "HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "NIGHTELF/DRUID", "NIGHTELF/HUNTER", "NIGHTELF/PRIEST", "NIGHTELF/ROGUE", "NIGHTELF/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/HUNTER", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+min = 0.1447
+reason = "Band 21–30: auch alle Quests der erlaubten Kerngebiete, nach Quest-XP-Anteil gewählt, erreichen 0,80 nicht (Wächter P9). Die Route grindet den Rest bis 30; dadurch sinkt die Deckung des Bands unter die Schranke."
+measured = "python3 -m tools.routekit bounds (2026-11-02): Schranke Band 21–30 in Start- und P9-Gebieten Allianz 0,793, Horde 0,700"
+date = "2026-11-02"
+
+[[exception]]
+id = "G4"
+modes = ["explorer"]
+combos = ["HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+max = 0.2335
+reason = "Gleichwertigkeit über beide Fraktionen: die Horde hat in ihren erlaubten Kerngebieten 13 % weniger Quest- und Ziel-Kill-XP als die Allianz (Wächter P9), die Deckung je Band unterscheidet sich deshalb zwischen den Fraktionen."
+measured = "python3 -m tools.routekit bounds (2026-11-02): Allianz 451.461, Horde 393.901 XP in den erlaubten Kerngebieten"
+date = "2026-11-02"
+
+[[exception]]
+id = "G4"
+modes = ["speed"]
+combos = ["HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+max = 0.1976
+reason = "Gleichwertigkeit über beide Fraktionen: die Horde hat in ihren erlaubten Kerngebieten 13 % weniger Quest- und Ziel-Kill-XP als die Allianz (Wächter P9), die Deckung je Band unterscheidet sich deshalb zwischen den Fraktionen."
+measured = "python3 -m tools.routekit bounds (2026-11-02): Allianz 451.461, Horde 393.901 XP in den erlaubten Kerngebieten"
+date = "2026-11-02"
+
+[[exception]]
+id = "G5"
+modes = ["explorer"]
+combos = ["ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+max = 1.7715
+reason = "Questzahl je Band über beide Fraktionen: die Fraktionen haben in ihren erlaubten Kerngebieten unterschiedlich viele Quests (Wächter P9, siehe G4); die Ursache je Band ist nicht einzeln geprüft."
+measured = "python3 -m tools.routekit bounds; Questzahlen je Kombination in docs/ROUTE-METRICS.md (Nachher, Alle Kombinationen)"
+date = "2026-11-02"
+
+[[exception]]
+id = "G5"
+modes = ["speed"]
+combos = ["ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+max = 1.7942
+reason = "Questzahl je Band über beide Fraktionen: die Fraktionen haben in ihren erlaubten Kerngebieten unterschiedlich viele Quests (Wächter P9, siehe G4); die Ursache je Band ist nicht einzeln geprüft."
+measured = "python3 -m tools.routekit bounds; Questzahlen je Kombination in docs/ROUTE-METRICS.md (Nachher, Alle Kombinationen)"
+date = "2026-11-02"
+
+[[exception]]
+id = "P2"
+modes = ["explorer"]
+combos = ["DWARF/HUNTER", "DWARF/PALADIN", "DWARF/PRIEST", "DWARF/ROGUE", "DWARF/SHAMAN", "DWARF/WARRIOR", "GNOME/MAGE", "GNOME/PRIEST", "GNOME/ROGUE", "GNOME/WARLOCK", "GNOME/WARRIOR", "HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "NIGHTELF/DRUID", "NIGHTELF/HUNTER", "NIGHTELF/PRIEST", "NIGHTELF/ROGUE", "NIGHTELF/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/HUNTER", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+min = 0.1117
+reason = "Wächter P9: in den Kerngebieten, die der Zonenwechsel-Rahmen der Startroute erlaubt, reichen alle Quests nicht bis Stufe 30; der letzte Kernblock und Blöcke mit Grind-Freischaltung decken ihr Band nicht zu 90 %."
+measured = "python3 -m tools.routekit bounds (2026-11-02): alle Quests der erlaubten Kerngebiete (Quest- und Ziel-Kill-XP) Allianz 451.461, Horde 393.901 von 463.800 XP für Stufe 11 bis 30 (0,97 bzw. 0,85), obere Schranke ohne Stufen-, Questlog- und Zeitgrenzen"
+date = "2026-11-02"
+
+[[exception]]
+id = "P2"
+modes = ["speed"]
+combos = ["DWARF/HUNTER", "DWARF/PALADIN", "DWARF/PRIEST", "DWARF/ROGUE", "DWARF/SHAMAN", "DWARF/WARRIOR", "GNOME/MAGE", "GNOME/PRIEST", "GNOME/ROGUE", "GNOME/WARLOCK", "GNOME/WARRIOR", "HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "NIGHTELF/DRUID", "NIGHTELF/HUNTER", "NIGHTELF/PRIEST", "NIGHTELF/ROGUE", "NIGHTELF/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/HUNTER", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+min = 0.1037
+reason = "Wächter P9: in den Kerngebieten, die der Zonenwechsel-Rahmen der Startroute erlaubt, reichen alle Quests nicht bis Stufe 30; der letzte Kernblock und Blöcke mit Grind-Freischaltung decken ihr Band nicht zu 90 %."
+measured = "python3 -m tools.routekit bounds (2026-11-02): alle Quests der erlaubten Kerngebiete (Quest- und Ziel-Kill-XP) Allianz 451.461, Horde 393.901 von 463.800 XP für Stufe 11 bis 30 (0,97 bzw. 0,85), obere Schranke ohne Stufen-, Questlog- und Zeitgrenzen"
+date = "2026-11-02"
+
+[[exception]]
+id = "P2g"
+modes = ["explorer"]
+combos = ["DWARF/HUNTER", "DWARF/PALADIN", "DWARF/PRIEST", "DWARF/ROGUE", "DWARF/SHAMAN", "DWARF/WARRIOR", "GNOME/MAGE", "GNOME/PRIEST", "GNOME/ROGUE", "GNOME/WARLOCK", "GNOME/WARRIOR", "HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "NIGHTELF/DRUID", "NIGHTELF/HUNTER", "NIGHTELF/PRIEST", "NIGHTELF/ROGUE", "NIGHTELF/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/HUNTER", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+max = 0.9923
+reason = "Wächter P9: dieselbe Schranke wie P2; die fehlende XP wird am Ende der Route oder zum Freischalten der nächsten Quests eines Gebiets gegrindet."
+measured = "python3 -m tools.routekit bounds (2026-11-02): Allianz 0,97, Horde 0,85 der nötigen XP in allen Quests der erlaubten Kerngebiete"
+date = "2026-11-02"
+
+[[exception]]
+id = "P2g"
+modes = ["speed"]
+combos = ["DWARF/HUNTER", "DWARF/PALADIN", "DWARF/PRIEST", "DWARF/ROGUE", "DWARF/SHAMAN", "DWARF/WARRIOR", "GNOME/MAGE", "GNOME/PRIEST", "GNOME/ROGUE", "GNOME/WARLOCK", "GNOME/WARRIOR", "HUMAN/HUNTER", "HUMAN/MAGE", "HUMAN/PALADIN", "HUMAN/PRIEST", "HUMAN/ROGUE", "HUMAN/WARLOCK", "HUMAN/WARRIOR", "NIGHTELF/DRUID", "NIGHTELF/HUNTER", "NIGHTELF/PRIEST", "NIGHTELF/ROGUE", "NIGHTELF/WARRIOR", "ORC/HUNTER", "ORC/MAGE", "ORC/ROGUE", "ORC/SHAMAN", "ORC/WARLOCK", "ORC/WARRIOR", "SKYBORNE_A/DRUID", "SKYBORNE_A/HUNTER", "SKYBORNE_A/MAGE", "SKYBORNE_A/ROGUE", "SKYBORNE_A/WARRIOR", "SKYBORNE_H/DRUID", "SKYBORNE_H/HUNTER", "SKYBORNE_H/ROGUE", "SKYBORNE_H/SHAMAN", "SKYBORNE_H/WARRIOR", "TAUREN/DRUID", "TAUREN/HUNTER", "TAUREN/SHAMAN", "TAUREN/WARRIOR", "TROLL/HUNTER", "TROLL/MAGE", "TROLL/PRIEST", "TROLL/ROGUE", "TROLL/SHAMAN", "TROLL/WARLOCK", "TROLL/WARRIOR", "UNDEAD/MAGE", "UNDEAD/PALADIN", "UNDEAD/PRIEST", "UNDEAD/ROGUE", "UNDEAD/WARLOCK", "UNDEAD/WARRIOR"]
+max = 0.9923
+reason = "Wächter P9: dieselbe Schranke wie P2; die fehlende XP wird am Ende der Route oder zum Freischalten der nächsten Quests eines Gebiets gegrindet."
+measured = "python3 -m tools.routekit bounds (2026-11-02): Allianz 0,97, Horde 0,85 der nötigen XP in allen Quests der erlaubten Kerngebiete"
+date = "2026-11-02"

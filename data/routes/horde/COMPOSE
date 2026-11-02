@@ -6,73 +6,13 @@ start h-speed-start-durotar << race=ORC,TROLL
 start h-speed-start-mulgore << race=TAUREN
 start h-speed-start-tirisfal << race=UNDEAD
 start h-speed-start-zephras << race=SKYBORNE_H
-core h-speed-core-01-1413 h-speed-core-02-1421 h-speed-core-03-1442 h-speed-core-04-1440 h-speed-core-05-1424 h-speed-core-06-1441
-insert after h-speed-core-01-1413 h-speed-class-orc-rogue-01 << race=ORC class=ROGUE
-insert after h-speed-core-03-1442 h-speed-class-orc-rogue-03 << race=ORC class=ROGUE
-insert after start h-speed-class-orc-warlock-00 << race=ORC class=WARLOCK
-insert after h-speed-core-03-1442 h-speed-class-orc-warlock-03 << race=ORC class=WARLOCK
-insert after h-speed-core-01-1413 h-speed-class-undead-rogue-01 << race=UNDEAD class=ROGUE
-insert after h-speed-core-03-1442 h-speed-class-undead-rogue-03 << race=UNDEAD class=ROGUE
-insert after start h-speed-class-undead-priest-00 << race=UNDEAD class=PRIEST
-insert after h-speed-core-03-1442 h-speed-class-undead-priest-03 << race=UNDEAD class=PRIEST
-insert after start h-speed-class-undead-mage-00 << race=UNDEAD class=MAGE
-insert after h-speed-core-01-1413 h-speed-class-undead-mage-01 << race=UNDEAD class=MAGE
-insert after h-speed-core-05-1424 h-speed-class-undead-mage-05 << race=UNDEAD class=MAGE
-insert after start h-speed-class-undead-warlock-00 << race=UNDEAD class=WARLOCK
-insert after h-speed-core-03-1442 h-speed-class-undead-warlock-03 << race=UNDEAD class=WARLOCK
-insert after start h-speed-class-tauren-warrior-00 << race=TAUREN class=WARRIOR
-insert after start h-speed-class-tauren-shaman-00 << race=TAUREN class=SHAMAN
-insert after start h-speed-class-tauren-druid-00 << race=TAUREN class=DRUID
-insert after h-speed-core-01-1413 h-speed-class-tauren-druid-01 << race=TAUREN class=DRUID
-insert after h-speed-core-01-1413 h-speed-class-troll-rogue-01 << race=TROLL class=ROGUE
-insert after h-speed-core-03-1442 h-speed-class-troll-rogue-03 << race=TROLL class=ROGUE
-insert after start h-speed-class-troll-priest-00 << race=TROLL class=PRIEST
-insert after h-speed-core-03-1442 h-speed-class-troll-priest-03 << race=TROLL class=PRIEST
-insert after start h-speed-class-troll-mage-00 << race=TROLL class=MAGE
-insert after h-speed-core-01-1413 h-speed-class-troll-mage-01 << race=TROLL class=MAGE
-insert after h-speed-core-05-1424 h-speed-class-troll-mage-05 << race=TROLL class=MAGE
-insert after start h-speed-class-troll-warlock-00 << race=TROLL class=WARLOCK
-insert after h-speed-core-03-1442 h-speed-class-troll-warlock-03 << race=TROLL class=WARLOCK
-insert after h-speed-core-01-1413 h-speed-class-skyborneh-rogue-01 << race=SKYBORNE_H class=ROGUE
-insert after h-speed-core-03-1442 h-speed-class-skyborneh-rogue-03 << race=SKYBORNE_H class=ROGUE
-insert after start h-speed-class-skyborneh-druid-00 << race=SKYBORNE_H class=DRUID
-insert after h-speed-core-01-1413 h-speed-class-skyborneh-druid-01 << race=SKYBORNE_H class=DRUID
+core h-speed-core-01-1421 h-speed-core-02-1413 h-speed-core-03-1424 h-speed-core-04-1440 h-speed-core-05-1424 h-speed-core-06-1442
 #mode explorer
 start h-explorer-start-durotar << race=ORC,TROLL
 start h-explorer-start-mulgore << race=TAUREN
 start h-explorer-start-tirisfal << race=UNDEAD
 start h-explorer-start-zephras << race=SKYBORNE_H
-core h-explorer-core-01-1413 h-explorer-core-02-1421 h-explorer-core-03-1442 h-explorer-core-04-1440 h-explorer-core-05-1424 h-explorer-core-06-1441
-insert after h-explorer-core-01-1413 h-explorer-class-orc-rogue-01 << race=ORC class=ROGUE
-insert after h-explorer-core-03-1442 h-explorer-class-orc-rogue-03 << race=ORC class=ROGUE
-insert after start h-explorer-class-orc-warlock-00 << race=ORC class=WARLOCK
-insert after h-explorer-core-03-1442 h-explorer-class-orc-warlock-03 << race=ORC class=WARLOCK
-insert after h-explorer-core-01-1413 h-explorer-class-undead-paladin-01 << race=UNDEAD class=PALADIN
-insert after h-explorer-core-01-1413 h-explorer-class-undead-rogue-01 << race=UNDEAD class=ROGUE
-insert after h-explorer-core-03-1442 h-explorer-class-undead-rogue-03 << race=UNDEAD class=ROGUE
-insert after start h-explorer-class-undead-priest-00 << race=UNDEAD class=PRIEST
-insert after h-explorer-core-03-1442 h-explorer-class-undead-priest-03 << race=UNDEAD class=PRIEST
-insert after start h-explorer-class-undead-mage-00 << race=UNDEAD class=MAGE
-insert after h-explorer-core-01-1413 h-explorer-class-undead-mage-01 << race=UNDEAD class=MAGE
-insert after h-explorer-core-05-1424 h-explorer-class-undead-mage-05 << race=UNDEAD class=MAGE
-insert after start h-explorer-class-undead-warlock-00 << race=UNDEAD class=WARLOCK
-insert after h-explorer-core-03-1442 h-explorer-class-undead-warlock-03 << race=UNDEAD class=WARLOCK
-insert after start h-explorer-class-tauren-warrior-00 << race=TAUREN class=WARRIOR
-insert after start h-explorer-class-tauren-shaman-00 << race=TAUREN class=SHAMAN
-insert after start h-explorer-class-tauren-druid-00 << race=TAUREN class=DRUID
-insert after h-explorer-core-01-1413 h-explorer-class-tauren-druid-01 << race=TAUREN class=DRUID
-insert after h-explorer-core-03-1442 h-explorer-class-tauren-druid-03 << race=TAUREN class=DRUID
-insert after h-explorer-core-01-1413 h-explorer-class-troll-rogue-01 << race=TROLL class=ROGUE
-insert after h-explorer-core-03-1442 h-explorer-class-troll-rogue-03 << race=TROLL class=ROGUE
-insert after start h-explorer-class-troll-priest-00 << race=TROLL class=PRIEST
-insert after h-explorer-core-03-1442 h-explorer-class-troll-priest-03 << race=TROLL class=PRIEST
-insert after start h-explorer-class-troll-mage-00 << race=TROLL class=MAGE
-insert after h-explorer-core-01-1413 h-explorer-class-troll-mage-01 << race=TROLL class=MAGE
-insert after h-explorer-core-05-1424 h-explorer-class-troll-mage-05 << race=TROLL class=MAGE
-insert after start h-explorer-class-troll-warlock-00 << race=TROLL class=WARLOCK
-insert after h-explorer-core-03-1442 h-explorer-class-troll-warlock-03 << race=TROLL class=WARLOCK
-insert after h-explorer-core-01-1413 h-explorer-class-skyborneh-rogue-01 << race=SKYBORNE_H class=ROGUE
-insert after h-explorer-core-03-1442 h-explorer-class-skyborneh-rogue-03 << race=SKYBORNE_H class=ROGUE
-insert after start h-explorer-class-skyborneh-druid-00 << race=SKYBORNE_H class=DRUID
-insert after h-explorer-core-01-1413 h-explorer-class-skyborneh-druid-01 << race=SKYBORNE_H class=DRUID
-insert after h-explorer-core-03-1442 h-explorer-class-skyborneh-druid-03 << race=SKYBORNE_H class=DRUID
+core h-explorer-core-01-1421 h-explorer-core-02-1413 h-explorer-core-03-1424 h-explorer-core-04-1440 h-explorer-core-05-1424 h-explorer-core-06-1442
+insert after h-explorer-core-02-1413 h-explorer-class-orc-warlock-01 << race=ORC class=WARLOCK
+insert after h-explorer-core-02-1413 h-explorer-class-undead-warlock-01 << race=UNDEAD class=WARLOCK
+insert after h-explorer-core-02-1413 h-explorer-class-troll-warlock-01 << race=TROLL class=WARLOCK

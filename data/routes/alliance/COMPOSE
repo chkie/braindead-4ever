@@ -6,87 +6,12 @@ start a-speed-start-elwynn << race=HUMAN
 start a-speed-start-dunmorogh << race=DWARF,GNOME
 start a-speed-start-teldrassil << race=NIGHTELF
 start a-speed-start-zephras << race=SKYBORNE_A
-core a-speed-core-01-1436 a-speed-core-02-1432 a-speed-core-03-1433 a-speed-core-04-1439 a-speed-core-05-1440 a-speed-core-06-1431 a-speed-core-07-1437
-insert after a-speed-core-07-1437 a-speed-class-human-warrior-07 << race=HUMAN class=WARRIOR
-insert after a-speed-core-01-1436 a-speed-class-human-paladin-01 << race=HUMAN class=PALADIN
-insert after start a-speed-class-human-priest-00 << race=HUMAN class=PRIEST
-insert after a-speed-core-03-1433 a-speed-class-human-priest-03 << race=HUMAN class=PRIEST
-insert after start a-speed-class-human-mage-00 << race=HUMAN class=MAGE
-insert after a-speed-core-02-1432 a-speed-class-human-mage-02 << race=HUMAN class=MAGE
-insert after a-speed-core-03-1433 a-speed-class-human-warlock-03 << race=HUMAN class=WARLOCK
-insert after a-speed-core-07-1437 a-speed-class-human-warlock-07 << race=HUMAN class=WARLOCK
-insert after a-speed-core-07-1437 a-speed-class-dwarf-warrior-07 << race=DWARF class=WARRIOR
-insert after start a-speed-class-dwarf-priest-00 << race=DWARF class=PRIEST
-insert after a-speed-core-03-1433 a-speed-class-dwarf-priest-03 << race=DWARF class=PRIEST
-insert after a-speed-core-07-1437 a-speed-class-nightelf-warrior-07 << race=NIGHTELF class=WARRIOR
-insert after start a-speed-class-nightelf-priest-00 << race=NIGHTELF class=PRIEST
-insert after a-speed-core-03-1433 a-speed-class-nightelf-priest-03 << race=NIGHTELF class=PRIEST
-insert after start a-speed-class-nightelf-druid-00 << race=NIGHTELF class=DRUID
-insert after a-speed-core-01-1436 a-speed-class-nightelf-druid-01 << race=NIGHTELF class=DRUID
-insert after a-speed-core-02-1432 a-speed-class-nightelf-druid-02 << race=NIGHTELF class=DRUID
-insert after a-speed-core-07-1437 a-speed-class-gnome-warrior-07 << race=GNOME class=WARRIOR
-insert after start a-speed-class-gnome-priest-00 << race=GNOME class=PRIEST
-insert after start a-speed-class-gnome-mage-00 << race=GNOME class=MAGE
-insert after a-speed-core-02-1432 a-speed-class-gnome-mage-02 << race=GNOME class=MAGE
-insert after a-speed-core-03-1433 a-speed-class-gnome-warlock-03 << race=GNOME class=WARLOCK
-insert after a-speed-core-07-1437 a-speed-class-gnome-warlock-07 << race=GNOME class=WARLOCK
-insert after a-speed-core-07-1437 a-speed-class-skybornea-warrior-07 << race=SKYBORNE_A class=WARRIOR
-insert after start a-speed-class-skybornea-mage-00 << race=SKYBORNE_A class=MAGE
-insert after a-speed-core-02-1432 a-speed-class-skybornea-mage-02 << race=SKYBORNE_A class=MAGE
-insert after start a-speed-class-skybornea-druid-00 << race=SKYBORNE_A class=DRUID
-insert after a-speed-core-01-1436 a-speed-class-skybornea-druid-01 << race=SKYBORNE_A class=DRUID
-insert after a-speed-core-02-1432 a-speed-class-skybornea-druid-02 << race=SKYBORNE_A class=DRUID
+core a-speed-core-01-1439 a-speed-core-02-1436 a-speed-core-03-1413 a-speed-core-04-1439 a-speed-core-05-1433 a-speed-core-06-1440 a-speed-core-07-1437
+insert after a-speed-core-04-1439 a-speed-class-nightelf-priest-03 << race=NIGHTELF class=PRIEST
 #mode explorer
 start a-explorer-start-elwynn << race=HUMAN
 start a-explorer-start-dunmorogh << race=DWARF,GNOME
 start a-explorer-start-teldrassil << race=NIGHTELF
 start a-explorer-start-zephras << race=SKYBORNE_A
-core a-explorer-core-01-1436 a-explorer-core-02-1432 a-explorer-core-03-1433 a-explorer-core-04-1439 a-explorer-core-05-1440 a-explorer-core-06-1431 a-explorer-core-07-1437
-insert after a-explorer-core-07-1437 a-explorer-class-human-warrior-07 << race=HUMAN class=WARRIOR
-insert after a-explorer-core-01-1436 a-explorer-class-human-paladin-01 << race=HUMAN class=PALADIN
-insert after a-explorer-core-02-1432 a-explorer-class-human-rogue-02 << race=HUMAN class=ROGUE
-insert after a-explorer-core-05-1440 a-explorer-class-human-rogue-05 << race=HUMAN class=ROGUE
-insert after start a-explorer-class-human-priest-00 << race=HUMAN class=PRIEST
-insert after a-explorer-core-03-1433 a-explorer-class-human-priest-03 << race=HUMAN class=PRIEST
-insert after start a-explorer-class-human-mage-00 << race=HUMAN class=MAGE
-insert after a-explorer-core-02-1432 a-explorer-class-human-mage-02 << race=HUMAN class=MAGE
-insert after a-explorer-core-06-1431 a-explorer-class-human-mage-06 << race=HUMAN class=MAGE
-insert after start a-explorer-class-human-warlock-00 << race=HUMAN class=WARLOCK
-insert after a-explorer-core-03-1433 a-explorer-class-human-warlock-03 << race=HUMAN class=WARLOCK
-insert after a-explorer-core-07-1437 a-explorer-class-human-warlock-07 << race=HUMAN class=WARLOCK
-insert after a-explorer-core-07-1437 a-explorer-class-dwarf-warrior-07 << race=DWARF class=WARRIOR
-insert after a-explorer-core-01-1436 a-explorer-class-dwarf-paladin-01 << race=DWARF class=PALADIN
-insert after a-explorer-core-02-1432 a-explorer-class-dwarf-rogue-02 << race=DWARF class=ROGUE
-insert after a-explorer-core-05-1440 a-explorer-class-dwarf-rogue-05 << race=DWARF class=ROGUE
-insert after start a-explorer-class-dwarf-priest-00 << race=DWARF class=PRIEST
-insert after a-explorer-core-03-1433 a-explorer-class-dwarf-priest-03 << race=DWARF class=PRIEST
-insert after a-explorer-core-07-1437 a-explorer-class-dwarf-shaman-07 << race=DWARF class=SHAMAN
-insert after a-explorer-core-07-1437 a-explorer-class-nightelf-warrior-07 << race=NIGHTELF class=WARRIOR
-insert after a-explorer-core-02-1432 a-explorer-class-nightelf-rogue-02 << race=NIGHTELF class=ROGUE
-insert after a-explorer-core-05-1440 a-explorer-class-nightelf-rogue-05 << race=NIGHTELF class=ROGUE
-insert after start a-explorer-class-nightelf-priest-00 << race=NIGHTELF class=PRIEST
-insert after a-explorer-core-03-1433 a-explorer-class-nightelf-priest-03 << race=NIGHTELF class=PRIEST
-insert after start a-explorer-class-nightelf-druid-00 << race=NIGHTELF class=DRUID
-insert after a-explorer-core-01-1436 a-explorer-class-nightelf-druid-01 << race=NIGHTELF class=DRUID
-insert after a-explorer-core-02-1432 a-explorer-class-nightelf-druid-02 << race=NIGHTELF class=DRUID
-insert after a-explorer-core-03-1433 a-explorer-class-nightelf-druid-03 << race=NIGHTELF class=DRUID
-insert after a-explorer-core-07-1437 a-explorer-class-gnome-warrior-07 << race=GNOME class=WARRIOR
-insert after a-explorer-core-02-1432 a-explorer-class-gnome-rogue-02 << race=GNOME class=ROGUE
-insert after a-explorer-core-05-1440 a-explorer-class-gnome-rogue-05 << race=GNOME class=ROGUE
-insert after start a-explorer-class-gnome-priest-00 << race=GNOME class=PRIEST
-insert after a-explorer-core-03-1433 a-explorer-class-gnome-priest-03 << race=GNOME class=PRIEST
-insert after start a-explorer-class-gnome-mage-00 << race=GNOME class=MAGE
-insert after a-explorer-core-02-1432 a-explorer-class-gnome-mage-02 << race=GNOME class=MAGE
-insert after a-explorer-core-06-1431 a-explorer-class-gnome-mage-06 << race=GNOME class=MAGE
-insert after start a-explorer-class-gnome-warlock-00 << race=GNOME class=WARLOCK
-insert after a-explorer-core-03-1433 a-explorer-class-gnome-warlock-03 << race=GNOME class=WARLOCK
-insert after a-explorer-core-07-1437 a-explorer-class-gnome-warlock-07 << race=GNOME class=WARLOCK
-insert after a-explorer-core-07-1437 a-explorer-class-skybornea-warrior-07 << race=SKYBORNE_A class=WARRIOR
-insert after a-explorer-core-02-1432 a-explorer-class-skybornea-rogue-02 << race=SKYBORNE_A class=ROGUE
-insert after a-explorer-core-05-1440 a-explorer-class-skybornea-rogue-05 << race=SKYBORNE_A class=ROGUE
-insert after start a-explorer-class-skybornea-mage-00 << race=SKYBORNE_A class=MAGE
-insert after a-explorer-core-02-1432 a-explorer-class-skybornea-mage-02 << race=SKYBORNE_A class=MAGE
-insert after start a-explorer-class-skybornea-druid-00 << race=SKYBORNE_A class=DRUID
-insert after a-explorer-core-01-1436 a-explorer-class-skybornea-druid-01 << race=SKYBORNE_A class=DRUID
-insert after a-explorer-core-02-1432 a-explorer-class-skybornea-druid-02 << race=SKYBORNE_A class=DRUID
-insert after a-explorer-core-03-1433 a-explorer-class-skybornea-druid-03 << race=SKYBORNE_A class=DRUID
+core a-explorer-core-01-1439 a-explorer-core-02-1436 a-explorer-core-03-1413 a-explorer-core-04-1439 a-explorer-core-05-1433 a-explorer-core-06-1440 a-explorer-core-07-1437
+insert after a-explorer-core-04-1439 a-explorer-class-nightelf-priest-03 << race=NIGHTELF class=PRIEST

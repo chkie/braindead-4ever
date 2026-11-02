@@ -113,7 +113,7 @@ UTF-8, one module per file, `data/routes/<faction>/<module>.route`. `--` starts 
 | `xp <level>` | reach a level | `plan` or data |
 | `note "<text>"` | a hint in our own words, infinitive style | `plan` |
 
-Every element ends with `| src=<sources> status=<status>`, optionally `roots=<n>` on `goto`. `status` is `unbestätigt` or `bestätigt`; `bestätigt` needs `own` in `src`.
+Every element ends with `| src=<sources> status=<status>`, optionally `roots=<n>` on `goto`. `status` is `unbestätigt` or `bestätigt`; `bestätigt` needs `own` in `src`. An element may carry its own filter before that part (`accept 783 << race=HUMAN | src=…`); it applies together with the step's and the module's filter.
 
 A step's zone is the target of its last `travel` element, else the map of its `goto`. Several `goto` in one step must be in the same zone.
 
@@ -156,7 +156,14 @@ The route of a combination: the first `start` module whose filter applies, then 
 - **Speed** (`#mode speed`): no quest without a secured prerequisite, no breadcrumbs.
 - **Explorer** (`#mode explorer`): also quests with an unknown or conflicting prerequisite and breadcrumbs. Known prerequisites are still enforced.
 
-The builder orders the actions of a block greedily: the cheapest next action (accept, objectives, turn-in), cost in yards plus 600 yards for every level an accept would raise the planned level; quest log at most 20; quests more than 4 levels below the block start are skipped; quest level at most 2 above the planned level. The planned level never goes down. These are computed routes, not played ones. The route simulator (`tools/routekit/sim.py`, parameters in `data/plan/params.toml`) plays them and prices them in Modellstunden; `docs/ROUTE-METRICS.md` holds the metrics of every combination. From Welle 6b the builder uses the simulator; until then, and until our own measurements arrive, the planned levels stay planning values.
+The builder (`tools/routekit/build.py` with the optimizer `tools/routekit/optimize.py`, Welle 6b) prices every choice in the time and XP model of the simulator (`tools/routekit/sim.py`, parameters in `data/plan/params.toml`) instead of the earlier nearest-action greed:
+
+- **Start modules** are optimised (construction with the worth test, then large neighbourhood search) so that every combination of the start arrives in the same one-level window at the first core block (G7).
+- **Core route**: a beam search over zone visits within the zone-change budget of the start route (guard P9); every visit may grind to open the next quests of its zone (an announced `xp` step). The order inside a visit is improved by relocate, or-opt, 2-opt and swap moves and Held-Karp at hubs; then quests whose actions lie in two visited zones are carried, and quests of other races and classes are added where they pay.
+- **Repair rounds** play the emitted route of every combination in the simulator and read the broken rules from the metrics (`tools/routekit/metrics.py`): an `xp` announcement before every grind (R17, R19), a flight path step when the route passes an unknown flight master (R13), the follow-up quest in the turn-in step (R04), a quest taken at the first visit of its giver (R05, P6), an objective worked when the route passes it (R06), passed quests worth their time taken (P6, R18), work done on the first visit (P5), long low-value trips dropped (P4).
+- **Explorer** is the speed route plus new Forever quests that add at most `opt.explorer_detour_sec` model seconds to a module; finds on the way come from `ns.Explore` in the client.
+
+The search is counted in tries and rounds, never in seconds, and is deterministic. A step carries the planned level of the lowest combination that sees it (accepts at least what they require), so no combination meets a level it lacks without an `xp` step. Elements carry the filter of their audience when the step serves several. An `fp` step leads to a flight master of `data/facts/finds.jsonl` (ATT); its `goto` is backed by that position. These are computed routes, not played ones; `docs/ROUTE-METRICS.md` holds the metrics of every combination before and after the optimizer. Until our own measurements arrive, the planned levels stay planning values.
 
 ## Linter
 
@@ -167,7 +174,7 @@ Run per file and per combination (56 combinations, both modes). Each error has a
 | `syntax`, `kopf`, `schritt` | syntax, required header lines, unique step IDs, no empty step |
 | `herkunft` | every element names its sources (`src=`) |
 | `quelle` | only sources allowed by FD-1101; data elements need a data source |
-| `beleg` | the named sources really hold the quest (data/facts), and a `goto` lies within 10 yards of a position those sources give for a quest of the step |
+| `beleg` | the named sources really hold the quest (data/facts), and a `goto` lies within 10 yards of a position those sources give for a quest of the step, or for a flight master when the step has `fp` |
 | `status` | status given; `bestätigt` only with `own` |
 | `label` | no section is `stabil` without measurements |
 | `sperrliste` | block list in notes and `#text`: typical AI phrases (for example "tauche ein", "nahtlos", "mühelos", "episch"), exclamation marks, emoji |

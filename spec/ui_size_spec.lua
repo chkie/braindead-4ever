@@ -243,7 +243,13 @@ describe("Step window size", function()
 		local ns = S.login({ locale = "deDE", saved = { ui = { width = 260 } } })
 		local SF, W = ns.StepFrame, ns.StepFrame.frame
 		assert.are.equal(260, W.w)
-		assert.matches("^„Wölfe an der Grenze“ annehmen", W.step.text)
+		local _, t1 = S.first(ns)
+		assert.are.equal(1, W.step.text:find("„" .. t1 .. "“ annehmen", 1, true))
+		local texts = W.step.text
+		for _, row in ipairs(SF.VisibleRows()) do
+			texts = texts .. row.text.text
+		end
+		assert.matches("[äöüÄÖÜß]", texts) -- an umlaut on the window (next steps, e.g. „Säuberung im Koboldlager“)
 		assert.matches("^Wald von Elwynn • 1/", W.title.text)
 		for _, fs in ipairs({ W.step, W.detail, W.xp }) do
 			assert.is_true(fs.w > 0 and fs.w <= 260 - 33, "text inside the window")

@@ -1,14 +1,14 @@
 # Pathmark
 
-Pathmark (working title) is a free leveling guide addon for World of Warcraft: Forever, levels 1 to 60.
+Pathmark (working title) is a free leveling guide addon for World of Warcraft: Forever. Its routes cover levels 1 to 30 today; levels 31 to 60 follow as updates after the first release.
 
-**Status:** early development. There is no release yet, and the addon does not guide you anywhere so far.
+**Status:** early development. There is no release yet. The routes for levels 1 to 30 are computed with a time and XP model, not yet played in the game.
 
 [Deutsch weiter unten](#deutsch)
 
 ## What it is for
 
-- Step-by-step routes from level 1 to 60 for both factions, free of charge with no paid tier.
+- Step-by-step routes for both factions and all 56 race and class combinations, levels 1 to 30 (31 to 60 later), free of charge with no paid tier.
 - Every step shows where its data comes from. Data taken from other open projects starts out as unconfirmed and is replaced as soon as our own in-game measurements cover it.
 - English and German from the start.
 
@@ -54,13 +54,13 @@ World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registe
 
 ## Deutsch
 
-Pathmark (Arbeitstitel) ist ein kostenloser Leveling-Guide für World of Warcraft: Forever, Stufe 1 bis 60.
+Pathmark (Arbeitstitel) ist ein kostenloser Leveling-Guide für World of Warcraft: Forever. Die Routen reichen heute von Stufe 1 bis 30; Stufe 31 bis 60 folgt nach der ersten Veröffentlichung mit Updates.
 
-**Stand:** frühe Entwicklung. Es gibt noch keine Veröffentlichung, und das Addon führt noch nirgendwohin.
+**Stand:** frühe Entwicklung. Es gibt noch keine Veröffentlichung. Die Routen für Stufe 1 bis 30 sind mit einem Zeit- und XP-Modell berechnet, im Spiel noch nicht gespielt.
 
 ### Wofür es gedacht ist
 
-- Routen Schritt für Schritt von Stufe 1 bis 60 für beide Fraktionen, kostenlos und ohne Bezahlstufe.
+- Routen Schritt für Schritt für beide Fraktionen und alle 56 Volk-Klasse-Kombinationen, Stufe 1 bis 30 (31 bis 60 später), kostenlos und ohne Bezahlstufe.
 - Jeder Schritt zeigt, woher seine Daten stammen. Daten aus anderen offenen Projekten gelten zunächst als unbestätigt und werden ersetzt, sobald eigene Messungen im Spiel sie abdecken.
 - Deutsch und Englisch von Anfang an.
 

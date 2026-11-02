@@ -100,8 +100,9 @@ def samples(leg, step):
 
 
 class Context:
-    def __init__(self, facts, mods, comps, params):
+    def __init__(self, facts, mods, comps, params, detail=False):
         self.f, self.mods, self.comps, self.p = facts, mods, comps, params
+        self.detail = detail  # the optimizer's repair rounds read what broke a rule (row["detail"])
         self.followups = {}  # q -> quests whose prerequisite groups name q
         for r in facts.q.values():
             for group in r.get("pre", {}).get("v", []) or []:
@@ -197,6 +198,7 @@ def evaluate(ctx, run):
                      if a in run.reached and b in run.reached}
     row["xph_1_20"] = xp.total_to(20) / h[20] if h.get(20) else None
     acts = run.actions
+    det = {}
     step_of = [(a["module"], a["step"]) for a in acts]
     rf = {q: (f.q.get(q) or {}) for q in run.quest}
 
@@ -238,7 +240,9 @@ def evaluate(ctx, run):
         if a["q"] is not None:
             quests_of_step.setdefault((a["module"], a["step"]), set()).add(a["q"])
     single = {}
-    for g in walks:
+    # a leg into another zone is the route's travel (with its own travel step), not a trip for the
+    # quest of the step it ends at; P4 counts legs inside one zone (as P4yd)
+    for g in same_zone:
         if g["action"] >= len(acts):
             continue
         qs = quests_of_step.get(step_of[g["action"]], set())
@@ -275,7 +279,7 @@ def evaluate(ctx, run):
         visits_back.setdefault(expected + 1, []).append((i, posacts[near[k]]))
     returns, wasted = 0, 0
     for start, items in sorted(visits_back.items()):
-        verdicts, services = [], False
+        verdicts, services, possible = [], False, []
         for i, j in items:
             a = acts[i]
             if a["verb"] in ("train", "fp", "sethome", "hs"):
@@ -291,10 +295,16 @@ def evaluate(ctx, run):
                 done = info.get("c") if rf[q].get("obj") else info.get("a")
                 ok = done is not None and done <= j
             verdicts.append(ok)
+            if ok:
+                possible.append((i, j))
         if any(verdicts):
             returns += 1
+            if ctx.detail:
+                det.setdefault("p5_returns", []).append(possible)
             if all(verdicts) and not services:
                 wasted += 1
+                if ctx.detail:
+                    det.setdefault("p5_wasted", []).append([(i, j) for i, j in items])
     row["p5_returns"], row["p5_wasted"] = returns, wasted
 
     # P6, R06, R13, R18: along the walked line
@@ -316,12 +326,14 @@ def evaluate(ctx, run):
     by_q = {r["q"]: r for r in pool}
     passed, obj_passed, fm_passed = {}, {}, set()
     step_len = p.lim("p6_sample_yd")
+    line = Grid(250.0)  # every sampled point of the walked line, for the detour of a quest
     for g in walks:
         i = g["action"]
         if i >= len(acts):
             continue
         a = acts[i]
         for s in samples(g, step_len):
+            line.add(s, i)
             for gp, q in givers.near(s, p.lim("p6_passed_yd")):
                 if q in passed:
                     continue
@@ -334,17 +346,96 @@ def evaluate(ctx, run):
                 obj_passed[q] = (i, op)
             for fp_pos, fid in fms.near(s, p.lim("r13_flight_master_yd")):
                 if not any(lp[0] == fp_pos[0] and geo.dist(lp[1:], fp_pos[1:]) <= p.lim("r13_flight_master_yd") for lp in learned):
+                    if fid not in fm_passed and ctx.detail:
+                        det.setdefault("r13", []).append((fid, i))
                     fm_passed.add(fid)
-    never, later = [], []
+    # P6 counts quests the route could take where it passes the giver (DR 22c §5, brain chapter 21
+    # P6 "lohnende passierte Quest"): the giver stands in the zone the character is in, and every
+    # zone of the quest (giver, objectives, ender) is still ahead on the route. A quest that needs
+    # a zone the route does not visit again would cost an extra zone change (guard P9); it is
+    # reported as P6z.
+    ahead = [set() for _ in range(len(acts) + 1)]
+    for k in range(len(acts) - 1, -1, -1):
+        ahead[k] = ahead[k + 1] | ({lint.zone_key(acts[k]["zone"])} if acts[k]["zone"] is not None else set())
+
+    def off_line(pos, i):
+        """Distance from pos to the walked line from action i on (yards; 1e9 if not near)."""
+        for radius in (250.0, 750.0, 2000.0):
+            near = [geo.dist(lp[1:], pos[1:]) for lp, k in line.near(pos, radius) if k >= i and lp[0] == pos[0]]
+            if near:
+                return min(near)
+        return 1e9
+
+    cf_kill = cf
+    rate_s = (xp.total_to(30) / run.reached[30]) if 30 in run.reached else 0.0
+
+    def worth(r, i, level):
+        """DR 22c §4.3 / brain chapter 21 §4.3 "lohnende Mitnahme": the quest's XP per second of
+        extra time (detours from the walked line to giver, objectives and ender and back, two
+        talks, the objectives' work) is at least the route's XP rate, or half of it when the
+        detour takes less than 60 s. Returns (worth it, extra seconds)."""
+        pts = [ctx.world(r["startPos"]["v"]), ctx.world(r["endPos"]["v"])]
+        pts += [ctx.world(o["pos"]) for o in r.get("obj", []) if o.get("pos")]
+        walk = 0.0
+        for pt in pts:
+            d = off_line(pt, i)
+            if d >= 1e9:
+                return False, 1e9
+            walk += 2 * d
+        walk_s = walk * sim.instance_detour(pts[0][0], p) / p["run_speed"]
+        ql = _qlevel(r) or level
+        work = 2 * p["talk_sec"]
+        gain = xp.quest_xp((r.get("xp") or {}).get("v") or 0, ql, level)
+        for o in r.get("obj", []):
+            n = o.get("count") or 1
+            if o.get("k") in ("kill", "item"):
+                n = n * (p["item_kills"] if o.get("k") == "item" else 1) * (1 + p["extra_kills"])
+                wa, wb = sim.kill_weights(level, ql, p)
+                work += cf_kill * n * (p["kill_sec_1"] * wa + p["kill_sec_60"] * wb)
+                gain += n * xp.kill_xp(level, ql)
+            elif o.get("k") == "object":
+                work += n * p["interact_sec"]
+            elif o.get("k") == "talk":
+                work += p["talk_sec"]
+            elif o.get("k") == "event":
+                work += p["escort_sec"]
+        extra = walk_s + work
+        if extra <= 0:
+            return True, 0.0
+        need = rate_s * (0.5 if walk_s < 60 else 1.0)
+        return gain / extra >= need, extra
+
+    def on_route(r, i):
+        """The giver stands in the character's zone and every zone of the quest is still ahead."""
+        if i >= len(acts) or acts[i]["zone"] is None:
+            return False
+        zones = {lint.zone_key(r["startPos"]["v"][0]), lint.zone_key(r["endPos"]["v"][0])}
+        zones |= {lint.zone_key(o["pos"][0]) for o in r.get("obj", []) if o.get("pos")}
+        return lint.zone_key(r["startPos"]["v"][0]) == lint.zone_key(acts[i]["zone"]) and zones <= ahead[i]
+
+    never, later, off, slow = [], [], [], []
     for q, (i, gp) in sorted(passed.items()):
         a_idx = run.quest.get(q, {}).get("a")
+        if not on_route(by_q[q], i):
+            if a_idx is None:
+                off.append(q)
+            continue
+        if a_idx is None and not worth(by_q[q], i, acts[i]["level"])[0]:
+            slow.append(q)
+            continue
         if a_idx is None:
             never.append(q)
         elif a_idx > i and _left(run, i, a_idx, gp, p.lim("p6_later_yd")):
             later.append(q)
     row["p6_never"], row["p6_later"] = len(never), len(later)
+    row["p6_off"] = len(off)
+    row["p6_slow"] = len(slow)
     row["p6_never_quests"] = never[:20]
     r06 = [q for q, (i, op) in sorted(obj_passed.items()) if _left(run, i, run.quest[q]["c"], op, visit_r)]
+    if ctx.detail:
+        det["p6_never"] = [(q, passed[q][0]) for q in never]
+        det["p6_later"] = [(q, passed[q][0]) for q in later]
+        det["r06"] = [(q, obj_passed[q][0]) for q in r06]
     row["r06_passed_objectives"] = len(r06)
 
     # P7: quest log
@@ -449,6 +540,8 @@ def evaluate(ctx, run):
     taken = [q for q in sorted(run.quest) if "a" in run.quest[q]]
     own = [q for q in taken if "own" in (rf[q].get("races") or {}).get("src", []) + (rf[q].get("classes") or {}).get("src", [])]
     row["g11_own"] = len(own) / len(taken) if taken else 0.0
+    # G11 holds "before label stabil" (DR 22d): it applies to a route with a module labelled stabil
+    row["g11_stabil"] = any(ctx.mods.get(k) and ctx.mods[k].header.get("label") == "stabil" for k in keys)
 
     # Rules of DR 22a
     rules = {}
@@ -463,13 +556,21 @@ def evaluate(ctx, run):
         if "t" not in info:
             continue
         ends = {e.get("id") for e in (rf[q].get("end") or {}).get("v", []) if e.get("k") == "npc"}
+        t_idx = info["t"]
+        # level and quest log right after the turn-in (DR 22a R04: the follow-up "bereitsteht")
+        lv_after = acts[t_idx + 1]["level"] if t_idx + 1 < len(acts) else run.end_level
+        log_after = acts[t_idx + 1]["log"] if t_idx + 1 < len(acts) else 0
         for q2 in ctx.followups.get(q, []):
             i2 = run.quest.get(q2, {}).get("a")
-            if i2 is None or i2 <= info["t"] or step_of[i2] == step_of[info["t"]]:
+            if i2 is None or i2 <= t_idx or step_of[i2] == step_of[t_idx]:
+                continue
+            if not _available(f.q.get(q2) or {"q": q2}, run, t_idx + 1, lv_after, log_after, p["quest_log_work"]):
                 continue
             starts = {e.get("id") for e in ((f.q.get(q2) or {}).get("start") or {}).get("v", []) if e.get("k") == "npc"}
             if ends & starts:
                 r04 += 1
+                if ctx.detail:
+                    det.setdefault("r04", []).append((q, q2))
     rules["R04"] = r04
     spot = Grid(SAME_NPC * 4)
     turnin_steps = {step_of[k] for k, a in enumerate(acts) if a["verb"] == "turnin"}
@@ -480,8 +581,15 @@ def evaluate(ctx, run):
         if a["verb"] == "accept" and step_of[i] not in turnin_steps:
             r = rf[a["q"]]
             for _, j in spot.near(a["pos"], SAME_NPC):
-                if step_of[j] != step_of[i] and _available(r, run, j + 1, acts[j]["level"], acts[j]["log"], p["quest_log_work"]):
+                # a later visit (DR 22a R05 "späterer Besuch"): the character went away from the
+                # NPC in between (a visit ends 400 yd away, as P5); the next step at the same NPC is
+                # the same visit
+                if step_of[j] == step_of[i] or not _left(run, j, i, acts[j]["pos"], visit_r):
+                    continue
+                if _available(r, run, j + 1, acts[j]["level"], acts[j]["log"], p["quest_log_work"]):
                     r05 += 1
+                    if ctx.detail:
+                        det.setdefault("r05", []).append((a["q"], j))
                     break
         spot.add(a["pos"], i)
     rules["R05"] = r05
@@ -497,6 +605,8 @@ def evaluate(ctx, run):
         between = acts[c1["idx"] + 1:c2["idx"]]
         if any(b["verb"] == "turnin" and b["pos"] is not None and (b["pos"][0] != c1["pos"][0] or geo.dist(b["pos"][1:], c1["pos"][1:]) > visit_r) for b in between):
             r07 += 1
+            if ctx.detail:
+                det.setdefault("r07", []).append((c1["idx"], c2["idx"]))
     rules["R07"] = r07
     rules["R09"] = r09
     rules["R10"] = sum(1 for _, rule, _ in run.hearth_errors if rule == "R10")
@@ -505,16 +615,27 @@ def evaluate(ctx, run):
                                                  and a["verb"] in ("accept", "turnin") for a in acts[i + 1:]))
     rules["R12"] = sum(1 for _, rule, _ in run.hearth_errors if rule == "R12")
     rules["R13"] = len(fm_passed)
-    r18 = 0
+    r18 = r18_off = 0
     for gte in run.gates:
         if gte["pos"] is None or gte["idx"] >= len(acts):
             continue
         a = acts[gte["idx"]]
-        if any(_available(by_q[q], run, gte["idx"], a["level"], a["log"], p["quest_log_work"])
-               for _, q in givers.near(gte["pos"], p.lim("p6_passed_yd"))):
+        # quests the character could take before it grinds (level before the grind, DR 22a R18)
+        lv0 = int(math.floor(gte["from"] + 1e-9))
+        near_q = [q for _, q in givers.near(gte["pos"], p.lim("p6_passed_yd"))
+                  if _available(by_q[q], run, gte["idx"], lv0, a["log"], p["quest_log_work"])]
+        # as P6: only quests the route can take there (zone of the character, all zones ahead)
+        off_q = [q for q in near_q if not on_route(by_q[q], gte["idx"]) or not worth(by_q[q], gte["idx"], lv0)[0]]
+        near_q = [q for q in near_q if q not in off_q]
+        if off_q:
+            r18_off += 1
+        if near_q:
             r18 += 1
+            if ctx.detail:
+                det.setdefault("r18", []).append((gte["idx"], sorted(near_q)))
     rules["R17"] = sum(1 for _, has_place in run.xp_marks if not has_place)
     rules["R18"] = r18
+    row["r18_off"] = r18_off
     rules["R19"] = sum(1 for g in run.gates if not g["announced"])
     rules["R20"] = sum(1 for q in taken if any(o.get("k") == "event" for o in rf[q].get("obj", [])))
     rules["R21"] = sum(1 for q in taken if any(o.get("k") == "item" for o in rf[q].get("obj", [])))
@@ -528,6 +649,10 @@ def evaluate(ctx, run):
     rules["R31"] = len(run.open_at_end)
     rules["R33"] = sum(1 for k in keys if ctx.mods.get(k) and ctx.mods[k].header.get("label") == "stabil")
     row["rules"] = rules
+    if ctx.detail:
+        det["gates"] = [(g["idx"], g["to"], g["announced"]) for g in run.gates]
+        det["long_legs"] = long_legs
+        row["detail"] = det
     return row
 
 
@@ -622,7 +747,7 @@ def _metric_table(params):
         ("P2g", "P2 größter Grind-Anteil einer Stufe", lambda r: r["p2_grind_max"], "high", L("p2_grind_share"), "limit"),
         ("P3", "P3 Ziehungen schlechter als Startlösung (von 16)", lambda r: r.get("p3_worse_draws"), "high", 0, "base"),
         ("P3h", "P3 Modellstunden 1–30, längste der 16 Ziehungen", lambda r: max(r["p3_draws_h30"]), "high", None, "report"),
-        ("P4", "P4 lange Einzelquest-Wege (über 0,05 Modellstunden, unter ½ Routenrate)", lambda r: r["p4_long"], "high", 0, "limit"),
+        ("P4", "P4 lange Einzelquest-Wege im Gebiet (über 0,05 Modellstunden, unter ½ Routenrate)", lambda r: r["p4_long"], "high", 0, "limit"),
         ("P4b", "P4 lange Einzelquest-Wege mehr als Startlösung", lambda r: r.get("p4_vs_base"), "high", 0, "base"),
         ("P4yd", "P4 längster Fußweg im selben Gebiet (yd)", lambda r: r["p4_longest_zone_yd"], "high", None, "report"),
         ("P5", "P5 vermeidbare Rückkehren", lambda r: r["p5_returns"], "high", None, "report"),
@@ -630,6 +755,8 @@ def _metric_table(params):
         ("P5w", "P5 verschwendete Wege", lambda r: r["p5_wasted"], "high", 0, "limit"),
         ("P6", "P6 vorbeigelaufen, nie genommen", lambda r: r["p6_never"], "high", 0, "limit"),
         ("P6l", "P6 vorbeigelaufen, erst später genommen", lambda r: r["p6_later"], "high", 0, "limit"),
+        ("P6z", "P6 vorbeigelaufen, braucht ein Gebiet, das die Route nicht mehr besucht (Wächter P9)", lambda r: r["p6_off"], "high", None, "report"),
+        ("P6n", "P6 vorbeigelaufen, lohnt nicht (XP je Zusatzsekunde unter der Routenrate)", lambda r: r["p6_slow"], "high", None, "report"),
         ("P7", "P7 Questlog-Spitze", lambda r: r["p7_peak"], "high", params["quest_log_work"], "limit"),
         ("P7o", "P7 angenommen und nie abgegeben", lambda r: r["p7_open_end"], "high", 0, "limit"),
         ("P8", "P8 Annahme über Stufe + 2, graue Abgabe, Ausreißer", lambda r: r["p8_above"] + r["p8_gray"] + r["p8_outliers"], "high", 0, "limit"),
@@ -650,7 +777,8 @@ def _metric_table(params):
         ("G8s", "G8 Klasseneinschübe gesamt (Modellstunden)", lambda r: r["g8_total_sec"] / 3600.0, "high", L("g8_insert_total_sec") / 3600.0, "limit"),
         ("G9", "G9 train-Schritte auf der Route (Lehrerwege prüfbar ab einem)", lambda r: r["g9_trains"], "low", None, "open0"),
         ("G10", "G10 Rückstand zur besten Route der Klasse", lambda r: r["g10_regret"], "high", L("g10_regret"), "limit"),
-        ("G11", "G11 Anteil Routenquests mit eigener Volk-/Klassen-Messung", lambda r: r["g11_own"], "low", L("g11_own"), "limit"),
+        ("G11", "G11 Anteil Routenquests mit eigener Volk-/Klassen-Messung (gilt ab Etikett stabil)",
+         lambda r: r["g11_own"] if r.get("g11_stabil") else None, "low", L("g11_own"), "limit"),
         ("R01", "R01 Abgabe über Questlevel + 5 (H)", rule("R01"), "high", 0, "H"),
         ("R02", "R02 Abgabe ab Questlevel + 10 (H)", rule("R02"), "high", 0, "H"),
         ("R04", "R04 Folgequest am selben NPC nicht im selben Schritt (H)", rule("R04"), "high", 0, "H"),
@@ -664,6 +792,7 @@ def _metric_table(params):
         ("R13", "R13 unbekannter Flugmeister passiert (H)", rule("R13"), "high", 0, "H"),
         ("R17", "R17 Grind-Schritt ohne Ort (H)", rule("R17"), "high", 0, "H"),
         ("R18", "R18 Grind trotz annehmbarer Quest in 500 yd (H)", rule("R18"), "high", 0, "H"),
+        ("R18z", "R18 Grind neben Quests, die ein Gebiet außerhalb der Route brauchen oder nicht lohnen", lambda r: r["r18_off"], "high", None, "report"),
         ("R19", "R19 Grind ohne vorherige Ankündigung (H)", rule("R19"), "high", 0, "H"),
         ("R20", "R20 Eskorten-/Ereignisquests im Speed-Pfad (W)", rule("R20"), "high", None, "W"),
         ("R21", "R21 Sammelquests ohne Abbruchregel (W)", rule("R21"), "high", None, "W"),
@@ -768,6 +897,72 @@ def hours_by_faction(rows):
     return out
 
 
+# --- gate (Welle 6b: the CI job "Route quality" fails on a breach) ------------------------------------
+
+EXCEPTIONS_PATH = repo_path("data", "plan", "route-exceptions.toml")
+GATED = ("limit", "base", "H", "check")
+
+
+def load_exceptions(path=None):
+    import tomllib
+
+    try:
+        with open(path or EXCEPTIONS_PATH, "rb") as fh:
+            return tomllib.load(fh).get("exception", [])
+    except FileNotFoundError:
+        return []
+
+
+def _covered(exc, mid, mode, label, value, bad):
+    for e in exc:
+        if e["id"] != mid or mode not in e.get("modes", routefmt.MODES):
+            continue
+        combos = e.get("combos", "*")
+        if combos != "*" and label.split("/", 1)[1] not in combos:
+            continue
+        if bad == "low" and value >= e["min"] - 1e-9:
+            return e
+        if bad != "low" and value <= e["max"] + 1e-9:
+            return e
+    return None
+
+
+def gate(report, params, exceptions):
+    """Every breach of a limit, a guard against the start route, a hard rule of DR 22a or the
+    model check by a combination, and whether a measured exception (data/plan/route-exceptions.toml)
+    covers it. An exception covers a metric only up to its measured value."""
+    out = []
+    table = {m[0]: m for m in _metric_table(params)}
+    for mid, title, get, bad, limit, kind in table.values():
+        if kind not in GATED or limit is None:
+            continue
+        for r in report["rows"]:
+            v = get(r)
+            if kind == "base" and not r.get("baseline"):
+                continue
+            if _ok(v, bad, limit) is not False:
+                continue
+            e = _covered(exceptions, mid, r["mode"], r["label"], v, bad)
+            out.append({"id": mid, "mode": r["mode"], "label": r["label"], "value": v, "limit": limit,
+                        "covered": bool(e), "exception": e.get("reason", "")[:60] if e else None})
+    if not report["p1"]["equal"]:
+        out.append({"id": "P1", "mode": "-", "label": "-", "value": 0, "limit": 1, "covered": False, "exception": None})
+    return out
+
+
+def gate_text(breaches):
+    open_ = [b for b in breaches if not b["covered"]]
+    lines = ["Gate: %d Überschreitungen, %d durch gemessene Ausnahmen gedeckt, %d offen" % (
+        len(breaches), len(breaches) - len(open_), len(open_))]
+    by = {}
+    for b in open_:
+        by.setdefault((b["id"], b["mode"]), []).append(b)
+    for (mid, mode), bs in sorted(by.items()):
+        worst = ", ".join("%s %s" % (b["label"].split("/", 1)[1], _fmt(b["value"])) for b in bs[:5])
+        lines.append("OFFEN %s %s: %d Kombinationen (%s)" % (mid, mode, len(bs), worst))
+    return "\n".join(lines)
+
+
 # --- output ------------------------------------------------------------------------------------------
 
 def _fmt(v):
@@ -815,7 +1010,8 @@ def markdown(report, title="Routenkennzahlen"):
     out.append("Modellstunden aus `tools/routekit/sim.py` mit den Parametern aus `data/plan/params.toml`, keine Vorhersage "
                "echter Spielzeit. Status: erfüllt oder verletzt (Zahl der Kombinationen) gegen den Grenzwert aus "
                "`data/plan/params.toml`; Bericht ohne Grenzwert; offen, wenn nicht prüfbar. Bänder 1–10, 11–20, 21–30 nach der "
-               "geplanten Stufe des Schritts. In Welle 6a bricht keine Kennzahl den Build ab.")
+               "geplanten Stufe des Schritts. Seit Welle 6b bricht jede Überschreitung, die keine gemessene Ausnahme in "
+               "`data/plan/route-exceptions.toml` deckt, den CI-Job „Route quality“ ab.")
     out.append("")
     p1 = report["p1"]
     out.append("P1 Determinismus: Prüfsumme `%s`, zweiter Lauf %s." % (p1["digest"], "gleich" if p1["equal"] else "**verschieden**"))
@@ -901,8 +1097,8 @@ def write_json(path, obj):
         fh.write("\n")
 
 
-def main(json_path=None, md_path=None, summary_path=None, write_baseline=False):
-    facts, mods, comps, params = sim.load()
+def main(json_path=None, md_path=None, summary_path=None, write_baseline=False, check=False, routes=None):
+    facts, mods, comps, params = sim.load(routes=routes)
     baseline = None
     try:
         with open(BASELINE_PATH, encoding="utf-8") as fh:
@@ -910,7 +1106,10 @@ def main(json_path=None, md_path=None, summary_path=None, write_baseline=False):
     except FileNotFoundError:
         pass
     report = collect(facts, mods, comps, params, baseline)
+    breaches = gate(report, params, load_exceptions())
+    report["gate"] = breaches
     print(text_table(report))
+    print(gate_text(breaches))
     if json_path:
         write_json(json_path, report)
     if md_path:
@@ -918,10 +1117,13 @@ def main(json_path=None, md_path=None, summary_path=None, write_baseline=False):
             fh.write(markdown(report) + "\n")
     if summary_path:
         with open(summary_path, "a", encoding="utf-8", newline="\n") as fh:
-            fh.write(markdown(report, "Route quality (Welle 6a: report only)") + "\n")
+            fh.write("## Gate\n\n```\n" + gate_text(breaches) + "\n```\n\n")
+            fh.write(markdown(report, "Route quality") + "\n")
     if write_baseline:
         write_json(BASELINE_PATH, baseline_of(report))
         print("Startlösung geschrieben: %s" % BASELINE_PATH)
     if not report["p1"]["equal"] or report["params_errors"]:
+        return 1
+    if check and any(not b["covered"] for b in breaches):
         return 1
     return 0

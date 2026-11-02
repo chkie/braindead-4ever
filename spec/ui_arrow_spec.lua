@@ -38,7 +38,8 @@ describe("Arrow", function()
 		assert.are.same({ 0, 0, 0, 1 }, F.outline.vertex)
 		assert.is_true(F.outline.w > F.tex.w)
 		assert.is_false(F.mouse) -- not clickable outside Edit Mode
-		assert.are.equal("Accept “Wolves Across the Border”", F.title.text)
+		local _, t1 = S.first(ns)
+		assert.are.equal("Accept “" .. t1 .. "”", F.title.text)
 		assert.are.equal(1, F.title.maxLines)
 		assert.are.equal(220, F.title.w)
 	end)
@@ -164,8 +165,9 @@ describe("Arrow", function()
 			sets = sets + 1
 			set(self, v)
 		end
-		for i = 1, 60 do -- one second while walking: the number changes every frame
-			S.place(-136.5, -8933.5 + i * 0.5)
+		local t = goal(ns)
+		for i = 1, 60 do -- one second while walking towards the goal: the number changes every frame
+			S.place(t.wx, t.wy - 70 + i * 0.5)
 			ns.Arrow.Update(1 / 60)
 		end
 		assert.is_true(sets <= 5, "distance text set " .. sets .. " times in one second")
@@ -288,8 +290,8 @@ describe("Map pins", function()
 		assert.are.equal("Waypoint-MapPin-Minimap-Tracked", mini.tex.atlas)
 		mini.scripts.OnUpdate(mini, 1)
 		local _, _, _, x, y = mini:GetPoint(1)
-		-- goal lies north-east of the player: right and up on a north-up minimap
-		assert.is_true(x > 0 and y > 0)
+		-- the session puts the player 70 yd south of the goal: up on a north-up minimap
+		assert.is_true(math.abs(x) < 1e-6 and y > 0)
 		ns.UI.Set("pins", false)
 		assert.is_false(rawget(mini, "shown"))
 	end)

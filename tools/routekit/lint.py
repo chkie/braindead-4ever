@@ -112,6 +112,22 @@ class Facts:
     def items(self, q):
         return (self.q.get(q) or {}).get("items", [])
 
+    def flight_masters(self):
+        """[(uiMap, west, north, sources)] of the flight masters in data/facts/finds.jsonl (ATT),
+        the places an `fp` step may lead to."""
+        if getattr(self, "_fms", None) is None:
+            self._fms = []
+            path = repo_path("data", "facts", "finds.jsonl")
+            if os.path.exists(path):
+                for rec in read_jsonl(path):
+                    if rec.get("type") != "flightpath":
+                        continue
+                    for m, x, y in rec.get("pos", []):
+                        w = self.frames.to_world(m, x / 100.0, y / 100.0)
+                        if w:
+                            self._fms.append((m, w[2], w[1], set(rec.get("src", []))))
+        return self._fms
+
 
 def zone_key(ui_map):
     """Zephras has two uiMapIDs (2521, 2665); both are one zone for the route rules."""
@@ -259,6 +275,8 @@ def lint_module(mod, facts):
                     E("karte", line, "Punkt %.1f,%.1f liegt nicht auf uiMap %d (Achsen vertauscht?)" % (wx, wy, m))
                 if ext:
                     cands = [p for qq in step_quests for p in facts.positions(qq)]
+                    if any(e.verb == "fp" for e in st.elements):
+                        cands += facts.flight_masters()
                     ok = any(
                         zone_key(p[0]) == zone_key(m) and geo.dist((p[2], p[1]), (wy, wx)) <= AGREE_YARDS and set(ext) <= p[3]
                         for p in cands

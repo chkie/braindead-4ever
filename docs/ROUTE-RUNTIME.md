@@ -18,7 +18,7 @@ Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Las
 
 ## Module `route`
 
-Core module (runs in safe mode). Required: `C_QuestLog.IsQuestFlaggedCompleted`, `C_QuestLog.GetLogIndexForQuestID`, `C_QuestLog.IsComplete`, `C_Map.GetBestMapForUnit`, `UnitLevel`, `UnitRace`, `UnitClass`, `UnitFactionGroup`, `UnitXP`, `UnitXPMax`; events `PLAYER_LOGIN`, `QUEST_ACCEPTED`, `QUEST_REMOVED`, `QUEST_LOG_UPDATE`. Optional: `GetQuestLogRewardXP` (undocumented), `GetXPExhaustion`, `C_Map.GetMapInfo`, `C_Item.GetItemCount` and the events `PLAYER_LOGOUT`, `QUEST_TURNED_IN`, `QUEST_WATCH_UPDATE`, `QUEST_LOG_CRITERIA_UPDATE`, `UNIT_QUEST_LOG_CHANGED`, `ZONE_CHANGED_NEW_AREA`, `BAG_UPDATE_DELAYED`, `PLAYER_LEVEL_UP`, `PLAYER_XP_UPDATE`, `UPDATE_EXHAUSTION`, `UI_INFO_MESSAGE`, `HEARTHSTONE_BOUND`, and since Welle 7 `UnitPosition` and `InCombatLockdown` (reorder in the block). The probe checks them as `mod.route.*`.
+Core module (runs in safe mode). Required: `C_QuestLog.IsQuestFlaggedCompleted`, `C_QuestLog.GetLogIndexForQuestID`, `C_QuestLog.IsComplete`, `C_Map.GetBestMapForUnit`, `UnitLevel`, `UnitRace`, `UnitClass`, `UnitFactionGroup`, `UnitXP`, `UnitXPMax`; events `PLAYER_LOGIN`, `QUEST_ACCEPTED`, `QUEST_REMOVED`, `QUEST_LOG_UPDATE`. Optional: `GetQuestLogRewardXP` (undocumented), `GetXPExhaustion`, `C_Map.GetMapInfo`, `C_Item.GetItemCount` and the events `PLAYER_LOGOUT`, `QUEST_TURNED_IN`, `QUEST_WATCH_UPDATE`, `QUEST_LOG_CRITERIA_UPDATE`, `UNIT_QUEST_LOG_CHANGED`, `ZONE_CHANGED_NEW_AREA`, `BAG_UPDATE_DELAYED`, `PLAYER_LEVEL_UP`, `PLAYER_XP_UPDATE`, `UPDATE_EXHAUSTION`, `UI_INFO_MESSAGE`, `HEARTHSTONE_BOUND`, `UNIT_SPELLCAST_SUCCEEDED`, `TRAINER_SHOW` (plan steps, Welle 6b), and since Welle 7 `UnitPosition` and `InCombatLockdown` (reorder in the block). The probe checks them as `mod.route.*`.
 
 At `PLAYER_LOGIN` the module reads faction (`UnitFactionGroup`), race ID and class ID (third return values of `UnitRace` and `UnitClass`; the two Skyborne races differ only there) and builds the route with `ns.Routes.Steps(faction, mode, raceID, classID)`. A race without a start module (new races are announced) gives no route; the problem report then says `no route for <faction> <race>/<class>`.
 
@@ -71,8 +71,8 @@ A step key is `<module>/<step id>`; step IDs are chosen by the route author and 
 | `travel` | the player's map is the target or one of its parent maps |
 | `xp` | level reached |
 | `collect` | `C_Item.GetItemCount` reaches the count |
-| `hs`, `sethome`, `fp` | the event was seen (`HEARTHSTONE_BOUND`, flight path message) for this step or one of the next three |
-| `goto`, `note`, `train` | not counted; a step with only these needs the player's check |
+| `hs`, `sethome`, `fp`, `train` | the event was seen for this step or one of the next three: hearthstone cast (`UNIT_SPELLCAST_SUCCEEDED` of the player with spell 8690), `HEARTHSTONE_BOUND`, the new flight path message (`UI_INFO_MESSAGE` with `ERR_NEWTAXIPATH`), the trainer window (`TRAINER_SHOW`) |
+| `goto`, `note` | not counted; a step with only these needs the player's check |
 
 A step is **done** when every counted element is done or the player checked it, **skipped** when the player skipped it, when all its quests are skipped, or (travel step) when every step of the zone it leads into is skipped, and **open** otherwise. An element of a skipped quest counts as done.
 
