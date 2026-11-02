@@ -152,6 +152,7 @@ read_globals = {
 	"GetTime",
 	-- units, player, group (collector, exchange, report)
 	"GetChannelName",
+	"GetFramerate",
 	"GetNumGroupMembers",
 	"GetServerTime",
 	"GetUnitName",
@@ -159,6 +160,7 @@ read_globals = {
 	"InCombatLockdown",
 	"IsInGroup",
 	"IsInGuild",
+	"IsInInstance",
 	"IsInRaid",
 	"LE_PARTY_CATEGORY_INSTANCE",
 	"UnitClass",

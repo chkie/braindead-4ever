@@ -232,6 +232,8 @@ local function NewWorld(flavor)
 		vignettes = {}, -- guid -> { info = {...}, x = 0.1, y = 0.2 }
 		onTaxi = false,
 		combat = false,
+		instance = false, -- IsInInstance (a dungeon, raid, battleground or arena)
+		fps = 60, -- GetFramerate
 		group = { instance = false, raid = false, party = false, members = 0 },
 		guild = false,
 		trial = false,
@@ -319,6 +321,12 @@ function M.reset(opts)
 	end
 	_G.InCombatLockdown = function()
 		return W.combat
+	end
+	_G.IsInInstance = function()
+		return W.instance, W.instance and "party" or "none"
+	end
+	_G.GetFramerate = function()
+		return W.fps
 	end
 	_G.C_EventUtils = {
 		IsEventValid = function(event)
@@ -799,6 +807,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/Collector/Export.lua",
 		"Pathmark/Collector/Proto.lua",
 		"Pathmark/Collector/Runs.lua",
+		"Pathmark/Collector/Budget.lua",
 		"Pathmark/Collector/Collect.lua",
 		"Pathmark/Collector/Exchange.lua",
 		"Pathmark/Core/Report.lua",
@@ -846,7 +855,29 @@ function M.session(opts)
 	M.fire("ADDON_LOADED", "Pathmark")
 	M.fire("PLAYER_LOGIN")
 	M.fire("PLAYER_ENTERING_WORLD", true, false)
+	M.ns = ns
 	return ns
+end
+
+-- Received addon messages wait in the exchange's inbox (Collector/Exchange.lua) until its ticker reads
+-- a slice; this reads all of them now, under the same rules (nothing in a fight or an instance).
+function M.readInbox(ns)
+	local X = (ns or M.ns).Exchange
+	while X.Drain() > 0 do
+	end
+end
+
+-- Lets the exchange send on the hidden channel whenever the rest of its rules allow: the channel
+-- budget (Collector/Budget.lua) grants every credit. For tests of delays, gaps and order.
+function M.freeChannel(ns)
+	local X = (ns or M.ns).Exchange
+	X.budget = {
+		Has = function()
+			return true
+		end,
+		Spend = function() end,
+		Heard = function() end,
+	}
 end
 
 -- Lines printed so far, as one string.

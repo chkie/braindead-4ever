@@ -3,7 +3,8 @@
 -- restricted call and nothing the design forbids happens while the lockdown is on. The stand-ins in
 -- spec/helpers/ui.lua record such calls in wow.blocked like the client's ADDON_ACTION_BLOCKED.
 -- Counter-check: with the guard taken out, the same actions fill wow.blocked, so the main test would
--- fail (the test can see the fault it guards against).
+-- fail (the test can see the fault it guards against). Received addon messages are only queued in a
+-- fight and read after it (Collector/Exchange.lua), with the same kind of counter-check.
 local wow = require("spec.helpers.wow")
 local S = require("spec.helpers.uisession")
 
@@ -78,6 +79,48 @@ describe("Combat lockdown", function()
 		assert.is_nil(_G.PathmarkSetupFrame)
 		S.combat(false)
 		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+	end)
+
+	-- Received addon messages wait in the exchange's inbox in a fight (owner 2026-11-02: receiving
+	-- costs next to nothing, reading happens outside fights; Collector/Exchange.lua).
+	local function hearInFight(ns)
+		S.combat(true)
+		for i = 1, 5 do
+			wow.fire(
+				"CHAT_MSG_ADDON",
+				"Pathmark",
+				("o;1;%d;1429;4231;6512"):format(2840 + i),
+				"CHANNEL",
+				"Anna Sommer" .. i,
+				"",
+				0,
+				5,
+				"PathmarkShare",
+				0
+			)
+		end
+		wow.fire("CHAT_MSG_ADDON", "Pathmark", "o;1;2850;1429;4231;6512", "PARTY", "Ben Winter")
+		wow.advance(30)
+		return ns.Exchange
+	end
+
+	it("reads no received addon message in a fight and reads them after it", function()
+		local X = hearInFight(Login())
+		assert.are.equal(0, X.stats.received)
+		assert.are.equal(5, X.Waiting(X.inbox.channel))
+		assert.are.equal(1, X.Waiting(X.inbox.other))
+		S.combat(false)
+		wow.advance(1)
+		assert.are.equal(6, X.stats.received)
+	end)
+
+	it("counter-check: reading without the guard happens in the fight", function()
+		local ns = Login()
+		ns.Exchange.CanRead = function()
+			return true
+		end
+		local X = hearInFight(ns)
+		assert.are.equal(6, X.stats.received)
 	end)
 
 	it("counter-check: without the guard the same fight records blocked calls", function()

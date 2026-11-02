@@ -25,7 +25,7 @@ of the Ace3 libraries used as well as that of the covered work.
 -- docs/RUN-TIMES.md). Every installation keeps the run sections it hears ("s" messages, Proto.lua)
 -- in a vault of its own beside the received finds and passes them on, so one export brings the runs
 -- of many players. Plain Lua 5.1 without WoW API: clock, server time, random and the XP table are
--- passed in, so the tests and the spread simulation (spec/runs_spec.lua) run this exact code.
+-- passed in, so the tests and the spread simulation (spec/helpers/spread.lua) run this exact code.
 -- Rules:
 --   vault    PathmarkCollectDB.runs, at most VAULT_MAX sections; the oldest give way first
 --   dedup    one section per (token, section); the same text again is a duplicate
@@ -49,7 +49,7 @@ Runs.VAULT_MAX = 5000 -- sections; about 60 bytes each, 300 KB in the SavedVaria
 Runs.RELAY_GAP = 10 -- seconds between two relayed messages of one client (plan: 1 per 10 s)
 Runs.SENDER_WINDOW = 300 -- seconds
 Runs.SENDER_MAX = 40 -- run messages per sender and window: relay pace 30 plus own sections and margin
-Runs.NEW_TOKENS_MAX = 150 -- tokens one sender may introduce per session (simulation peak 66, spec/runs_spec.lua)
+Runs.NEW_TOKENS_MAX = 150 -- tokens one sender may introduce per session (simulation peak 66 before the channel budget)
 Runs.BLOCKED_MAX = 2000 -- conflicting keys remembered; beyond that the list starts over
 Runs.MIN_LEVEL_SECS = 60 -- no level takes less than a minute
 Runs.MIN_MODULE_SECS = 20 -- the shortest route modules are a travel step and a turn-in
@@ -139,8 +139,8 @@ function Runs:Rebind(tbl)
 end
 
 -- A new session (login or /reload): every section may go out once more, own sections first, then
--- the newest first: a player who was away lacks the recent ones (spread simulation: a higher minimum
--- than random order, spec/runs_spec.lua).
+-- the newest first: a player who was away lacks the recent ones (spread simulation of 2026-11-02, before
+-- the channel budget: a higher minimum than random order).
 function Runs:StartSession()
 	self.heard, self.senders, self.muted = {}, {}, {}
 	self.nextRelay, self.qi = 0, 1
