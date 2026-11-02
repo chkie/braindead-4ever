@@ -34,8 +34,15 @@ local Num, Str = U.Num, U.Str
 
 local Route = {
 	MODES = { speed = true, explorer = true },
-	EVENTS = { StepChanged = true, RouteRecalculated = true, XPBalance = true, QuestAbandoned = true },
+	EVENTS = {
+		StepChanged = true,
+		RouteRecalculated = true,
+		XPBalance = true,
+		QuestAbandoned = true,
+		OfferChanged = true,
+	},
 	EVALUATE_DELAY = 0.1, -- quest events come in bursts; one evaluation per burst
+	JOB_BUDGET = 0.002, -- seconds of replanning per frame outside a fight (brain chapter 21 §6.2)
 	REMOVED_DELAY = 1, -- completion flag check after QUEST_REMOVED (Questie, chapter 06 §3)
 	SAVE_FORMAT = 1,
 }
@@ -49,7 +56,9 @@ local store -- prerequisite observations, account-wide (PathmarkDB.prereq)
 local modules -- compiled modules of the played faction (read only)
 local turnedIn = {} -- quests handed in this session (QUEST_TURNED_IN), the flag can lag behind
 local levelSeen -- PLAYER_LEVEL_UP payload; UnitLevel can lag behind
-local evalQueued, balanceQueued = false, false
+local evalQueued, balanceQueued, offerQueued = false, false, false
+local offer -- open question of the replanning (Routes/Replan.lua), or nil
+local driver -- frame whose OnUpdate runs the replanning job one slice per frame
 local lastXP, lastMax
 local lastActive -- GetTime() of the last game event; gaps up to Forecast.IDLE_CAP count as play
 
@@ -97,6 +106,19 @@ local world = {
 	IsComplete = function(q)
 		return C_QuestLog.IsComplete(q) == true
 	end,
+	-- Objective progress (entry anchor, brain chapter 21 §6.1): an objective with a count above zero.
+	Progress = function(q)
+		if C_QuestLog.IsComplete(q) == true then
+			return true
+		end
+		local list = api.GetQuestObjectives and api.GetQuestObjectives(q)
+		for _, o in ipairs(type(list) == "table" and list or {}) do
+			if o.finished == true or (Num(o.numFulfilled) or 0) > 0 then
+				return true
+			end
+		end
+		return false
+	end,
 	Level = function()
 		local level = Num(UnitLevel("player")) or 1
 		return math.max(level, levelSeen or 0)
@@ -122,6 +144,18 @@ local world = {
 	end,
 	ItemCount = function(item)
 		return api.GetItemCount and Num(api.GetItemCount(item)) or 0
+	end,
+	-- World position (west, north) and instance, for reordering a block from where the player stands;
+	-- nil inside instances (restricted there).
+	Position = function()
+		if not api.UnitPosition then
+			return nil
+		end
+		local north, west, _, inst = api.UnitPosition("player")
+		return Num(west), Num(north), Num(inst)
+	end,
+	InCombat = function()
+		return api.InCombatLockdown ~= nil and api.InCombatLockdown() == true
 	end,
 }
 Route.world = world
@@ -176,6 +210,23 @@ local function Split(cur, prev)
 	s.split = cur and { m = cur.module, secs = 0, clean = ranges[cur.module].first == cur.index } or nil
 end
 
+-- Replanning job (Routes/Replan.lua): one slice of at most JOB_BUDGET per frame, nothing in a fight.
+local function Clock()
+	return debugprofilestop() / 1000
+end
+
+local function Tick()
+	if not rt or not rt:RunJob(Clock, Route.JOB_BUDGET) then
+		driver:Hide()
+	end
+end
+
+local function Drive()
+	if driver and rt and rt:Busy() then
+		driver:Show()
+	end
+end
+
 -- Balance and evaluation, bundled per burst of events ---------------------------------------------
 
 local function SendBalance()
@@ -197,6 +248,7 @@ local function Evaluate()
 	evalQueued = false
 	if rt then
 		rt:Evaluate()
+		Drive()
 	end
 end
 
@@ -209,10 +261,35 @@ local function QueueEvaluate()
 	C_Timer.After(Route.EVALUATE_DELAY, Guard.Wrap("route", Evaluate))
 end
 
+-- Open question of the replanning ("over the plan", switch point): computed after a step change, a
+-- recalculation or a level-up, not per frame; OfferChanged when it changes.
+local function UpdateOffer()
+	offerQueued = false
+	local o = rt and rt:Offer() or nil
+	if (o and o.id) ~= (offer and offer.id) then
+		offer = o
+		Fire("OfferChanged", o)
+	else
+		offer = o
+	end
+end
+
+local function QueueOffer()
+	if offerQueued then
+		return
+	end
+	offerQueued = true
+	C_Timer.After(Route.EVALUATE_DELAY, Guard.Wrap("route", UpdateOffer))
+end
+
 local function OnRuntime(event, ...)
+	Drive()
 	if event == "StepChanged" then
 		Split(...)
 		QueueBalance()
+	end
+	if event == "StepChanged" or event == "RouteRecalculated" then
+		QueueOffer()
 	end
 	Fire(event, ...)
 end
@@ -229,7 +306,7 @@ local function Root()
 end
 
 local function Build()
-	rt, Route.missing = nil, nil
+	rt, Route.missing, offer = nil, nil, nil
 	root = Root()
 	local mode = Route.MODES[root.mode] and root.mode or "speed"
 	root.mode = mode
@@ -237,7 +314,14 @@ local function Build()
 	local _, _, raceID = UnitRace("player")
 	local _, _, classID = UnitClass("player")
 	raceID, classID = Num(raceID), Num(classID)
-	local steps = faction and raceID and classID and R.Steps(faction, mode, raceID, classID)
+	local saved = root[mode]
+	local fresh = type(saved) ~= "table"
+		or saved.v ~= Route.SAVE_FORMAT
+		or saved.race ~= raceID
+		or saved.class ~= classID
+	-- alternative modules the player chose at switch points (Routes/Replan.lua, stage 2)
+	local swap = not fresh and type(saved.alts) == "table" and saved.alts or nil
+	local steps = faction and raceID and classID and R.Steps(faction, mode, raceID, classID, swap)
 	if not steps then
 		-- New race/class pairs are announced (brain chapter 14 §1): report, do not fail.
 		Route.missing = ("no route for %s %s/%s"):format(tostring(faction), tostring(raceID), tostring(classID))
@@ -247,18 +331,18 @@ local function Build()
 	local data = R.Load(faction)
 	R.Release()
 	modules = data.modules
-	local saved = root[mode]
-	if type(saved) ~= "table" or saved.v ~= Route.SAVE_FORMAT or saved.race ~= raceID or saved.class ~= classID then
+	if fresh then
 		saved = { v = Route.SAVE_FORMAT, race = raceID, class = classID }
 		root[mode] = saved
 	end
-	rt = RT.New(
-		steps,
-		data.quests,
-		world,
-		saved,
-		{ race = raceID, class = classID, modules = data.modules, unsure = data.unsure }
-	)
+	rt = RT.New(steps, data.quests, world, saved, {
+		race = raceID,
+		class = classID,
+		modules = data.modules,
+		unsure = data.unsure,
+		maps = data.maps,
+		alts = data.alts,
+	})
 	rt.data, rt.race, rt.class = data, raceID, classID
 	if store then
 		for q, r in pairs(store:Known()) do
@@ -268,6 +352,7 @@ local function Build()
 	rt.notify = OnRuntime
 	Fire("RouteRecalculated", "start")
 	rt:Evaluate()
+	Drive()
 	QueueBalance()
 end
 
@@ -504,6 +589,43 @@ function Route.Quests()
 	end) or {}
 end
 
+-- Open question of the replanning (docs/ROUTE-RUNTIME.md §Replanning), or nil:
+-- { kind = "over", id, gap, plan, level, drop } or { kind = "switch", id, plan, level, map, choice, options }.
+function Route.Offer()
+	if not rt or not M.IsActive("route") then
+		return nil
+	end
+	return offer
+end
+
+-- Answers the open question: yes = true takes it (leaves out quests, switches the zone), false keeps the
+-- route; the question does not come again. True if answered.
+function Route.AnswerOffer(yes)
+	return Call(function()
+		local o = offer
+		if not o then
+			return false
+		end
+		local r, module = rt:AnswerOffer(o.id, yes == true)
+		if r == "rebuild" then
+			local m = modules and modules[module]
+			local first = m and m.steps and m.steps[1]
+			rt.saved.anchor = first and (module .. "/" .. first.id) or nil
+			Build()
+		end
+		UpdateOffer()
+		return r ~= false
+	end) == true
+end
+
+-- Quests the route passed on entry although they were neither done nor in the log (anchor rule,
+-- docs/ROUTE-RUNTIME.md §Replanning): list of quest IDs in route order, {} when none.
+function Route.Earlier()
+	return Call(function()
+		return rt:Earlier()
+	end) or {}
+end
+
 -- Last XP gain seen (for the probe check xp.kill).
 function Route.LastGain()
 	return Route.lastGain
@@ -528,9 +650,18 @@ local function Init()
 		GetXPExhaustion = "GetXPExhaustion",
 		GetMapInfo = "C_Map.GetMapInfo",
 		GetItemCount = "C_Item.GetItemCount",
+		GetQuestObjectives = "C_QuestLog.GetQuestObjectives",
+		UnitPosition = "UnitPosition",
+		InCombatLockdown = "InCombatLockdown",
 	}) do
 		api[name] = M.Optional(path)
 	end
+	driver = CreateFrame("Frame")
+	driver:Hide() -- OnUpdate runs only while the frame is shown
+	driver:SetScript("OnUpdate", function()
+		Guard.Call("route", Tick)
+	end)
+	Route.driver = driver
 	root = Root()
 	Store()
 end
@@ -608,7 +739,11 @@ local events = {
 	BAG_UPDATE_DELAYED = QueueEvaluate,
 	PLAYER_LEVEL_UP = function(_, _, level)
 		levelSeen = Num(level)
+		if rt then
+			rt:Recheck() -- played without the route meanwhile? (brain chapter 21 §6.1)
+		end
 		QueueEvaluate()
+		QueueOffer()
 		QueueBalance()
 	end,
 	PLAYER_XP_UPDATE = function(_, _, unit)
@@ -649,7 +784,15 @@ M.Define("route", {
 		events = { "PLAYER_LOGIN", "QUEST_ACCEPTED", "QUEST_REMOVED", "QUEST_LOG_UPDATE" },
 	},
 	optional = {
-		funcs = { "GetQuestLogRewardXP", "GetXPExhaustion", "C_Map.GetMapInfo", "C_Item.GetItemCount" },
+		funcs = {
+			"GetQuestLogRewardXP",
+			"GetXPExhaustion",
+			"C_Map.GetMapInfo",
+			"C_Item.GetItemCount",
+			"C_QuestLog.GetQuestObjectives",
+			"UnitPosition",
+			"InCombatLockdown",
+		},
 		events = {
 			"PLAYER_LOGOUT",
 			"QUEST_TURNED_IN",

@@ -36,6 +36,9 @@ The live route in Retail uses Forever quest IDs and maps, so quest names may sho
 | 1 Optional dungeon | `/pathmark preview dungeon` | gold tag with Blizzard's words for optional and dungeon and the level range 18–24 on the second next step |
 | 1 XP line tooltip with forecast (Welle 5b) | `/pathmark preview forecast` (or hover the XP line) | "Level and time": planned level 3, "Your level: 5, 2 levels above the plan", gold "Time forecast" with route end, section against the median, next level with XP per hour |
 | 1 XP line tooltip without runs (Welle 5b) | `/pathmark preview collecting` | the same tooltip with "collecting data" instead of times |
+| 1 Over the plan (Welle 7) | `/pathmark preview over`, then "Adjust" | banner "You are 3 levels above the plan. Adjust the route?" with "Adjust" and "Keep route"; after "Adjust" the status line "2 quests left out: …" and no buttons |
+| 1 Switch point (Welle 7) | `/pathmark preview switch` | banner "Westfall fits your level better (planned from level 9). Go there next? About 25 min faster." with "Go there" and "Keep route" |
+| 1 Quests skipped earlier (Welle 7) | `/pathmark preview earlier` (or hover the XP line) | tooltip of the XP line with gold "7 quests skipped earlier:", five quest names and "and 2 more" |
 | 1 Size: narrowest (Welle 5b) | `/pathmark preview narrow`, best in a German client | 260 units wide; umlauts whole, next steps wrap to two lines, nothing cut in the middle of a word |
 | 1 Size: widest, ten steps (Welle 5b) | `/pathmark preview wide`; then drag the grip at the bottom right up and down, `/pathmark preview off` restores the size | 500 units wide, ten next steps, Blizzard's thin scroll bar on the right; the mouse wheel scrolls to steps 11 to 20; while dragging the height, "Show steps ahead" in the settings (Display) follows; in a fight the grip does nothing |
 | 2 Arrow colors | `/pathmark preview arrow 0`, `arrow 55`, `arrow 90`, `arrow 120`, `arrow 160` | green, yellow-green, yellow, orange-red, red with "behind you"; stand still while taking the shot |
@@ -62,6 +65,17 @@ Whether the watch calls and the tracker's alpha from addon code cause taint is u
 5. Do the same once in a fight: nothing changes until the fight ends.
 6. `/reload`, then open `World of Warcraft/_retail_/Logs/taint.log`: lines naming `Pathmark` together with `ObjectiveTracker`, `QuestWatch` or `blocked` are the finding; copy them into the report. No such line: the check passed.
 7. Turn Pathmark off in the AddOns list and log in: the tracker shows the marks from step 2 (Pathmark puts them back at every logout).
+
+## 3a. Replanning in the live route (Welle 7)
+
+In Retail the Forever quests are missing, so the live route cannot be checked there; these checks wait for the Forever client. In Forever:
+
+1. New character: turn Pathmark off in the AddOns list, play a few quests of the start zone in your own order and leave one out, then turn Pathmark on and log in: the route stands at the step after the furthest quest you handed in or made progress on, not at the start. Hover the XP line: the quest you left out is listed as "skipped earlier".
+2. Take a breadcrumb quest that leads to a later zone and keep it in the log, then `/reload`: the route does not jump ahead to that zone.
+3. Grind three levels above the plan of the current quest step: the banner asks "You are 3 levels above the plan. Adjust the route?" once; "Adjust" leaves out the quests under 80 % XP, the right-click menu can undo it.
+4. Grind on until the route reaches a travel step into a new zone: it stops there and offers the block that fits ("Go there", "Keep route"); in a fight no new banner appears.
+5. Skip a quest in the middle of a zone, then stand still a moment: the next steps may change their order (only when the way gets at least 5 % shorter); in a fight nothing changes until it ends. `/reload` keeps the order; undo of the skip brings the plan order back.
+6. Profiling: with `C_AddOnProfiler` (or `/pathmark probe run`) the route module stays under 0.1 ms per frame on average during steps 3 to 5.
 
 ## 4. Moving the windows (Welle 5c, owner readings 16 and 17)
 

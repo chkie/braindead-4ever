@@ -134,10 +134,10 @@ local function Steps()
 end
 
 -- Demo source for ns.Connect: the route functions the windows call.
-local function Source(kind)
+local function Source(kind, westfall)
 	local steps, idx = {}, 1
 	local history = {}
-	local src = { missing = nil }
+	local src = { missing = nil, westfall = westfall }
 	function src.Build() -- after ns.Connect uses this source, so the titles come from it
 		steps = Steps()
 	end
@@ -168,6 +168,8 @@ local function Source(kind)
 			b.zone = { nextMap = src.westfall, shortfall = 640, enough = false, kills = 9 }
 		elseif kind == "forecast" then
 			b.level = 5 -- two levels above the plan of the demo steps (level 3)
+		elseif kind == "over" then
+			b.level = 6 -- three levels above the plan: the question "over the plan"
 		end
 		return b
 	end
@@ -194,6 +196,34 @@ local function Source(kind)
 	end
 	function src.SkipPreview()
 		return { Q.milly, Q.harvest, Q.grapes }
+	end
+	-- Replanning (Welle 7): the question "over the plan", a switch point with an alternative module and
+	-- the list of quests skipped earlier (XP tooltip, more names than it shows).
+	local offer
+	if kind == "over" then
+		offer = { kind = "over", id = "preview-over", gap = 3, plan = 3, level = 6, drop = { Q.milly, Q.harvest } }
+	elseif kind == "switch" then
+		offer = {
+			kind = "switch",
+			id = "preview-switch",
+			plan = 3,
+			level = 9,
+			choice = { kind = "module", module = "preview", map = src.westfall, plan = 9, gain = 1500 },
+			options = {},
+		}
+	end
+	function src.Offer()
+		return offer
+	end
+	function src.AnswerOffer()
+		offer = nil
+		return true
+	end
+	function src.Earlier()
+		if kind == "earlier" then
+			return { Q.kob, Q.echo, Q.skir, Q.report, Q.milly, Q.harvest, Q.grapes }
+		end
+		return {}
 	end
 	local function Advance(action)
 		history[#history + 1] = { idx = idx, act = action }
@@ -322,8 +352,7 @@ local function ArrowAt(deg, yd)
 end
 
 local function Use(kind)
-	local src = Source(kind)
-	src.westfall = 1436
+	local src = Source(kind, 1436)
 	C.Use(src)
 	src.Build()
 	return src
@@ -349,6 +378,9 @@ P.STATES = {
 	"wide",
 	"forecast",
 	"collecting",
+	"over",
+	"switch",
+	"earlier",
 	"arrow <degrees>",
 	"arrival",
 	"colorblind",
@@ -453,7 +485,7 @@ ns.Commands.preview = function(rest)
 	SF.Refresh()
 	if state == "tooltip" then
 		SF.ShowOriginTip(SF.frame.cur)
-	elseif state == "forecast" or state == "collecting" then
+	elseif state == "forecast" or state == "collecting" or state == "earlier" then
 		SF.ShowXPTip(SF.frame.xpHit) -- the tooltip of the XP line
 	elseif state == "combat" then
 		SF.frame:SetAlpha(UI.COMBAT_ALPHA)

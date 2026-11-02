@@ -44,6 +44,10 @@ ns.Runtime = RT
 -- Chosen values, not measured: a step planned more than LEVEL_MARGIN levels below the character
 -- counts as passed (its quests give at most 80 % XP from quest level + 6 on, see XP.QuestXP).
 RT.LEVEL_MARGIN = 5
+-- Chosen value (Polestar #86, brain chapter 21 §6.1): the entry anchor holds only when at least this
+-- share of the route quests up to it is handed in or in the log; else the route starts from the top.
+RT.ANCHOR_SHARE = 0.5
+RT.EARLIER_MAX = 200 -- quests kept in the list "skipped earlier"
 RT.UNDO_MAX = 20
 RT.LOOKAHEAD = 3 -- an event (flight path, hearthstone bound) counts for the current and next 3 steps
 
@@ -81,6 +85,7 @@ function RT.New(steps, quests, world, saved, opts)
 		observed = {}, -- questID -> prerequisite groups confirmed by player observations
 		resolved = {}, -- questID -> "observed" | "observed-none" (Routes/Prereq.lua)
 		notify = noop,
+		recheck = true, -- the first evaluation places the route by the anchor rule (RT:Anchor)
 	}, RT)
 	for _, q in ipairs(opts.unsure or {}) do
 		self.unsure[q] = true
@@ -135,6 +140,9 @@ function RT.New(steps, quests, world, saved, opts)
 	end
 	self.routeQuests = seen
 	self:Reindex()
+	if self.InitReplan then
+		self:InitReplan(opts) -- Routes/Replan.lua: blocks for reordering, saved orders, alternatives
+	end
 	return self
 end
 
@@ -328,18 +336,107 @@ function RT:HoldsLogQuest(i)
 	return false
 end
 
--- An open step the route may pass without the player: far below the character's level, before the
--- last step with server progress on a fresh start, or a travel step whose next quest shows progress.
+-- Entry anchor (Polestar #86, brain chapter 21 §6.1, Code E): the furthest step from `from` on with a
+-- turn-in or with objective progress of one of its quests. A quest that is only in the log does not
+-- count, so a carried breadcrumb cannot throw the player ahead. The anchor holds only when at least
+-- ANCHOR_SHARE of the route quests from `from` up to it are handed in or in the log; else nil (the
+-- route moves on from `from` by the other rules). Accepts before the anchor whose quest is neither
+-- done nor in the log go to the list "skipped earlier" (RT:Earlier). Steps before the anchor count
+-- as passed, unless a quest of them is in the log.
+function RT:Anchor(from, ctx)
+	local w = self.world
+	local progress = w.Progress or function(q)
+		return w.IsComplete(q)
+	end
+	local anchor
+	for j = #self.steps, from + 1, -1 do
+		for _, el in ipairs(self.steps[j].els) do
+			local v, q = el[1], el[2]
+			if QUEST[v] and (w.IsFlagged(q) or (v == V.COMPLETE and w.InLog(q) and progress(q))) then
+				anchor = j
+				break
+			end
+		end
+		if anchor then
+			break
+		end
+	end
+	if not anchor then
+		return nil
+	end
+	local seen, total, ok, skipped = {}, 0, 0, {}
+	for j = from, anchor do
+		for _, q in ipairs(self.steps[j].quests) do
+			if not seen[q] then
+				seen[q] = true
+				total = total + 1
+				if w.IsFlagged(q) or w.InLog(q) then
+					ok = ok + 1
+				elseif self.accepts[q] and self.accepts[q] < anchor and not ctx.blocked[q] then
+					skipped[#skipped + 1] = q
+				end
+			end
+		end
+	end
+	if ok < total * RT.ANCHOR_SHARE then
+		return nil
+	end
+	local list, have = type(self.saved.earlier) == "table" and self.saved.earlier or {}, {}
+	for _, q in ipairs(list) do
+		have[q] = true
+	end
+	for _, q in ipairs(skipped) do
+		if not have[q] and #list < RT.EARLIER_MAX then
+			list[#list + 1] = q
+		end
+	end
+	self.saved.earlier = #list > 0 and list or nil
+	return anchor
+end
+
+-- The next evaluation checks the anchor again from the current step (after a level-up: the player
+-- may have played without the route meanwhile).
+function RT:Recheck()
+	self.recheck = true
+end
+
+-- Quests the route passed on entry although they were neither done nor in the log, in route order;
+-- without those done, taken or skipped since. For the line "N quests skipped earlier".
+function RT:Earlier()
+	local out, w = {}, self.world
+	local list = self.saved.earlier
+	if type(list) ~= "table" then
+		return out
+	end
+	local blocked = self:Blocked()
+	for _, q in ipairs(list) do
+		if not w.IsFlagged(q) and not w.InLog(q) and not blocked[q] then
+			out[#out + 1] = q
+		end
+	end
+	return out
+end
+
+-- An open step the route may pass without the player: far below the character's level (a travel step
+-- into a new zone only on the first start), before the entry anchor (RT:Anchor), or a travel step
+-- whose next quest shows progress.
 -- A step the player went back to (pin) is never passed by these rules.
 function RT:Passed(i, ctx)
 	local s = self.steps[i]
 	if self.saved.pin == s.key then
 		return false
 	end
-	if ctx.fresh and i < ctx.evidence and not self:HoldsLogQuest(i) then
+	if ctx.anchor and i < ctx.anchor and not self:HoldsLogQuest(i) then
 		return true
 	end
-	if s.lv and s.lv + RT.LEVEL_MARGIN < ctx.level and not self:HoldsLogQuest(i) then
+	-- A zone change is the player's choice (brain chapter 21 §6.2): during play the level rule never
+	-- passes a travel step into a new zone; the switch question there offers a block that fits.
+	if
+		s.lv
+		and s.lv + RT.LEVEL_MARGIN < ctx.level
+		and not self:HoldsLogQuest(i)
+		and (s.kind ~= "travel" or s.ret or ctx.fresh)
+	then
 		return true
 	end
 	if s.kind ~= "quest" then
@@ -403,16 +500,16 @@ function RT:Evaluate()
 		i = i or prev or 1
 	else
 		local ctx = self:Context()
+		local from
 		if not i then
 			ctx.fresh = true
-			ctx.evidence = 0
-			for j = n, 1, -1 do
-				if self.steps[j].kind == "quest" and self:Evidence(j) then
-					ctx.evidence = j
-					break
-				end
-			end
-			i = 1
+			i, from = 1, 1
+		elseif self.recheck and not saved.pin and i <= n then
+			from = i
+		end
+		self.recheck = nil
+		if from then
+			ctx.anchor = self:Anchor(from, ctx)
 		end
 		while i <= n do
 			if self:StepState(i, ctx) == "open" and not self:Passed(i, ctx) then
@@ -422,6 +519,9 @@ function RT:Evaluate()
 		end
 		if saved.pin and self.index[saved.pin] ~= i then
 			saved.pin = nil
+		end
+		if from and (ctx.anchor or (ctx.fresh and i > 1)) then
+			self.entered = true -- entry in the middle of the route: reorder the block's rest (Replan.lua)
 		end
 	end
 	self.cur = i
@@ -456,6 +556,7 @@ function RT:Push(kind, key, quest)
 		anchor = s.anchor,
 		pin = s.pin,
 		pending = s.pending,
+		orders = type(s.orders) == "table" and copy(s.orders) or nil, -- block orders (Replan.lua)
 		act = kind and { kind = kind, key = key, quest = quest } or nil,
 	}
 	while #u > RT.UNDO_MAX do
@@ -472,6 +573,10 @@ function RT:Undo()
 	local s = self.saved
 	s.marks, s.roots = copy(snap.marks), copy(snap.roots)
 	s.anchor, s.pin, s.pending = snap.anchor, snap.pin, snap.pending
+	if self.SetOrders then
+		-- a reorder that followed the action goes back with it (Routes/Replan.lua)
+		self:SetOrders(type(snap.orders) == "table" and copy(snap.orders) or nil)
+	end
 	self:Changed("undo")
 	return true
 end
@@ -489,6 +594,9 @@ function RT:LastAction()
 end
 
 function RT:Changed(reason)
+	if self.Replan then
+		self:Replan(reason) -- Routes/Replan.lua: a skip or abandon reorders the rest of the block
+	end
 	self:Evaluate()
 	self.notify("RouteRecalculated", reason)
 end

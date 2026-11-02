@@ -185,6 +185,13 @@ local function Build()
 	W.btnShow = Button(W, L.SHOW_LOCATION, function()
 		SF.RevealRumor()
 	end)
+	-- Replanning (Welle 7): "over the plan" and the switch point, yes and no
+	W.btnYes = Button(W, L.ADJUST, function()
+		SF.AnswerOffer(true)
+	end)
+	W.btnNo = Button(W, L.KEEP_ROUTE, function()
+		SF.AnswerOffer(false)
+	end)
 
 	-- Current step: check box in place of the nub, text, counter, detail
 	W.cur = CreateFrame("Frame", nil, W)
@@ -520,7 +527,7 @@ function SF.Layout()
 		Place(W.banner, x, y)
 		y = y + Height(W.banner) + 7
 		local bx, rowH = x, 0
-		for _, b in ipairs({ W.btnReaccept, W.btnSkipChain, W.btnShow }) do
+		for _, b in ipairs({ W.btnReaccept, W.btnSkipChain, W.btnShow, W.btnYes, W.btnNo }) do
 			if b:IsShown() then
 				local bw = FitButton(b)
 				if bx > x and bx + bw > total - SF.RIGHT then
@@ -828,6 +835,8 @@ local function RenderBanner(info)
 	W.btnReaccept:Hide()
 	W.btnSkipChain:Hide()
 	W.btnShow:Hide()
+	W.btnYes:Hide()
+	W.btnNo:Hide()
 	view.rumor = nil
 	if pending then
 		local follow = C.AbandonPreview() or {}
@@ -839,6 +848,17 @@ local function RenderBanner(info)
 		W.btnSkipChain:Show()
 		return true
 	end
+	-- Replanning question (Welle 7): a new one never appears in a fight; one shown before stays.
+	local offer = info and C.Offer()
+	if offer and (offer.id == view.offerId or not UI.Fighting()) then
+		view.offerId = offer.id
+		SetLine(W.banner, ST.Offer(offer))
+		W.btnYes:SetText(offer.kind == "switch" and L.SWITCH_GO or L.ADJUST)
+		W.btnYes:Show()
+		W.btnNo:Show()
+		return true
+	end
+	view.offerId = nil
 	local rumor = view.rumorShown or (not UI.Fighting() and C.Rumor())
 	if rumor and info then
 		view.rumorShown, view.rumor = rumor, rumor
@@ -1197,6 +1217,22 @@ local function DefinePopup()
 	}
 end
 
+-- Answer to the replanning question. After "adjust" the status line names how many quests were left out.
+function SF.AnswerOffer(yes)
+	local offer = C.Offer()
+	if not offer then
+		return false
+	end
+	local ok = C.AnswerOffer(yes)
+	if ok and yes and offer.kind == "over" then
+		view.message = ST.Adjusted(#offer.drop)
+	end
+	view.offerId = nil
+	SF.Invalidate()
+	SF.Refresh()
+	return ok
+end
+
 function SF.RevealRumor()
 	local r = view.rumor
 	if not r then
@@ -1238,7 +1274,7 @@ function SF.ShowXPTip(owner)
 	if not info then
 		return
 	end
-	local title, lines = ST.XPTip(info, view.balance, C.Forecast())
+	local title, lines = ST.XPTip(info, view.balance, C.Forecast(), C.Earlier())
 	GameTooltip:SetOwner(owner, "ANCHOR_LEFT")
 	GameTooltip:SetText(title, T.RGB(HIGHLIGHT_FONT_COLOR))
 	for _, line in ipairs(lines) do
@@ -1348,6 +1384,9 @@ local function Init()
 		SF.Queue()
 	end)
 	C.Register("QuestAbandoned", SF, function()
+		SF.Refresh()
+	end)
+	C.Register("OfferChanged", SF, function()
 		SF.Refresh()
 	end)
 	C.OnFinds(SF, function()

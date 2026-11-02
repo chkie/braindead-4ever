@@ -110,6 +110,35 @@ describe("Developer preview", function()
 		assert.are.same({}, wow.errors)
 	end)
 
+	it("over the plan, switch point and quests skipped earlier (Welle 7)", function()
+		local ns, W = preview("over")
+		assert.are.equal("You are 3 levels above the plan. Adjust the route?", W.banner.text)
+		assert.are.equal("Adjust", W.btnYes.text)
+		W.btnYes:Click()
+		assert.are.equal("2 quests left out: their turn-in would give less than 80 % XP.", W.status.text)
+		assert.is_false(rawget(W.btnYes, "shown"))
+		SlashCmdList.PATHMARK("preview switch")
+		assert.are.equal(
+			"Westfall fits your level better (planned from level 9). Go there next? About 25 min faster.",
+			W.banner.text
+		)
+		assert.are.equal("Go there", W.btnYes.text)
+		SlashCmdList.PATHMARK("preview earlier")
+		local lines = wow.world.tooltip.lines
+		local at
+		for i, line in ipairs(lines) do
+			if line == "7 quests skipped earlier:" then
+				at = i
+			end
+		end
+		assert.is_not_nil(at, "the list of quests skipped earlier")
+		assert.are.equal("“Kobold Camp Cleanup”", lines[at + 1])
+		assert.are.equal("and 2 more", lines[at + 6])
+		assert.are.same({}, wow.errors)
+		SlashCmdList.PATHMARK("preview off")
+		assert.are.same({}, ns.Connect.Earlier())
+	end)
+
 	it("setup and settings windows; unknown states list the choices", function()
 		local ns = preview("setup")
 		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
