@@ -90,7 +90,7 @@ local function Step(i, text, quest)
 	}
 end
 
-local function Steps()
+local function Steps(kind)
 	local s = {
 		Step(
 			1,
@@ -114,13 +114,17 @@ local function Steps()
 				"„Säuberung im Koboldlager“: Koboldgezücht besiegen",
 				"“Kobold Camp Cleanup”: kill Kobold Vermin"
 			)
+				-- abandoned: the counter takes the step's color like the window's own counter (S5)
+				.. (kind == "abandon" and " 3/8" or ""),
+			Q.kob
 		),
 		Step(
 			4,
 			T(
 				"„Säuberung im Koboldlager“ bei Marshal McBride abgeben",
 				"Turn in “Kobold Camp Cleanup” to Marshal McBride"
-			)
+			),
+			Q.kob
 		),
 	}
 	-- More steps for the size states (owner reading 14): the list holds 20, the rest scrolls.
@@ -139,7 +143,9 @@ local function Source(kind, westfall)
 	local history = {}
 	local src = { missing = nil, westfall = westfall }
 	function src.Build() -- after ns.Connect uses this source, so the titles come from it
-		steps = Steps()
+		steps = Steps(kind)
+		-- the abandoned quest is the current step, so note and marked step name the same quest (M9)
+		idx = kind == "abandon" and 3 or 1
 	end
 	function src.Title(q)
 		return TITLES[q]
@@ -163,7 +169,9 @@ local function Source(kind, westfall)
 	end
 	function src.Balance()
 		local b = { level = 3, toLevel = 620, step = { xp = 260, source = "log" } }
-		if kind == "reach" then
+		if kind == "dungeon" then
+			b.level = 18 -- the dungeon fits from level 18 on (K2: "Stufe 18–24" next to level 3)
+		elseif kind == "reach" then
 			b = { level = 9, toLevel = 1600, step = { xp = 480, source = "log" } }
 			b.zone = { nextMap = src.westfall, shortfall = 640, enough = false, kills = 9 }
 		elseif kind == "forecast" then
@@ -290,7 +298,13 @@ local function Source(kind, westfall)
 		if pos and pos.GetXY then
 			x, y = pos:GetXY()
 		end
-		local area = ns.Discover.Area("book:preview", x * 10000, y * 10000)
+		-- radii from the map's size in yards like the explorer logic (Routes/Explore.lua); without it
+		-- the circle was an oval of 1.5:1 (Welle 5d, S8)
+		local w, h
+		if C_Map.GetMapWorldSize then
+			w, h = C_Map.GetMapWorldSize(map)
+		end
+		local area = ns.Discover.Area("book:preview", x * 10000, y * 10000, w, h)
 		return { { key = "book:preview", kind = "book", map = map, show = "area", area = area } }
 	end
 	local hidden = false
@@ -352,7 +366,8 @@ local function ArrowAt(deg, yd)
 end
 
 local function Use(kind)
-	local src = Source(kind, 1436)
+	-- Westfall: 1436 in Forever, 52 in Retail; a map the client does not know gave "bis ?" (M8)
+	local src = Source(kind, C_Map.GetMapInfo(1436) and 1436 or 52)
 	C.Use(src)
 	src.Build()
 	return src
@@ -389,7 +404,7 @@ P.STATES = {
 	"off",
 }
 
--- The size states change the player's size; "off" puts it back.
+-- The size states change the player's size; every other state and "off" put it back.
 local function SetSize(width, ahead)
 	if not P.size then
 		P.size = { width = UI.Get("width"), ahead = UI.Get("ahead") }
@@ -398,22 +413,46 @@ local function SetSize(width, ahead)
 	UI.Set("ahead", ahead)
 end
 
-function P.Run(state, arg)
+local ARROW_STATES = { arrow = true, arrival = true, colorblind = true }
+
+-- Every state starts from a clean window (Welle 5d, K2): the usage hint, the skip dialog, the first
+-- start, rumor and riddle lines, a demo arrow goal, mini view, combat dimming and a demo size of the
+-- state before are gone. Before, the hint stood in every picture after "help", the dialog from "skip" to
+-- "wide", and the rumor in the three extra pictures of "normal".
+function P.Clear(state)
+	local W = SF.frame
+	if state ~= "help" and HelpTip and HelpTip.Hide and W then
+		HelpTip:Hide(W, ns.L.HELP_RIGHTCLICK) -- not acknowledged: the real hint stays unused
+		SF.View().hintWaiting = nil
+	end
+	if state ~= "skip" and StaticPopup_Hide then
+		StaticPopup_Hide(SF.POPUP)
+	end
+	local setup = ns.Setup and ns.Setup.frame
+	if state ~= "setup" and setup and setup:IsShown() then
+		setup:Hide() -- a reopened window: closing changes nothing
+	end
+	SF.View().rumorShown, SF.View().riddleShown = nil, nil
 	if ns.Arrow then
 		ns.Arrow.colorblind = ns.Theme.Colorblind()
-	end
-	UI.DB().mini = nil
-	if state == "off" or state == "" then
-		if P.size then
-			UI.Set("width", P.size.width)
-			UI.Set("ahead", P.size.ahead)
-			P.size = nil
-		end
-		C.Use(nil)
-		SF.View().rumorShown, SF.View().riddleShown = nil, nil
-		if ns.Arrow then
+		ns.Arrow.holdArrival = nil
+		if not ARROW_STATES[state] then
 			ns.Arrow.SetExtra(nil)
 		end
+	end
+	if P.size and state ~= "narrow" and state ~= "wide" then
+		UI.Set("width", P.size.width)
+		UI.Set("ahead", P.size.ahead)
+		P.size = nil
+	end
+	UI.DB().mini = nil
+	SF.ApplyLook() -- collapse button and combat dimming of the state before
+end
+
+function P.Run(state, arg)
+	P.Clear(state)
+	if state == "off" or state == "" then
+		C.Use(nil)
 		SF.SetMessage(nil)
 		return
 	end
@@ -454,12 +493,13 @@ function P.Run(state, arg)
 	elseif state == "arrow" then
 		ArrowAt(tonumber(arg) or 8, 38)
 	elseif state == "arrival" then
+		ns.Arrow.holdArrival = 10 -- check and "Reached destination" stay ten seconds for the picture
 		ArrowAt(0, 8)
 	elseif state == "colorblind" then
 		ns.Arrow.colorblind = true
 		ArrowAt(tonumber(arg) or 160, 38)
 	elseif state == "setup" then
-		ns.Setup.Open(true)
+		ns.Setup.Open(true, true) -- the first start's footer (S6)
 	elseif state == "settings" then
 		ns.Menu.OpenSettings()
 	end

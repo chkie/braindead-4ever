@@ -332,7 +332,23 @@ describe("Default of Blizzard's quest tracker (migration)", function()
 		for i, c in ipairs(cases) do
 			local ns = login({ saved = c.saved and saved(c.saved) })
 			assert.are.equal(c.want, ns.UI.Get("tracker"), "case " .. i)
-			assert.are.equal(1, ns.UI.DB().rev, "case " .. i)
+			assert.are.equal(ns.UI.REV, ns.UI.DB().rev, "case " .. i)
+		end
+	end)
+
+	-- Welle 5d, M1: background opacity 35 % left the text at about 3:1 over a bright sky; 70 % is the new
+	-- default. Who kept 35 gets it, any other value is a choice and stays.
+	it("lifts the old background opacity 35 % to 70 % and keeps a chosen one", function()
+		for i, c in ipairs({
+			{ saved = nil, want = 70 },
+			{ saved = { bgAlpha = 35 }, want = 70 },
+			{ saved = { bgAlpha = 35, rev = 1 }, want = 70 },
+			{ saved = { bgAlpha = 50, rev = 1 }, want = 50 },
+			{ saved = { bgAlpha = 35, rev = 2 }, want = 35 }, -- chosen after Welle 5d
+		}) do
+			local ns = login({ saved = c.saved and saved(c.saved) })
+			assert.are.equal(c.want, ns.UI.Get("bgAlpha"), "case " .. i)
+			assert.are.equal(2, ns.UI.DB().rev, "case " .. i)
 		end
 	end)
 

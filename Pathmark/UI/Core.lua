@@ -38,7 +38,7 @@ local UI = {
 		sound = true,
 		ahead = 3, -- steps ahead 0..10, synchronous with the height of the step window (owner reading 14)
 		width = 300, -- width of the step window, 260..500 (owner reading 14)
-		bgAlpha = 35, -- percent, 0..80
+		bgAlpha = 70, -- percent, 0..80; 70 keeps every text of the window at 4.5:1 on white ground (Welle 5d)
 		dim = true, -- dim the step window to 60 % in combat
 		arrival = 12, -- yards, 5..30
 		pins = true,
@@ -54,9 +54,11 @@ local UI = {
 	-- Revision of the defaults in PathmarkDB.ui.rev. UI.DB fills every default into the saved table, so
 	-- a value equal to an old default was never chosen: it takes the new default, any other value is the
 	-- player's choice and stays. REVISIONS[n] lists the defaults that revision n replaced.
-	REV = 1,
+	REV = 2,
 	REVISIONS = {
 		[1] = { tracker = "route" }, -- Welle 5c: Blizzard's quest tracker hidden while Pathmark guides
+		-- Welle 5d, M1: 35 % left white text at 3.2:1 and gold at 3.0:1 over the bright sky of Orgrimmar
+		[2] = { bgAlpha = 35 },
 	},
 	-- Presets of the "Anzeigeumfang" dropdown: each sets these options (brain chapter 18 pattern D).
 	SCOPES = {
@@ -313,6 +315,9 @@ function UI.Place(key)
 	f:ClearAllPoints()
 	if pos then
 		f:SetPoint(pos[1], UIParent, pos[2] or pos[1], pos[3] or 0, pos[4] or 0)
+		if m.top and not tostring(pos[1]):find("^TOP") then
+			UI.SavePosition(key) -- a place saved before Welle 5d: the same spot, now held at the top edge
+		end
 	else
 		local d = m.default
 		if type(d) == "function" then
@@ -322,10 +327,39 @@ function UI.Place(key)
 	end
 end
 
+-- Anchors a window at its top edge where it stands: TOPLEFT or TOPRIGHT of UIParent, whichever side
+-- of the screen its middle is on. The client anchors a dropped frame at the point closest to a UIParent
+-- point (Frame:StopMovingOrSizing, warcraft.wiki.gg), in the middle of the screen height that is LEFT,
+-- CENTER or RIGHT, and a window anchored there grows up and down when a line comes or goes (Welle 5d,
+-- M4). Returns true when it anchored.
+function UI.AnchorTop(f)
+	local l, r, t = f:GetLeft(), f:GetRight(), f:GetTop()
+	local pr, pt = UIParent:GetRight(), UIParent:GetTop()
+	local fs, ps = f:GetEffectiveScale(), UIParent:GetEffectiveScale()
+	for _, v in ipairs({ l, r, t, pr, pt, fs, ps }) do
+		if type(v) ~= "number" or ns.Util.IsSecret(v) then
+			return false
+		end
+	end
+	if fs <= 0 or ps <= 0 then
+		return false
+	end
+	local k = ps / fs -- UIParent units to the window's units
+	local screenR, screenT = pr * k, pt * k
+	local right = (l + r) / 2 > screenR / 2
+	local point = right and "TOPRIGHT" or "TOPLEFT"
+	f:ClearAllPoints()
+	f:SetPoint(point, UIParent, point, right and (r - screenR) or l, t - screenT)
+	return true
+end
+
 local function Save(key)
 	local m = UI.movers[key]
 	if not m then
 		return
+	end
+	if m.top then
+		UI.AnchorTop(m.frame)
 	end
 	local point, _, relPoint, x, y = m.frame:GetPoint(1)
 	if point then
@@ -391,7 +425,8 @@ end
 
 -- win, key, label shown in Edit Mode, default { point, x, y } or a function returning one; opts:
 -- mouse = takes the mouse outside Edit Mode, drag(frame) = true when a drag may start outside Edit
--- Mode, shift = takes the mouse only while Shift is held.
+-- Mode, shift = takes the mouse only while Shift is held, top = the saved place holds the top edge (a
+-- window whose height changes grows downwards only).
 function UI.Mover(win, key, label, default, opts)
 	opts = opts or {}
 	local overlay = CreateFrame("Frame", nil, win)
@@ -411,6 +446,7 @@ function UI.Mover(win, key, label, default, opts)
 		mouse = opts.mouse == true,
 		drag = opts.drag,
 		shift = opts.shift == true,
+		top = opts.top == true,
 	}
 	UI.movers[key] = m
 	win:SetClampedToScreen(true)

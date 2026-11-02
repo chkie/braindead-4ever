@@ -109,6 +109,23 @@ describe("First start", function()
 		assert.are.equal(0, #wow.world.helptips) -- the usage hint belongs to the first start only
 	end)
 
+	-- Welle 5d, S7: "Entdecker-Route ohne Hinweise" wrapped and pushed the third card's text a line down.
+	it("gives every card subtitle two lines, so the three texts start on one line (S7)", function()
+		first({ locale = "deDE" })
+		wow.advance(2)
+		local d = dialog()
+		local h = d.cards[1].sub.h
+		assert.is_true(h ~= nil and h >= 24)
+		for _, card in ipairs(d.cards) do
+			assert.are.equal(h, card.sub.h)
+			assert.are.equal(2, card.sub.maxLines)
+			assert.are.same(
+				{ "TOPLEFT", card.sub, "BOTTOMLEFT" },
+				{ card.text.points[1][1], card.text.points[1][2], card.text.points[1][3] }
+			)
+		end
+	end)
+
 	it("speaks German in the German client", function()
 		first({ locale = "deDE" })
 		wow.advance(2)

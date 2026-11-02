@@ -44,11 +44,12 @@ describe("Step window", function()
 			assert.are.equal("a-speed-start-elwynn/a33", cur.key)
 			assert.matches("^Elwynn Forest • 1/%d+$", W.title.text)
 			assert.matches("^Accept “Wolves Across the Border”", W.step.text)
-			assert.matches("^Elwynn Forest • 70 |4yd:yds$", W.detail.text)
+			-- the target lies in the zone the header names: only the distance (Welle 5d, Q3)
+			assert.are.equal("70 |4yd:yds away", W.detail.text)
 			local rows = nextRows(ns)
 			assert.are.equal(3, #rows)
 			for _, row in ipairs(rows) do
-				assert.are.equal(0.6, row.text.alpha)
+				assert.are.equal(0.7, row.text.alpha) -- Welle 5d, M1: 4.9:1 on white ground behind 70 %
 				assert.are.equal(2, row.text.maxLines) -- at most two lines (release gate T19)
 			end
 			assert.matches("Level |cffffffff1|r • |cffffffff400|r XP to go", W.xp.text, 1, true)
@@ -56,11 +57,19 @@ describe("Step window", function()
 		end)
 
 		it("uses one background and a header band on exactly the window width", function()
-			assert.are.same({ 0, 0, 0, 0.35 }, W.bg.colorTexture)
+			assert.are.same({ 0, 0, 0, 0.7 }, W.bg.colorTexture)
 			assert.are.equal(300, W.w)
 			assert.are.equal("UI-QuestTracker-Primary-Objective-Header", W.header.atlas)
-			assert.are.same({ "TOPLEFT", nil, "TOPLEFT", 0, 0 }, W.header.points[1])
-			assert.are.same({ "TOPRIGHT", nil, "TOPRIGHT", 0, 0 }, W.header.points[2])
+			-- Welle 5d, Q1: the atlas draws from 3.0 % to 94.1 % of its width; stretched past the window by
+			-- those parts, its drawn band starts and ends exactly at the window edges
+			local l, r = W.header.points[1], W.header.points[2]
+			assert.are.same({ "TOPLEFT", W, "TOPLEFT" }, { l[1], l[2], l[3] })
+			assert.are.same({ "TOPRIGHT", W, "TOPRIGHT" }, { r[1], r[2], r[3] })
+			local band = 300 - l[4] + r[4]
+			local trim = ns.StepFrame.HEADER_TRIM
+			assert.is_true(math.abs(l[4] + band * trim[1]) < 1e-6, "left edge of the drawn band")
+			assert.is_true(math.abs(l[4] + band * (1 - trim[2]) - 300) < 1e-6, "right edge of the drawn band")
+			assert.is_true(l[4] < -5 and r[4] > 10)
 			assert.are.equal("TOPRIGHT", W.points[1][1])
 			-- the place of Blizzard's quest tracker, hidden by default (spec/ui_place_spec.lua)
 			assert.are.same({ -115, -266 }, { W.points[1][4], W.points[1][5] })
@@ -222,6 +231,29 @@ describe("Step window", function()
 			assert.are.equal(1, #wow.world.helptips)
 		end)
 
+		-- Welle 5d, M13: the hint lay over Blizzard's settings (slider "Size") and on the first start.
+		it("waits while settings or the first start are open and comes back after (M13)", function()
+			local ns = S.login({ hint = false })
+			local W = frame(ns)
+			ns.StepFrame.ShowHintOnce()
+			assert.is_true(_G.HelpTip:IsShowing(W))
+			ns.Menu.OpenSettings()
+			assert.is_true(rawget(_G.SettingsPanel, "shown"))
+			assert.is_false(_G.HelpTip:IsShowing(W))
+			assert.is_nil(ns.UI.DB().hintsSeen.rightclick) -- hidden, not seen
+			_G.SettingsPanel:Hide()
+			assert.is_true(_G.HelpTip:IsShowing(W))
+			SlashCmdList.PATHMARK("setup")
+			assert.is_false(_G.HelpTip:IsShowing(W))
+			_G.PathmarkSetupFrame:Hide()
+			assert.is_true(_G.HelpTip:IsShowing(W))
+			-- only "Got It" uses it up
+			local tip = wow.world.helptips[#wow.world.helptips]
+			assert.is_nil(tip.info.acknowledgeOnHide)
+			tip.info.onAcknowledgeCallback()
+			assert.is_true(ns.UI.DB().hintsSeen.rightclick)
+		end)
+
 		it("goes once into the status line when HelpTip is off (gamepad, help tips hidden)", function()
 			local ns = S.login({ hint = false })
 			wow.world.helptipResult = false
@@ -351,6 +383,69 @@ describe("Step window", function()
 		assert.are.same({ 1, 0.82, 0 }, W.reach.textColor)
 	end)
 
+	-- Welle 5d, M8: a zone the client cannot name showed as "bis ?".
+	it("route falls short of a zone the client cannot name: the sentence names no zone (M8)", function()
+		local ns = S.login({ locale = "deDE" })
+		ns.Route.Balance = function()
+			return {
+				level = 9,
+				toLevel = 1600,
+				zone = { nextMap = 99999, shortfall = 640, enough = false, kills = 9 },
+			}
+		end
+		ns.StepFrame.Invalidate()
+		ns.StepFrame.Refresh()
+		local text = frame(ns).reach.text
+		assert.are.equal(
+			"Route reicht nicht bis zum nächsten Gebiet. Es fehlen ca. 640 EP, das sind ca. 9 Gegner der Stufe 9.",
+			text
+		)
+		assert.is_nil(text:find("?", 1, true))
+	end)
+
+	-- Welle 5d, Q3: another zone than the header's keeps its name in the detail line.
+	it("names the target's zone in the detail line only when the header names another (Q3)", function()
+		local ns = S.login()
+		local ST = ns.StepText
+		assert.are.equal("Westfall • 42 |4yd:yds", ST.Detail({ map = 1436 }, 42, "Elwynn Forest"))
+		assert.are.equal("42 |4yd:yds away", ST.Detail({ map = 1429 }, 42, "Elwynn Forest"))
+		assert.are.equal("", ST.Detail({ map = 1429 }, nil, "Elwynn Forest"))
+	end)
+
+	-- Welle 5d, K1 and S5: the counter stays with the last word; an abandoned step's counter takes the
+	-- step's color instead of gold (the abandoned quest's progress no longer counts).
+	it("keeps the counter on the line of the last word, and plain on an abandoned step (K1, S5)", function()
+		local ns = S.login({ locale = "deDE" })
+		local W = frame(ns)
+		wow.world.questLog[#wow.world.questLog + 1] = {
+			questID = 33,
+			objectives = { { text = "Zähes Wolfsfleisch: 3/8", numFulfilled = 3, numRequired = 8, finished = false } },
+		}
+		local V = ns.Routes.VERB
+		local info = { key = "test/c33", index = 2, total = 9, quests = { 33 }, step = { { V.COMPLETE, 33 } } }
+		ns.StepFrame.Render(info)
+		assert.matches("Zähes Wolfsfleisch\194\160|cff%x+3/8|r$", W.step.text)
+		ns.Connect.Pending = function()
+			return 33
+		end
+		ns.StepFrame.Render(info)
+		assert.matches("Zähes Wolfsfleisch\194\1603/8$", W.step.text)
+		assert.are.same({ 1, 1, 1 }, W.step.textColor)
+		assert.are.equal("step", ns.StepFrame.View().failAt)
+	end)
+
+	-- Welle 5d, M5: the developer preview cleared the mini flag without the look, and "+" stayed.
+	it("draws the collapse button from the mini flag on every refresh (M5)", function()
+		local ns = S.login()
+		local W = frame(ns)
+		ns.UI.DB().mini = true
+		ns.StepFrame.Refresh()
+		assert.are.equal("UI-QuestTrackerButton-Expand-All", W.toggle.tex.atlas)
+		ns.UI.DB().mini = nil
+		ns.StepFrame.Refresh()
+		assert.are.equal("UI-QuestTrackerButton-Collapse-All", W.toggle.tex.atlas)
+	end)
+
 	describe("skip with follow-up quests", function()
 		it("asks in a dialog that names every follow-up quest, then skips", function()
 			local ns = S.login()
@@ -421,9 +516,31 @@ describe("Step window", function()
 			assert.are.equal("Accept again", W.btnReaccept.text)
 			assert.are.equal("UI-QuestTracker-Objective-Fail", W.icon.atlas)
 			assert.is_false(shown(W.box))
-			assert.are.same({ 0.8, 0.1, 0.1 }, W.step.textColor)
 			W.box:Click()
 			assert.are.equal(33, ns.Route.Pending())
+		end)
+
+		-- Welle 5d, M9: the note named one quest and the window marked the step of another. The runtime
+		-- asks about a quest taken earlier; here the current step is “A Threat Within” (783).
+		it("marks only the step of the abandoned quest; another current step stays as it is (M9)", function()
+			local ns = abandoned()
+			local W = frame(ns)
+			local cur = ns.Route.Current()
+			assert.is_false(ns.StepFrame.StepHasQuest(cur, 33))
+			assert.matches("A Threat Within", W.step.text, 1, true)
+			-- the fail symbol stands in front of the note that names the quest, not at the step
+			assert.are.same(
+				{ "TOPLEFT", W, "TOPLEFT" },
+				{ W.icon.points[1][1], W.icon.points[1][2], W.icon.points[1][3] }
+			)
+			assert.are.equal("banner", ns.StepFrame.View().failAt)
+		end)
+
+		-- Welle 5d, M2: DIM_RED on the window measured 1.3:1 over a bright sky and stays under 2.5:1
+		-- behind any opacity; the step text stays white, the symbol and the note carry the state.
+		it("keeps the step text white and readable while a quest is abandoned (M2)", function()
+			local ns = abandoned()
+			assert.are.same({ 1, 1, 1 }, frame(ns).step.textColor)
 		end)
 
 		it("“Accept again” leads back to the quest giver", function()
@@ -513,8 +630,10 @@ describe("Step window", function()
 		local ns = S.login({ locale = "deDE" })
 		local W = frame(ns)
 		assert.are.equal("„Wölfe an der Grenze“ annehmen", W.step.text)
-		assert.are.equal("Wald von Elwynn • 70 |4m", W.detail.text)
-		assert.matches("^Stufe |cffffffff1|r • noch |cffffffff400|r EP", W.xp.text)
+		-- Welle 5d, Q2: "|4m" without a colon lost the "m" in the client; Q3: no zone repeated
+		assert.are.equal("70 m entfernt", W.detail.text)
+		-- Welle 5d, Q5: number and "EP" joined by a no-break space, so "EP" never stands alone
+		assert.matches("^Stufe |cffffffff1|r • noch |cffffffff400|r\194\160EP", W.xp.text)
 		assert.matches("^Wald von Elwynn • 1/", W.title.text)
 		assert.are.equal(1, W.title.maxLines)
 	end)

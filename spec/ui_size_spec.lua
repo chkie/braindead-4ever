@@ -51,13 +51,46 @@ describe("Step window size", function()
 		assert.are.equal("MinimalScrollBar", SF.bar.template)
 		assert.are.equal(W.list, W.listBox.child)
 		assert.is_true(W.list.scrollable)
-		assert.is_true(SF.bar.hideIfUnscrollable)
 		assert.are.equal(20, #SF.rowBottoms)
 		assert.are.equal(SF.rowBottoms[20], W.list.h)
-		assert.are.equal(SF.rowBottoms[3], W.listBox.h)
+		assert.are.equal(SF.rowBottoms[3] + SF.DESCENT, W.listBox.h)
 		assert.is_true(W.listBox.scrollable)
-		assert.is_true(shown(SF.bar))
 		assert.are.equal(20, W.listBox.view.pan)
+		-- Welle 5d, Q4: at the default three steps the bar stays hidden (the wheel still scrolls); a
+		-- larger window shows Blizzard's bar, which then hides itself when nothing is left to scroll
+		assert.is_false(shown(SF.bar))
+		assert.is_false(SF.bar.hideIfUnscrollable)
+		ns.UI.Set("ahead", 5)
+		assert.is_true(SF.bar.hideIfUnscrollable)
+		assert.is_true(shown(SF.bar))
+	end)
+
+	-- Welle 5d, M7: the scroll box clipped the descenders of the last visible row ("abgeben").
+	it("leaves room below the last visible row for descenders, less than a row gap (M7)", function()
+		local ns = S.login({ locale = "deDE" })
+		local SF, W = ns.StepFrame, ns.StepFrame.frame
+		for _, n in ipairs({ 1, 3, 5, 10 }) do
+			ns.UI.Set("ahead", n)
+			assert.are.equal(SF.rowBottoms[n] + SF.DESCENT, W.listBox.h)
+			assert.is_true(SF.DESCENT >= 4 and SF.DESCENT < SF.ROW_GAP)
+			assert.are.equal(n, #SF.VisibleRows())
+		end
+	end)
+
+	-- Welle 5d, M6: in the mini view Blizzard's scroll bar hung below the window.
+	it("hides the scroll bar in the mini view, also with more steps ahead (M6)", function()
+		local ns = S.login()
+		local SF, W = ns.StepFrame, ns.StepFrame.frame
+		ns.UI.Set("ahead", 6)
+		assert.is_true(shown(SF.bar))
+		SF.SetMini(true)
+		assert.is_false(shown(W.listBox))
+		assert.is_false(shown(SF.bar))
+		-- hidden by the window itself: in the client Blizzard's bar stayed shown on the hidden one-unit box
+		-- and hung below the window, so the bar may not decide by itself in the mini view
+		assert.is_false(SF.bar.hideIfUnscrollable)
+		SF.SetMini(false)
+		assert.is_true(shown(SF.bar))
 	end)
 
 	it("steps ahead 0 to 10 on the settings page and the window height follow each other", function()
@@ -134,14 +167,15 @@ describe("Step window size", function()
 		assert.are.equal(260, ns.UI.Get("width"))
 	end)
 
-	it("keeps the top left corner where it was and saves the position after a drag", function()
+	it("keeps the top edge where it was and saves the position after a drag", function()
 		local ns = S.login()
 		local W = ns.StepFrame.frame
 		W.left, W.top = 812, 640
 		drag(ns, 360, W.h)
 		release(ns)
-		assert.are.same({ "TOPLEFT", _G.UIParent, "BOTTOMLEFT", 812, 640 }, W.points[1])
-		assert.are.same({ "TOPLEFT", "BOTTOMLEFT", 812, 640 }, ns.UI.DB().pos.window)
+		-- the same spot, held at the top edge on the right half of the screen: right edge 812 + 360
+		assert.are.same({ "TOPRIGHT", _G.UIParent, "TOPRIGHT", 812 + 360 - 1920, 640 - 1080 }, W.points[1])
+		assert.are.same({ "TOPRIGHT", "TOPRIGHT", 812 + 360 - 1920, 640 - 1080 }, ns.UI.DB().pos.window)
 		assert.is_nil(rawget(W, "sizingPoint"))
 	end)
 
@@ -234,6 +268,6 @@ describe("Step window size", function()
 		local SF, W = ns.StepFrame, ns.StepFrame.frame
 		assert.is_nil(SF.bar)
 		assert.are.equal(3, #SF.VisibleRows())
-		assert.are.equal(SF.rowBottoms[3], W.listBox.h)
+		assert.are.equal(SF.rowBottoms[3] + SF.DESCENT, W.listBox.h)
 	end)
 end)

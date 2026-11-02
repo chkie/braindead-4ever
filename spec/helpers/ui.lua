@@ -217,6 +217,12 @@ function U.install(M, W, opts)
 	function Frame:SetRotation(r)
 		self.rotation = r
 	end
+	function Frame:SetDesaturated(on)
+		self.desaturated = on and true or false
+	end
+	function Frame:SetBlendMode(mode)
+		self.blend = mode
+	end
 	function Frame:SetTextColor(r, g, b)
 		self.textColor = { r, g, b }
 	end
@@ -374,9 +380,11 @@ function U.install(M, W, opts)
 				local child = rawget(box, "child")
 				local extent, visible = child and child:GetHeight() or 0, box:GetHeight() or 0
 				box.scrollable = extent > visible + 0.5
+				-- ScrollBarMixin:Update (ScrollBar.lua, live and forever): the bar toggles itself only
+				-- while hideIfUnscrollable is on; otherwise the owner's Show and Hide stay.
 				local bar = rawget(box, "bar")
-				if bar then
-					bar:SetShown(box.scrollable or not rawget(bar, "hideIfUnscrollable"))
+				if bar and rawget(bar, "hideIfUnscrollable") then
+					bar:SetShown(box.scrollable)
 				end
 			end
 			function f.ScrollToBegin(box)
@@ -385,6 +393,10 @@ function U.install(M, W, opts)
 		elseif template == "MinimalScrollBar" then
 			function f.SetHideIfUnscrollable(bar, on)
 				bar.hideIfUnscrollable = on
+				local box = rawget(bar, "box")
+				if on and box then -- SetHideIfUnscrollable calls Update
+					bar:SetShown(rawget(box, "scrollable") == true)
+				end
 			end
 		end
 		if name == "PathmarkSetupFrame" then
@@ -409,7 +421,7 @@ function U.install(M, W, opts)
 	_G.ScrollUtil = {
 		InitScrollBoxWithScrollBar = function(box, bar, view)
 			assert(view and bar and box, "scroll box, bar and view needed")
-			box.view, box.bar = view, bar
+			box.view, box.bar, bar.box = view, bar, box
 			for _, w in ipairs(M.frames) do
 				if rawget(w, "parent") == box and rawget(w, "scrollable") then
 					box.child = w
@@ -436,6 +448,9 @@ function U.install(M, W, opts)
 	_G.GameFontNormalSmall = Font(10)
 	_G.GameFontNormalMed3 = Font(14)
 	_G.GameFontNormalLarge = Font(16)
+	-- Outline fonts (Blizzard_Fonts_Shared/Shared/FontStyles.xml, live and forever)
+	_G.GameFontNormalOutline = Font(12)
+	_G.GameFontHighlightOutline = Font(12)
 
 	-- Colors, strings, sounds -------------------------------------------------------------------------
 	_G.NORMAL_FONT_COLOR = Color(1, 0.82, 0)
@@ -575,6 +590,14 @@ function U.install(M, W, opts)
 		end
 		local x, y = vec:GetXY()
 		return c, Vector(b.n2 - y * (b.n2 - b.n1), b.w2 - x * (b.w2 - b.w1)) -- worldPosition.x = north
+	end
+	-- width and height of a map in yards (C_Map.GetMapWorldSize, live and forever)
+	_G.C_Map.GetMapWorldSize = function(map)
+		local b = W.mapBounds[map]
+		if b then
+			return b.w2 - b.w1, b.n2 - b.n1
+		end
+		return 0, 0
 	end
 	_G.C_Map.GetAreaInfo = function(area)
 		return W.areas[area]
@@ -726,15 +749,41 @@ function U.install(M, W, opts)
 	}
 
 	-- HelpTip (Blizzard_SharedXML/HelpTip.lua): false when help tips are off, gamepad UI, kiosk.
+	-- Hide closes the tip; it counts as seen only with acknowledgeOnHide (HelpTipTemplateMixin:Close).
+	local function tipMatches(t, parent, text)
+		return t.visible and t.parent == parent and (text == nil or t.info.text == text)
+	end
 	_G.HelpTip = {
 		ButtonStyle = { None = 1, Close = 2, Okay = 3, GotIt = 4 },
 		Point = { LeftEdgeCenter = 10 },
 		Show = function(_, parent, info)
 			audit("HelpTip.Show")
-			W.helptips[#W.helptips + 1] = { parent = parent, info = info }
+			W.helptips[#W.helptips + 1] = { parent = parent, info = info, visible = W.helptipResult == true }
 			return W.helptipResult
 		end,
+		IsShowing = function(_, parent, text)
+			for _, t in ipairs(W.helptips) do
+				if tipMatches(t, parent, text) then
+					return true
+				end
+			end
+			return false
+		end,
+		Hide = function(_, parent, text)
+			for _, t in ipairs(W.helptips) do
+				if tipMatches(t, parent, text) then
+					t.visible = false
+					if t.info.acknowledgeOnHide and t.info.onAcknowledgeCallback then
+						t.info.onAcknowledgeCallback()
+					end
+					return
+				end
+			end
+		end,
 	}
+	-- Blizzard's settings window (Blizzard_Settings): OpenToCategory shows it.
+	local panel = NewWidget("Frame", "SettingsPanel")
+	panel.shown = false
 
 	-- StaticPopup
 	_G.StaticPopupDialogs = {}
@@ -744,6 +793,17 @@ function U.install(M, W, opts)
 		assert(d, "Dialog " .. tostring(which) .. " does not exist.")
 		M.popup = { which = which, text = d.text:format(a1, a2), data = data, dialog = d }
 		return M.popup
+	end
+	_G.StaticPopup_Hide = function(which)
+		if M.popup and M.popup.which == which then
+			M.popup = nil
+		end
+	end
+	-- Blizzard_StaticPopup/StaticPopup.lua (live and forever): calls func for every shown dialog.
+	_G.StaticPopup_ForEachShownDialog = function(func)
+		if M.popup then
+			func(M.popup)
+		end
 	end
 
 	-- Menus (Blizzard_Menu): the root description records its elements.
@@ -882,6 +942,7 @@ function U.install(M, W, opts)
 		OpenToCategory = function(id)
 			audit("Settings.OpenToCategory")
 			reg.opened[#reg.opened + 1] = id
+			_G.SettingsPanel:Show()
 		end,
 		GetValue = function(variable)
 			local s = reg.settings[variable]

@@ -27,6 +27,7 @@ read_globals = {
 			"GetBestMapForUnit",
 			"GetMapInfo",
 			"GetMapPosFromWorldPos",
+			"GetMapWorldSize",
 			"GetPlayerMapPosition",
 			"GetWorldPosFromMapPos",
 			"SetUserWaypoint",
@@ -81,7 +82,7 @@ read_globals = {
 	AddonCompartmentFrame = { fields = { "RegisterAddon" } },
 	EventRegistry = { fields = { "RegisterCallback" } },
 	GameTooltip = { fields = { "AddLine", "Hide", "SetOwner", "SetText", "Show" } },
-	HelpTip = { fields = { "ButtonStyle", "Point", "Show" } },
+	HelpTip = { fields = { "ButtonStyle", "Hide", "IsShowing", "Point", "Show" } },
 	MenuUtil = { fields = { "CreateContextMenu" } },
 	MinimalSliderWithSteppersMixin = { fields = { Label = { other_fields = true } } },
 	Settings = {
@@ -128,6 +129,8 @@ read_globals = {
 	"Minimap",
 	"Mixin",
 	"PlaySound",
+	"StaticPopup_ForEachShownDialog",
+	"StaticPopup_Hide", -- Welle 5d: the developer preview closes the skip dialog of the state before
 	"StaticPopup_Show",
 	"UnitPosition",
 	-- interface strings, colors and sounds (GlobalStrings, FrameXML constants)

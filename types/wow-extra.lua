@@ -78,6 +78,19 @@ StaticPopupDialogs = {}
 ---@return table?
 function StaticPopup_Show(which, text_arg1, text_arg2, data) end
 
+---Hides the shown dialog of that name (Blizzard_StaticPopup/StaticPopup.lua, live and forever).
+---@param which string
+---@param data? any
+function StaticPopup_Hide(which, data) end
+
+---Calls func for every shown dialog (Blizzard_StaticPopup/StaticPopup.lua, live and forever).
+---@param func fun(dialog: table)
+function StaticPopup_ForEachShownDialog(func) end
+
+---Blizzard's settings window (Blizzard_Settings_Shared/Blizzard_SettingsPanel.xml, live and forever).
+---@type table<string, any>
+SettingsPanel = {}
+
 ---Addon compartment at the minimap (Blizzard_Minimap/Mainline/AddonCompartment.lua).
 ---@type table<string, any>
 AddonCompartmentFrame = {}

@@ -179,9 +179,9 @@ function Frame:CreateFontString(_, layer, template)
 	return fs
 end
 
-function Frame:CreateTexture(_, layer)
+function Frame:CreateTexture(_, layer, _, sublevel)
 	local t = NewWidget("Texture", nil, nil, self)
-	t.layer = layer
+	t.layer, t.sublevel = layer, sublevel
 	return t
 end
 
