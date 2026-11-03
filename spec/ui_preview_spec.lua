@@ -47,7 +47,7 @@ describe("Developer preview", function()
 		SlashCmdList.BRAINDEADFOREVER("preview menu")
 		assert.matches("^Undo: checked off", wow.menu.items[2].text)
 		SlashCmdList.BRAINDEADFOREVER("preview status")
-		assert.are.equal("New version 0.1.1 available", W.status.text)
+		assert.are.equal("New version 0.9.1 available", W.status.text)
 		assert.is_true(ns.UI.DB().hintsSeen.rightclick) -- the preview does not use up the real hint
 		assert.are.same({}, wow.errors)
 	end)

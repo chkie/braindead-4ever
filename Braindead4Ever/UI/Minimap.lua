@@ -32,7 +32,7 @@ local M, Guard = ns.Modules, ns.Guard
 
 local MM = {
 	SIZE = 31,
-	ICON = 20,
+	ICON = 18,
 	ANGLE = 225, -- degrees, start position on the minimap edge (lower left)
 	ICON_FILE = "Interface\\AddOns\\Braindead4Ever\\Media\\icon", -- the addon icon (Media/icon.tga)
 }
@@ -84,10 +84,31 @@ local function Build()
 	btn:SetFrameStrata("MEDIUM")
 	btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
 	btn:RegisterForDrag("LeftButton")
+	-- round like Blizzard's minimap buttons (owner, screenshot round 3): dark disc, the icon cut to a
+	-- circle, the gold tracking ring on top; texture sizes and offsets as in LibDBIcon-1.0
+	btn.bg = btn:CreateTexture(nil, "BACKGROUND")
+	btn.bg:SetSize(20, 20)
+	btn.bg:SetPoint("TOPLEFT", 7, -5)
+	btn.bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
 	btn.icon = btn:CreateTexture(nil, "ARTWORK")
 	btn.icon:SetSize(MM.ICON, MM.ICON)
-	btn.icon:SetPoint("CENTER")
+	btn.icon:SetPoint("TOPLEFT", 6, -6)
 	btn.icon:SetTexture(MM.ICON_FILE)
+	local mask = btn.CreateMaskTexture and btn:CreateMaskTexture()
+	if mask and btn.icon.AddMaskTexture then
+		mask:SetAllPoints(btn.icon)
+		mask:SetTexture(
+			"Interface\\CharacterFrame\\TempPortraitAlphaMask",
+			"CLAMPTOBLACKADDITIVE",
+			"CLAMPTOBLACKADDITIVE"
+		)
+		btn.icon:AddMaskTexture(mask)
+	end
+	btn.ring = btn:CreateTexture(nil, "OVERLAY")
+	btn.ring:SetSize(50, 50)
+	btn.ring:SetPoint("TOPLEFT")
+	btn.ring:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+	btn:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
 	btn:SetScript("OnClick", function(_, button)
 		Guard.Call("minimap", MM.Click, button)
 	end)

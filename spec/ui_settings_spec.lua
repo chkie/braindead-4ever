@@ -189,9 +189,11 @@ describe("Settings", function()
 		assert.are.equal("speed", ns.Route.Mode())
 		assert.is_false(hint.modifyPredicate())
 		assert.are.equal("3 • Point", hint.options.formatter(3))
-		local header = page.inits[#page.inits]
-		assert.are.same({ "header", "Finds by other players" }, { header.kind, header.name })
-		assert.matches("Show location", header.tooltip, 1, true)
+		-- no section header without options: Blizzard shows a header's text only on hover, so it
+		-- stood empty on the page (screenshot round 3)
+		for _, i in ipairs(page.inits) do
+			assert.are_not.equal("header", i.kind)
+		end
 	end)
 
 	it("indents and greys out the minimap pins under the map pins (E7)", function()
