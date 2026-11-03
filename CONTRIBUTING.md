@@ -1,6 +1,6 @@
 # Contributing to Braindead 4ever
 
-Thanks for helping. Issues and pull requests are welcome in English or German (Beiträge auf Deutsch sind willkommen).
+Thanks for helping. Issues and pull requests are welcome, in English.
 
 For anything larger than a small fix, please open an issue first so we can agree on the approach.
 
@@ -59,12 +59,12 @@ A pull request can only be merged when all checks are green.
 
 A tag `vX.Y.Z` on `main` runs all checks and then the BigWigs packager, which uploads to CurseForge, Wago and GitHub Releases. Tags containing `alpha` or `beta` become alpha or beta releases. Use annotated tags: `git tag -a v0.1.0 -m "v0.1.0"`.
 
-The release notes come from [CHANGELOG.md](CHANGELOG.md) (`manual-changelog` in `.pkgmeta`): before a tag, give its top section the version and the date, in English and German, and keep "Known issues" and "Bekannte Probleme" current. If the Discord secret `DISCORD_WEBHOOK_URL` is set, `release.yml` posts the tag to the channel; the workflow "Discord test" (started by hand) checks the webhook first.
+The release notes come from [CHANGELOG.md](CHANGELOG.md) (`manual-changelog` in `.pkgmeta`): before a tag, give its top section the version and the date, in English, and keep "Known issues" current. If the Discord secret `DISCORD_WEBHOOK_URL` is set, `release.yml` posts the tag to the channel; the workflow "Discord test" (started by hand) checks the webhook first.
 
 ### Hotfix
 
 1. Branch from the release tag: `git switch -c hotfix/launch v0.1.0` (later hotfixes: `hotfix/<topic>` from the last tag). CI runs on every push to `hotfix/**`.
 2. Fix, add a test that fails without the fix, CI green, owner approval.
-3. Add the version section to `CHANGELOG.md` in English and German. After renamed or deleted files add: "Restart the game client completely after this update, /reload is not enough." / "Nach diesem Update das Spiel ganz neu starten, /reload genügt nicht."
+3. Add the version section to `CHANGELOG.md` in English. After renamed or deleted files add: "Restart the game client completely after this update, /reload is not enough."
 4. Tag on the hotfix branch without `alpha` or `beta`, one patch step per hotfix: `git tag -a v0.1.1 -m "v0.1.1"` and push the tag. GitHub Releases has it at once; CurseForge reviews files by hand between 08:00 and 15:00 CET.
 5. Merge the hotfix branch back into `main`. Close a bug report only when the file is approved on CurseForge.

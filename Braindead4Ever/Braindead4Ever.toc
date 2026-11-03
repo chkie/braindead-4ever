@@ -8,6 +8,7 @@
 ## Version: @project-version@
 ## X-License: GPL-3.0-or-later WITH AdditionRef-Braindead4Ever-Ace3-Exception
 ## X-Website: https://github.com/chkie/braindead-4ever
+## X-Curse-Project-ID: 1781825
 ## OptionalDeps: TomTom
 ## SavedVariables: BraindeadForeverDB, BraindeadForeverCollectDB
 ## SavedVariablesPerCharacter: BraindeadForeverCharDB

@@ -23,13 +23,3 @@ Braindead 4ever embeds no libraries. When [TomTom](https://www.curseforge.com/wo
 ## Trademarks
 
 World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries. Braindead 4ever is not affiliated with or endorsed by Blizzard Entertainment.
-
----
-
-## Deutsch
-
-Braindead 4ever ist freie Software unter GPL-3.0-or-later mit der zusätzlichen Erlaubnis in [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md), ohne jede Gewährleistung.
-
-Datenquellen: All The Things (MIT), EG Link (CC BY 4.0), Polestar forever-db (GPL-3.0-only); Einzelheiten in der Tabelle oben und in [NOTICE](NOTICE). Braindead 4ever bettet keine Bibliotheken ein. Ist TomTom installiert, übergibt Braindead 4ever ihm das aktuelle Ziel; TomTom gehört nicht zu Braindead 4ever.
-
-Nicht mit Blizzard Entertainment verbunden. World of Warcraft, Warcraft und Blizzard Entertainment sind Marken oder eingetragene Marken von Blizzard Entertainment, Inc. in den USA und/oder anderen Ländern.

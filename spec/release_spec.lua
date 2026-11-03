@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Hotfix readiness (Welle 9, K9; release gate T30, concept §1.6): release notes by hand in English and
--- German with known issues (manual-changelog), CI on hotfix branches, the Discord notice without
+-- Hotfix readiness (Welle 9, K9; release gate T30, concept §1.6): release notes by hand in English
+-- with known issues (manual-changelog), CI on hotfix branches, the Discord notice without
 -- mentions and a test post that needs nothing but the secret.
 local function read(path)
 	local fh = assert(io.open(path, "rb"))
@@ -19,20 +19,17 @@ describe("Release and hotfix", function()
 		assert.is_nil(pkg:find("\t"), "YAML: spaces only")
 	end)
 
-	it("CHANGELOG.md has notes and known issues in English and German", function()
+	it("CHANGELOG.md has notes and known issues in English only (the repository is English)", function()
 		local text = read("CHANGELOG.md")
 		local top = text:match("\n## ([^\n]+)")
 		assert.is_string(top)
 		for _, heading in ipairs({
-			"\n### English\n",
-			"\n### Deutsch\n",
 			"\n## Known issues\n",
-			"\n## Bekannte Probleme\n",
 		}) do
 			assert.is_truthy(text:find(heading, 1, true), "missing" .. heading)
 		end
 		assert.matches("/reload is not enough", text, 1, true)
-		assert.matches("/reload genügt nicht", text, 1, true)
+		assert.is_nil(text:find("[äöüÄÖÜß]"), "no German text")
 		assert.is_nil(text:find("\226\128\148"), "no em dash")
 		local shown = text:gsub("<!%-%-.-%-%->", "") -- the editing note is not shown
 		assert.is_nil(shown:find("!", 1, true), "no exclamation marks in release notes")
