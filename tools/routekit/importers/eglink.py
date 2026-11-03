@@ -3,9 +3,12 @@
 
 Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0. Changes made
 here: reduced to quest facts (who gives and takes a quest, where players stood, which faction
-the server describes a quest for, levels and race mask from the server cache), merged over all
-builds of the products wow_classic_beta and wowf. No game text is copied (no titles, no names,
-no quest text): the README grants no rights in Blizzard's content.
+the server describes a quest for, levels and race mask from the server cache), to service NPCs
+(class trainers, innkeepers and flight masters: role from the window a player opened, side,
+flight point, where players stood) and to flights (the flight points of each trip, how many
+flights took how many seconds), merged over all builds of the products wow_classic_beta and
+wowf. No game text is copied (no titles, no names, no quest text): the README grants no rights
+in Blizzard's content.
 """
 
 import collections
@@ -16,6 +19,12 @@ import os
 from ..io import git_head, write_json, write_jsonl
 
 MAX_POSITIONS = 6
+
+# Window kinds (npcs.json `interactions`) that mark a service NPC; a trainer counts when its list
+# shows trainer type 0 (class trainers; trainers.json, DATASETS.md §trainers).
+ROLE_OF_INTERACTION = {"Binder": "innkeeper", "TaxiNode": "flightmaster"}
+CLASS_TRAINER_TYPE = 0
+SIDES = {"Alliance": "A", "Horde": "H"}
 
 
 def _load(path):
@@ -35,6 +44,13 @@ def run(src_dir, out_dir):
     quests = collections.defaultdict(dict)
     builds = set()
     starts = {}
+    service = {}  # npcId -> {"roles": set, "sides": set, "pos": [], "sources": n}
+    trainer_type = {}  # npcId -> set of trainer types seen
+    masters = {}  # npcId -> flight point
+    routes = {}  # "from>to[|frequentFlier:rank]" -> {"paths": set, "seconds": Counter, "sources"}
+
+    def npc_entry(ident):
+        return service.setdefault(ident, {"roles": set(), "sides": set(), "pos": [], "sources": 0})
 
     def add_pos(q, field, positions, sources):
         rec = quests[q]
@@ -52,12 +68,46 @@ def run(src_dir, out_dir):
         name = os.path.basename(path)
         if product not in ("wow_classic_beta", "wowf"):
             continue
-        if name not in ("npcs.json", "quest_scan.json", "quests.enUS.json", "game_rules.json"):
+        if name not in ("npcs.json", "quest_scan.json", "quests.enUS.json", "game_rules.json", "trainers.json", "flights.json"):
             continue
         builds.add(product + "/" + build)
         d = _load(path)
         if d.get("meta", {}).get("license") != "CC BY 4.0":
             raise SystemExit("eglink: unexpected licence in " + path)
+        if name == "npcs.json":
+            for ident, n in d.get("npcs", {}).items():
+                roles = {ROLE_OF_INTERACTION[i] for i in n.get("interactions", []) if i in ROLE_OF_INTERACTION}
+                if "Trainer" in n.get("interactions", []):
+                    roles.add("?trainer")  # decided by the trainer type below
+                if not roles:
+                    continue
+                e = npc_entry(int(ident))
+                e["roles"] |= roles
+                if n.get("side") in SIDES:
+                    e["sides"].add(SIDES[n["side"]])
+                for p in n.get("positions", []):
+                    pp = _pos(p)
+                    if pp and pp not in e["pos"]:
+                        e["pos"].append(pp)
+                e["sources"] = max(e["sources"], n.get("sources") or 0)
+        if name == "trainers.json":
+            for ident, t in d.get("trainers", {}).items():
+                trainer_type.setdefault(int(ident), set()).add(t.get("trainerType"))
+            continue
+        if name == "flights.json":
+            for ident, m in d.get("masters", {}).items():
+                if m.get("node") is not None:
+                    masters.setdefault(int(ident), set()).add(m["node"])
+            for key, r in d.get("routes", {}).items():
+                e = routes.setdefault(key, {"paths": set(), "seconds": collections.Counter(), "sources": 0})
+                if r.get("hops"):
+                    # Every path seen is kept: the stops of a trip depend on the flight points the
+                    # character knows (22>80 was flown both through 25 and through 77 and 25).
+                    e["paths"].add(tuple(r["hops"]))
+                for secs, cnt in r.get("seconds", {}).items():
+                    e["seconds"][int(secs)] += cnt
+                e["sources"] = max(e["sources"], r.get("sources") or 0)
+            continue
         if name == "npcs.json":
             for kind, coll in (("npc", d.get("npcs", {})), ("object", d.get("objects", {}))):
                 for ident, n in coll.items():
@@ -107,6 +157,36 @@ def run(src_dir, out_dir):
             {"key": key, "race": race_token, "faction": faction, "class": class_token, "count": s["count"], "positions": s["positions"][:MAX_POSITIONS]}
         )
 
+    npc_rows = []
+    for ident in set(service) | set(masters):
+        e = service.get(ident) or {"roles": set(), "sides": set(), "pos": [], "sources": 0}
+        roles = {r for r in e["roles"] if not r.startswith("?")}
+        if "?trainer" in e["roles"] and CLASS_TRAINER_TYPE in trainer_type.get(ident, ()):
+            roles.add("trainer")
+        if ident in masters:
+            roles.add("flightmaster")
+        if not roles:
+            continue
+        rec = {"id": ident, "roles": sorted(roles), "sources": e["sources"]}
+        if len(e["sides"]) == 1:
+            rec["side"] = next(iter(e["sides"]))
+        if e["pos"]:
+            rec["pos"] = e["pos"][:MAX_POSITIONS]
+        if len(masters.get(ident, ())) == 1:
+            rec["node"] = next(iter(masters[ident]))
+        npc_rows.append(rec)
+    flight_rows = []
+    for key, e in routes.items():
+        paths = sorted(list(p) for p in e["paths"] if len(p) >= 2)
+        if not paths:
+            continue
+        rec = {"key": key, "paths": paths, "sources": e["sources"]}
+        if "|" in key:
+            rec["talent"] = key.split("|", 1)[1]
+        if e["seconds"]:
+            rec["seconds"] = {str(k): v for k, v in sorted(e["seconds"].items())}
+        flight_rows.append(rec)
+
     commit, date = git_head(src_dir)
     write_json(
         os.path.join(out_dir, "SOURCE.json"),
@@ -119,13 +199,26 @@ def run(src_dir, out_dir):
             "builds": sorted(builds),
             "license": "CC-BY-4.0",
             "attribution": "Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0 "
-            "(https://creativecommons.org/licenses/by/4.0/). Changed: reduced to quest facts and start positions, "
-            "merged over builds, coordinates reordered.",
-            "files": ["quests.jsonl", "starts.jsonl"],
+            "(https://creativecommons.org/licenses/by/4.0/). Changed: reduced to quest facts, start positions, "
+            "service NPCs and flights, merged over builds, coordinates reordered.",
+            "files": ["quests.jsonl", "starts.jsonl", "npcs.jsonl", "flights.jsonl"],
+            "selection": "npcs.jsonl: NPCs at which players opened a Binder or TaxiNode window or the list of a "
+            "class trainer (trainer type 0), or that flights.json names as flight masters, with role, side, flight "
+            "point and positions; flights.jsonl: every trip of flights.json with every sequence of flight points "
+            "seen for it and the counted flight seconds; no names",
             "status": "unbestätigt",
         },
     )
     n = write_jsonl(os.path.join(out_dir, "quests.jsonl"), records)
     write_jsonl(os.path.join(out_dir, "starts.jsonl"), start_rows, key="key")
-    return {"quests": n, "starts": len(start_rows), "builds": len(builds), "commit": commit[:7]}
+    write_jsonl(os.path.join(out_dir, "npcs.jsonl"), npc_rows, key="id")
+    write_jsonl(os.path.join(out_dir, "flights.jsonl"), flight_rows, key="key")
+    return {
+        "quests": n,
+        "starts": len(start_rows),
+        "npcs": len(npc_rows),
+        "flights": len(flight_rows),
+        "builds": len(builds),
+        "commit": commit[:7],
+    }
 

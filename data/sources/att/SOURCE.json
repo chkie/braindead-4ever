@@ -10,7 +10,7 @@
  "license": "MIT",
  "name": "All The Things, Forever database",
  "repository": "https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever",
- "selection": "every q() entry under .contrib/.db/forever/zones and .contrib/.db/forever/dungeons & raids, instanceroot() entries, o()/n()/fp() entries under the TREASURES, RARES and FLIGHT_PATHS headers of the zone files (book: an object holding an item of a library book quest), evaluated in a Lua 5.1 sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
+ "selection": "every q() entry under .contrib/.db/forever/zones and .contrib/.db/forever/dungeons & raids, instanceroot() entries, o()/n()/fp() entries under the TREASURES, RARES and FLIGHT_PATHS headers of the zone files (book: an object holding an item of a library book quest; flight paths with the NPC ID of the flight master), evaluated in a Lua 5.1 sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
  "source": "att",
  "status": "unbestätigt"
 }

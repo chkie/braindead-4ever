@@ -10,7 +10,8 @@ Format version: 1 (2026-11-01).
 foreign data (cloned outside the repo)
         |  python3 -m tools.routekit import
         v
-data/sources/<source>/   ----merge---->  data/facts/quests.jsonl
+data/sources/<source>/   ----merge---->  data/facts/quests.jsonl, dungeons, finds, times,
+                                         npcs, flightnodes, flightedges (+ FACTS.json)
 
 data/routes/<faction>/*.route + COMPOSE        (the source form of the route data)
         |  lint (all 56 combinations, against data/facts)
@@ -25,7 +26,7 @@ The route files are the source form of the compiled data: they are read and chan
 | --- | --- |
 | `python3 -m tools.routekit import --polestar DIR --eglink DIR --att DIR` | reads the three sources from local clones and writes `data/sources/` |
 | `python3 -m tools.routekit merge` | merges the sources into `data/facts/` with sources and status per value |
-| `python3 -m tools.routekit lint [FILES]` | checks route files; without arguments all files and all 56 combinations |
+| `python3 -m tools.routekit lint [FILES]` | checks route files; without arguments all files, all 56 combinations and the facts on service NPCs and flights |
 | `python3 -m tools.routekit compile` | writes `Pathmark/Routes/Data_Alliance.lua` and `Data_Horde.lua` |
 | `python3 -m tools.routekit check` | lint, then compile into a temporary folder and compare with the committed files (CI) |
 
@@ -37,9 +38,9 @@ Only these sources may provide data (decision FD-1101 of 2026-11-01):
 
 | Key | Source | Licence | Used for |
 | --- | --- | --- | --- |
-| `polestar` | Polestar forever-db, tables only (not the Polestar guides) | GPL-3.0-only | quests, levels, races and classes, givers, turn-ins, prerequisites, objectives, spawn points, map frames |
-| `att` | All The Things, Forever database | MIT | givers, coordinates, prerequisites, races, classes, required level |
-| `eglink` | EG Link output (Efficient Games) | CC BY 4.0 | measured giver and turn-in positions, faction per quest, levels and race mask, start positions |
+| `polestar` | Polestar forever-db, tables only (not the Polestar guides) | GPL-3.0-only | quests, levels, races and classes, givers, turn-ins, prerequisites, objectives, spawn points, map frames; service NPCs (role and class from the title, faction template, spawn points) |
+| `att` | All The Things, Forever database | MIT | givers, coordinates, prerequisites, races, classes, required level; flight points with their flight master |
+| `eglink` | EG Link output (Efficient Games) | CC BY 4.0 | measured giver and turn-in positions, faction per quest, levels and race mask, start positions; service NPCs (window opened, side, where players stood), flights (flight points of each trip, flight seconds) |
 | `own` | our own measurements | GPL-3.0-or-later | everything, once the data collector delivers |
 | `plan` | route logic written by the team | GPL-3.0-or-later | travel steps, notes, planned levels; never IDs or coordinates |
 
@@ -62,6 +63,42 @@ Rules applied by `merge` (decided 2026-11-01, revisable):
 4. **Levels.** Minimum level from EG Link, then ATT, then Polestar; Polestar's placeholder minimum level 1 for quests above level 5 is ignored.
 5. **Band.** Quests with a minimum level up to 30 and a quest level up to 34.
 6. **XP.** `xp` is the full quest XP as Polestar states it (no other source has it); the addon applies the level reduction itself and prefers the client's value while the quest is in the log (`docs/ROUTE-RUNTIME.md`).
+
+## Service NPCs and flights (`data/facts/npcs.jsonl`, `flightnodes.jsonl`, `flightedges.jsonl`)
+
+Facts for the plan elements `train`, `sethome` and `fp` and for planning flights (added 2026-11-03, Welle 10). They are not in the compiled data yet; the routes take them up in a later step. `merge` writes them (`tools/routekit/services.py`); every value has `src`, every record `"status": "unbestätigt"`.
+
+**Service NPCs**, one record per role and NPC, sorted by NPC ID:
+
+```json
+{"id": 198, "role": {"v": "trainer", "src": ["polestar"]},
+ "class": {"v": 8, "src": ["polestar"]}, "side": {"v": "A", "src": ["polestar"]},
+ "pos": {"v": [1429, -188, -8851.5], "src": ["polestar"], "seen": ["polestar"], "roots": 1},
+ "zone": 1429, "status": "unbestätigt"}
+```
+
+- `role`: `trainer` (class trainer), `innkeeper` or `flightmaster`. Polestar chooses by title (`<Class> Trainer`, `Innkeeper`, `Gryphon Master`, `Wind Rider Master`, `Hippogryph Master`, `Flight Master`, `Bat Handler`); EG Link by the window a player opened (`Binder`, `TaxiNode`, a trainer list of trainer type 0); ATT by the flight master of a flight point. Titles and names are read, never written.
+- `class` (trainers only): classID from Polestar's title. A trainer without it is left out: EG Link's trainer type 0 also covers pet trainers, weapon masters and riding instructors (measured 2026-11-03).
+- `side`: `A`, `H` or `B` (both). EG Link (as the game showed it) wins over ATT (races of the flight point) over Polestar. Polestar's side is derived from the faction template: per template, the quests NPCs with it give and take count by quest side; one side when at least 95 % of the one-faction quests have it and there are at least 3, both sides when both factions have such quests and quests for both are at least half of all, otherwise none. On the merge of 2026-11-03 all 50 NPCs with an EG Link side and all 32 with an ATT side agreed with the derived side. A source that states another side goes to `alt`.
+- `pos`: as for quests, EG Link (where a player stood at the open window) before Polestar (spawn point) before ATT (map percent, not on the four changed maps); agreement within 10 yards. Polestar takes part of its Forever data from EG Link, so for service NPCs the two count as one root.
+- `zone`: the uiMap. A bare world point (Polestar) lies in several zone rectangles at zone borders (Darkshire inside the frame of Deadwind Pass, Ratchet inside Durotar's); it takes the map of another source within 50 yards, else the zone that most EG Link positions within 150 yards name, else the smallest frame.
+- `node` (flight masters): the flight point, from EG Link and ATT.
+- Only NPCs in a route zone are kept: the zones in `tools/routekit/game.py` `ZONES` (the zones of levels 1 to 34 and the capitals; `FACTS.json` `rules.serviceZones`).
+
+**Flight points**, one record per point (`node` is the flight point ID the client reports as `nodeID`): `src` (sources that name the point), `masters` (flight master NPC IDs), `side`, `pos` (the flight master's position, else ATT's coordinate), `zone`. All points of the sources are kept, also outside the route zones, so a trip through a point outside them can be planned.
+
+**Flight legs**, one record per direct leg, directed, key `<from>><to>`:
+
+```json
+{"key": "10>11", "from": 10, "to": 11, "src": ["eglink"], "trips": 1,
+ "seconds": {"v": 112, "src": ["eglink"], "flights": 4}, "status": "unbestätigt"}
+```
+
+- A leg exists only when a source flew it: two consecutive flight points of a trip in EG Link (`flights.json`, `hops`) or in our own records. No leg is derived from anything else, also not the way back. The stops of a trip depend on the points the character knows (EG Link saw 22>80 both through 25 and through 77 and 25); every sequence seen counts.
+- `seconds` measured: the median of the flights of a trip flown without a stop (one sequence of two points), our own before EG Link; trips with the Legacy talent Frequent Flier do not count.
+- `seconds` model value: `{"v": n, "basis": "model"}`, the straight distance between the two flight points times the median seconds per yard of all measured legs (`FACTS.json` `flightModel`; 2026-11-03: 0.0484 s per yard over 25 legs, about 20.7 yards per second). Leaving one measured leg out at a time, the model missed it by 22 % in the median and 34 % at most; the measured legs of nine trips with stops added up to the measured trip within 0 to 7 % (median 0.6 %), so a trip with stops costs the sum of its legs. Measured values replace the model value at the next merge.
+
+Own measurements come from the data collector (records `taxilegs`, `flight`, `land`, docs/STATUS.md) through `observe` into `data/sources/own/flights.jsonl` (same layout as EG Link's, legs from the flight master's map as `leg:<a>><b>`); landings outside 5 to 1800 seconds are dropped (chosen values).
 
 ## Route files
 
@@ -165,7 +202,7 @@ Run per file and per combination (56 combinations, both modes). Each error has a
 | `syntax`, `kopf`, `schritt` | syntax, required header lines, unique step IDs, no empty step |
 | `herkunft` | every element names its sources (`src=`) |
 | `quelle` | only sources allowed by FD-1101; data elements need a data source |
-| `beleg` | the named sources really hold the quest (data/facts), and a `goto` lies within 10 yards of a position those sources give for a quest of the step |
+| `beleg` | the named sources really hold the quest (data/facts), and a `goto` lies within 10 yards of a position those sources give for a quest of the step, or, in a step with `train`, `sethome` or `fp`, for a class trainer, innkeeper or flight master (or flight point) whose side is not the other faction |
 | `status` | status given; `bestätigt` only with `own` |
 | `label` | no section is `stabil` without measurements |
 | `sperrliste` | block list in notes and `#text`: typical AI phrases (for example "tauche ein", "nahtlos", "mühelos", "episch"), exclamation marks, emoji |
@@ -180,6 +217,8 @@ Run per file and per combination (56 combinations, both modes). Each error has a
 | `reise` | per combination: every zone change has a `travel` element |
 | `ruecksprung` | per combination: no return into a zone left earlier without `!return "<reason>"` |
 | `compose` | every combination gets a route; modules exist and match faction and mode |
+
+Without file arguments the linter also checks the facts on service NPCs and flights, with the same codes: `herkunft` (a value without `src` that is not marked `"basis": "model"`), `quelle` (a source FD-1101 does not allow), `status`, `karte` (position on its uiMap, `zone` equal to that map, service NPCs in a route zone), `beleg` (legs and flight masters name known flight points), `fakt` (unknown role, trainer without class). Counter-checks for each in `tools/tests/test_services.py`.
 
 Acceptance (Plan, work package 5): ten prepared errors in `tools/tests/fixtures/bad` (one per rule: herkunft, quelle, sperrliste, gegenstand, vorquest, ruecksprung, reise, filter, speed, label) are each found with exactly their code; the clean route in `tools/tests/fixtures/good` passes. The fixtures use made-up quest IDs (900001 and up).
 

@@ -19,12 +19,14 @@ Rules (DR 20 §5, decided and revisable; documented in docs/ROUTE-FORMAT.md §Fa
   the quests ATT lists under the instance plus Polestar dungeon quests (type 81) of the
   instance's area. The discovery catalog (data/facts/finds.jsonl) is ATT's treasures, books,
   rares and flight paths; map-percent coordinates on the four changed maps are left out.
+- Service NPCs (class trainers, innkeepers, flight masters) and the flight network
+  (data/facts/npcs.jsonl, flightnodes.jsonl, flightedges.jsonl) follow the rules in services.py.
 """
 
 import collections
 import os
 
-from . import game, geo
+from . import game, geo, services
 from .io import read_json, read_jsonl, repo_path, write_json, write_jsonl
 
 AGREE_YARDS = 10.0
@@ -432,15 +434,33 @@ def run():
     dungeons = _dungeons(frames, ps, att, {r["q"] for r in facts})
     finds = _finds(frames)
     times = _times()
+    npcs, nodes, edges, model = services.run(frames)
     meta["counts"]["dungeons"] = len(dungeons)
     meta["counts"]["finds"] = len(finds)
     meta["counts"]["timed modules"] = len(times)
+    for role in services.ROLES:
+        meta["counts"]["npcs " + role] = sum(1 for r in npcs if r["role"]["v"] == role)
+    meta["counts"]["flight points"] = len(nodes)
+    meta["counts"]["flight legs"] = len(edges)
+    meta["counts"]["flight legs measured"] = sum(1 for e in edges if "src" in e.get("seconds", {}))
+    meta["flightModel"] = {
+        "basis": "model",
+        "rule": "seconds = straight distance between the flight points (yards) x secondsPerYard, the median "
+        "over the measured legs; replaced by a measured value as soon as one exists",
+        "secondsPerYard": model["secondsPerYard"],
+        "measuredLegs": model["legs"],
+    }
+    meta["rules"]["serviceZones"] = sorted(services.SERVICE_ZONES)
     write_json(repo_path("data", "facts", "FACTS.json"), meta)
+    write_jsonl(repo_path("data", "facts", "npcs.jsonl"), npcs, key="id")
+    write_jsonl(repo_path("data", "facts", "flightnodes.jsonl"), nodes, key="node")
+    write_jsonl(repo_path("data", "facts", "flightedges.jsonl"), edges, key="key")
     write_jsonl(repo_path("data", "facts", "quests.jsonl"), facts)
     write_jsonl(repo_path("data", "facts", "dungeons.jsonl"), dungeons, key="id")
     write_jsonl(repo_path("data", "facts", "finds.jsonl"), finds, key="key")
     write_jsonl(repo_path("data", "facts", "times.jsonl"), times, key="module")
     counts["dungeons"], counts["finds"] = len(dungeons), len(finds)
+    counts["npcs"], counts["flight points"], counts["flight legs"] = len(npcs), len(nodes), len(edges)
     return dict(counts)
 
 

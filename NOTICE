@@ -23,8 +23,8 @@ the #sources line of every route file.
 Polestar forever-db
 https://github.com/fitzforge/polestar/tree/next/forever-db
 
-The database tables used (quest, quest_start, quest_end, quest_prereq, quest_objective, spawn,
-item_source, ui_map) are licensed under the GNU General Public License version 3 only
+The database tables used (quest, quest_start, quest_end, quest_prereq, quest_objective, npc,
+spawn, item_source, ui_map) are licensed under the GNU General Public License version 3 only
 (datapackage.json). Polestar's own credits, which also apply to the values taken from it:
 
 - EG Link output: World of Warcraft: Forever (https://github.com/JIVESCORP/eg-link-output-wowf),
@@ -40,7 +40,9 @@ item_source, ui_map) are licensed under the GNU General Public License version 3
   (Shagu).
 
 Changed: reduced to quests up to level 34, without titles and names; spawn points reduced to
-giver, turn-in and objective positions.
+giver, turn-in and objective positions; NPCs reduced to class trainers, innkeepers and flight
+masters with role, class, faction template, a side derived from it and their spawn points,
+without titles and names.
 
 -------------------------------------------------------------------------------------------
 EG Link output: World of Warcraft: Forever
@@ -50,16 +52,19 @@ Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0
 (https://creativecommons.org/licenses/by/4.0/).
 
 Changed: reduced to quest facts (who offers and takes a quest and where players stood, which
-faction the server describes a quest for, quest level, minimum level and race mask) and to the
-start positions of new characters; merged over the builds of the products wow_classic_beta and
-wowf; coordinates reordered to north and west. No game text is included.
+faction the server describes a quest for, quest level, minimum level and race mask), to the
+start positions of new characters, to class trainers, innkeepers and flight masters (the window
+a player opened, side, flight point, where players stood) and to flights (the flight points of
+each trip, how many flights took how many seconds); merged over the builds of the products
+wow_classic_beta and wowf; coordinates reordered to north and west. No game text is included.
 
 -------------------------------------------------------------------------------------------
 All The Things (Forever database)
 https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever
 
 Changed: quest facts only (quest IDs, giver IDs, coordinates, prerequisites, races, classes,
-required level, flags), read from the Lua source files; no names or comments.
+required level, flags) and the discovery catalog (treasures, books, rares, flight points with the
+NPC ID of their flight master), read from the Lua source files; no names or comments.
 
 MIT License
 

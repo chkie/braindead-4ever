@@ -4,12 +4,13 @@
  "commitDate": "2026-10-31T09:12:21+01:00",
  "files": [
   "quests.jsonl",
-  "ui_map.jsonl"
+  "ui_map.jsonl",
+  "npcs.jsonl"
  ],
  "license": "GPL-3.0-only",
  "name": "Polestar forever-db",
  "repository": "https://github.com/fitzforge/polestar/tree/next/forever-db",
- "selection": "quests with min_level <= 30 and level <= 34; tables quest, quest_start, quest_end, quest_prereq, quest_objective, spawn, item_source, ui_map; no titles or names",
+ "selection": "quests with min_level <= 30 and level <= 34; tables quest, quest_start, quest_end, quest_prereq, quest_objective, spawn, item_source, ui_map; no titles or names. Service NPCs from tables npc and spawn: class trainers, innkeepers and flight masters chosen by title, with role, class, faction template, a side derived from the sides of the quests NPCs with the same template give and take, and spawn points; no titles or names",
  "source": "polestar",
  "status": "unbestätigt",
  "version": "2026.10.1"

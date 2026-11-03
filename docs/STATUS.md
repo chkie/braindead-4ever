@@ -69,6 +69,7 @@ Records go into a ring buffer of text chunks (`Collector/Store.lua`): one line p
 | Rare enemies from name plates, target and mouseover | built | |
 | Vignettes | built | whether Forever zones have vignettes is unconfirmed |
 | Flight masters with known nodes, new flight path message, taxi start and landing | built | |
+| Flights (Welle 10): direct legs from the flight master's map (`GetNumRoutes`, `TaxiGetNodeSlot`; record `taxilegs`, once per flight point and session), the chosen flight with its flight points (post-hook on `TakeTaxiNode`; record `flight`), the landing with destination and seconds since the choice (`land`) | built | own records only, nothing goes to the exchange, so the channel budget stays as it is; the legs are read again only when the known flight points changed: offline (Lua 5.1, 40 points with up to 4 legs) 0.15 ms more on the first open of a flight master in a session, nothing on later opens; the three functions are in the Forever global dump (Ketho, branch forever, d1ee569) and checked as `mod.collector.*`; `observe` turns the records into own flight facts |
 | NPC names in the client language, zone changes, position samples, deaths, group size, hearthstone bind | built | |
 | Export as `PM1` text (JSON, Deflate, Base64, length and Adler-32), only data not exported yet, acknowledged after Ctrl+C | built | `/pathmark export [all]`; Zlib only after `enc.zlib` passed in the client |
 | Website decoder for the export (`decoder/decode.mjs`) | built | round trip Lua to Node decoder in `spec/export_spec.lua`; browser paste test with the `enc.deflate` text |
@@ -156,6 +157,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Route measurement: all 56 combinations in both modes priced in Modellstunden (model hours) up to level 30 | built | results in `docs/ROUTE-METRICS.md`; the measuring tools are kept outside this repository and are not needed to build the addon or the route data |
 | Planned levels from measured XP | planned | levels are planning values until then |
 | Quest facts in the compiled data: quest level, full XP (Polestar), prerequisite groups | built | `quests` table, docs/ROUTE-FORMAT.md §Compiled form |
+| Facts on class trainers, innkeepers and flight masters in the route zones and on the flight network (flight points, flown legs, flight seconds measured or as a model value), each value with sources and status `unbestätigt` (Welle 10) | built | docs/ROUTE-FORMAT.md §Service NPCs and flights; merge of 2026-11-03: 224 trainers, 40 innkeepers, 35 flight masters, 66 flight points, 99 legs (25 with measured seconds); not in the compiled data yet, the routes take them up later; the linter checks them and accepts a trainer, innkeeper or flight master as the position of a `train`, `sethome` or `fp` step |
 
 ## Route runtime (step logic, owner wishes 9 and 10)
 

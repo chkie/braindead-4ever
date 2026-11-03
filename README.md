@@ -20,7 +20,7 @@ Quest IDs, coordinates and times never come from an AI model. Each value carries
 
 ## Data contribution
 
-Pathmark records what you do while leveling, in your own game folder: quests accepted and turned in with their place, experience, objects you loot, rare enemies, flight masters and similar finds. Nothing in it names your character, your realm, your guild or other players, and there is no chat. Time is kept relative to the session, the date only as a day.
+Pathmark records what you do while leveling, in your own game folder: quests accepted and turned in with their place, experience, objects you loot, rare enemies, flight masters, the flights you take and similar finds. Nothing in it names your character, your realm, your guild or other players, and there is no chat. Time is kept relative to the session, the date only as a day.
 
 What you discover, Pathmark shares in the game with other players who use it, through addon messages: IDs and map positions only, to your group at once, to your guild and other players 30 to 90 seconds later. This is part of the addon and cannot be switched off. Addon messages show the game's sender name to the receiving addon; Pathmark never stores it.
 
