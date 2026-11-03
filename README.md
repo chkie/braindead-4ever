@@ -14,9 +14,9 @@ Braindead 4ever is a free leveling guide addon for World of Warcraft: Forever. I
 
 ## How it is built
 
-Braindead 4ever is developed with AI assistance (Claude by Anthropic). Every change has to pass automated tests, linting, a type check, a format check and a secret scan before it can be merged. Features are tested in the game client before a release. The addon itself contains no AI.
+Every change has to pass automated tests, linting, a type check, a format check and a secret scan before it can be merged. Features are tested in the game client before a release.
 
-Quest IDs, coordinates and times never come from an AI model. Each value carries its source.
+Quest IDs, coordinates and times come from open sources with a known licence or from our own measurements. Each value carries its source.
 
 ## Data contribution
 
@@ -70,9 +70,9 @@ Braindead 4ever ist ein kostenloser Leveling-Guide für World of Warcraft: Forev
 
 ### Wie es entsteht
 
-Braindead 4ever wird mit KI-Unterstützung entwickelt (Claude von Anthropic). Jede Änderung muss vor dem Zusammenführen automatische Tests, Linter, Typprüfung, Formatprüfung und einen Scan auf Zugangsdaten bestehen. Funktionen werden vor einer Veröffentlichung im Spiel getestet. Das Addon selbst enthält keine KI.
+Jede Änderung muss vor dem Zusammenführen automatische Tests, Linter, Typprüfung, Formatprüfung und einen Scan auf Zugangsdaten bestehen. Funktionen werden vor einer Veröffentlichung im Spiel getestet.
 
-Quest-IDs, Koordinaten und Zeiten stammen nie aus einem KI-Modell. Jede Angabe trägt ihre Quelle.
+Quest-IDs, Koordinaten und Zeiten stammen aus offenen Quellen mit bekannter Lizenz oder aus eigenen Messungen. Jede Angabe trägt ihre Quelle.
 
 ### Datenbeitrag
 
