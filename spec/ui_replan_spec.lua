@@ -105,6 +105,46 @@ describe("Replanning in the step window", function()
 		assert.are.equal(ALT .. "/r1439", ns.Route.Current().key)
 	end)
 
+	-- A core module that returns into a zone left earlier (`!return "neue Quests"`, R09) starts with a
+	-- zone change like any other: the switch point offers the block that fits. Only the travel step of a
+	-- class insert (`!return "Klassenquest"`, R24) is a detour where the search stops.
+	local function returnAt(reason, kind)
+		return function(ns)
+			local build = ns.RouteData.Alliance
+			ns.RouteData.Alliance = function()
+				local data = build()
+				local m = data.modules["a-speed-core-01-1436"]
+				m.steps[1].ret = reason
+				if kind then
+					m.kind = kind
+				end
+				return data
+			end
+		end
+	end
+
+	it("offers the switch at a core module's return into a zone, not at a class detour", function()
+		local ns = S.login({ loaded = returnAt("neue Quests") })
+		wow.world.mapInfo[1439] = { mapID = 1439, name = "Darkshore" }
+		wow.world.player.level = 20
+		wow.fire("PLAYER_LEVEL_UP", 20)
+		wow.advance(0.5)
+		assert.are.equal("a-speed-core-01-1436/r1436", ns.Route.Current().key)
+		local o = ns.Route.Offer()
+		assert.is_table(o, "a core return is a zone change: the switch point asks")
+		assert.are.equal("switch", o.kind)
+		assert.are.equal(20, o.choice.plan)
+		-- counter check: the same step as the travel step of a class insert is a detour; it is no switch
+		-- point, the level rule passes it like before
+		ns = S.login({ loaded = returnAt("Klassenquest", "class") })
+		wow.world.player.level = 20
+		wow.fire("PLAYER_LEVEL_UP", 20)
+		wow.advance(0.5)
+		assert.are_not.equal("a-speed-core-01-1436/r1436", ns.Route.Current().key)
+		local again = ns.Route.Offer()
+		assert.is_true(again == nil or again.key ~= "a-speed-core-01-1436/r1436")
+	end)
+
 	it("“Keep route” keeps it and does not ask again", function()
 		local ns = S.login()
 		local W = ns.StepFrame.frame
