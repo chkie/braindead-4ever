@@ -8,6 +8,9 @@ faction, filters, levels, Speed rule.
 Checks per combination (all 56 races x classes, per mode): a route exists, quest order
 (accept before turn-in, prerequisite before follow-up), items before turn-in, travel on
 every zone change, no return to a zone left earlier without a stated reason.
+Checks of the facts on service NPCs and flights (data/facts/npcs.jsonl, flightnodes.jsonl,
+flightedges.jsonl): every value names allowed sources or is marked as a model value, status,
+position on its zone's map and in a route zone, legs between known flight points.
 """
 
 import glob
@@ -57,16 +60,48 @@ class Error:
         return "%s:%s: [%s] %s" % (self.path, self.line, self.code, self.msg)
 
 
+# Plan elements a service NPC or a flight point can back the goto of (docs/ROUTE-FORMAT.md §Service NPCs).
+ROLE_OF_VERB = {"train": "trainer", "sethome": "innkeeper", "fp": "flightmaster"}
+SERVICE_FILES = ("npcs", "flightnodes", "flightedges")
+
+
 class Facts:
-    def __init__(self, records, frames):
+    def __init__(self, records, frames, npcs=(), nodes=()):
         self.q = {r["q"]: r for r in records}
         self.frames = frames
+        self.npcs = list(npcs)
+        self.nodes = list(nodes)
 
     @classmethod
     def load(cls, facts_path=None, frames_path=None):
         facts_path = facts_path or repo_path("data", "facts", "quests.jsonl")
         frames_path = frames_path or repo_path("data", "sources", "polestar", "ui_map.jsonl")
-        return cls(read_jsonl(facts_path), geo.Frames(read_jsonl(frames_path)))
+        extra = {}
+        for name in ("npcs", "flightnodes"):
+            path = os.path.join(os.path.dirname(facts_path), name + ".jsonl")
+            extra[name] = read_jsonl(path) if os.path.exists(path) else []
+        return cls(read_jsonl(facts_path), geo.Frames(read_jsonl(frames_path)), extra["npcs"], extra["flightnodes"])
+
+    def service_positions(self, verbs, faction):
+        """[(uiMap, west, north, seen sources)] of the service NPCs (and flight points for `fp`) whose
+        role matches one of the plan elements of a step and whose side is not the other faction."""
+        roles = {ROLE_OF_VERB[v] for v in verbs if v in ROLE_OF_VERB}
+        out = []
+
+        def side_ok(r):
+            side = (r.get("side") or {}).get("v")
+            return not faction or side in (None, "B", faction[0])
+
+        for r in self.npcs:
+            if r["role"]["v"] in roles and r.get("pos") and side_ok(r):
+                p = r["pos"]
+                out.append((p["v"][0], p["v"][1], p["v"][2], set(p.get("seen", p["src"]))))
+        if "flightmaster" in roles:
+            for r in self.nodes:
+                if r.get("pos") and side_ok(r):
+                    p = r["pos"]
+                    out.append((p["v"][0], p["v"][1], p["v"][2], set(p.get("seen", p["src"]))))
+        return out
 
     def sources_of(self, q):
         r = self.q.get(q)
@@ -259,6 +294,7 @@ def lint_module(mod, facts):
                     E("karte", line, "Punkt %.1f,%.1f liegt nicht auf uiMap %d (Achsen vertauscht?)" % (wx, wy, m))
                 if ext:
                     cands = [p for qq in step_quests for p in facts.positions(qq)]
+                    cands += facts.service_positions({e.verb for e in st.elements}, faction)
                     ok = any(
                         zone_key(p[0]) == zone_key(m) and geo.dist((p[2], p[1]), (wy, wx)) <= AGREE_YARDS and set(ext) <= p[3]
                         for p in cands
@@ -397,6 +433,100 @@ def lint_all(mods, comps, facts, combos=True, combo_list=None, modes=routefmt.MO
     return errs
 
 
+def _field_errors(E, line, name, field, key):
+    """A value field {v, src} or a model value {v, basis: "model"}."""
+    if not isinstance(field, dict) or "v" not in field:
+        E("fakt", line, "%s: Feld %s ohne Wert" % (key, name))
+        return set()
+    src = field.get("src")
+    if not src:
+        if field.get("basis") != "model":
+            E("herkunft", line, "%s: Feld %s ohne Herkunft (src) und nicht als Modellwert markiert" % (key, name))
+        return set()
+    bad = [x for x in src if x not in DATA_SOURCES]
+    if bad:
+        E("quelle", line, "%s: Feld %s nennt %s; nach FD-1101 keine Datenquelle" % (key, name, ",".join(bad)))
+    return set(src)
+
+
+def lint_facts(npcs, nodes, edges, frames, zones=None, paths=None):
+    """Checks of the facts on service NPCs and flights. Records are dicts as in data/facts; `zones`
+    the uiMaps service NPCs may stand in (default: services.SERVICE_ZONES)."""
+    from . import services
+
+    zones = services.SERVICE_ZONES if zones is None else zones
+    paths = paths or {n: "data/facts/%s.jsonl" % n for n in SERVICE_FILES}
+    errs = []
+    node_ids = {r.get("node") for r in nodes}
+
+    def check_record(path, line, r, key, fields, top_src=False):
+        def E(code, ln, msg):
+            errs.append(Error(code, path, ln, msg))
+
+        srcs = set()
+        if top_src:
+            if not r.get("src"):
+                E("herkunft", line, "%s ohne Herkunft (src)" % key)
+            else:
+                srcs |= _field_errors(E, line, "src", {"v": True, "src": r["src"]}, key)
+        for name in fields:
+            if name in r:
+                srcs |= _field_errors(E, line, name, r[name], key)
+        status = r.get("status")
+        if status is None:
+            E("status", line, "%s ohne status" % key)
+        elif status not in routefmt.STATUS:
+            E("status", line, "%s: unbekannter Status '%s'" % (key, status))
+        elif status == "bestätigt" and "own" not in srcs:
+            E("status", line, "%s: 'bestätigt' nur mit eigener Messung (own)" % key)
+        p = r.get("pos")
+        if isinstance(p, dict) and isinstance(p.get("v"), list) and len(p["v"]) == 3:
+            m, west, north = p["v"]
+            if m not in frames.by_map:
+                E("karte", line, "%s: uiMap %s unbekannt" % (key, m))
+            elif not frames.contains(m, north, west, FRAME_MARGIN):
+                E("karte", line, "%s: Position %.1f,%.1f liegt nicht auf uiMap %d" % (key, west, north, m))
+            if r.get("zone") != m:
+                E("karte", line, "%s: zone %s passt nicht zur Position auf uiMap %s" % (key, r.get("zone"), m))
+        return E
+
+    for i, r in enumerate(npcs, 1):
+        key = "%s %s" % ((r.get("role") or {}).get("v", "NPC"), r.get("id"))
+        E = check_record(paths["npcs"], i, r, key, ("role", "class", "side", "pos", "node"))
+        if "role" not in r:
+            E("herkunft", i, "%s ohne Rolle" % key)
+        role = (r.get("role") or {}).get("v")
+        if role is not None and role not in services.ROLES:
+            E("fakt", i, "%s: unbekannte Rolle '%s'" % (key, role))
+        if role == "trainer" and "class" not in r:
+            E("fakt", i, "%s: Lehrer ohne Klasse" % key)
+        if "pos" not in r:
+            E("karte", i, "%s ohne Position" % key)
+        elif r.get("zone") not in zones:
+            E("karte", i, "%s steht nicht in einem Routengebiet (uiMap %s)" % (key, r.get("zone")))
+        node = (r.get("node") or {}).get("v")
+        if node is not None and node not in node_ids:
+            E("beleg", i, "%s: Flugpunkt %s fehlt in flightnodes" % (key, node))
+    for i, r in enumerate(nodes, 1):
+        check_record(paths["flightnodes"], i, r, "Flugpunkt %s" % r.get("node"), ("masters", "side", "pos"), top_src=True)
+    for i, r in enumerate(edges, 1):
+        key = "Flugstrecke %s" % r.get("key")
+        E = check_record(paths["flightedges"], i, r, key, ("seconds",), top_src=True)
+        for end in ("from", "to"):
+            if r.get(end) not in node_ids:
+                E("beleg", i, "%s: Flugpunkt %s fehlt in flightnodes" % (key, r.get(end)))
+    return errs
+
+
+def load_service_facts(root=None):
+    root = root or repo_path("data", "facts")
+    out = {}
+    for name in SERVICE_FILES:
+        path = os.path.join(root, name + ".jsonl")
+        out[name] = read_jsonl(path) if os.path.exists(path) else []
+    return out
+
+
 def main(files=None, combos=True, facts=None, out=sys.stdout):
     facts = facts or Facts.load()
     if files:
@@ -409,6 +539,9 @@ def main(files=None, combos=True, facts=None, out=sys.stdout):
     else:
         mods, comps = load_routes()
     errs = lint_all(mods, comps, facts, combos=combos)
+    if not files:
+        sf = load_service_facts()
+        errs += lint_facts(sf["npcs"], sf["flightnodes"], sf["flightedges"], facts.frames)
     # identical messages from several combinations are reported once
     seen = set()
     for e in errs:

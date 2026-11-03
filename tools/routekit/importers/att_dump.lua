@@ -341,7 +341,8 @@ end
 local bookItems = {}
 
 -- Discovery catalog: treasures (chests, objects), books (objects holding a library book),
--- rares, flight paths. Only entries with a coordinate are useful as a hint.
+-- rares, flight paths (with the flight master's NPC ID, cr). Only entries with a coordinate are
+-- useful as a hint.
 local HEADERS = { TREASURES = "treasure", RARES = "rare", FLIGHT_PATHS = "flightpath" }
 local FIND_NODES = { treasure = "o", rare = "n", flightpath = "fp" }
 
@@ -375,6 +376,7 @@ local function emitFind(n, ctx)
 			zoneMap = ctx.map,
 			coords = coords,
 			races = numList(t.races),
+			cr = ftype == "flightpath" and numList(t.cr) or nil,
 			timeline = timelineList(t),
 		}),
 		"\n"

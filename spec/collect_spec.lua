@@ -275,6 +275,91 @@ describe("Collector", function()
 		assert.are.equal(1, #ofKind(own, "newtaxi"))
 	end)
 
+	it("records the legs of the flight network, the chosen flight and its seconds", function()
+		local ns, own = start()
+		local FP = Enum.FlightPathState
+		wow.world.npc = { guid = "Creature-0-1465-0-2105-352-0000ABC127", name = "Dungar Longdrink" }
+		wow.world.taxi.nodes = {
+			{ nodeID = 2, state = FP.Current, slotIndex = 1 },
+			{ nodeID = 4, state = FP.Reachable, slotIndex = 2 },
+			{ nodeID = 6, state = FP.Reachable, slotIndex = 3 },
+			{ nodeID = 9, state = FP.Unreachable, slotIndex = 4 },
+		}
+		wow.world.taxi.routes = { [2] = { 1, 2 }, [3] = { 1, 2, 3 }, [4] = { 1, 4 } }
+		wow.fire("TAXIMAP_OPENED", 0)
+		wow.fire("TAXIMAP_OPENED", 0) -- the same known points: the legs are not read again
+		local legs = ofKind(own, "taxilegs")
+		assert.are.equal(1, #legs)
+		assert.are.same({ "2", "2>4;4>6" }, { legs[1][6], legs[1][7] })
+		assert.are.equal(2, wow.world.taxi.reads)
+		-- A newly known point: the legs are read and recorded again.
+		wow.world.taxi.nodes[4].state = FP.Reachable
+		wow.world.taxi.routes[4] = { 1, 2, 4 }
+		wow.fire("TAXIMAP_OPENED", 0)
+		assert.are.equal(5, wow.world.taxi.reads)
+		legs = ofKind(own, "taxilegs")
+		assert.are.equal(2, #legs)
+		assert.are.equal("2>4;4>6;4>9", legs[2][7])
+
+		-- Own records only: the flight offers nothing to the exchange (the channel budget is untouched).
+		local offered, offer = 0, ns.Exchange.Offer
+		ns.Exchange.Offer = function(...)
+			offered = offered + 1
+			return offer(...)
+		end
+		_G.TakeTaxiNode(3)
+		assert.are.equal(3, wow.world.taxi.taken) -- the hook does not replace the original
+		local f = ofKind(own, "flight")
+		assert.are.equal(1, #f)
+		assert.are.same({ "2", "6", "2;4;6" }, { f[1][6], f[1][7], f[1][8] })
+		wow.world.onTaxi = true
+		wow.fire("PLAYER_CONTROL_LOST")
+		wow.advance(120)
+		wow.world.onTaxi = false
+		wow.fire("PLAYER_CONTROL_GAINED")
+		wow.advance(1)
+		local land = ofKind(own, "land")
+		assert.are.equal(1, #land)
+		assert.are.same({ "6", "120" }, { land[1][6], land[1][7] })
+		assert.are.equal(0, offered)
+		ns.Exchange.Offer = offer
+	end)
+
+	it("leaves out flights and legs it cannot name", function()
+		local _, own = start()
+		local FP = Enum.FlightPathState
+		wow.world.taxi.nodes = {
+			{ nodeID = 2, state = FP.Current, slotIndex = 1 },
+			{ nodeID = 4, state = FP.Reachable, slotIndex = 2 },
+		}
+		wow.world.taxi.routes = { [2] = { 1, 7 } } -- slot 7 is not on the map: broken answer
+		wow.fire("TAXIMAP_OPENED", 0)
+		assert.are.equal(0, #ofKind(own, "taxilegs"))
+		_G.TakeTaxiNode(5) -- unknown slot
+		assert.are.equal(0, #ofKind(own, "flight"))
+		_G.TakeTaxiNode(2) -- known slot, broken path: the flight is kept without its points
+		local f = ofKind(own, "flight")
+		assert.are.equal(1, #f)
+		assert.are.same({ "2", "4", "" }, { f[1][6], f[1][7], f[1][8] or "" })
+		-- Landing without a chosen flight (a /reload in the air): position only.
+		wow.world.onTaxi = true
+		wow.fire("PLAYER_CONTROL_LOST")
+		wow.advance(2)
+		wow.world.onTaxi = false
+		wow.fire("PLAYER_CONTROL_GAINED")
+		wow.advance(1)
+		wow.world.onTaxi = true
+		wow.fire("PLAYER_CONTROL_LOST")
+		wow.advance(2)
+		wow.world.onTaxi = false
+		wow.fire("PLAYER_CONTROL_GAINED")
+		wow.advance(1)
+		local land = ofKind(own, "land")
+		assert.are.equal(2, #land)
+		assert.are.equal("4", land[1][6])
+		assert.is_nil(land[2][6])
+	end)
+
 	it("records taxi start and landing, deaths, own kills and group size", function()
 		local _, own = start()
 		wow.world.onTaxi = true

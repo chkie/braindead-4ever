@@ -231,7 +231,12 @@ describe("Settings", function()
 		end
 		local all = table.concat(texts, "\n")
 		assert.matches("GNU General Public License 3.0, without warranty", all, 1, true)
-		assert.matches("All The Things (MIT) • EG Link (CC BY 4.0) • Polestar forever-db (GPL-3.0)", all, 1, true)
+		assert.matches(
+			"All The Things (MIT) • EG Link (CC BY 4.0) • Polestar forever-db (GPL-3.0-only)",
+			all,
+			1,
+			true
+		)
 		assert.matches("Not affiliated with Blizzard Entertainment", all, 1, true)
 	end)
 

@@ -46,6 +46,7 @@ local C = {
 	NET_BYTES = 1024 * 1024, -- finds received from other players (own data is never pushed out by them)
 	EXPORT_RAW_MAX = 1024 * 1024, -- raw bytes per export text; the rest comes with the next export
 	CODEC = "d", -- Deflate; "z" only after the probe check enc.zlib passed in the client
+	TAXI_LEGS_MAX = 20, -- legs of one trip; more is taken as a broken answer
 }
 ns.Collector = C
 
@@ -67,6 +68,10 @@ local npcSeen, rareSeen, vignetteSeen = {}, {}, {}
 -- last offer list, and quests whose offer was observed this session.
 local recent, lastTurn, listing, offerSeen = {}, nil, nil, {}
 local scanQueued, lastMap, lastX, lastY, onTaxi, rosterTimer = false, nil, nil, nil, false, nil
+-- Flights (docs/ROUTE-FORMAT.md §Service NPCs and flights): the flight point of the open flight master,
+-- its slots (slot index -> node ID), per flight point the known points the legs were last read for, and
+-- the flight taken (to, start time) until the landing.
+local taxiHere, taxiSlots, legsRead, flight = nil, {}, {}, nil
 
 local function Rec(kind, map, x, y, ...)
 	if own then
@@ -530,6 +535,8 @@ local function Init()
 		ItemTextGetItem = "ItemTextGetItem",
 		GetTaxiMapID = "GetTaxiMapID",
 		GetAllTaxiNodes = "C_TaxiMap.GetAllTaxiNodes",
+		GetNumRoutes = "GetNumRoutes",
+		TaxiGetNodeSlot = "TaxiGetNodeSlot",
 		UnitOnTaxi = "UnitOnTaxi",
 		GetVignetteInfo = "C_VignetteInfo.GetVignetteInfo",
 		GetVignettePosition = "C_VignetteInfo.GetVignettePosition",
@@ -579,6 +586,48 @@ local function Init()
 	})
 end
 
+-- Flight points of the trip to a slot of the open flight master: { from, stop, ..., to } as node IDs,
+-- or nil when a slot is unknown or a value is secret. GetNumRoutes(slot) is the number of legs;
+-- TaxiGetNodeSlot(slot, leg, true) the slot the leg starts at, (slot, leg, false) the one it ends at.
+function C.TaxiPath(slot)
+	local n = Num((Call(api.GetNumRoutes, slot)))
+	if not (n and n >= 1 and n <= C.TAXI_LEGS_MAX) then
+		return
+	end
+	local path = { taxiSlots[Num((Call(api.TaxiGetNodeSlot, slot, 1, true)))] }
+	for leg = 1, n do
+		path[#path + 1] = taxiSlots[Num((Call(api.TaxiGetNodeSlot, slot, leg, false)))]
+	end
+	if #path ~= n + 1 then
+		return
+	end
+	return path
+end
+
+-- TakeTaxiNode(slot): the player chose a flight. Recorded with its flight points; the landing record
+-- carries the destination and the seconds from this choice to the landing.
+local function OnTakeTaxi(slot)
+	local s = Num(slot)
+	local to = s and taxiSlots[s]
+	if not (to and taxiHere) then
+		return
+	end
+	local path = C.TaxiPath(s)
+	flight = { to = to, at = GetTime() }
+	Here("flight", taxiHere, to, path and table.concat(path, ";") or nil)
+end
+
+-- No event says which flight point was chosen; a secure post-hook on TakeTaxiNode does (Polestar
+-- Recorder does the same). Installed once per session; it does nothing while the module is off.
+local taxiHooked = false
+local function HookTaxi()
+	if taxiHooked or not (hooksecurefunc and M.Optional("TakeTaxiNode")) then
+		return
+	end
+	hooksecurefunc("TakeTaxiNode", Guard.Wrap("collector", OnTakeTaxi))
+	taxiHooked = true
+end
+
 local function Stop()
 	for i = #tickers, 1, -1 do
 		tickers[i]:Cancel()
@@ -590,6 +639,7 @@ end
 local events = {
 	PLAYER_LOGIN = function()
 		Start()
+		HookTaxi()
 	end,
 	PLAYER_LOGOUT = function()
 		Save()
@@ -812,23 +862,53 @@ local events = {
 		local FP = Enum.FlightPathState
 		local mapID = Num((Call(api.GetTaxiMapID)))
 		local nodes = mapID and Call(api.GetAllTaxiNodes, mapID) or {}
-		local here, known = nil, {}
+		local here, known, reachable = nil, {}, {}
+		taxiSlots = {}
 		for _, n in ipairs(nodes) do
-			local node, state = Num(n.nodeID), Num(n.state)
+			local node, state, slot = Num(n.nodeID), Num(n.state), Num(n.slotIndex)
 			if node and state then
+				if slot then
+					taxiSlots[slot] = node
+				end
 				if FP and state == FP.Current then
 					here = node
 				end
 				if not FP or state ~= FP.Unreachable then
 					known[#known + 1] = node
+					if slot and state ~= (FP and FP.Current) then
+						reachable[#reachable + 1] = slot
+					end
 				end
 			end
 		end
 		table.sort(known)
+		taxiHere = here
+		local knownText = table.concat(known, ";")
 		local k, npc = Ref("npc")
-		local map, x, y = Here("flightmaster", k == "c" and npc or nil, here, table.concat(known, ";"))
+		local map, x, y = Here("flightmaster", k == "c" and npc or nil, here, knownText)
 		if k == "c" and here and map and x and y then
 			Offer("f", npc, here, map, x, y)
+		end
+		-- Legs: the game routes every reachable point through direct legs (Blizzard_FlightMap draws
+		-- them with GetNumRoutes and TaxiGetNodeSlot). Read and recorded again only when the known
+		-- points changed since the last open at this point in the session.
+		if here and api.GetNumRoutes and api.TaxiGetNodeSlot and legsRead[here] ~= knownText then
+			legsRead[here] = knownText
+			local set, legs = {}, {}
+			for _, slot in ipairs(reachable) do
+				local path = C.TaxiPath(slot) or {}
+				for i = 2, #path do
+					local leg = path[i - 1] .. ">" .. path[i]
+					if not set[leg] then
+						set[leg], legs[#legs + 1] = true, leg
+					end
+				end
+			end
+			table.sort(legs)
+			local text = table.concat(legs, ";")
+			if text ~= "" then
+				Rec("taxilegs", map, x, y, here, text)
+			end
 		end
 	end,
 	UI_INFO_MESSAGE = function(_, _, _, message) -- says "new", not which flight path
@@ -873,10 +953,16 @@ local events = {
 	PLAYER_CONTROL_GAINED = function()
 		if onTaxi then
 			onTaxi = false
+			local f = flight
+			flight = nil
 			C_Timer.After(
 				0.2,
 				Guard.Wrap("collector", function()
-					Here("land")
+					if f then
+						Here("land", f.to, math.floor(GetTime() - f.at + 0.5))
+					else
+						Here("land")
+					end
 				end)
 			)
 		end
@@ -1005,6 +1091,9 @@ M.Define("collector", {
 			"ItemTextGetItem",
 			"GetTaxiMapID",
 			"C_TaxiMap.GetAllTaxiNodes",
+			"GetNumRoutes",
+			"TaxiGetNodeSlot",
+			"TakeTaxiNode",
 			"UnitOnTaxi",
 			"C_VignetteInfo.GetVignetteInfo",
 			"C_VignetteInfo.GetVignettePosition",

@@ -4,11 +4,16 @@
 The tables used here are GPL-3.0-only (datapackage.json). Output goes to
 data/sources/polestar/ and keeps that licence. Titles and names are not copied (brain
 chapter 16: only IDs and coordinates in the repository, names at runtime from the client).
+
+Service NPCs (npcs.jsonl): class trainers, innkeepers and flight masters, chosen by their title
+(`subname`); only the role, the class of a trainer, the faction template, a side derived from it
+and the spawn points are kept, never the title or the name.
 """
 
 import collections
 import json
 import os
+import re
 
 from .. import game, geo
 from ..io import git_head, write_json, write_jsonl
@@ -17,6 +22,49 @@ from ..io import git_head, write_json, write_jsonl
 MAX_MIN_LEVEL = 30
 MAX_LEVEL = 34
 MAX_POSITIONS = 6
+
+# Service NPCs by title. The titles are read, never written.
+INNKEEPER_TITLES = {"Innkeeper"}
+FLIGHT_MASTER_TITLES = {"Gryphon Master", "Wind Rider Master", "Hippogryph Master", "Flight Master", "Bat Handler"}
+TRAINER_TITLE = re.compile(r"(Warrior|Paladin|Hunter|Rogue|Priest|Shaman|Mage|Warlock|Druid) Trainer")
+CLASS_OF_TITLE = {name.capitalize(): cid for cid, name in game.CLASSES.items()}
+
+# Side of a faction template, derived from the quests the NPCs with that template give and take
+# (quest side 1 Alliance, 2 Horde, 0 both). Chosen thresholds, documented in docs/ROUTE-FORMAT.md
+# §Service NPCs: one side when at least SIDE_SHARE of the one-faction quests are of that side and
+# at least SIDE_MIN of them exist; both sides when both factions have such quests and quests for
+# both are at least BOTH_SHARE of all; otherwise no side.
+SIDE_SHARE = 0.95
+SIDE_MIN = 3
+BOTH_SHARE = 0.5
+
+
+def npc_role(subname):
+    """(role, classID) for a title, or (None, None)."""
+    s = subname or ""
+    if s in INNKEEPER_TITLES:
+        return "innkeeper", None
+    if s in FLIGHT_MASTER_TITLES:
+        return "flightmaster", None
+    m = TRAINER_TITLE.fullmatch(s)
+    if m:
+        return "trainer", CLASS_OF_TITLE[m.group(1)]
+    return None, None
+
+
+def template_sides(votes):
+    """{faction_template: Counter(A=, H=, B=)} -> {faction_template: "A" | "H" | "B"}."""
+    out = {}
+    for ft, c in votes.items():
+        a, h, b = c["A"], c["H"], c["B"]
+        one = a + h
+        if one >= SIDE_MIN and a >= SIDE_SHARE * one:
+            out[ft] = "A"
+        elif one >= SIDE_MIN and h >= SIDE_SHARE * one:
+            out[ft] = "H"
+        elif a > 0 and h > 0 and b >= BOTH_SHARE * (one + b):
+            out[ft] = "B"
+    return out
 
 
 def _rows(path):
@@ -150,6 +198,8 @@ def run(src_dir, out_dir):
             if c:
                 o["pos"] = c
 
+    npcs = _npcs(data)
+
     commit, date = git_head(src_dir)
     write_json(
         os.path.join(out_dir, "SOURCE.json"),
@@ -162,12 +212,56 @@ def run(src_dir, out_dir):
             "version": index["version"],
             "clientBuild": index["clientBuild"],
             "license": "GPL-3.0-only",
-            "files": ["quests.jsonl", "ui_map.jsonl"],
+            "files": ["quests.jsonl", "ui_map.jsonl", "npcs.jsonl"],
             "selection": "quests with min_level <= %d and level <= %d; tables quest, quest_start, quest_end, "
-            "quest_prereq, quest_objective, spawn, item_source, ui_map; no titles or names" % (MAX_MIN_LEVEL, MAX_LEVEL),
+            "quest_prereq, quest_objective, spawn, item_source, ui_map; no titles or names. Service NPCs from "
+            "tables npc and spawn: class trainers, innkeepers and flight masters chosen by title, with role, "
+            "class, faction template, a side derived from the sides of the quests NPCs with the same template "
+            "give and take, and spawn points; no titles or names" % (MAX_MIN_LEVEL, MAX_LEVEL),
             "status": "unbestätigt",
         },
     )
     write_jsonl(os.path.join(out_dir, "ui_map.jsonl"), ui_rows, key="ui_map")
     n = write_jsonl(os.path.join(out_dir, "quests.jsonl"), quests.values())
-    return {"quests": n, "ui_maps": len(ui_rows), "commit": commit[:7], "version": index["version"]}
+    write_jsonl(os.path.join(out_dir, "npcs.jsonl"), npcs, key="id")
+    return {
+        "quests": n,
+        "ui_maps": len(ui_rows),
+        "npcs": dict(collections.Counter(r["role"] for r in npcs)),
+        "commit": commit[:7],
+        "version": index["version"],
+    }
+
+
+def _npcs(data):
+    """Class trainers, innkeepers and flight masters: [{id, role, class?, ft?, side?, pos}] with
+    pos [[instance, west, north], ...] in world yards (the zone is resolved in the merge step)."""
+    npc_rows = {r["id"]: r for r in _rows(os.path.join(data, "npc.jsonl"))}
+    side_of_quest = {r["id"]: {0: "B", 1: "A", 2: "H"}[r["side"]] for r in _rows(os.path.join(data, "quest.jsonl"))}
+    votes = collections.defaultdict(collections.Counter)
+    for name in ("quest_start", "quest_end"):
+        for r in _rows(os.path.join(data, name + ".jsonl")):
+            n = npc_rows.get(r["id"]) if r["kind"] == "npc" else None
+            if n and n.get("faction_template") is not None and r["quest"] in side_of_quest:
+                votes[n["faction_template"]][side_of_quest[r["quest"]]] += 1
+    sides = template_sides(votes)
+
+    out = {}
+    for ident, r in npc_rows.items():
+        role, cls = npc_role(r.get("subname"))
+        if role is None:
+            continue
+        rec = {"id": ident, "role": role, "pos": []}
+        if cls is not None:
+            rec["class"] = cls
+        ft = r.get("faction_template")
+        if ft is not None:
+            rec["ft"] = ft
+            if ft in sides:
+                rec["side"] = sides[ft]
+        out[ident] = rec
+    for r in _rows(os.path.join(data, "spawn.jsonl")):
+        rec = out.get(r["id"]) if r["kind"] == "npc" else None
+        if rec is not None and len(rec["pos"]) < MAX_POSITIONS:
+            rec["pos"].append([r["map"], round(r["y"], 1), round(r["x"], 1)])
+    return [r for r in out.values() if r["pos"]]
