@@ -17,7 +17,7 @@ s;1;k3x9qa;1;1;s;l;5;0;1840;2800;100;6;20762
 
 | Field | Values | Meaning |
 | --- | --- | --- |
-| token | six characters `0-9a-z` | rolled once per character (`PathmarkCharDB.run`), from nothing else; only for one value per section and character |
+| token | six characters `0-9a-z` | rolled once per character (`BraindeadForeverCharDB.run`), from nothing else; only for one value per section and character |
 | race, class | IDs | `UnitRace` and `UnitClass`, third return value |
 | mode | `s`, `e`, `f` | speed route, explorer route, free play |
 | kind | `l`, `m` | a level or a route module |
@@ -44,7 +44,7 @@ Each own section is written as record `run` (same fields from the token on, afte
 
 ## Run vault
 
-`PathmarkCollectDB.runs`, beside the buffer of received finds, so neither pushes the other out.
+`BraindeadForeverCollectDB.runs`, beside the buffer of received finds, so neither pushes the other out.
 
 - At most 5000 sections; the oldest give way first.
 - One section per (token, kind, section). The same text again is a duplicate. A different text for the same key drops the stored one too and blocks the key (at most 2000 blocked keys, then the list starts over). Own sections stay with their owner.
@@ -95,7 +95,7 @@ Simplifications, so that 20,000 clients run in about 25 s: clients older than an
 
 ## Export and analysis
 
-The PM1 export (`/pathmark export`) carries the vault's sections not exported yet under the key `runs`, as message texts. `node decoder/cli.mjs --runs < export.txt` writes the run table as CSV:
+The PM1 export (`/bdf export`) carries the vault's sections not exported yet under the key `runs`, as message texts. `node decoder/cli.mjs --runs < export.txt` writes the run table as CSV:
 
 ```
 token,race,class,mode,kind,section,version,seconds,xp,in_order,level,day,source

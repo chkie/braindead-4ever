@@ -26,7 +26,7 @@ def cases():
 
 
 def pm1(payload, method="d"):
-    """An export text like Pathmark/Collector/Export.lua builds it, with real DEFLATE."""
+    """An export text like BraindeadForever/Collector/Export.lua builds it, with real DEFLATE."""
     raw = json.dumps(payload).encode("utf-8")
     if method == "d":
         c = zlib.compressobj(9, zlib.DEFLATED, -15)
@@ -51,7 +51,7 @@ class PrereqRule(unittest.TestCase):
 
 class Observe(unittest.TestCase):
     def payload(self, install, seq, lines):
-        return {"format": "pathmark", "v": 1, "install": install, "own": ["chunk\t0\t%d\t20762\n" % seq + "\n".join(lines)], "net": []}
+        return {"format": "braindead-forever", "v": 1, "install": install, "own": ["chunk\t0\t%d\t20762\n" % seq + "\n".join(lines)], "net": []}
 
     def test_decodes_both_methods_and_rejects_changed_text(self):
         p = self.payload("inst", 1, ["zone\t1\t1429\t10\t20"])
@@ -71,7 +71,7 @@ class Observe(unittest.TestCase):
             lines = [accept(900002, tok, 900001), "split\t9\t\t\t\ta-speed-start-elwynn\t%d\tspeed" % (3000 + i * 600)]
             texts.append(pm1(self.payload("inst%d" % i, 1, lines)))
         # A third player's observation arrives through the in-game exchange of player 0.
-        net = {"format": "pathmark", "v": 1, "install": "inst0", "own": [], "net": ["chunk\t0\t7\t20762\nrx\t3\tp\tcccccc\t900002\t0\t0\t900001\t"]}
+        net = {"format": "braindead-forever", "v": 1, "install": "inst0", "own": [], "net": ["chunk\t0\t7\t20762\nrx\t3\tp\tcccccc\t900002\t0\t0\t900001\t"]}
         texts.append(pm1(net))
         texts.append(texts[0])  # the same export pasted twice counts once
         obs, splits = observe.collect([p for t in texts for p in observe.decode(t)])

@@ -2,7 +2,8 @@
 -- Core/Guard.lua: error buffer, dedup, first occurrence to the handler, error burst.
 local wow = require("spec.helpers.wow")
 
-local CORE = { "Pathmark/Locales/enUS.lua", "Pathmark/Core/Guard.lua", "Pathmark/Core/Modules.lua" }
+local CORE =
+	{ "BraindeadForever/Locales/enUS.lua", "BraindeadForever/Core/Guard.lua", "BraindeadForever/Core/Modules.lua" }
 
 local function setup(opts)
 	wow.reset(opts)
@@ -48,7 +49,7 @@ describe("Guard", function()
 		boom()
 		boom()
 		boom()
-		assert.are.same({ "Pathmark [calc] same failure" }, wow.errors)
+		assert.are.same({ "Braindead Forever [calc] same failure" }, wow.errors)
 		assert.are.equal(3, ns.Guard.list[1].count)
 	end)
 
@@ -68,7 +69,7 @@ describe("Guard", function()
 			error(wow.SECRET)
 		end)
 		assert.are.equal("<secret>", ns.Guard.list[1].msg)
-		assert.are.same({ "Pathmark [combat] <secret>" }, wow.errors)
+		assert.are.same({ "Braindead Forever [combat] <secret>" }, wow.errors)
 	end)
 
 	it("overwrites the oldest entry when the ring is full", function()

@@ -17,7 +17,7 @@ local NPC = { guid = "Creature-0-1-0-1-197-0000000001", name = "Marshal" }
 
 local function pure()
 	wow.reset({})
-	return wow.loadFiles({ "Pathmark/Routes/Prereq.lua" })
+	return wow.loadFiles({ "BraindeadForever/Routes/Prereq.lua" })
 end
 
 -- Records of one kind in the collector's own buffer, split into fields.
@@ -42,7 +42,7 @@ end
 local function sentPrereq()
 	local out = {}
 	for _, m in ipairs(wow.world.sent) do
-		if m.prefix == "Pathmark" and m.msg:match("^p;") then
+		if m.prefix == "BDF" and m.msg:match("^p;") then
 			out[#out + 1] = m.msg
 		end
 	end
@@ -117,7 +117,7 @@ end)
 
 describe("Exchange message for prerequisite observations", function()
 	wow.reset({})
-	local Proto = wow.loadFiles({ "Pathmark/Collector/Proto.lua" }).Proto
+	local Proto = wow.loadFiles({ "BraindeadForever/Collector/Proto.lua" }).Proto
 
 	it("carries token, quest, link, unlock and two short ID lists", function()
 		local msg = Proto.Format("p", "a1b2c3", 900002, 900001, 1, "900005.900006", "")
@@ -323,8 +323,8 @@ describe("Route: prerequisites from player data", function()
 			ns.Route.Observe(q, t, 0, false, {}, {})
 		end
 		wow.fire("PLAYER_LOGOUT")
-		local saved = _G.PathmarkDB
-		ns = wow.session({ saved = saved, char = _G.PathmarkCharDB, collect = _G.PathmarkCollectDB })
+		local saved = _G.BraindeadForeverDB
+		ns = wow.session({ saved = saved, char = _G.BraindeadForeverCharDB, collect = _G.BraindeadForeverCollectDB })
 		ns.Route.SetMode("explorer")
 		assert.are.equal("none", ns.Route.ChainState(q))
 	end)
@@ -338,7 +338,7 @@ describe("Simulated runs: three players, the exchange carries the observations",
 			wow.world.group.party = true
 			wow.world.player.name = "Player" .. i
 			for _, m in ipairs(messages) do
-				wow.fire("CHAT_MSG_ADDON", "Pathmark", m.msg, "PARTY", m.from)
+				wow.fire("CHAT_MSG_ADDON", "BDF", m.msg, "PARTY", m.from)
 			end
 			wow.readInbox(ns)
 			if i < 3 then

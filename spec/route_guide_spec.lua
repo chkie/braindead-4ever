@@ -50,7 +50,7 @@ local function login(opts)
 		wow.world.completed[q] = true
 	end
 	local ns = wow.loadFiles(wow.addonFiles())
-	wow.fire("ADDON_LOADED", "Pathmark")
+	wow.fire("ADDON_LOADED", "BraindeadForever")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
 	return ns
@@ -60,9 +60,9 @@ end
 local function reload(opts)
 	wow.fire("PLAYER_LOGOUT")
 	local o = deepcopy(opts or {})
-	o.char = deepcopy(_G.PathmarkCharDB)
-	o.saved = deepcopy(_G.PathmarkDB)
-	o.collect = deepcopy(_G.PathmarkCollectDB)
+	o.char = deepcopy(_G.BraindeadForeverCharDB)
+	o.saved = deepcopy(_G.BraindeadForeverDB)
+	o.collect = deepcopy(_G.BraindeadForeverCollectDB)
 	o.completed = deepcopy(wow.world.completed)
 	local log = deepcopy(wow.world.questLog)
 	local map = wow.world.player.map
@@ -179,7 +179,7 @@ describe("Route module", function()
 		local ns = login()
 		ns.Route.Check()
 		local key = ns.Route.Current().key
-		_G.PathmarkCharDB = { id = "replaced" } -- Forever beta trap (Polestar, brain chapter 15 §7)
+		_G.BraindeadForeverCharDB = { id = "replaced" } -- Forever beta trap (Polestar, brain chapter 15 §7)
 		ns = reload()
 		assert.are.equal(key, ns.Route.Current().key)
 	end)

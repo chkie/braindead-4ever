@@ -67,7 +67,7 @@ describe("Collector", function()
 		assert.are.same({
 			"session",
 			"0",
-			PathmarkCharDB.id,
+			BraindeadForeverCharDB.id,
 			"Human",
 			"WARRIOR",
 			"Alliance",
@@ -79,21 +79,21 @@ describe("Collector", function()
 			"0",
 			"",
 		}, s)
-		assert.matches("^[0-9a-z]+$", PathmarkCharDB.id)
-		assert.are.equal(10, #PathmarkCharDB.id)
-		assert.are.equal(12, #PathmarkCollectDB.install)
-		assert.are.equal(1, PathmarkCollectDB.schema)
+		assert.matches("^[0-9a-z]+$", BraindeadForeverCharDB.id)
+		assert.are.equal(10, #BraindeadForeverCharDB.id)
+		assert.are.equal(12, #BraindeadForeverCollectDB.install)
+		assert.are.equal(1, BraindeadForeverCollectDB.schema)
 		local zone = ofKind(own, "zone")[1]
 		assert.are.same({ "1429", "4231", "6512" }, { zone[3], zone[4], zone[5] })
 	end)
 
 	it("keeps the IDs across sessions", function()
 		local _, _ = start()
-		local char, collect = PathmarkCharDB, PathmarkCollectDB
+		local char, collect = BraindeadForeverCharDB, BraindeadForeverCollectDB
 		local id, install = char.id, collect.install
 		start({ char = char, collect = collect })
-		assert.are.equal(id, PathmarkCharDB.id)
-		assert.are.equal(install, PathmarkCollectDB.install)
+		assert.are.equal(id, BraindeadForeverCharDB.id)
+		assert.are.equal(install, BraindeadForeverCollectDB.install)
 	end)
 
 	it("records quest accept with giver, dialog position, name, level and quest XP", function()
@@ -105,7 +105,7 @@ describe("Collector", function()
 		wow.fire("QUEST_ACCEPTED", 783)
 		local r = ofKind(own, "accept")[1]
 		-- then the prerequisite observation: token, link, unlock, done, missing (Routes/Prereq.lua)
-		local token = ns.Prereq.Token(PathmarkCollectDB.install, 783)
+		local token = ns.Prereq.Token(BraindeadForeverCollectDB.install, 783)
 		assert.are.same({
 			"accept",
 			"0",
@@ -420,13 +420,13 @@ describe("Collector", function()
 	it("rebinds to a replaced SavedVariables table at logout", function()
 		local ns, own = start()
 		wow.fire("PLAYER_DEAD")
-		local install = PathmarkCollectDB.install
-		PathmarkCollectDB = nil -- Forever beta: the global was lost
+		local install = BraindeadForeverCollectDB.install
+		BraindeadForeverCollectDB = nil -- Forever beta: the global was lost
 		wow.fire("PLAYER_LOGOUT")
-		assert.is_table(PathmarkCollectDB)
-		assert.are.equal(install, PathmarkCollectDB.install)
-		assert.are.equal(own.db, PathmarkCollectDB.own)
-		assert.matches("death", PathmarkCollectDB.own.chunks[PathmarkCollectDB.own.seq])
+		assert.is_table(BraindeadForeverCollectDB)
+		assert.are.equal(install, BraindeadForeverCollectDB.install)
+		assert.are.equal(own.db, BraindeadForeverCollectDB.own)
+		assert.matches("death", BraindeadForeverCollectDB.own.chunks[BraindeadForeverCollectDB.own.seq])
 		assert.are.equal("on", ns.Modules.state.collector)
 	end)
 
@@ -434,26 +434,26 @@ describe("Collector", function()
 		local saved = { schema = 99, install = "zzzzzzzzzzzz", own = { seq = 3, chunks = { [3] = "keep" } } }
 		local ns = start({ collect = saved })
 		assert.are.equal("error", ns.Modules.state.collector)
-		assert.are.equal(saved, PathmarkCollectDB)
-		assert.are.equal("keep", PathmarkCollectDB.own.chunks[3])
+		assert.are.equal(saved, BraindeadForeverCollectDB)
+		assert.are.equal("keep", BraindeadForeverCollectDB.own.chunks[3])
 		assert.matches("newer addon version", wow.errors[1], 1, true)
 	end)
 
 	it("saves a backup when it migrates older data", function()
 		local saved = { own = { seq = 1, chunks = { "chunk\t0\t1\t1" } } }
 		start({ collect = saved })
-		assert.are.equal(1, PathmarkCollectDB.schema)
-		assert.are.same({ seq = 1, chunks = { "chunk\t0\t1\t1" } }, PathmarkCollectDB.backup.data.own)
+		assert.are.equal(1, BraindeadForeverCollectDB.schema)
+		assert.are.same({ seq = 1, chunks = { "chunk\t0\t1\t1" } }, BraindeadForeverCollectDB.backup.data.own)
 	end)
 end)
 
 describe("Mandatory data contribution", function()
-	it("refuses /pathmark flag for the collector and the exchange", function()
+	it("refuses /bdf flag for the collector and the exchange", function()
 		start()
-		SlashCmdList.PATHMARK("flag collector off")
-		SlashCmdList.PATHMARK("flag exchange off")
-		assert.is_nil(PathmarkDB.flags.collector)
-		assert.is_nil(PathmarkDB.flags.exchange)
+		SlashCmdList.BRAINDEADFOREVER("flag collector off")
+		SlashCmdList.BRAINDEADFOREVER("flag exchange off")
+		assert.is_nil(BraindeadForeverDB.flags.collector)
+		assert.is_nil(BraindeadForeverDB.flags.exchange)
 		assert.matches("collector is part of the addon and cannot be turned off", wow.output(), 1, true)
 	end)
 
@@ -484,7 +484,7 @@ describe("Export of collected data", function()
 	it("shows the copy window and acknowledges after Ctrl+C", function()
 		local ns, own = start()
 		wow.fire("PLAYER_DEAD")
-		SlashCmdList.PATHMARK("export")
+		SlashCmdList.BRAINDEADFOREVER("export")
 		local win = ns.CopyWindow()
 		assert.is_true(win:IsShown())
 		assert.matches("^PM1:d:%d+:%x+:", win.box:GetText())
@@ -492,16 +492,16 @@ describe("Export of collected data", function()
 		wow.world.ctrl = true
 		win.box.scripts.OnKeyUp(win.box, "C")
 		assert.is_true(own.db.acked > 0)
-		SlashCmdList.PATHMARK("export")
+		SlashCmdList.BRAINDEADFOREVER("export")
 		assert.matches("no new data to share yet", wow.output(), 1, true)
-		SlashCmdList.PATHMARK("export all")
+		SlashCmdList.BRAINDEADFOREVER("export all")
 		assert.matches("^PM1:", win.box:GetText())
 	end)
 
 	it("refuses in combat", function()
 		local ns = start()
 		wow.world.combat = true
-		SlashCmdList.PATHMARK("export")
+		SlashCmdList.BRAINDEADFOREVER("export")
 		assert.is_nil(ns.CopyWindow())
 		assert.matches("try again after combat", wow.output(), 1, true)
 	end)
@@ -515,8 +515,8 @@ describe("Export of collected data", function()
 		local text = assert(ns.Collector.BuildExport(false))
 		local out = assert(node.decode(text))
 		local payload = node.parseJSON(out)
-		assert.are.equal("pathmark", payload.format)
-		assert.are.equal(PathmarkCollectDB.install, payload.install)
+		assert.are.equal("braindead-forever", payload.format)
+		assert.are.equal(BraindeadForeverCollectDB.install, payload.install)
 		assert.is_true(#payload.own >= 1)
 		local all = table.concat(payload.own, "\n")
 		assert.matches("accept\t%d+\t1429\t4231\t6512\t783\tc\t823", all)

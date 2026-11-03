@@ -15,7 +15,7 @@ local function everything(ns)
 	wow.advance(1)
 	ns.StepFrame.ShowHintOnce() -- HelpTip (before the windows it waits behind, Welle 5d M13)
 	S.item(S.menu(ns), "Settings").fn() -- Settings.OpenToCategory
-	SlashCmdList.PATHMARK("setup") -- setup window
+	SlashCmdList.BRAINDEADFOREVER("setup") -- setup window
 	ns.UI.Set("blizzNav", true) -- user waypoint and super tracking
 	ns.UI.Set("blizzNav", false)
 	ns.UI.Set("blizzNav", true)
@@ -24,13 +24,13 @@ local function everything(ns)
 	W.scripts.OnDragStop(W)
 	_G.EventRegistry:TriggerEvent("EditMode.Exit")
 	ns.StepFrame.AskSkip()
-	SlashCmdList.PATHMARK("stats") -- the page "Your run" (Welle 8)
+	SlashCmdList.BRAINDEADFOREVER("stats") -- the page "Your run" (Welle 8)
 	ns.MinimapButton.Click("LeftButton")
 	ns.MinimapButton.Click("LeftButton")
 	-- every key binding (Welle 9, K2): the same entry points as the window
 	for _, action in ipairs(ns.Bindings.ACTIONS) do
-		_G.PathmarkBinding(action)
-		_G.PathmarkBinding(action)
+		_G.BraindeadForeverBinding(action)
+		_G.BraindeadForeverBinding(action)
 	end
 	ns.Arrow.Update(1)
 	local grip = ns.StepFrame.grip -- size grip (owner reading 14)
@@ -61,17 +61,17 @@ describe("Combat lockdown", function()
 		assert.are.same({}, wow.world.sounds)
 		assert.are.same({}, wow.world.helptips)
 		assert.are.same({}, wow.world.settings.opened)
-		assert.is_nil(_G.PathmarkSetupFrame)
+		assert.is_nil(_G.BraindeadForeverSetupFrame)
 		assert.is_nil(wow.world.waypoint)
 		assert.is_true(ns.UI.Waiting() > 0)
 		S.combat(false)
 		assert.are.same({}, wow.blocked)
 		assert.are.same({ ns.settingsCategoryID }, wow.world.settings.opened)
-		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
-		assert.is_true(rawget(_G.PathmarkStatsFrame, "shown")) -- Welle 8: the page opened after the fight
+		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
+		assert.is_true(rawget(_G.BraindeadForeverStatsFrame, "shown")) -- Welle 8: the page opened after the fight
 		-- the usage hint came after the fight and waits behind settings and first start (M13)
 		assert.is_false(_G.HelpTip:IsShowing(ns.StepFrame.frame))
-		_G.PathmarkSetupFrame:Hide()
+		_G.BraindeadForeverSetupFrame:Hide()
 		_G.SettingsPanel:Hide()
 		assert.is_true(_G.HelpTip:IsShowing(ns.StepFrame.frame))
 		assert.is_table(wow.world.waypoint)
@@ -83,9 +83,9 @@ describe("Combat lockdown", function()
 		S.login({ setup = false, combat = true })
 		wow.advance(3)
 		assert.are.same({}, wow.blocked)
-		assert.is_nil(_G.PathmarkSetupFrame)
+		assert.is_nil(_G.BraindeadForeverSetupFrame)
 		S.combat(false)
-		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
 	end)
 
 	-- Received addon messages wait in the exchange's inbox in a fight (owner 2026-11-02: receiving
@@ -95,18 +95,18 @@ describe("Combat lockdown", function()
 		for i = 1, 5 do
 			wow.fire(
 				"CHAT_MSG_ADDON",
-				"Pathmark",
+				"BDF",
 				("o;1;%d;1429;4231;6512"):format(2840 + i),
 				"CHANNEL",
 				"Anna Sommer" .. i,
 				"",
 				0,
 				5,
-				"PathmarkShare",
+				"BraindeadShare",
 				0
 			)
 		end
-		wow.fire("CHAT_MSG_ADDON", "Pathmark", "o;1;2850;1429;4231;6512", "PARTY", "Ben Winter")
+		wow.fire("CHAT_MSG_ADDON", "BDF", "o;1;2850;1429;4231;6512", "PARTY", "Ben Winter")
 		wow.advance(30)
 		return ns.Exchange
 	end
@@ -148,14 +148,14 @@ describe("Combat lockdown", function()
 		end
 		assert.is_true(seen["Settings.OpenToCategory"], "OpenToCategory not caught")
 		assert.is_true(seen["HelpTip.Show"], "HelpTip not caught")
-		assert.is_true(seen["PathmarkSetupFrame:Show"], "setup window not caught")
+		assert.is_true(seen["BraindeadForeverSetupFrame:Show"], "setup window not caught")
 		assert.is_true(seen["C_Map.SetUserWaypoint"], "waypoint not caught")
 		assert.is_true(seen.PlaySound, "sound not caught")
 		assert.is_true(seen["Frame:StartSizing"], "sizing not caught")
 		assert.is_true(seen["C_QuestLog.RemoveQuestWatch"], "RemoveQuestWatch not caught")
 		assert.is_true(seen["ObjectiveTrackerFrame:SetAlpha"], "tracker alpha not caught")
 		assert.is_true(seen["Frame:StartMoving"], "window drag not caught") -- owner reading 16
-		assert.is_true(seen["PathmarkStatsFrame:Show"], "page Your run not caught") -- Welle 8
+		assert.is_true(seen["BraindeadForeverStatsFrame:Show"], "page Your run not caught") -- Welle 8
 		local kinds = 0
 		for _ in pairs(seen) do
 			kinds = kinds + 1

@@ -33,7 +33,7 @@ end
 
 describe("Forecast rules (pure)", function()
 	wow.reset({})
-	local F = wow.loadFiles({ "Pathmark/Routes/Forecast.lua" }).Forecast
+	local F = wow.loadFiles({ "BraindeadForever/Routes/Forecast.lua" }).Forecast
 	-- Route of two modules: a (steps 1-4), b (steps 5-6); the player is at step 2.
 	local function rt(cur)
 		local steps = {}
@@ -128,7 +128,7 @@ describe("Time forecast in the route", function()
 		local ns = wow.session()
 		wow.advance(5000)
 		wow.fire("QUEST_LOG_UPDATE")
-		assert.are.equal(ns.Forecast.IDLE_CAP, _G.PathmarkCharDB.route.rate.secs)
+		assert.are.equal(ns.Forecast.IDLE_CAP, _G.BraindeadForeverCharDB.route.rate.secs)
 	end)
 end)
 
@@ -185,7 +185,11 @@ describe("Module runs", function()
 		local secs = ns.Route.Runtime().saved.split.secs
 		assert.are.equal(180, secs)
 		wow.fire("PLAYER_LOGOUT")
-		ns = wow.session({ char = _G.PathmarkCharDB, saved = _G.PathmarkDB, collect = _G.PathmarkCollectDB })
+		ns = wow.session({
+			char = _G.BraindeadForeverCharDB,
+			saved = _G.BraindeadForeverDB,
+			collect = _G.BraindeadForeverCollectDB,
+		})
 		assert.are.equal(180, ns.Route.Runtime().saved.split.secs)
 		assert.is_true(ns.Route.Runtime().saved.split.clean)
 	end)

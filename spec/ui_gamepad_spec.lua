@@ -84,8 +84,16 @@ describe("Places per UI type (gamepad)", function()
 	it("Retail has no gamepad UI: always the places of mouse and keyboard", function()
 		wow.reset({ flavor = "retail" })
 		assert.is_nil(_G.C_InputInterfaceStyle)
-		local ns = wow.loadFiles({ "Pathmark/Locales/enUS.lua", "Pathmark/Core/Util.lua", "Pathmark/Core/Guard.lua" })
-		ns = wow.loadFiles({ "Pathmark/Core/Modules.lua", "Pathmark/UI/Core.lua" }, "Pathmark", ns)
+		local ns = wow.loadFiles({
+			"BraindeadForever/Locales/enUS.lua",
+			"BraindeadForever/Core/Util.lua",
+			"BraindeadForever/Core/Guard.lua",
+		})
+		ns = wow.loadFiles(
+			{ "BraindeadForever/Core/Modules.lua", "BraindeadForever/UI/Core.lua" },
+			"BraindeadForever",
+			ns
+		)
 		assert.is_false(ns.UI.Pad())
 		assert.are.equal("pos", ns.UI.PosKey())
 	end)

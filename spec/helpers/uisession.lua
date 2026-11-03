@@ -11,7 +11,7 @@ S.TITLES = {
 	deDE = { [33] = "Wölfe an der Grenze", [783] = "Eine Bedrohung von innen", [7] = "Säuberung im Koboldlager" },
 }
 
--- opts: locale, saved (PathmarkDB), char, version (TOC version), level, xp, xpMax, style (default
+-- opts: locale, saved (BraindeadForeverDB), char, version (TOC version), level, xp, xpMax, style (default
 -- "arrow" = speed route),
 -- setup (false = first start, setup not done), hint (false = usage hint not seen yet), combat,
 -- before(world) to change the client state before the files load.
@@ -39,13 +39,13 @@ function S.login(opts)
 	end
 	local files = wow.addonFiles(opts.probe)
 	if opts.locale == "deDE" then
-		table.insert(files, 2, "Pathmark/Locales/deDE.lua") -- the TOC loads it only in German clients
+		table.insert(files, 2, "BraindeadForever/Locales/deDE.lua") -- the TOC loads it only in German clients
 	end
 	local ns = wow.loadFiles(files)
 	if opts.loaded then
 		opts.loaded(ns) -- the addon files are loaded, nothing has run yet (e.g. to change route data)
 	end
-	wow.fire("ADDON_LOADED", "Pathmark")
+	wow.fire("ADDON_LOADED", "BraindeadForever")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
 	wow.advance(0.5)

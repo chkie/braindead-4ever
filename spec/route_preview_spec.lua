@@ -72,7 +72,11 @@ end
 
 describe("Route runtime previews for the step window", function()
 	wow.reset({})
-	local ns = wow.loadFiles({ "Pathmark/Routes/Routes.lua", "Pathmark/Routes/XP.lua", "Pathmark/Routes/Runtime.lua" })
+	local ns = wow.loadFiles({
+		"BraindeadForever/Routes/Routes.lua",
+		"BraindeadForever/Routes/XP.lua",
+		"BraindeadForever/Routes/Runtime.lua",
+	})
 	local RT = ns.Runtime
 
 	local function fresh(w)

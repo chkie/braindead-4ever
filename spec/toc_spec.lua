@@ -3,36 +3,37 @@
 local wow = require("spec.helpers.wow")
 local tocReader = require("spec.helpers.toc")
 
-local ADDON = "Pathmark"
-local DIR = "Pathmark"
+local ADDON = "BraindeadForever"
+local DIR = "BraindeadForever"
 local TOCS = {
-	{ file = DIR .. "/Pathmark.toc", gameType = "standard", flavor = "retail" },
-	{ file = DIR .. "/Pathmark_Camelot.toc", gameType = "camelot", flavor = "forever" },
+	{ file = DIR .. "/BraindeadForever.toc", gameType = "standard", flavor = "retail" },
+	{ file = DIR .. "/BraindeadForever_Camelot.toc", gameType = "camelot", flavor = "forever" },
 }
 -- Globals the addon may create. Everything else must stay in the namespace.
 local ALLOWED_NEW_GLOBALS = {
-	PathmarkDB = true,
-	PathmarkCollectDB = true,
-	PathmarkCharDB = true,
-	SLASH_PATHMARK1 = true,
+	BraindeadForeverDB = true,
+	BraindeadForeverCollectDB = true,
+	BraindeadForeverCharDB = true,
+	SLASH_BRAINDEADFOREVER1 = true,
+	SLASH_BRAINDEADFOREVER2 = true,
 	-- Interface (Welle 5): font copies of Blizzard objects (CreateFont needs a name) and the setup
 	-- window (Escape closes frames by name).
-	PathmarkFontHeader = true,
-	PathmarkFontStep = true,
-	PathmarkFontLine = true,
-	PathmarkFontSmall = true,
-	PathmarkFontStatus = true,
-	PathmarkSetupFrame = true,
+	BraindeadForeverFontHeader = true,
+	BraindeadForeverFontStep = true,
+	BraindeadForeverFontLine = true,
+	BraindeadForeverFontSmall = true,
+	BraindeadForeverFontStatus = true,
+	BraindeadForeverSetupFrame = true,
 	-- Key bindings (Welle 9): the handler Bindings.xml calls and the names on Blizzard's binding page.
-	PathmarkBinding = true,
-	BINDING_HEADER_PATHMARK = true,
-	BINDING_NAME_PATHMARK_TOGGLE = true,
-	BINDING_NAME_PATHMARK_CHECK = true,
-	BINDING_NAME_PATHMARK_SKIP = true,
-	BINDING_NAME_PATHMARK_BACK = true,
-	BINDING_NAME_PATHMARK_WINDOW = true,
-	BINDING_NAME_PATHMARK_MINI = true,
-	BINDING_NAME_PATHMARK_STATS = true,
+	BraindeadForeverBinding = true,
+	BINDING_HEADER_BRAINDEADFOREVER = true,
+	BINDING_NAME_BRAINDEADFOREVER_TOGGLE = true,
+	BINDING_NAME_BRAINDEADFOREVER_CHECK = true,
+	BINDING_NAME_BRAINDEADFOREVER_SKIP = true,
+	BINDING_NAME_BRAINDEADFOREVER_BACK = true,
+	BINDING_NAME_BRAINDEADFOREVER_WINDOW = true,
+	BINDING_NAME_BRAINDEADFOREVER_MINI = true,
+	BINDING_NAME_BRAINDEADFOREVER_STATS = true,
 }
 
 local function fileExists(path)
@@ -93,10 +94,10 @@ describe("TOC files", function()
 			local toc = tocReader.parse(entry.file)
 
 			it("has the required directives", function()
-				assert.are.equal("Pathmark", toc.directives.Title)
+				assert.are.equal("Braindead Forever", toc.directives.Title)
 				assert.are.equal("@project-version@", toc.directives.Version)
-				assert.are.equal("PathmarkDB, PathmarkCollectDB", toc.directives.SavedVariables)
-				assert.are.equal("PathmarkCharDB", toc.directives.SavedVariablesPerCharacter)
+				assert.are.equal("BraindeadForeverDB, BraindeadForeverCollectDB", toc.directives.SavedVariables)
+				assert.are.equal("BraindeadForeverCharDB", toc.directives.SavedVariablesPerCharacter)
 			end)
 
 			it("keeps the developer probe inside the do-not-package block", function()
@@ -173,17 +174,17 @@ describe("TOC files", function()
 					for _, name in ipairs({ "collector", "exchange", "report" }) do
 						assert.are.equal("on", ns.Modules.state[name], name)
 					end
-					assert.is_table(PathmarkCollectDB)
-					assert.is_string(PathmarkCharDB.id)
+					assert.is_table(BraindeadForeverCollectDB)
+					assert.is_string(BraindeadForeverCharDB.id)
 
 					assert.are.same({}, wow.errors)
-					assert.is_table(PathmarkDB)
-					assert.are.equal(PathmarkDB, ns.db)
-					assert.is_false(PathmarkDB.boot.inProgress)
+					assert.is_table(BraindeadForeverDB)
+					assert.are.equal(BraindeadForeverDB, ns.db)
+					assert.is_false(BraindeadForeverDB.boot.inProgress)
 					assert.are.equal("dev", ns.version)
 
-					SlashCmdList.PATHMARK("")
-					assert.matches("^Pathmark dev build=", wow.output())
+					SlashCmdList.BRAINDEADFOREVER("")
+					assert.matches("^Braindead Forever dev build=", wow.output())
 
 					for k in pairs(_G) do
 						if not before[k] then
@@ -201,7 +202,7 @@ describe(".pkgmeta", function()
 		local fh = assert(io.open(".pkgmeta", "rb"))
 		local text = fh:read("*a")
 		fh:close()
-		assert.is_truthy(text:find("\n  %- Pathmark/Probe\n"), "Pathmark/Probe not ignored")
+		assert.is_truthy(text:find("\n  %- BraindeadForever/Probe\n"), "BraindeadForever/Probe not ignored")
 		assert.is_truthy(text:find("\n  %- decoder\n"), "decoder not ignored")
 	end)
 end)

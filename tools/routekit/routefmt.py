@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Parser for the Pathmark route format (docs/ROUTE-FORMAT.md).
+"""Parser for the Braindead Forever route format (docs/ROUTE-FORMAT.md).
 
 The parser only reads and reports syntax errors; every content rule lives in lint.py.
 """

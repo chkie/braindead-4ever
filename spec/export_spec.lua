@@ -7,7 +7,11 @@ local json = require("spec.helpers.json")
 
 local function load()
 	wow.reset()
-	return wow.loadFiles({ "Pathmark/Locales/enUS.lua", "Pathmark/Core/Util.lua", "Pathmark/Collector/Export.lua" })
+	return wow.loadFiles({
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Util.lua",
+		"BraindeadForever/Collector/Export.lua",
+	})
 end
 
 -- Codec with the real compression of Node's zlib (method 0 = raw Deflate, 1 = Zlib).
@@ -103,8 +107,12 @@ describe("Export round trip through the website decoder", function()
 	for _, m in ipairs({ "d", "z" }) do
 		it("decodes method " .. m .. " to the same data, umlauts included", function()
 			local ns = load()
-			local payload =
-				{ format = "pathmark", t = "Prüfung äöü ß", n = 42, own = { "chunk\t0\t1\t20762\nxp\t3\t1\t2" } }
+			local payload = {
+				format = "braindead-forever",
+				t = "Prüfung äöü ß",
+				n = 42,
+				own = { "chunk\t0\t1\t20762\nxp\t3\t1\t2" },
+			}
 			local text = assert(ns.Export.Build(payload, nodeCodec(m)))
 			assert.matches("^PM1:" .. m .. ":", text)
 			local out = assert(node.decode(text))

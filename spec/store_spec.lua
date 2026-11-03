@@ -4,7 +4,11 @@ local wow = require("spec.helpers.wow")
 
 local function load()
 	wow.reset()
-	return wow.loadFiles({ "Pathmark/Locales/enUS.lua", "Pathmark/Core/Util.lua", "Pathmark/Collector/Store.lua" })
+	return wow.loadFiles({
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Util.lua",
+		"BraindeadForever/Collector/Store.lua",
+	})
 end
 
 local function clock()
@@ -153,7 +157,7 @@ describe("Store", function()
 		-- Write the table like a SavedVariables file and count its constants with luac (chapter 12 §5.1).
 		local path = os.tmpname()
 		local fh = assert(io.open(path, "wb"))
-		fh:write("PathmarkCollectDB = { own = " .. serialize(db) .. " }\n")
+		fh:write("BraindeadForeverCollectDB = { own = " .. serialize(db) .. " }\n")
 		fh:close()
 		local luac = io.open(".tools/lua51/bin/luac", "rb") and ".tools/lua51/bin/luac" or "luac"
 		local p = assert(io.popen(luac .. " -p -l -l " .. path .. " 2>&1"))

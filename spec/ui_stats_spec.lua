@@ -27,7 +27,7 @@ local function msg(tok, class, mode, kind, sec, secs, opts)
 	)
 end
 
--- PathmarkCollectDB with a run vault of the given texts.
+-- BraindeadForeverCollectDB with a run vault of the given texts.
 local function collect(texts, mine)
 	return {
 		schema = 1,
@@ -92,7 +92,7 @@ local function login(opts)
 		combat = opts.combat,
 		probe = opts.probe,
 		before = function(W)
-			_G.PathmarkCollectDB = opts.collect
+			_G.BraindeadForeverCollectDB = opts.collect
 			if opts.before then
 				opts.before(W)
 			end
@@ -173,19 +173,19 @@ describe("Your run: the page", function()
 	it("opens only on the player's command: slash, right-click menu, minimap button menu", function()
 		local ns = login({ level = 5, xp = 100 })
 		wow.advance(10)
-		assert.is_false(shown("PathmarkStatsFrame"))
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverStatsFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		assert.is_false(rawget(ns.RunStats.driver, "shown") == true)
-		SlashCmdList.PATHMARK("stats")
-		assert.is_true(shown("PathmarkStatsFrame"))
-		SlashCmdList.PATHMARK("stats") -- toggles
-		assert.is_false(shown("PathmarkStatsFrame"))
+		SlashCmdList.BRAINDEADFOREVER("stats")
+		assert.is_true(shown("BraindeadForeverStatsFrame"))
+		SlashCmdList.BRAINDEADFOREVER("stats") -- toggles
+		assert.is_false(shown("BraindeadForeverStatsFrame"))
 		S.item(S.menu(ns), "Your run").fn()
-		assert.is_true(shown("PathmarkStatsFrame"))
-		_G.PathmarkStatsFrame:Hide()
+		assert.is_true(shown("BraindeadForeverStatsFrame"))
+		_G.BraindeadForeverStatsFrame:Hide()
 		ns.MinimapButton.Click("RightButton")
 		S.item(wow.menu, "Your run").fn()
-		assert.is_true(shown("PathmarkStatsFrame"))
+		assert.is_true(shown("BraindeadForeverStatsFrame"))
 		assert.are.same({}, wow.errors)
 	end)
 
@@ -194,7 +194,7 @@ describe("Your run: the page", function()
 		local ns = login({ level = 4, char = veteran(4), collect = collect(others({ 1, 2 }, need - 1)) })
 		assert.are.equal(need, ns.Stats.MIN_RUNS)
 		local SP = ns.StatsPage
-		SlashCmdList.PATHMARK("stats")
+		SlashCmdList.BRAINDEADFOREVER("stats")
 		drain(ns)
 		local rows = SP.rendered
 		-- newest level on top: 4 (running), 3, 2, 1
@@ -207,7 +207,7 @@ describe("Your run: the page", function()
 
 		ns = login({ level = 4, char = veteran(4), collect = collect(others({ 1, 2 }, need)) })
 		SP = ns.StatsPage
-		SlashCmdList.PATHMARK("stats")
+		SlashCmdList.BRAINDEADFOREVER("stats")
 		drain(ns)
 		rows = SP.rendered
 		assert.are.equal("11 min", rows[3].cells[3]) -- median of 610..700 s: 655 s
@@ -242,12 +242,12 @@ describe("Your run: the page", function()
 			},
 		})
 		local SP = ns.StatsPage
-		SlashCmdList.PATHMARK("stats")
+		SlashCmdList.BRAINDEADFOREVER("stats")
 		drain(ns)
-		_G.PathmarkStatsFrameTab2.scripts.OnClick(_G.PathmarkStatsFrameTab2)
+		_G.BraindeadForeverStatsFrameTab2.scripts.OnClick(_G.BraindeadForeverStatsFrameTab2)
 		assert.are.equal(1, #SP.rendered)
 		assert.are.equal("Section 1", SP.rendered[1].cells[1])
-		_G.PathmarkStatsFrameTab3.scripts.OnClick(_G.PathmarkStatsFrameTab3)
+		_G.BraindeadForeverStatsFrameTab3.scripts.OnClick(_G.BraindeadForeverStatsFrameTab3)
 		-- the dwarf hunter's 5000 s stay the best of the account (this character's band took 5400 s)
 		assert.are.equal("1–10", SP.rendered[1].cells[1])
 		assert.are.equal("Dwarf • Hunter • follows the route", SP.rendered[1].cells[3])
@@ -256,9 +256,9 @@ describe("Your run: the page", function()
 
 	it("German: header, summary and a level row", function()
 		local ns = login({ level = 3, locale = "deDE", char = veteran(3) })
-		SlashCmdList.PATHMARK("stats")
+		SlashCmdList.BRAINDEADFOREVER("stats")
 		drain(ns)
-		local W = _G.PathmarkStatsFrame
+		local W = _G.BraindeadForeverStatsFrame
 		assert.are.equal("Dein Lauf", W.TitleText.text)
 		assert.are.equal("Stufe 3 • Mensch • Krieger", W.head.text)
 		assert.are.equal("Aktive Spielzeit", W.sum[1].label.text)
@@ -270,11 +270,11 @@ describe("Your run: never in a fight", function()
 	it("the page waits for the end of the fight, and so does the comparison build", function()
 		local ns = login({ level = 4, char = veteran(4), collect = collect(others({ 1, 2, 3 }, 40)) })
 		S.combat(true)
-		SlashCmdList.PATHMARK("stats")
-		assert.is_false(shown("PathmarkStatsFrame"))
+		SlashCmdList.BRAINDEADFOREVER("stats")
+		assert.is_false(shown("BraindeadForeverStatsFrame"))
 		assert.is_false(ns.RunStats.Building())
 		S.combat(false)
-		assert.is_true(shown("PathmarkStatsFrame"))
+		assert.is_true(shown("BraindeadForeverStatsFrame"))
 		assert.is_true(ns.RunStats.Building())
 		-- a fight starts while the build runs: not one more vault text is read
 		ns.RunStats.SLICE = 10
@@ -300,18 +300,18 @@ describe("Your run: review card", function()
 	it("comes once at level 10, after the level-up banner, and never again for that level", function()
 		local ns = login({ level = 9, char = veteran(9), collect = collect(others({ 1, 2, 3, 4, 5, 6, 7, 8, 9 }, 12)) })
 		levelUp(ns, 10)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		wow.advance(3)
 		drain(ns)
-		assert.is_true(shown("PathmarkRecapFrame"))
-		local R = _G.PathmarkRecapFrame
+		assert.is_true(shown("BraindeadForeverRecapFrame"))
+		local R = _G.BraindeadForeverRecapFrame
 		assert.are.equal("Level 10 reached", R.head.text)
 		assert.are.equal("Mensch • Krieger • follows the route", R.who.text) -- the stand-in client names them in German
 		assert.are.equal("Active play time, level 1 to 10", R.timeLabel.text)
 		assert.are.equal("1 h 28 min", R.time.text) -- levels 1 to 8 at 600 s, level 9 the route section's 500.5 s
 		assert.are.equal("Median of your class", R.facts[1].label.text)
 		assert.matches("%(12 runs%)$", R.facts[1].value.text)
-		assert.are.equal("Pathmark", R.foot.text)
+		assert.are.equal("Braindead Forever", R.foot.text)
 		assert.is_true(ns.RunStats.Char().recap[10])
 		R:Hide()
 		-- the same level-up again, a zone change and a new session: the card stays closed
@@ -319,12 +319,12 @@ describe("Your run: review card", function()
 		wow.fire("ZONE_CHANGED_NEW_AREA")
 		wow.advance(5)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
-		local char = _G.PathmarkCharDB
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
+		local char = _G.BraindeadForeverCharDB
 		ns = login({ level = 10, char = char })
 		wow.advance(5)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		assert.are.same({}, wow.errors)
 	end)
 
@@ -334,22 +334,22 @@ describe("Your run: review card", function()
 		levelUp(ns, 20)
 		wow.advance(5)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		wow.world.instance = true
 		S.combat(false)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		wow.advance(5)
 		wow.fire("ZONE_CHANGED_NEW_AREA")
 		wow.advance(5)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		wow.world.instance = false
 		wow.fire("ZONE_CHANGED_NEW_AREA")
 		wow.advance(5)
 		drain(ns)
-		assert.is_true(shown("PathmarkRecapFrame"))
-		assert.are.equal("Level 20 reached", _G.PathmarkRecapFrame.head.text)
+		assert.is_true(shown("BraindeadForeverRecapFrame"))
+		assert.are.equal("Level 20 reached", _G.BraindeadForeverRecapFrame.head.text)
 		assert.are.same({}, wow.blocked)
 	end)
 
@@ -359,18 +359,18 @@ describe("Your run: review card", function()
 		levelUp(ns, 10)
 		wow.advance(5)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		assert.is_nil(ns.RunStats.PendingRecap())
 		ns.UI.Set("recap", true)
 		wow.fire("ZONE_CHANGED_NEW_AREA")
 		wow.advance(5)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		-- the check box on the card writes the same option
 		ns = login({ level = 19, char = veteran(19) })
 		levelUp(ns, 20)
 		wow.advance(5)
 		drain(ns)
-		local R = _G.PathmarkRecapFrame
+		local R = _G.BraindeadForeverRecapFrame
 		assert.is_true(R.check:GetChecked())
 		R.check:SetChecked(false)
 		R.check.scripts.OnClick(R.check)
@@ -381,13 +381,13 @@ describe("Your run: review card", function()
 		local ns = login({ level = 11, char = veteran(11) })
 		levelUp(ns, 12)
 		wow.advance(5)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		local fresh = { run = TOKEN, route = { lvl = { l = 9, secs = 50, xp = 10, guided = 0, n = 0, d = 0 } } }
 		ns = login({ level = 9, char = fresh }) -- the addon came in during level 9
 		levelUp(ns, 10)
 		wow.advance(5)
 		drain(ns)
-		assert.is_false(shown("PathmarkRecapFrame"))
+		assert.is_false(shown("BraindeadForeverRecapFrame"))
 		assert.is_nil(ns.RunStats.PendingRecap())
 	end)
 end)
@@ -422,15 +422,15 @@ describe("Your run: saved tables", function()
 		assert.are.same({ num = 4711, v = 2, s = 300, o = 100, mo = "s", l = 4 }, char.mods[1])
 		assert.are.same({ s = 3600, r = 3, c = 3, g = "f", d = 20762, t = "alt001" }, acct.best[10])
 		assert.are.equal(1, acct.schema)
-		assert.are.equal(_G.PathmarkDB.stats, acct)
+		assert.are.equal(_G.BraindeadForeverDB.stats, acct)
 	end)
 
 	it("write the live tables back into whatever the globals hold at logout", function()
 		local ns = login({ level = 3, char = veteran(3) })
 		local char = ns.RunStats.Char()
-		_G.PathmarkCharDB = {}
+		_G.BraindeadForeverCharDB = {}
 		wow.fire("PLAYER_LOGOUT")
-		assert.are.equal(char, _G.PathmarkCharDB.stats)
+		assert.are.equal(char, _G.BraindeadForeverCharDB.stats)
 	end)
 end)
 
@@ -438,7 +438,7 @@ describe("Your run: counter-checks", function()
 	it("without the minimum number of runs, nine runs show a median and a rank", function()
 		local ns = login({ level = 4, char = veteran(4), collect = collect(others({ 1, 2 }, 9)) })
 		ns.Stats.MIN_RUNS = 1 -- the guard taken out: any run counts
-		SlashCmdList.PATHMARK("stats")
+		SlashCmdList.BRAINDEADFOREVER("stats")
 		drain(ns)
 		local row = ns.StatsPage.rendered[3]
 		assert.are.equal("11 min", row.cells[3])
@@ -450,7 +450,7 @@ describe("Your run: counter-checks", function()
 		ns.RunStats.Fighting = function()
 			return false
 		end
-		SlashCmdList.PATHMARK("stats")
+		SlashCmdList.BRAINDEADFOREVER("stats")
 		ns.RunStats.SLICE = 10
 		local d = ns.RunStats.driver
 		d.scripts.OnUpdate(d, 1 / 60)
@@ -467,8 +467,8 @@ describe("Your run: counter-checks", function()
 			return true
 		end
 		S.combat(true)
-		SlashCmdList.PATHMARK("stats")
-		assert.are.same({ "PathmarkStatsFrame:Show" }, wow.blocked)
+		SlashCmdList.BRAINDEADFOREVER("stats")
+		assert.are.same({ "BraindeadForeverStatsFrame:Show" }, wow.blocked)
 	end)
 
 	it("without the shown mark the review card comes a second time", function()
@@ -477,11 +477,11 @@ describe("Your run: counter-checks", function()
 		levelUp(ns, 10)
 		wow.advance(5)
 		drain(ns)
-		assert.is_true(shown("PathmarkRecapFrame"))
-		_G.PathmarkRecapFrame:Hide()
+		assert.is_true(shown("BraindeadForeverRecapFrame"))
+		_G.BraindeadForeverRecapFrame:Hide()
 		wow.fire("ZONE_CHANGED_NEW_AREA")
 		wow.advance(5)
 		drain(ns)
-		assert.is_true(shown("PathmarkRecapFrame"))
+		assert.is_true(shown("BraindeadForeverRecapFrame"))
 	end)
 end)

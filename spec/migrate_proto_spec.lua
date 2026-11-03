@@ -5,10 +5,10 @@ local wow = require("spec.helpers.wow")
 local function load()
 	wow.reset()
 	return wow.loadFiles({
-		"Pathmark/Locales/enUS.lua",
-		"Pathmark/Core/Util.lua",
-		"Pathmark/Collector/Migrate.lua",
-		"Pathmark/Collector/Proto.lua",
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Util.lua",
+		"BraindeadForever/Collector/Migrate.lua",
+		"BraindeadForever/Collector/Proto.lua",
 	})
 end
 
