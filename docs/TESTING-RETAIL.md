@@ -105,6 +105,12 @@ Start from the default: settings, Display, "Reset" (positions and size).
 7. In a fight: neither window moves, not by the header, not with Shift, not in Edit Mode. A drag that runs when the fight starts stops there and keeps the place.
 8. Edit Mode, drag bar 6 (MultiBar5) to the right edge left of the right bars, close Edit Mode: after "Reset" the window keeps a gap to it too.
 
+## 4a. Key bindings, TomTom, hardcore-safe mode (Welle 9)
+
+1. Blizzard settings, Keybindings: a section "Pathmark" lists seven actions (guidance on/off, check off step, skip step, step back, step window on/off, mini view, your run), all unbound. Bind two of them, press them in and out of a fight: the same as the window's buttons, and no "action blocked" message.
+2. With TomTom installed (release gate T20): a TomTom waypoint stands on the current goal, without a TomTom chat line; it moves with the next step and goes on pause. Settings, Arrow and Map: "Hand the goal to TomTom" off removes it. Without TomTom the option is not there.
+3. Settings, Play style, "Hardcore-safe": "Always". A quest 3 or more levels above the character shows a gold "Careful: …" line under the step; no optional dungeon step.
+
 ## 5. Situations per screenshot
 
 Concept §2.12 asks for these situations; take the views of section 2 in them:

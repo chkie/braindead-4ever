@@ -421,8 +421,39 @@ function C.MapItems(map)
 	return out
 end
 
+-- Hardcore-safe mode (requirement A18, Routes/Hardcore.lua): "auto" follows the realm's rule set
+-- (C_GameRules.IsHardcoreActive), "on" and "off" are the player's choice.
+C.HARDCORE = { "auto", "on", "off" }
+
+function C.Hardcore()
+	local v = UI.Get("hardcore")
+	if v == "on" then
+		return true
+	elseif v == "off" then
+		return false
+	end
+	local rule = ns.Modules.Optional("C_GameRules.IsHardcoreActive")
+	if not rule then
+		return false
+	end
+	local ok, active = pcall(rule)
+	return ok and active == true
+end
+
+-- Warning for the current step in the hardcore-safe mode: { elite = true } or { gap, level }, or nil.
+function C.Danger(info)
+	if not info or not C.Hardcore() then
+		return nil
+	end
+	return call("Danger", info)
+end
+
 -- Dungeon hint (owner wish 11): the first dungeon that fits now, or nil. Shown as an optional step.
+-- Never in the hardcore-safe mode: a dungeon is group content with elite enemies.
 function C.Dungeon()
+	if C.Hardcore() then
+		return nil
+	end
 	local list = call("DungeonHint")
 	return type(list) == "table" and list[1] or nil
 end
@@ -431,7 +462,24 @@ function C.SkipDungeon(id)
 	return call("SkipDungeon", id) == true
 end
 
--- Newer addon version seen (version notice, concept §1.5), or nil.
+-- Level cap of the game (WoW: Forever, like Classic Era).
+C.MAX_LEVEL = 60
+
+-- Highest level the route data reaches, or nil (requirement A32).
+function C.TopLevel()
+	return call("TopLevel")
+end
+
+-- Newer addon version seen (version notice, concept §1.5), or nil. It shows until the next completed
+-- step after it was shown (C.NewerVersionDone), once per session.
+local versionDone = false
 function C.NewerVersion()
+	if versionDone then
+		return nil
+	end
 	return ns.newerVersion
+end
+
+function C.NewerVersionDone()
+	versionDone = ns.newerVersion ~= nil
 end

@@ -258,6 +258,10 @@ local function Build()
 	W.step = FS(W, "step")
 	W.detail = FS(W, "line")
 	W.detail:SetTextColor(T.Tracker("Normal"))
+	-- hardcore-safe mode (Welle 9, M3): elite quest or quest too far above the character, gold like the
+	-- banner; also in the mini view
+	W.warn = FS(W, "line")
+	W.warn:SetTextColor(T.RGB(NORMAL_FONT_COLOR))
 
 	-- Next steps, dimmed, at most two lines each (T19); an optional step carries a gold tag line.
 	-- They sit in a scroll list (owner reading 14); rows are made when first needed (SF.Row).
@@ -589,6 +593,11 @@ function SF.Layout()
 		Place(W.detail, x, y + 4)
 		y = y + 4 + Height(W.detail)
 	end
+	if W.warn:IsShown() then
+		W.warn:SetWidth(width)
+		Place(W.warn, x, y + 4)
+		y = y + 4 + Height(W.warn)
+	end
 	W.cur:ClearAllPoints()
 	W.cur:SetPoint("TOPLEFT", W, "TOPLEFT", 0, -curTop)
 	W.cur:SetPoint("RIGHT", W, "RIGHT", 0, 0)
@@ -832,7 +841,8 @@ end
 local function StatusMessage()
 	local newer = C.NewerVersion()
 	if newer then
-		return L.STATUS_NEW_VERSION
+		view.versionShown = true
+		return L.STATUS_NEW_VERSION:format(newer)
 	end
 	if ns.db and ns.db.safeMode then
 		return L.STATUS_SAFE
@@ -855,6 +865,11 @@ local function StatusMessage()
 		return L.STATUS_CONTINENT
 	end
 	if not view.info and view.started then
+		-- Routes end below the level cap until the 1.x updates: say where it goes on (A32).
+		local top = C.TopLevel()
+		if top and top < C.MAX_LEVEL then
+			return L.STATUS_END_MORE:format(top)
+		end
 		return L.STATUS_END
 	end
 end
@@ -1029,6 +1044,16 @@ function SF.DungeonMenu(row)
 end
 
 -- Draws a step. mode: "open" (default) or "done" (the check feedback before the next step).
+-- Text of the hardcore warning (UI/Connect.lua C.Danger), or nil.
+function SF.Warning(danger)
+	if not danger then
+		return nil
+	elseif danger.elite then
+		return L.WARN_ELITE
+	end
+	return L.WARN_GAP:format(danger.gap)
+end
+
 function SF.Render(info, mode)
 	if not W then
 		return
@@ -1071,6 +1096,7 @@ function SF.Render(info, mode)
 		local dist = view.target and Nav.Vector(view.target)
 		view.dist = dist and math.floor(dist + 0.5)
 		SetLine(W.detail, ST.Detail(view.target, dist, view.zone))
+		SetLine(W.warn, mode ~= "done" and SF.Warning(C.Danger(info)) or nil)
 		-- icon: check box (open), check (done), fail (abandoned)
 		W.box:SetShown(mode ~= "done" and not pending)
 		W.tick:Hide()
@@ -1088,6 +1114,7 @@ function SF.Render(info, mode)
 		W.step:SetText("")
 		W.step:Hide()
 		SetLine(W.detail, nil)
+		SetLine(W.warn, nil)
 		W.box:Hide()
 		W.icon:Hide()
 		W.tick:Hide()
@@ -1127,7 +1154,7 @@ function SF.Refresh(light)
 	local cur = C.Current()
 	view.started = view.started or cur ~= nil or C.Missing() ~= nil
 	SF.Render(cur)
-	W:Show()
+	W:SetShown(not SF.hidden)
 	if light == true and before == (cur and cur.key) then
 		return
 	end
@@ -1136,6 +1163,9 @@ function SF.Refresh(light)
 	end
 	if ns.Arrow then
 		ns.Arrow.SetTarget(view.target, view.info)
+	end
+	if ns.TomTom then
+		ns.TomTom.SetTarget(view.target, view.info)
 	end
 	if ns.MapPins then
 		ns.MapPins.Refresh()
@@ -1189,6 +1219,10 @@ function SF.OnStepChanged(_, cur, prev)
 			C.RiddleDone(view.riddleShown.id)
 		end
 		view.rumorShown, view.riddleShown = nil, nil
+		if view.versionShown then -- the version notice goes after the next completed step, once per session
+			C.NewerVersionDone()
+			view.versionShown = nil
+		end
 		SF.PlayDone(prev)
 		return
 	end
@@ -1486,6 +1520,15 @@ function SF.SetMessage(text)
 	SF.Refresh()
 end
 
+-- Key binding "step window on/off" (UI/Bindings.lua): hides the window only, the arrow and the map pins
+-- keep guiding. For this session only, so a /reload always brings the window back.
+SF.hidden = false
+function SF.ToggleWindow()
+	SF.hidden = not SF.hidden
+	SF.Refresh()
+	return SF.hidden
+end
+
 -- Module ----------------------------------------------------------------------------------------------
 
 local function Init()
@@ -1519,6 +1562,10 @@ local function Init()
 		UI.OnChange(key, SF, SF.Refresh)
 	end
 	UI.OnChange("combat", OnFight, OnFight)
+	UI.OnChange("hardcore", SF, function() -- warning and dungeon step follow the mode at once
+		SF.Invalidate()
+		SF.Refresh()
+	end)
 	-- default place: Blizzard's tracker shown or not, window scale and width, after Edit Mode
 	for _, key in ipairs({ "tracker", "scale", "width", "editing" }) do
 		UI.OnChange(key, SF.PlaceDefault, SF.PlaceDefault)
@@ -1565,8 +1612,10 @@ M.Define("window", {
 			"BreakUpLargeNumbers",
 			"UnitPosition",
 			"GetCursorPosition",
+			"C_InputInterfaceStyle.GetCurrentStyle", -- places per UI type (UI/Core.lua, Welle 9 K8)
 		},
 		events = {
+			"INPUT_DEVICE_INTERFACE_TRANSITION",
 			"QUEST_DATA_LOAD_RESULT",
 			"CVAR_UPDATE",
 			"PLAYER_REGEN_DISABLED",

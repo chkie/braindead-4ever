@@ -1,11 +1,12 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-# Required checks for every pull request and every push to main.
+# Required checks for every pull request, every push to main and every push to a hotfix branch
+# (hotfix/launch, CONTRIBUTING.md "Hotfix").
 # release.yml calls this workflow too, so a tag only ships when all checks pass.
 name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, "hotfix/**"]
   pull_request:
   workflow_call:
 

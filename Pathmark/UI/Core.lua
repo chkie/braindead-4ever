@@ -45,6 +45,8 @@ local UI = {
 		minipins = false,
 		blizzNav = false,
 		mmButton = true,
+		tomtom = true, -- hand the current goal to TomTom when it is installed (UI/TomTom.lua)
+		hardcore = "auto", -- hardcore-safe mode: auto (the realm's rule set) | on | off (UI/Connect.lua)
 		textSize = true, -- follow Blizzard's text size (userFontScale)
 		style = "hints", -- play style: arrow | hints | self (closing the setup picks "hints")
 		hint = 1, -- hint level 0..3
@@ -214,7 +216,12 @@ end
 -- Combat state for the windows: listeners of the pseudo key "combat" get true or false.
 frame:RegisterEvent("PLAYER_REGEN_DISABLED")
 frame:SetScript("OnEvent", function(_, event, key)
-	if event == "MODIFIER_STATE_CHANGED" then
+	if event == "INPUT_DEVICE_INTERFACE_TRANSITION" then
+		-- the player switched between mouse and keyboard and the gamepad UI: their places (K8)
+		UI.OutOfCombat("placeAll", function()
+			Guard.Call("ui", UI.PlaceAll)
+		end)
+	elseif event == "MODIFIER_STATE_CHANGED" then
 		if (key == "LSHIFT" or key == "RSHIFT") and IsShiftKeyDown then
 			Guard.Call("ui", UI.OnShift, IsShiftKeyDown() == true)
 		end
@@ -265,6 +272,8 @@ function UI.Listen(f, event)
 	return false
 end
 
+UI.Listen(frame, "INPUT_DEVICE_INTERFACE_TRANSITION") -- Forever only: switch to and from the gamepad UI
+
 -- Positions ---------------------------------------------------------------------------------------
 -- Windows hang on UIParent (rule N6). They move three ways (owner reading 16): the step window by
 -- dragging its header band, the arrow while Shift is held (it stays click-free otherwise, rule P7), and
@@ -297,9 +306,32 @@ function UI.Rect(f)
 	return l * k, r * k, t * k, b * k
 end
 
+-- UI type (Welle 9, K8; requirement A40): Forever saves Edit Mode layouts per UI type, mouse and
+-- keyboard apart from gamepad (patch 1.60.1 beta 4, brain chapter 18 §1.6), and the windows follow:
+-- PathmarkDB.ui.pos holds their places for mouse and keyboard, PathmarkDB.ui.posPad for the gamepad UI.
+-- The type comes from C_InputInterfaceStyle.GetCurrentStyle (InputInterfaceStyleDocumentation.lua,
+-- wow-ui-source forever); Retail 12.1.5 has no gamepad UI and no such function, so there it is always
+-- mouse and keyboard. INPUT_DEVICE_INTERFACE_TRANSITION places the windows again, after a fight.
+function UI.Pad()
+	local style = ns.Modules.Optional("C_InputInterfaceStyle.GetCurrentStyle")
+	if not style then
+		return false
+	end
+	---@diagnostic disable-next-line: undefined-field
+	local types = Enum.InputDeviceInterfaceType -- not in the pinned annotations (12.0.1)
+	local pad = types and types.Gamepad or 1 -- InputConstantsDocumentation.lua forever: Gamepad = 1
+	local ok, value = pcall(style)
+	return ok and value == pad
+end
+
+-- Name of the table in PathmarkDB.ui that holds the places for the current UI type.
+function UI.PosKey()
+	return UI.Pad() and "posPad" or "pos"
+end
+
 -- Saved position of a window, nil while it stands at its default.
 function UI.Position(key)
-	local pos = UI.DB().pos
+	local pos = UI.DB()[UI.PosKey()]
 	pos = type(pos) == "table" and pos[key]
 	if type(pos) == "table" and pos[1] then
 		return pos
@@ -364,9 +396,9 @@ local function Save(key)
 	end
 	local point, _, relPoint, x, y = m.frame:GetPoint(1)
 	if point then
-		local db = UI.DB()
-		db.pos = type(db.pos) == "table" and db.pos or {}
-		db.pos[key] = { point, relPoint, math.floor((x or 0) + 0.5), math.floor((y or 0) + 0.5) }
+		local db, which = UI.DB(), UI.PosKey()
+		db[which] = type(db[which]) == "table" and db[which] or {}
+		db[which][key] = { point, relPoint, math.floor((x or 0) + 0.5), math.floor((y or 0) + 0.5) }
 	end
 end
 
@@ -477,15 +509,21 @@ end
 
 UI.SavePosition = Save
 
--- "Reset" on the Display page: positions and the size of the step window (owner reading 14).
-function UI.ResetPositions()
-	UI.DB().pos = nil
-	for _, key in ipairs(UI.SIZE_KEYS) do
-		UI.Set(key, UI.DEFAULTS[key])
-	end
+-- Every window at its place for the current UI type.
+function UI.PlaceAll()
 	for key in pairs(UI.movers) do
 		UI.Place(key)
 	end
+end
+
+-- "Reset" on the Display page: positions of the current UI type and the size of the step window (owner
+-- reading 14).
+function UI.ResetPositions()
+	UI.DB()[UI.PosKey()] = nil
+	for _, key in ipairs(UI.SIZE_KEYS) do
+		UI.Set(key, UI.DEFAULTS[key])
+	end
+	UI.PlaceAll()
 end
 
 if EventRegistry and EventRegistry.RegisterCallback then

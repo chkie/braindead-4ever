@@ -38,11 +38,14 @@ of the Ace3 libraries used as well as that of the covered work.
 -- channel carries about the same small traffic for 100 or 20,000 players. Run messages wait for one,
 -- finds wait FIND_WAIT seconds for one and are then dropped from the channel (group and guild still
 -- get them). Nothing goes on the channel in combat or in an instance.
+-- Version notice ("a", Collector/Version.lua): the addon version goes once to each group the player is
+-- in, once per session to the guild and once per session on the channel. On the channel it needs a
+-- credit of the finds pool like a find, so it stays inside the channel budget and adds no traffic.
 -- Receiving costs next to nothing: the event checks the prefix and puts the raw text into a small
 -- inbox (INBOX_MAX, the oldest give way). The ticker reads the inbox in slices (SLICE messages,
 -- SLICE_MS), never in combat, never in an instance and never below MIN_FPS frames per second.
 local _, ns = ...
-local U, Proto = ns.Util, ns.Proto
+local U, Proto, Version = ns.Util, ns.Proto, ns.Version
 local M, Guard = ns.Modules, ns.Guard
 local Num, Str = U.Num, U.Str
 
@@ -300,6 +303,54 @@ function X.Relay()
 	return true
 end
 
+-- Version notice: the own version once per group membership, once per session to guild and channel
+-- (on the channel with a finds credit like a find; Pump drops it after FIND_WAIT without one). Called
+-- by the ticker; a build without a release version ("dev", untagged) announces nothing.
+function X.Announce()
+	local msg, a = X.versionMsg, X.announced
+	if not msg then
+		return false
+	end
+	local group
+	if Call(IsInGroup, LE_PARTY_CATEGORY_INSTANCE) then
+		group = "INSTANCE_CHAT"
+	elseif Call(IsInRaid) then
+		group = "RAID"
+	elseif Call(IsInGroup) then
+		group = "PARTY"
+	end
+	local any = false
+	if group and not a.group then
+		Enqueue(msg, group, false)
+		any = true
+	end
+	a.group = group ~= nil
+	if not a.guild and Call(IsInGuild) then
+		a.guild = true
+		Enqueue(msg, "GUILD", true)
+		any = true
+	end
+	if not a.channel and X.channel.state == "on" then
+		a.channel = true
+		Enqueue(msg, "CHANNEL", true)
+		any = true
+	end
+	if any then
+		X.Pump()
+	end
+	return any
+end
+
+-- A version reported by another player: the notice once per session when enough players report a
+-- newer one (Collector/Version.lua). The step window shows it in its status line.
+local function HeardVersion(who, find)
+	local newest = X.versions and X.versions:Heard(who, { find[1], find[2], find[3], pre = find[4] == 1 })
+	if newest then
+		ns.newerVersion = Version.Text(newest)
+		M.Tell(ns.L.MSG_NEW_VERSION:format("|cffff8800Pathmark|r", ns.newerVersion, tostring(ns.version)))
+	end
+end
+
 -- Called by the collector for each discovery. Fields as in Proto.lua; invalid ones are not sent.
 function X.Offer(kind, ...)
 	if not M.IsActive("exchange") then
@@ -362,6 +413,15 @@ local function Evaluate(text, dist, sender, at)
 				X.muted[who] = true
 			end
 		end
+		return
+	end
+	if find.kind == "a" then
+		b.finds = b.finds + 1 -- counts towards the sender's limit like a find
+		if b.finds > X.SENDER_MAX then
+			X.muted[who] = true
+			return
+		end
+		HeardVersion(who, find)
 		return
 	end
 	if find.kind == "s" then
@@ -630,6 +690,10 @@ local function Init()
 	end
 	X.tokens = X.TOKENS
 	X.budget = ns.Budget.New({ clock = GetTime })
+	local own = Version.Parse(ns.version)
+	X.versions = Version.New(own)
+	X.versionMsg = own and Proto.Format("a", own[1], own[2], own[3], own.pre and 1 or 0) or nil
+	X.announced = { group = false, guild = false, channel = false }
 	R = Enum.SendAddonMessageResult
 	RETRY = { [R.AddonMessageThrottle] = true, [R.ChannelThrottle] = true, [R.AddOnMessageLockdown] = true }
 	local RR = Enum.RegisterAddonMessagePrefixResult
@@ -654,6 +718,7 @@ local function Init()
 		Guard.Wrap("exchange", function()
 			X.tokens = math.min(X.TOKENS, X.tokens + 1)
 			X.Drain()
+			X.Announce()
 			X.Pump()
 			X.Relay()
 		end)

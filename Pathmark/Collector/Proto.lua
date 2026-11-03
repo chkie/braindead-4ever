@@ -44,6 +44,8 @@ of the Ace3 libraries used as well as that of the covered work.
 --               (section = Proto.ModuleNumber(key), version = the module's version, 0 for levels)
 --      seconds  active play; xp gained in the section; in order = share of the section's route steps
 --               done in route order, 0..100; level = character level at the end; day = server day
+--   a  addon version (Collector/Version.lua, version notice): major, minor, patch, pre (1 = a pre-release
+--      such as "-beta"). Sent once per group, once per session to guild and channel; no position.
 -- giverKind: c = creature, o = game object, i = item, n = none (giverID 0).
 -- Readers skip unknown kinds and other protocol versions without counting them as broken, so a
 -- newer addon version can add kinds without muting older ones.
@@ -75,6 +77,7 @@ local KINDS = {
 	v = { "id", "map", "xy", "xy" },
 	p = { "tok", "id", "gid", "flag", "ids", "ids" },
 	s = { "tok", "id", "id", "mode", "section", "id", "gid", "id", "gid", "pct", "lvl", "gid" },
+	a = { "gid", "gid", "gid", "flag" },
 }
 Proto.KINDS = KINDS
 
@@ -199,6 +202,8 @@ function Proto.Key(find)
 		return table.concat({ k, find[1], find[5], find[6] }, ";") -- token and section
 	elseif k == "f" then
 		return table.concat({ k, find[1], find[2] }, ";")
+	elseif k == "a" then
+		return table.concat({ k, find[1], find[2], find[3], find[4] }, ";")
 	end
 	local n = find.n or #KINDS[k]
 	local x, y, map = find[n - 1], find[n], find[n - 2]

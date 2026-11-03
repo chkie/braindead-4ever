@@ -6,6 +6,12 @@ package-as: Pathmark
 move-folders:
   Pathmark/Pathmark: Pathmark
 
+# Release notes in English and German, written by hand (CHANGELOG.md); without this key the packager
+# would build them from the commit subjects.
+manual-changelog:
+  filename: CHANGELOG.md
+  markup-type: markdown
+
 ignore:
   - Pathmark/Probe
   - data

@@ -334,7 +334,7 @@ describe("Step window", function()
 			local ns = S.login()
 			ns.newerVersion = "1.1.0"
 			ns.StepFrame.Refresh()
-			assert.are.equal("New version available", frame(ns).status.text)
+			assert.are.equal("New version 1.1.0 available", frame(ns).status.text)
 		end)
 
 		it("names a module that turned off", function()
@@ -359,7 +359,10 @@ describe("Step window", function()
 			local rt = ns.Route.Runtime()
 			rt.saved.anchor = "_end"
 			rt:Evaluate()
-			assert.are.equal("End of the route reached", frame(ns).status.text)
+			assert.are.equal(
+				"End of the route reached. Routes from level 30 on follow with updates.",
+				frame(ns).status.text
+			)
 		end)
 	end)
 
