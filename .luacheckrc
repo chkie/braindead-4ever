@@ -183,6 +183,7 @@ read_globals = {
 	"GetLootSlotLink",
 	"GetNumLootItems",
 	"GetTaxiMapID",
+	"hooksecurefunc", -- secure post-hook on TakeTaxiNode (in the Forever API dump, Ketho forever d1ee569)
 	-- copy window and chat frames
 	"CLOSE",
 	"ChatFontNormal",

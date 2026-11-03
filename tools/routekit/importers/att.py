@@ -5,7 +5,8 @@ The Lua source files in .contrib/.db/forever/zones and .contrib/.db/forever/dung
 are evaluated in a Lua 5.1 sandbox (att_dump.lua). Kept: quest ID, giver IDs, coordinates in
 map percent, prerequisites, races, classes, required level, breadcrumb and repeatable flags,
 objective providers, the instance a dungeon quest belongs to; instances (area, entrance,
-minimum level); the discovery catalog (treasures, books, rares, flight paths with coordinates).
+minimum level); the discovery catalog (treasures, books, rares, flight paths with coordinates and
+the NPC ID of the flight master).
 Not kept: names, comments, descriptions.
 """
 
@@ -52,6 +53,8 @@ def run(src_dir, out_dir, lua):
                 f["zone"] = r["zoneMap"]
             if r.get("races"):
                 f["races"] = sorted(x for x in r["races"] if x in game.RACES)
+            if r.get("cr"):
+                f["masters"] = sorted(set(r["cr"]))
             if _removed(r.get("timeline")):
                 f["removed"] = True
             first = f["pct"][0]
@@ -127,8 +130,9 @@ def run(src_dir, out_dir, lua):
             "files": ["quests.jsonl", "dungeons.jsonl", "finds.jsonl"],
             "selection": "every q() entry under .contrib/.db/forever/zones and .contrib/.db/forever/dungeons & raids, "
             "instanceroot() entries, o()/n()/fp() entries under the TREASURES, RARES and FLIGHT_PATHS headers of "
-            "the zone files (book: an object holding an item of a library book quest), evaluated in a Lua 5.1 "
-            "sandbox; coordinates in map percent (x, y on uiMap); no names or comments",
+            "the zone files (book: an object holding an item of a library book quest; flight paths with the NPC ID "
+            "of the flight master), evaluated in a Lua 5.1 sandbox; coordinates in map percent (x, y on uiMap); "
+            "no names or comments",
             "status": "unbestätigt",
         },
     )

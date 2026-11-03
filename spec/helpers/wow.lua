@@ -609,6 +609,32 @@ function M.reset(opts)
 			return W.taxi.nodes
 		end,
 	}
+	-- W.taxi.routes[slot] = { slot, slot, ... }: the slots of the trip to `slot`, start first.
+	_G.GetNumRoutes = function(slot)
+		W.taxi.reads = (W.taxi.reads or 0) + 1
+		local r = W.taxi.routes and W.taxi.routes[slot]
+		return r and #r - 1 or 0
+	end
+	_G.TaxiGetNodeSlot = function(slot, leg, isSource)
+		local r = W.taxi.routes and W.taxi.routes[slot]
+		return r and r[isSource and leg or leg + 1]
+	end
+	_G.TakeTaxiNode = function(slot)
+		W.taxi.taken = slot
+	end
+	-- Post-hook as in the client: the original runs first, then the hook with the same arguments.
+	_G.hooksecurefunc = function(a, b, c)
+		local t, name, fn = _G, a, b
+		if type(a) == "table" then
+			t, name, fn = a, b, c
+		end
+		local original = t[name]
+		t[name] = function(...)
+			local r = { original(...) }
+			fn(...)
+			return unpack(r)
+		end
+	end
 	_G.ERR_NEWTAXIPATH = "New flight path discovered!"
 	_G.C_VignetteInfo = {
 		GetVignetteInfo = function(guid)

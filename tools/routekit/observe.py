@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Own data from player exports: prerequisites observed at quest accepts and measured module
-times. Reads PM1 export texts (Pathmark/Collector/Export.lua; one or more per file, separated by
-whitespace), writes data/sources/own/prereq.jsonl and times.jsonl. Run before `merge`:
+"""Own data from player exports: prerequisites observed at quest accepts, measured module times and
+flights. Reads PM1 export texts (Pathmark/Collector/Export.lua; one or more per file, separated by
+whitespace), writes data/sources/own/prereq.jsonl, times.jsonl and flights.jsonl. Run before `merge`:
 
   python3 -m tools.routekit observe EXPORT_DIR_OR_FILES...
 
@@ -11,6 +11,9 @@ Records used (docs/STATUS.md, data collector):
   offer   kind, dt, map, x, y, quest, token, done, missing     (an NPC offered the quest)
   rx      kind, dt, "p", token, quest, link, unlock, done, missing   (from another player)
   split   kind, dt, map, x, y, module, seconds, mode          (one module played start to end)
+  taxilegs kind, dt, map, x, y, node, legs                    (legs "a>b;b>c" of a flight master's map)
+  flight  kind, dt, map, x, y, from, to, points               (a chosen flight, points "a;b;c")
+  land    kind, dt, map, x, y, to, seconds                    (the landing of the chosen flight)
 Exports overlap when a player exports "all"; chunks are counted once per install and sequence.
 """
 
@@ -23,6 +26,11 @@ import zlib
 
 from . import prereq
 from .io import repo_path, write_json, write_jsonl
+
+# Plausible seconds of one flight (chosen values): a landing outside them is a broken pair (a
+# /reload in the air, a flight that never started), not a measurement.
+FLIGHT_SECONDS_MIN = 5
+FLIGHT_SECONDS_MAX = 1800
 
 FRAME = re.compile(r"PM1:([dz]):(\d+):([0-9a-fA-F]+):([A-Za-z0-9+/=\s]+)")
 MAX_JSON = 8 * 1024 * 1024
@@ -90,6 +98,59 @@ def collect(payloads):
     return obs, splits
 
 
+def _own_chunks(payloads):
+    """Own chunks in order, each once per install and sequence: (install, chunk)."""
+    seen = set()
+    for p in payloads:
+        install = p.get("install") or ""
+        for chunk in p.get("own") or []:
+            first = chunk.split("\n", 1)[0].split("\t")
+            key = (install, first[2] if len(first) > 2 else chunk)
+            if key not in seen:
+                seen.add(key)
+                yield install, chunk
+
+
+def flights(payloads):
+    """Trips and legs in the layout of data/sources/eglink/flights.jsonl: trips "from>to" with the
+    flight points flown and the counted seconds of a landing paired with the flight chosen before
+    it; legs "leg:a>b" from the flight master's map."""
+    trips, last = {}, {}
+
+    def trip(key):
+        return trips.setdefault(key, {"key": key, "paths": set(), "seconds": {}})
+
+    for install, chunk in _own_chunks(payloads):
+        for f in _records(chunk):
+            kind = f[0]
+            if kind == "taxilegs" and len(f) >= 7:
+                for leg in f[6].split(";"):
+                    a, _, b = leg.partition(">")
+                    if a.isdigit() and b.isdigit():
+                        trip("leg:%s>%s" % (a, b))["paths"].add((int(a), int(b)))
+            elif kind == "flight" and len(f) >= 7 and f[5].isdigit() and f[6].isdigit():
+                points = tuple(int(x) for x in (f[7] if len(f) > 7 else "").split(";") if x.isdigit())
+                ok = len(points) >= 2 and points[0] == int(f[5]) and points[-1] == int(f[6])
+                last[install] = (int(f[5]), int(f[6]), points if ok else None)
+                if ok:
+                    trip("%d>%d" % (int(f[5]), int(f[6])))["paths"].add(points)
+            elif kind == "land" and len(f) >= 7 and f[5].isdigit() and f[6].isdigit():
+                chosen = last.pop(install, None)
+                secs = int(f[6])
+                if chosen and chosen[1] == int(f[5]) and chosen[2] and FLIGHT_SECONDS_MIN <= secs <= FLIGHT_SECONDS_MAX:
+                    t = trip("%d>%d" % chosen[:2])
+                    t["seconds"][str(secs)] = t["seconds"].get(str(secs), 0) + 1
+    out = []
+    for t in trips.values():
+        if not t["paths"]:
+            continue
+        rec = {"key": t["key"], "paths": sorted(list(p) for p in t["paths"])}
+        if t["seconds"]:
+            rec["seconds"] = dict(sorted(t["seconds"].items(), key=lambda kv: int(kv[0])))
+        out.append(rec)
+    return out
+
+
 def results(obs, splits):
     pre = []
     for q in obs.quests():
@@ -113,6 +174,7 @@ def run(paths):
             payloads += decode(fh.read())
     obs, splits = collect(payloads)
     pre, times = results(obs, splits)
+    trips = flights(payloads)
     out = repo_path("data", "sources", "own")
     write_json(
         os.path.join(out, "SOURCE.json"),
@@ -121,11 +183,23 @@ def run(paths):
             "name": "Pathmark players: data collector exports",
             "license": "GPL-3.0-or-later",
             "exports": len(payloads),
-            "files": ["prereq.jsonl", "times.jsonl"],
-            "rules": {"minLinks": prereq.MIN_LINKS, "minSupport": prereq.MIN_SUPPORT, "minNone": prereq.MIN_NONE},
+            "files": ["prereq.jsonl", "times.jsonl", "flights.jsonl"],
+            "rules": {
+                "minLinks": prereq.MIN_LINKS,
+                "minSupport": prereq.MIN_SUPPORT,
+                "minNone": prereq.MIN_NONE,
+                "flightSeconds": [FLIGHT_SECONDS_MIN, FLIGHT_SECONDS_MAX],
+            },
             "status": "unbestätigt",
         },
     )
     write_jsonl(os.path.join(out, "prereq.jsonl"), pre)
     write_jsonl(os.path.join(out, "times.jsonl"), times, key="module")
-    return {"exports": len(payloads), "quests observed": len(obs.quests()), "prerequisites": len(pre), "timed modules": len(times)}
+    write_jsonl(os.path.join(out, "flights.jsonl"), trips, key="key")
+    return {
+        "exports": len(payloads),
+        "quests observed": len(obs.quests()),
+        "prerequisites": len(pre),
+        "timed modules": len(times),
+        "flight trips and legs": len(trips),
+    }

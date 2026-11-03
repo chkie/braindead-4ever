@@ -1,5 +1,5 @@
 {
- "attribution": "Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changed: reduced to quest facts and start positions, merged over builds, coordinates reordered.",
+ "attribution": "Data from Efficient Games (https://efficient.games), licensed under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/). Changed: reduced to quest facts, start positions, service NPCs and flights, merged over builds, coordinates reordered.",
  "builds": [
   "wow_classic_beta/1.60.1.70009",
   "wow_classic_beta/1.60.1.70124",
@@ -27,11 +27,14 @@
  "commitDate": "2026-10-31T10:23:50Z",
  "files": [
   "quests.jsonl",
-  "starts.jsonl"
+  "starts.jsonl",
+  "npcs.jsonl",
+  "flights.jsonl"
  ],
  "license": "CC-BY-4.0",
  "name": "EG Link output: World of Warcraft: Forever",
  "repository": "https://github.com/JIVESCORP/eg-link-output-wowf",
+ "selection": "npcs.jsonl: NPCs at which players opened a Binder or TaxiNode window or the list of a class trainer (trainer type 0), or that flights.json names as flight masters, with role, side, flight point and positions; flights.jsonl: every trip of flights.json with every sequence of flight points seen for it and the counted flight seconds; no names",
  "source": "eglink",
  "status": "unbestätigt"
 }
