@@ -23,6 +23,16 @@ local ALLOWED_NEW_GLOBALS = {
 	PathmarkFontSmall = true,
 	PathmarkFontStatus = true,
 	PathmarkSetupFrame = true,
+	-- Key bindings (Welle 9): the handler Bindings.xml calls and the names on Blizzard's binding page.
+	PathmarkBinding = true,
+	BINDING_HEADER_PATHMARK = true,
+	BINDING_NAME_PATHMARK_TOGGLE = true,
+	BINDING_NAME_PATHMARK_CHECK = true,
+	BINDING_NAME_PATHMARK_SKIP = true,
+	BINDING_NAME_PATHMARK_BACK = true,
+	BINDING_NAME_PATHMARK_WINDOW = true,
+	BINDING_NAME_PATHMARK_MINI = true,
+	BINDING_NAME_PATHMARK_STATS = true,
 }
 
 local function fileExists(path)

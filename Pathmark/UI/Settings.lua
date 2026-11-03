@@ -151,6 +151,12 @@ local function Build()
 	hintInit:SetParentInitializer(styleInit, function()
 		return UI.Get("style") ~= "arrow"
 	end)
+	-- hardcore-safe mode (Welle 9, M3): the tooltip names the chosen level gap of Routes/Hardcore.lua
+	Dropdown(play, "hardcore", L.OPT_HARDCORE, L.TIP_HARDCORE:format(ns.Hardcore.GAP + 1), {
+		{ "auto", L.HC_auto, L.TIP_HC_auto },
+		{ "on", L.HC_on, L.TIP_HC_on },
+		{ "off", L.HC_off, L.TIP_HC_off },
+	})
 	Header(playLayout, L.SEC_FINDS, L.INFO_FINDS)
 
 	-- Display
@@ -183,6 +189,9 @@ local function Build()
 	end)
 	Check(nav, "blizzNav", L.OPT_BLIZZNAV, L.TIP_BLIZZNAV)
 	Check(nav, "mmButton", L.OPT_MMBUTTON, L.TIP_MMBUTTON)
+	if M.IsActive("tomtom") then -- only with TomTom installed (UI/TomTom.lua)
+		Check(nav, "tomtom", L.OPT_TOMTOM, L.TIP_TOMTOM)
+	end
 
 	-- Accessibility
 	local a11y, a11yLayout = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_A11Y)

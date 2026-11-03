@@ -27,6 +27,11 @@ local function everything(ns)
 	SlashCmdList.PATHMARK("stats") -- the page "Your run" (Welle 8)
 	ns.MinimapButton.Click("LeftButton")
 	ns.MinimapButton.Click("LeftButton")
+	-- every key binding (Welle 9, K2): the same entry points as the window
+	for _, action in ipairs(ns.Bindings.ACTIONS) do
+		_G.PathmarkBinding(action)
+		_G.PathmarkBinding(action)
+	end
 	ns.Arrow.Update(1)
 	local grip = ns.StepFrame.grip -- size grip (owner reading 14)
 	grip.scripts.OnMouseDown(grip, "LeftButton")

@@ -102,6 +102,7 @@ describe("Settings", function()
 			hint = 1,
 			tracker = "hide", -- owner reading 16
 			lock = false,
+			hardcore = "auto", -- Welle 9: follows the realm's rule set
 		}
 		for key, value in pairs(expect) do
 			assert.are.equal(value, ns.UI.Get(key), key)

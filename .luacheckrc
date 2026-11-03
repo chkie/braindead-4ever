@@ -62,6 +62,7 @@ read_globals = {
 			CompressionLevel = { other_fields = true },
 			CompressionMethod = { other_fields = true },
 			FlightPathState = { other_fields = true },
+			InputDeviceInterfaceType = { other_fields = true }, -- Welle 9: gamepad UI (InputConstants, forever)
 			RegisterAddonMessagePrefixResult = { other_fields = true },
 			SendAddonMessageResult = { other_fields = true },
 		},
@@ -211,6 +212,9 @@ globals = {
 	"PathmarkCharDB", -- ## SavedVariablesPerCharacter (random character ID)
 	"SLASH_PATHMARK1",
 	"SlashCmdList",
+	-- key bindings (Bindings.xml, UI/Bindings.lua): the handler and the names on Blizzard's binding page
+	"PathmarkBinding",
+	"BINDING_HEADER_PATHMARK",
 }
 files["spec/**/*.lua"] = {
 	std = "+busted",

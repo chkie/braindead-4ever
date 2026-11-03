@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: GPL-3.0-or-later
+# Test post to the Discord channel of the release notice (release.yml), started by hand from the Actions
+# tab once the server and the secret DISCORD_WEBHOOK_URL exist. Without the secret it only says so.
+# allowed_mentions with an empty parse list keeps every mention out (Discord docs, release gate T30).
+name: Discord test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  post:
+    name: Test post
+    runs-on: ubuntu-latest
+    env:
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+    steps:
+      - name: No webhook yet
+        if: ${{ env.DISCORD_WEBHOOK_URL == '' }}
+        run: echo "::notice::DISCORD_WEBHOOK_URL is not set, nothing posted."
+      - name: Post a test message
+        if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
+        run: |
+          MSG="Test of the Pathmark release notice from ${GITHUB_REPOSITORY}, run ${GITHUB_RUN_ID}."
+          jq -n --arg c "$MSG" '{content:$c, allowed_mentions:{parse:[]}}' \
+            | curl -fsS --retry 3 -H "Content-Type: application/json" -d @- "${DISCORD_WEBHOOK_URL}?wait=true"
