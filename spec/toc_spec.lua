@@ -110,6 +110,8 @@ describe("TOC files", function()
 				assert.are.equal("@project-version@", toc.directives.Version)
 				assert.are.equal("BraindeadForeverDB, BraindeadForeverCollectDB", toc.directives.SavedVariables)
 				assert.are.equal("BraindeadForeverCharDB", toc.directives.SavedVariablesPerCharacter)
+				-- the packager uploads to this CurseForge project (release.sh: X-Curse-Project-ID)
+				assert.are.equal("1781825", toc.directives["X-Curse-Project-ID"])
 			end)
 
 			it("keeps the developer probe inside the do-not-package block", function()
