@@ -66,12 +66,16 @@ local function Boot()
 	if b.inProgress then
 		b.fails = b.fails + 1
 	end
+	local switched = false
 	if b.fails >= 2 and not db.safeMode then
-		db.safeMode, db.autoSafe = true, true
-		print(L.MSG_SAFE_MODE_AUTO:format("|cffff8800" .. ADDON .. "|r", ns.slash))
+		db.safeMode, db.autoSafe, switched = true, true, true
 	end
 	b.inProgress = true
 	ns.Modules.Boot(db)
+	if switched then
+		-- The step window names safe mode in its status line; a chat line only if it is down itself.
+		ns.Modules.Tell(L.MSG_SAFE_MODE_AUTO:format("|cffff8800" .. ADDON .. "|r", ns.slash))
+	end
 end
 
 local function StartedCleanly()

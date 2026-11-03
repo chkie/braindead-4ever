@@ -63,7 +63,7 @@ Every message on the hidden channel reaches every player in it. Without a limit,
 - Receiving costs next to nothing; reading happens in slices outside fights and instances and not at a low frame rate.
 - Relays go out only outside fights and instances.
 
-The budget covers both kinds of channel messages, run sections and finds. Group and guild are not part of it.
+The budget covers both kinds of channel messages, run sections and finds. The version notice (message `a`, Welle 9: major, minor, patch, pre-release flag; once per session on the channel) needs a credit of the finds pool like a find, so it adds nothing to the channel's traffic. Group and guild are not part of it.
 
 **Estimate of the players** (`Collector/Budget.lua`). Each client estimates how many players send on the channel and takes only its share of a fixed total: `SHARE[pool] / estimate` messages per second for runs (0.15 in total) and finds (0.1 in total). The estimate is an upper bound, the smaller of two:
 

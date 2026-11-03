@@ -2,7 +2,7 @@
 
 The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `Pathmark/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
 
-Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip; Welle 7: replanning).
+Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip; Welle 7: replanning; Welle 9, 2026-11-03: hardcore-safe mode, `Route.TopLevel`).
 
 | File | What it does |
 | --- | --- |
@@ -11,6 +11,7 @@ Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Las
 | `Pathmark/Routes/Discover.lua` | Explorer mode rules (Welle 4): hint levels, riddle and rumor sentences, the area hint. Pure Lua. |
 | `Pathmark/Routes/Dungeon.lua` | Dungeon hint (Welle 4). Pure Lua over the runtime and the compiled dungeon tables. |
 | `Pathmark/Routes/Forecast.lua` | Time forecast (Welle 4). Pure Lua. |
+| `Pathmark/Routes/Hardcore.lua` | Hardcore-safe mode (Welle 9): which quests of a step are too high or elite. Pure Lua. |
 | `Pathmark/Routes/Runtime.lua` | The rules below. Pure Lua: the client state comes in through a world table, so the tests run the same code. |
 | `Pathmark/Routes/Replan.lua` | Replanning (Welle 7): over the plan, switch points with alternative modules, reorder in the block. Adds methods to the runtime; pure Lua. |
 | `Pathmark/Routes/Guide.lua` | Module `route`: picks the route, feeds game events in, saves progress, offers `ns.Route`. |
@@ -119,6 +120,8 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.Skipped()` | Welle 8: number of quests the route leaves out now (skipped and their follow-ups), for "Your run" ([RUN-STATS.md](RUN-STATS.md)); nil without a route |
 | `Route.LevelSection()` | Welle 8: the current level section `{ l, full, secs, xp, guided, n, d }` (read only) |
 | `Route.ModuleKey(number)` | Welle 8: key of the module with this module number (`Proto.ModuleNumber`), nil when the faction has none |
+| `Route.Danger(info)` | hardcore-safe mode (§Hardcore-safe mode): `{ quest, elite = true }`, `{ quest, gap, level }` or nil |
+| `Route.TopLevel()` | highest level the route data reaches (top of the highest module band), nil without a route; the step window names it at the end of the route |
 | `Route.Runtime()` | the runtime object, for diagnostics and tests only |
 
 Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step, chain }`. `chain` is `"incomplete"` when a quest of the step has prerequisites nobody knows yet (show the status text `L.STATUS_COLLECTING`, "collecting data": skipping may leave a follow-up quest the game will not offer), else nil. `kind` is `"quest"`, `"travel"` or `"other"`; `label` is the module's label (`vorläufig` or `stabil`); `quests` lists the quest IDs; `step` is the compiled step (read only, layout in docs/ROUTE-FORMAT.md). Quest and item names are not part of it: the window reads them from the client in the player's language. Every call builds new info tables: call on the events below, not on every frame (brain chapter 12, no tables per frame).
@@ -242,6 +245,16 @@ Sources: the catalog (`finds`, ATT, unbestätigt); own finds from the collector 
 
 Known data limits: the Deadmines quests at Sentinel Hill need the Defias chain (155) and the Orgrimmar quests of Ragefire Chasm need 5727; no route takes these chains, so the hint names them only after the player did them.
 
+## Hardcore-safe mode
+
+Welle 9 (requirement A18). Setting "Hardcore-safe" on the page "Play style": on Hardcore realms (default, `C_GameRules.IsHardcoreActive`), always, never. It uses only data that exists and invents no danger values:
+
+- **Level gap:** for the quests the current step sends the player to (accept, complete; not the turn-in), the quest level of the route data (`quests`, 0 = unknown, never a warning) against the character's level. More than `Hardcore.GAP` = 2 levels above warns ("Careful: quest 3 levels above you"). The 2 is a chosen value, not measured: Blizzard colors a quest orange from 3 levels above the player and red from 5 (`DifficultyUtil.GetRelativeDifficultyColor`, wow-ui-source forever).
+- **Elite:** a quest the client marks elite (`C_QuestLog.IsEliteQuest`, Forever only) warns ("Careful: elite quest") before the level. The routes hold no quest that Polestar types as elite or group, dungeon, raid or PvP (`type` in `data/facts`, checked in `spec/route_hardcore_spec.lua`: 0 of 959 route quests on 2026-11-03), so this catches what the data missed.
+- **Dungeon hint:** the optional dungeon step does not show.
+
+The warning is a gold line under the step, also in the mini view; the route itself does not change (skipping stays the player's choice).
+
 ## Time forecast
 
 `Route.Forecast()`:
@@ -318,7 +331,9 @@ The windows (`Pathmark/UI/`) read the logic only through the adapter `UI/Connect
 | `Route.Pending`, `AbandonPreview`, `ResolveAbandon` | abandoned quest: fail symbol and the two buttons |
 | `Route.Module` | clock symbol for provisional sections and its tooltip |
 | step info `chain = "incomplete"` | a line "Follow-up quests: collecting data" in the step's origin tooltip |
-| `Route.DungeonHint`, `SkipDungeon` | the first hint as an optional step among the next steps, behind the step where its first giver is passed; right-click skips it |
+| `Route.DungeonHint`, `SkipDungeon` | the first hint as an optional step among the next steps, behind the step where its first giver is passed; right-click skips it; none in the hardcore-safe mode |
+| `Route.Danger` | hardcore-safe mode: gold warning line under the current step |
+| `Route.TopLevel` | status line at the end of the route: "Routes from level 30 on follow with updates" while the data ends below the level cap |
 | `Explore.Styles`, `SetStyle`, `Level`, `SetLevel` | first start and settings page "Play style"; style and hint level are kept account-wide on the settings page and handed to `ns.Explore` at login and on every change |
 | `Explore.List`, `FindsChanged` | a new rumor (`show = "rumor"`) once in the step window with "Show location"; finds with `show = "point"` on the world map (own finds with the check) |
 | `Explore.Ask(key, 3)` | "Show location": waypoint pin and arrow goal for this one find |

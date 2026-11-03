@@ -11,7 +11,8 @@ S.TITLES = {
 	deDE = { [33] = "Wölfe an der Grenze", [783] = "Eine Bedrohung von innen", [7] = "Säuberung im Koboldlager" },
 }
 
--- opts: locale, saved (PathmarkDB), char, level, xp, xpMax, style (default "arrow" = speed route),
+-- opts: locale, saved (PathmarkDB), char, version (TOC version), level, xp, xpMax, style (default
+-- "arrow" = speed route),
 -- setup (false = first start, setup not done), hint (false = usage hint not seen yet), combat,
 -- before(world) to change the client state before the files load.
 function S.login(opts)
@@ -25,7 +26,7 @@ function S.login(opts)
 			saved.ui.hintsSeen = saved.ui.hintsSeen or { rightclick = true }
 		end
 	end
-	wow.reset({ saved = saved, char = opts.char, locale = opts.locale })
+	wow.reset({ saved = saved, char = opts.char, locale = opts.locale, version = opts.version })
 	local W = wow.world
 	local P = W.player
 	P.level, P.xp, P.xpMax = opts.level or 1, opts.xp or 0, opts.xpMax or 400

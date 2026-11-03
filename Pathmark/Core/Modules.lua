@@ -80,6 +80,25 @@ function M.IsActive(name)
 	return M.state[name] == "on"
 end
 
+-- A message the player did not ask for (module turned off, automatic safe mode): it goes into the
+-- status line of the step window (concept §1.5, design rule R2; UI/StepFrame.lua reads the states).
+-- Only when the step window itself is not running does a chat line go out, one per session at most.
+-- Returns true when it printed.
+M.told = false
+function M.Tell(text)
+	local sf = ns.StepFrame
+	if M.IsActive("window") and sf and sf.Queue then
+		Guard.Call("window", sf.Queue)
+		return false
+	end
+	if M.told then
+		return false
+	end
+	M.told = true
+	print(text)
+	return true
+end
+
 function M.Disable(name, reason)
 	if M.state[name] ~= "on" then
 		return
@@ -90,7 +109,7 @@ function M.Disable(name, reason)
 		Guard.Call(name, spec.disable, spec)
 	end
 	-- The module's events stay registered on the frame; Guard.Wrap asks IsActive.
-	print(L.MSG_MODULE_DISABLED:format("|cffff8800" .. ADDON .. "|r", name, reason, ns.slash or "pathmark"))
+	M.Tell(L.MSG_MODULE_DISABLED:format("|cffff8800" .. ADDON .. "|r", name, reason, ns.slash or "pathmark"))
 end
 
 -- Checks requirements; returns nil or the reason.

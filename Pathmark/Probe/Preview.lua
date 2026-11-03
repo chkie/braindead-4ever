@@ -638,7 +638,7 @@ function P.Run(state, arg)
 		SF.Refresh()
 		ns.Menu.Open(SF.frame)
 	elseif state == "status" then
-		SF.SetMessage(ns.L.STATUS_NEW_VERSION)
+		SF.SetMessage(ns.L.STATUS_NEW_VERSION:format("0.1.1"))
 	elseif state == "skip" then
 		SF.AskSkip()
 	elseif state == "narrow" then

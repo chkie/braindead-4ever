@@ -5,6 +5,9 @@
 local tocReader = require("spec.helpers.toc")
 
 local LICENCES = { LICENSE = true, ["LICENSE-EXCEPTION.md"] = true, NOTICE = true }
+-- Files beside the licences that travel with the addon: the credits (release gate T13) and the
+-- changelog the packager uses as release notes (manual-changelog, release gate T30).
+local BESIDE = { ["CREDITS.md"] = true, ["CHANGELOG.md"] = true }
 
 local function ignoreList()
 	local fh = assert(io.open(".pkgmeta", "rb"))
@@ -68,7 +71,7 @@ describe(".pkgmeta", function()
 	it("packages only addon files and licences", function()
 		assert.is_true(#files > 10)
 		for _, f in ipairs(files) do
-			assert.is_true(LICENCES[f] or f:match("^Pathmark/") ~= nil, "would be packaged: " .. f)
+			assert.is_true(LICENCES[f] or BESIDE[f] or f:match("^Pathmark/") ~= nil, "would be packaged: " .. f)
 		end
 		local have = {}
 		for _, f in ipairs(files) do
@@ -77,6 +80,7 @@ describe(".pkgmeta", function()
 		for name in pairs(LICENCES) do
 			assert.is_true(have[name] == true, "licence missing in the package: " .. name)
 		end
+		assert.is_true(have["CREDITS.md"] == true, "credits missing in the package")
 	end)
 
 	it("packages every file the TOC loads outside the developer block", function()

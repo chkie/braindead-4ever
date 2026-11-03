@@ -571,6 +571,22 @@ function Route.Mode()
 	return root and root.mode or nil
 end
 
+-- Highest level the route data reaches (the top of the highest module band), or nil without a route.
+-- The step window names it at the end of the route (requirement A32: no promise beyond the data).
+function Route.TopLevel()
+	if not modules then
+		return nil
+	end
+	local top
+	for _, m in pairs(modules) do
+		local hi = type(m.levels) == "table" and tonumber(m.levels[2])
+		if hi and (not top or hi > top) then
+			top = hi
+		end
+	end
+	return top
+end
+
 function Route.SetMode(mode)
 	if not Route.MODES[mode] or not M.IsActive("route") then
 		return false
@@ -609,6 +625,26 @@ function Route.DungeonHint()
 			skipped = rt.saved.dungeons,
 		})
 	end) or {}
+end
+
+-- Hardcore-safe mode (Routes/Hardcore.lua): danger of a step for the character, or nil. Only the quests
+-- the step sends the player to (accept, complete) count; the elite mark comes from the client.
+local function IsElite(q)
+	if not api.IsEliteQuest then
+		return nil
+	end
+	local ok, elite = pcall(api.IsEliteQuest, q)
+	return ok and elite == true
+end
+
+function Route.Danger(info)
+	return Call(function()
+		local s = info and rt.steps[info.index]
+		if not s or s.key ~= info.key then
+			return nil
+		end
+		return ns.Hardcore.Check(ns.Hardcore.Quests(s.els, R.VERB), rt.quests, world.Level(), IsElite)
+	end)
 end
 
 -- Hides a dungeon hint (or shows it again with show = true). The route does not change.
@@ -800,6 +836,7 @@ local function Init()
 		GetQuestObjectives = "C_QuestLog.GetQuestObjectives",
 		UnitPosition = "UnitPosition",
 		InCombatLockdown = "InCombatLockdown",
+		IsEliteQuest = "C_QuestLog.IsEliteQuest", -- Forever only (hardcore-safe mode)
 	}) do
 		api[name] = M.Optional(path)
 	end
@@ -942,6 +979,7 @@ M.Define("route", {
 			"C_QuestLog.GetQuestObjectives",
 			"UnitPosition",
 			"InCombatLockdown",
+			"C_QuestLog.IsEliteQuest",
 		},
 		events = {
 			"PLAYER_LOGOUT",

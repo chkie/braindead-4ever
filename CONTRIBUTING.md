@@ -10,7 +10,7 @@ By opening a pull request you agree that your contribution is licensed under the
 
 ## Rules for addon code
 
-- No new global variables. The only globals are the SavedVariables `PathmarkDB`, `PathmarkCollectDB` and `PathmarkCharDB`, the slash command entries `SLASH_PATHMARK1` and `SlashCmdList.PATHMARK`, the named copy window `PathmarkCopyFrame` and setup window `PathmarkSetupFrame` (Escape closes frames by name), and the font copies `PathmarkFontHeader`, `PathmarkFontStep`, `PathmarkFontLine`, `PathmarkFontSmall`, `PathmarkFontStatus` (`CreateFont` needs a name). The developer probe adds `PathmarkProbeItemButton` in developer builds only. Everything else lives in the addon namespace (`local ADDON, ns = ...`).
+- No new global variables. The only globals are the SavedVariables `PathmarkDB`, `PathmarkCollectDB` and `PathmarkCharDB`, the slash command entries `SLASH_PATHMARK1` and `SlashCmdList.PATHMARK`, the named copy window `PathmarkCopyFrame` and setup window `PathmarkSetupFrame` (Escape closes frames by name), the font copies `PathmarkFontHeader`, `PathmarkFontStep`, `PathmarkFontLine`, `PathmarkFontSmall`, `PathmarkFontStatus` (`CreateFont` needs a name), and for the key bindings the handler `PathmarkBinding` that `Pathmark/Bindings.xml` calls with `BINDING_HEADER_PATHMARK` and `BINDING_NAME_PATHMARK_*` (names the client reads for its key binding page). The developer probe adds `PathmarkProbeItemButton` in developer builds only. Everything else lives in the addon namespace (`local ADDON, ns = ...`).
 - Every text a player can see lives in `Pathmark/Locales/` and exists in `enUS.lua` and `deDE.lua`.
 - Interface code (`Pathmark/UI/`) reads the route and discovery logic only through `UI/Connect.lua`. Graphics only as Blizzard atlases through `ns.Theme.SetAtlas`, fonts only as copies of Blizzard font objects, colors from Blizzard's constants. Anything that may be protected, opens a window or plays a sound goes through `ns.UI.OutOfCombat` (tested in `spec/ui_combat_spec.lua`).
 - Never call `seterrorhandler`. Run event handlers through `ns.Guard.Wrap` or `ns.Guard.Call`.
@@ -58,3 +58,13 @@ A pull request can only be merged when all checks are green.
 ## Releases
 
 A tag `vX.Y.Z` on `main` runs all checks and then the BigWigs packager, which uploads to CurseForge, Wago and GitHub Releases. Tags containing `alpha` or `beta` become alpha or beta releases. Use annotated tags: `git tag -a v0.1.0 -m "v0.1.0"`.
+
+The release notes come from [CHANGELOG.md](CHANGELOG.md) (`manual-changelog` in `.pkgmeta`): before a tag, give its top section the version and the date, in English and German, and keep "Known issues" and "Bekannte Probleme" current. If the Discord secret `DISCORD_WEBHOOK_URL` is set, `release.yml` posts the tag to the channel; the workflow "Discord test" (started by hand) checks the webhook first.
+
+### Hotfix
+
+1. Branch from the release tag: `git switch -c hotfix/launch v0.1.0` (later hotfixes: `hotfix/<topic>` from the last tag). CI runs on every push to `hotfix/**`.
+2. Fix, add a test that fails without the fix, CI green, owner approval.
+3. Add the version section to `CHANGELOG.md` in English and German. After renamed or deleted files add: "Restart the game client completely after this update, /reload is not enough." / "Nach diesem Update das Spiel ganz neu starten, /reload genügt nicht."
+4. Tag on the hotfix branch without `alpha` or `beta`, one patch step per hotfix: `git tag -a v0.1.1 -m "v0.1.1"` and push the tag. GitHub Releases has it at once; CurseForge reviews files by hand between 08:00 and 15:00 CET.
+5. Merge the hotfix branch back into `main`. Close a bug report only when the file is approved on CurseForge.

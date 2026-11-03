@@ -1,6 +1,6 @@
 # Pathmark
 
-Pathmark (working title) is a free leveling guide addon for World of Warcraft: Forever, levels 1 to 60.
+Pathmark (working title) is a free leveling guide addon for World of Warcraft: Forever. The routes cover levels 1 to 30; levels 30 to 60 follow with updates.
 
 **Status:** early development. There is no release yet, and the addon does not guide you anywhere so far.
 
@@ -8,7 +8,7 @@ Pathmark (working title) is a free leveling guide addon for World of Warcraft: F
 
 ## What it is for
 
-- Step-by-step routes from level 1 to 60 for both factions, free of charge with no paid tier.
+- Step-by-step routes from level 1 to 30 for both factions, free of charge with no paid tier. Routes from level 30 to 60 follow with updates.
 - Every step shows where its data comes from. Data taken from other open projects starts out as unconfirmed and is replaced as soon as our own in-game measurements cover it.
 - English and German from the start.
 
@@ -25,6 +25,8 @@ Pathmark records what you do while leveling, in your own game folder: quests acc
 What you discover, Pathmark shares in the game with other players who use it, through addon messages: IDs and map positions only, to your group at once, to your guild and other players 30 to 90 seconds later. This is part of the addon and cannot be switched off. Addon messages show the game's sender name to the receiving addon; Pathmark never stores it.
 
 Pathmark also shares how long each level and each route part took you: active seconds, experience, race and class as numbers, whether you followed the route, the level and the day. These run times carry a random token that Pathmark rolls once per character and derives from nothing else; it only serves to count each level of a character once. Other copies of Pathmark keep them and pass them on, so the routes can be measured against real play ([format](docs/RUN-TIMES.md)). The page "Your run" (right-click menu, `/pathmark stats`) shows your own times per level and, once at least ten runs of your class have reached you, their median and where you stand ([details](docs/RUN-STATS.md)).
+
+Pathmark tells other players which version of it you run (to your group, your guild and the hidden channel, once per session), so it can say when a newer version is out.
 
 `/pathmark export` shows your data as a text to copy, for the website that comes later. `/pathmark report` builds a problem report without names.
 
@@ -56,13 +58,13 @@ World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registe
 
 ## Deutsch
 
-Pathmark (Arbeitstitel) ist ein kostenloser Leveling-Guide für World of Warcraft: Forever, Stufe 1 bis 60.
+Pathmark (Arbeitstitel) ist ein kostenloser Leveling-Guide für World of Warcraft: Forever. Die Routen reichen von Stufe 1 bis 30; Stufe 30 bis 60 folgt mit Updates.
 
 **Stand:** frühe Entwicklung. Es gibt noch keine Veröffentlichung, und das Addon führt noch nirgendwohin.
 
 ### Wofür es gedacht ist
 
-- Routen Schritt für Schritt von Stufe 1 bis 60 für beide Fraktionen, kostenlos und ohne Bezahlstufe.
+- Routen Schritt für Schritt von Stufe 1 bis 30 für beide Fraktionen, kostenlos und ohne Bezahlstufe. Routen von Stufe 30 bis 60 folgen mit Updates.
 - Jeder Schritt zeigt, woher seine Daten stammen. Daten aus anderen offenen Projekten gelten zunächst als unbestätigt und werden ersetzt, sobald eigene Messungen im Spiel sie abdecken.
 - Deutsch und Englisch von Anfang an.
 
@@ -79,6 +81,8 @@ Pathmark zeichnet beim Leveln in deinem eigenen Spielordner auf, was du tust: an
 Was du entdeckst, teilt Pathmark im Spiel mit anderen Spielern, die es auch nutzen, über Addon-Nachrichten: nur Kennungen und Kartenpositionen, an deine Gruppe sofort, an deine Gilde und andere Spieler 30 bis 90 Sekunden später. Das gehört zum Addon und lässt sich nicht ausschalten. Addon-Nachrichten zeigen dem empfangenden Addon den Absendernamen des Spiels; Pathmark speichert ihn nie.
 
 Pathmark teilt außerdem, wie lange du für jede Stufe und jeden Routenabschnitt gebraucht hast: aktive Sekunden, Erfahrung, Volk und Klasse als Zahl, ob du der Route gefolgt bist, die Stufe und den Tag. Diese Spielzeiten tragen eine zufällige Kennung, die Pathmark einmal je Charakter würfelt und aus nichts anderem ableitet; sie dient nur dazu, jede Stufe eines Charakters einmal zu zählen. Andere Pathmark-Installationen bewahren sie auf und geben sie weiter, damit sich die Routen am echten Spiel messen lassen ([Format](docs/RUN-TIMES.md)). Die Seite „Dein Lauf“ (Rechtsklickmenü, `/pathmark stats`) zeigt deine eigenen Zeiten je Stufe und, sobald mindestens zehn Läufe deiner Klasse bei dir angekommen sind, deren Median und wo du stehst ([Details](docs/RUN-STATS.md)).
+
+Pathmark sagt anderen Spielern, welche Version davon du nutzt (deiner Gruppe, deiner Gilde und dem versteckten Kanal, einmal je Sitzung), damit es dir sagen kann, wenn es eine neuere gibt.
 
 `/pathmark export` zeigt deine Daten als Text zum Kopieren, für die Website, die später kommt. `/pathmark report` erstellt einen Fehlerbericht ohne Namen.
 

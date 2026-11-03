@@ -92,7 +92,7 @@ local FLAVORS = {
 	forever = {
 		build = { "1.60.1", "70532", "Oct 20 2026", 16001 },
 		project = 18,
-		extraEvents = { "GAME_RULES_CHANGED" },
+		extraEvents = { "GAME_RULES_CHANGED", "INPUT_DEVICE_INTERFACE_TRANSITION" },
 	},
 	retail = {
 		build = { "12.1.5", "70448", "Oct 14 2026", 120105 },
@@ -252,6 +252,7 @@ local function NewWorld(flavor)
 		cvars = { questTextContrast = "0", showInGameNavigation = "0" },
 		serverTime = 1793836800, -- 2026-11-05 00:00 UTC
 		ctrl = false,
+		inputStyle = 0, -- C_InputInterfaceStyle.GetCurrentStyle in Forever: 0 mouse and keyboard, 1 gamepad
 		flavor = flavor,
 	}
 end
@@ -404,6 +405,7 @@ function M.reset(opts)
 		AddOnRestrictionType = { Combat = 0, Encounter = 1, ChallengeMode = 2, PvPMatch = 3, Map = 4, Chat = 5 },
 		AddOnRestrictionState = { Inactive = 0, Activating = 1, Active = 2 },
 		AddOnProfilerMetric = { SessionAverageTime = 0, RecentAverageTime = 1 },
+		InputDeviceInterfaceType = { Mkb = 0, Gamepad = 1 },
 	}
 
 	-- Player and units
@@ -733,6 +735,15 @@ function M.reset(opts)
 	}
 
 	if forever then
+		_G.C_InputInterfaceStyle = {
+			GetCurrentStyle = function()
+				return W.inputStyle
+			end,
+		}
+	else
+		_G.C_InputInterfaceStyle = nil -- Retail 12.1.5 has no gamepad UI style
+	end
+	if forever then
 		_G.WOW_PROJECT_CAMELOT = 18
 		_G.C_SkillInfo = { AbandonSkill = function() end }
 		_G.C_GameRules = {
@@ -751,6 +762,8 @@ function M.reset(opts)
 	end
 	_G.SlashCmdList = {}
 	_G.SLASH_PATHMARK1 = nil
+	-- the key binding handler holds the last session's namespace (UI/Bindings.lua): a fresh client has none
+	_G.PathmarkBinding = nil
 	_G.PathmarkDB = opts.saved
 	_G.PathmarkCollectDB = opts.collect
 	_G.PathmarkCharDB = opts.char
@@ -851,6 +864,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/Collector/Proto.lua",
 		"Pathmark/Collector/Runs.lua",
 		"Pathmark/Collector/Budget.lua",
+		"Pathmark/Collector/Version.lua",
 		"Pathmark/Collector/Collect.lua",
 		"Pathmark/Collector/Exchange.lua",
 		"Pathmark/Core/Report.lua",
@@ -861,6 +875,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/Routes/Prereq.lua",
 		"Pathmark/Routes/Discover.lua",
 		"Pathmark/Routes/Dungeon.lua",
+		"Pathmark/Routes/Hardcore.lua",
 		"Pathmark/Routes/Forecast.lua",
 		"Pathmark/Routes/Stats.lua",
 		"Pathmark/Routes/Runtime.lua",
@@ -876,12 +891,14 @@ function M.addonFiles(withProbe)
 		"Pathmark/UI/Menu.lua",
 		"Pathmark/UI/StepFrame.lua",
 		"Pathmark/UI/Arrow.lua",
+		"Pathmark/UI/TomTom.lua",
 		"Pathmark/UI/MapPins.lua",
 		"Pathmark/UI/QuestWatch.lua",
 		"Pathmark/UI/Minimap.lua",
 		"Pathmark/UI/Setup.lua",
 		"Pathmark/UI/Settings.lua",
 		"Pathmark/UI/StatsPage.lua",
+		"Pathmark/UI/Bindings.lua",
 	}
 	if withProbe then
 		files[#files + 1] = "Pathmark/Probe/Probe.lua"
