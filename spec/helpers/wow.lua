@@ -53,6 +53,7 @@ local BASE_EVENTS = {
 	"PLAYER_XP_UPDATE",
 	"PLAYER_LEVEL_UP",
 	"PLAYER_STARTED_MOVING",
+	"PLAYER_STOPPED_MOVING",
 	"LOOT_OPENED",
 	"ITEM_TEXT_BEGIN",
 	"ITEM_TEXT_READY",
@@ -356,6 +357,22 @@ function M.reset(opts)
 	_G.GetLocale = function()
 		return opts.locale or "enUS"
 	end
+	_G.date = os.date -- the client's date() is Lua's os.date
+	-- Race and class names (Forever CreatureInfoDocumentation.lua: GetRaceInfo -> raceName, GetClassInfo
+	-- -> className); a few IDs in the client language of the test.
+	local RACES = { [1] = { "Human", "Mensch" }, [2] = { "Orc", "Orc" }, [3] = { "Dwarf", "Zwerg" } }
+	local CLASSES = { [1] = { "Warrior", "Krieger" }, [3] = { "Hunter", "Jäger" }, [8] = { "Mage", "Magier" } }
+	local lang = opts.locale == "deDE" and 2 or 1
+	_G.C_CreatureInfo = {
+		GetRaceInfo = function(id)
+			local r = RACES[id]
+			return r and { raceName = r[lang], raceID = id }
+		end,
+		GetClassInfo = function(id)
+			local c = CLASSES[id]
+			return c and { className = c[lang], classID = id }
+		end,
+	}
 	_G.GetBuildInfo = function()
 		return unpack(flavor.build)
 	end
@@ -819,10 +836,12 @@ function M.addonFiles(withProbe)
 		"Pathmark/Routes/Discover.lua",
 		"Pathmark/Routes/Dungeon.lua",
 		"Pathmark/Routes/Forecast.lua",
+		"Pathmark/Routes/Stats.lua",
 		"Pathmark/Routes/Runtime.lua",
 		"Pathmark/Routes/Replan.lua",
 		"Pathmark/Routes/Guide.lua",
 		"Pathmark/Routes/Explore.lua",
+		"Pathmark/Routes/RunStats.lua",
 		"Pathmark/UI/Core.lua",
 		"Pathmark/UI/Theme.lua",
 		"Pathmark/UI/Nav.lua",
@@ -836,6 +855,7 @@ function M.addonFiles(withProbe)
 		"Pathmark/UI/Minimap.lua",
 		"Pathmark/UI/Setup.lua",
 		"Pathmark/UI/Settings.lua",
+		"Pathmark/UI/StatsPage.lua",
 	}
 	if withProbe then
 		files[#files + 1] = "Pathmark/Probe/Probe.lua"

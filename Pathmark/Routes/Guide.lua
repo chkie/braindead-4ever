@@ -190,7 +190,8 @@ end
 -- the current module and to the current level section. xp: XP gained with this event.
 local function Active(xp)
 	local now = GetTime()
-	local d = lastActive and math.max(0, math.min(now - lastActive, Fc.IDLE_CAP)) or 0
+	local raw = lastActive and math.max(0, now - lastActive) or 0
+	local d = math.min(raw, Fc.IDLE_CAP)
 	lastActive = now
 	local guided = Following() and d or 0
 	if root then
@@ -205,6 +206,11 @@ local function Active(xp)
 	if type(sp) == "table" then
 		sp.secs = (sp.secs or 0) + d
 		sp.xp, sp.guided = (sp.xp or 0) + (xp or 0), (sp.guided or 0) + guided
+	end
+	-- The player's own statistics (Routes/RunStats.lua, Welle 8) take the same gap.
+	local St = ns.RunStats
+	if St and M.IsActive("stats") then
+		Guard.Call("stats", St.Play, now, d, raw, xp)
 	end
 end
 
@@ -225,12 +231,18 @@ local function LevelUp(level)
 	if type(lv) == "table" and lv.l == level then
 		return -- the same level-up twice
 	end
-	if type(lv) == "table" and lv.full and lv.l == level - 1 then
+	local sec
+	if type(lv) == "table" and lv.l == level - 1 then
+		local inOrder = (lv.n or 0) > 0 and 100 * (lv.d or 0) / lv.n or 0
+		sec = { secs = lv.secs, xp = lv.xp, mode = ModeOf(lv), inOrder = inOrder, full = lv.full == true }
 		local C = ns.Collector
-		if C and C.RecordRun then
-			local inOrder = (lv.n or 0) > 0 and 100 * (lv.d or 0) / lv.n or 0
-			C.RecordRun("l", lv.l, 0, lv.secs, lv.xp, inOrder, level, ModeOf(lv))
+		if lv.full and C and C.RecordRun then
+			C.RecordRun("l", lv.l, 0, lv.secs, lv.xp, inOrder, level, sec.mode)
 		end
+	end
+	local St = ns.RunStats
+	if St and M.IsActive("stats") then
+		Guard.Call("stats", St.LevelUp, level, sec)
 	end
 	StartLevel(level, true)
 end
@@ -302,6 +314,10 @@ local function Split(cur, prev)
 			local inOrder = 100 * done / (r.last - r.first + 1)
 			local number = ns.Proto.ModuleNumber(sp.m)
 			C.RecordRun("m", number, version, sp.secs, sp.xp, inOrder, world.Level(), ModeOf(sp))
+			local St = ns.RunStats
+			if St and M.IsActive("stats") then
+				Guard.Call("stats", St.Module, number, sp.m, version, sp.secs, inOrder, ModeOf(sp), world.Level())
+			end
 		end
 	end
 	local first = cur and ranges[cur.module].first == cur.index
@@ -535,6 +551,22 @@ function Route.Module(key)
 	return modules[key] or modules[key:match("^(.-)/[^/]*$") or ""]
 end
 
+-- Key of the module with this module number (Proto.ModuleNumber), for run sections that carry only the
+-- number (Routes/RunStats.lua takes them over from the run vault). Nil when the faction has none.
+local numbers, numbered
+function Route.ModuleKey(num)
+	if not modules then
+		return nil
+	end
+	if numbered ~= modules then
+		numbers, numbered = {}, modules
+		for key in pairs(modules) do
+			numbers[ns.Proto.ModuleNumber(key)] = key
+		end
+	end
+	return numbers[num]
+end
+
 function Route.Mode()
 	return root and root.mode or nil
 end
@@ -722,6 +754,23 @@ function Route.Earlier()
 	return Call(function()
 		return rt:Earlier()
 	end) or {}
+end
+
+-- Number of quests the route leaves out now (skipped by the player and their follow-ups), for the
+-- player's statistics (Routes/RunStats.lua); nil without a route.
+function Route.Skipped()
+	return Call(function()
+		local n = 0
+		for _ in pairs(rt:Blocked()) do
+			n = n + 1
+		end
+		return n
+	end)
+end
+
+-- The current level section (read only): { l, full, secs, xp, guided, n, d }, nil before the login.
+function Route.LevelSection()
+	return root and root.lvl or nil
 end
 
 -- Last XP gain seen (for the probe check xp.kill).

@@ -345,6 +345,148 @@ local function Source(kind, westfall)
 	return src
 end
 
+-- "Your run" (Welle 8): demo numbers of the design for the page and the review card, with and without
+-- enough runs of other players. Times rise from about 6 minutes at level 1, as on a real start.
+local function DemoLevels(upto, cmp)
+	local rows = {}
+	for l = 1, upto do
+		local s = 360 + l * 230
+		local rec = {
+			s = s,
+			p = l % 4 == 0 and 420 or 0,
+			x = 400 + l * 520,
+			q = 260 + l * 320,
+			k = 120 + l * 170,
+			c = s * 0.32,
+			m = s * 0.41,
+			f = l > 8 and 90 or 0,
+			n = 3 + l % 4,
+			d = l == 7 and 1 or 0,
+			mo = "s",
+			o = 100,
+			full = true,
+		}
+		local row = { level = l, rec = rec, g = "r", skipped = l % 5 == 0 and 1 or 0, cur = l == upto }
+		if not row.cur then
+			if cmp then
+				local median = s + (l % 3 - 1) * 140
+				row.cmp = { state = "ready", n = 40 + l * 3, median = median, faster = s <= median and 62 or 38 }
+			else
+				row.cmp = { state = "collecting", n = l % 4 + 2, need = ns.Stats.MIN_RUNS }
+			end
+		end
+		rows[#rows + 1] = row
+	end
+	return rows
+end
+
+local function DemoPage(cmp)
+	local m = {
+		level = 12,
+		race = ns.Util.Str((UnitRace("player"))),
+		class = ns.Util.Str((UnitClass("player"))),
+		total = 0,
+		quests = 0,
+		skipped = 0,
+		deaths = 0,
+		runs = cmp and 4180 or 23,
+		levels = DemoLevels(12, cmp),
+		modules = {},
+		bests = {},
+		rate = cmp and { state = "ready", perHour = 9850 } or { state = "collecting" },
+		forecast = cmp and { state = "ready", seconds = 41200, level = 30 } or { state = "collecting" },
+	}
+	for _, r in ipairs(m.levels) do
+		m.total = m.total + r.rec.s
+		m.quests = m.quests + r.rec.n
+		m.skipped = m.skipped + r.skipped
+		m.deaths = m.deaths + r.rec.d
+	end
+	local zones = { T("Wald von Elwynn", "Elwynn Forest"), T("Dun Morogh", "Dun Morogh"), "Westfall" }
+	for i = 1, 6 do
+		local s = 700 + i * 260
+		m.modules[i] = {
+			name = ("%s, %s"):format(zones[(i - 1) % 3 + 1], T("Stufe ", "level ") .. (i * 2 - 1) .. "–" .. (i * 2)),
+			s = s,
+			g = "r",
+			cmp = cmp and { state = "ready", n = 30 + i, median = s + 120, faster = 64 }
+				or { state = "collecting", n = 2, need = ns.Stats.MIN_RUNS },
+		}
+	end
+	if cmp then
+		m.bests[1] = {
+			top = 10,
+			s = 4 * 3600 + 47 * 60,
+			race = ns.RunStats.RaceName(3) or T("Zwerg", "Dwarf"),
+			class = ns.RunStats.ClassName(3) or T("Jäger", "Hunter"),
+			g = "r",
+			day = 20760,
+		}
+	end
+	return m
+end
+
+local function DemoRecap(level, cmp)
+	local rows, lv = {}, {}
+	local lo = math.max(1, level - 10)
+	for l = lo, level - 1 do
+		local s = 360 + l * 230
+		lv[l] = {
+			s = s,
+			x = 400 + l * 520,
+			q = 260 + l * 320,
+			k = 120 + l * 170,
+			c = s * 0.32,
+			m = s * 0.41,
+			f = l > 8 and 90 or 0,
+			p = 0,
+			n = 5,
+			d = l == 7 and 1 or 0,
+			b = l % 5 == 0 and 1 or 0,
+			mo = "s",
+			o = 100,
+			full = true,
+		}
+		rows[#rows + 1] = { level = l, s = s, median = cmp and (s + (l % 3 - 1) * 140) or nil }
+	end
+	local band = ns.Stats.Band(lv, level)
+	local m = {
+		top = level,
+		band = band,
+		race = ns.Util.Str((UnitRace("player"))),
+		class = ns.Util.Str((UnitClass("player"))),
+		g = "r",
+		rows = rows,
+	}
+	if cmp then
+		m.cmp = { state = "ready", n = 57, median = band.s + 840, faster = 71 }
+		m.best = { s = band.s, own = true }
+	else
+		m.cmp = { state = "collecting", n = 6, need = ns.Stats.MIN_RUNS }
+		m.best = {
+			s = band.s - 1500,
+			race = ns.RunStats.RaceName(3) or T("Zwerg", "Dwarf"),
+			class = ns.RunStats.ClassName(3) or T("Jäger", "Hunter"),
+		}
+	end
+	return m
+end
+
+local function StatsSource(cmp)
+	return {
+		Page = function()
+			return DemoPage(cmp)
+		end,
+		Recap = function(level)
+			return DemoRecap(level, cmp)
+		end,
+		Request = function(owner, fn)
+			fn(owner, nil)
+		end,
+		Cancel = function() end,
+	}
+end
+
 -- Places the arrow goal `deg` degrees off the player's facing, `yd` yards away (Retail world).
 local function ArrowAt(deg, yd)
 	local north, west, _, inst = UnitPosition("player")
@@ -401,6 +543,10 @@ P.STATES = {
 	"colorblind",
 	"setup",
 	"settings",
+	"stats",
+	"stats0",
+	"recap10",
+	"recap30",
 	"off",
 }
 
@@ -447,6 +593,15 @@ function P.Clear(state)
 	end
 	UI.DB().mini = nil
 	SF.ApplyLook() -- collapse button and combat dimming of the state before
+	local SP = ns.StatsPage -- "Your run" (Welle 8): page and card of the state before close
+	if SP then
+		SP.Use(nil)
+		for _, f in ipairs({ SP.frame, SP.recap }) do
+			if f and f:IsShown() then
+				f:Hide()
+			end
+		end
+	end
 end
 
 function P.Run(state, arg)
@@ -502,6 +657,12 @@ function P.Run(state, arg)
 		ns.Setup.Open(true, true) -- the first start's footer (S6)
 	elseif state == "settings" then
 		ns.Menu.OpenSettings()
+	elseif state == "stats" or state == "stats0" then
+		ns.StatsPage.Use(StatsSource(state == "stats")) -- with and without enough runs of other players
+		ns.StatsPage.Open()
+	elseif state == "recap10" or state == "recap30" then
+		local level = state == "recap10" and 10 or 30
+		ns.StatsPage.ShowRecap(level, DemoRecap(level, level == 10)) -- 10: with comparison, 30: collecting
 	end
 end
 

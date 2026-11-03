@@ -168,6 +168,7 @@ local function Build()
 		})
 	end
 	Check(disp, "lock", L.OPT_LOCK, L.TIP_LOCK) -- the header band drags the window (owner reading 16)
+	Check(disp, "recap", L.OPT_RECAP, L.TIP_RECAP) -- review card at level 10, 20 and 30 (Welle 8)
 	Button(dispLayout, L.BTN_RESET_LABEL, L.BTN_RESET, UI.ResetPositions, L.TIP_BTN_RESET)
 
 	-- Arrow and map

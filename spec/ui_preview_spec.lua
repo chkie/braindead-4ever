@@ -233,4 +233,33 @@ describe("Developer preview", function()
 		SlashCmdList.PATHMARK("preview nonsense")
 		assert.matches("normal | tooltip | done", wow.output(), 1, true)
 	end)
+
+	it("your run: page with and without comparison data, review card at 10 and 30 (Welle 8)", function()
+		local ns = preview("stats")
+		local SP = ns.StatsPage
+		local P = _G.PathmarkStatsFrame
+		assert.is_true(rawget(P, "shown"))
+		assert.are.equal("Level 12 • Mensch • Krieger", P.head.text)
+		assert.matches("running$", SP.rendered[1].cells[2]) -- level 12, on top
+		assert.matches("%d+ min$", SP.rendered[2].cells[3]) -- median of the class
+		assert.matches("%d+ %%$", SP.rendered[2].cells[4])
+		assert.are.equal("9,850", P.sum[3].value.text)
+		SlashCmdList.PATHMARK("preview stats0")
+		assert.are.equal("collecting", SP.rendered[2].cells[3])
+		assert.are.equal("collecting data", P.sum[3].value.text)
+		SlashCmdList.PATHMARK("preview recap10")
+		assert.is_false(rawget(P, "shown")) -- the state before is gone
+		local R = _G.PathmarkRecapFrame
+		assert.is_true(rawget(R, "shown"))
+		assert.are.equal("Level 10 reached", R.head.text)
+		assert.matches("%(57 runs%)$", R.facts[1].value.text)
+		assert.matches("new, this character$", R.facts[3].value.text)
+		SlashCmdList.PATHMARK("preview recap30")
+		assert.are.equal("Level 30 reached", R.head.text)
+		assert.are.equal("collecting data (6 of 10 runs)", R.facts[1].value.text)
+		assert.is_nil(ns.RunStats.Char().recap[10]) -- the preview does not use up the real card
+		SlashCmdList.PATHMARK("preview off")
+		assert.is_false(rawget(R, "shown"))
+		assert.are.same({}, wow.errors)
+	end)
 end)

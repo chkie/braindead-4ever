@@ -55,6 +55,8 @@ PathmarkDB.prereq = { obs = { [questID] = { [token] = "link;unlock;done;missing"
 PathmarkDB.explore = { heard = { ["rare:62"] = "1429;4231;6512;2" } }  -- map;x;y;reports (1 or 2)
 ```
 
+The player's statistics (Welle 8) live in `PathmarkCharDB.stats` and `PathmarkDB.stats` ([RUN-STATS.md](RUN-STATS.md)); the route hands them every gap of active play, each level-up with its level section and each module run (`Routes/RunStats.lua`).
+
 `PathmarkDB.prereq` and `PathmarkDB.explore` are account-wide: what other players reported is true for every character. Own finds and the hint level belong to the character.
 
 A step key is `<module>/<step id>`; step IDs are chosen by the route author and never renumbered (docs/ROUTE-FORMAT.md). Quest state is never saved: it comes from the server each time.
@@ -114,6 +116,9 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.Offer()` | open replanning question (§Replanning), or nil |
 | `Route.AnswerOffer(yes)` | answers it: true takes it, false keeps the route; the question does not come again; true if answered |
 | `Route.Earlier()` | quest IDs the route passed on entry although they were neither done nor in the log, in route order; `{}` when none |
+| `Route.Skipped()` | Welle 8: number of quests the route leaves out now (skipped and their follow-ups), for "Your run" ([RUN-STATS.md](RUN-STATS.md)); nil without a route |
+| `Route.LevelSection()` | Welle 8: the current level section `{ l, full, secs, xp, guided, n, d }` (read only) |
+| `Route.ModuleKey(number)` | Welle 8: key of the module with this module number (`Proto.ModuleNumber`), nil when the faction has none |
 | `Route.Runtime()` | the runtime object, for diagnostics and tests only |
 
 Step info: `{ index, total, key, module, id, lv, ret, kind, label, quests, step, chain }`. `chain` is `"incomplete"` when a quest of the step has prerequisites nobody knows yet (show the status text `L.STATUS_COLLECTING`, "collecting data": skipping may leave a follow-up quest the game will not offer), else nil. `kind` is `"quest"`, `"travel"` or `"other"`; `label` is the module's label (`vorläufig` or `stabil`); `quests` lists the quest IDs; `step` is the compiled step (read only, layout in docs/ROUTE-FORMAT.md). Quest and item names are not part of it: the window reads them from the client in the player's language. Every call builds new info tables: call on the events below, not on every frame (brain chapter 12, no tables per frame).

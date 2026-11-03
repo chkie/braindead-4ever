@@ -23,7 +23,7 @@ of the Ace3 libraries used as well as that of the covered work.
 
 -- UI/Menu.lua: the right-click menu of the step window, also opened by the minimap button and the
 -- addon compartment (concept §2.7, design v2 "Rechtsklickmenü"): undo with the name of the last action
--- on top, then skip, back, arrow, mini view, report, share, settings, pause. Blizzard_Menu
+-- on top, then skip, back, arrow, mini view, report, share, your run (Welle 8), settings, pause. Blizzard_Menu
 -- (MenuUtil.CreateContextMenu, brain chapter 04 §10). Every entry is also reachable another way (E9).
 local ADDON, ns = ...
 local L, UI, C, ST = ns.L, ns.UI, ns.Connect, ns.StepText
@@ -115,6 +115,7 @@ function Menu.Entries()
 				end
 			end,
 		},
+		{ kind = "button", id = "stats", text = L.MENU_STATS, enabled = true, fn = ns.StatsPage and ns.StatsPage.Open },
 		{ kind = "button", id = "settings", text = L.MENU_SETTINGS, enabled = true, fn = Menu.OpenSettings },
 		{
 			kind = "button",

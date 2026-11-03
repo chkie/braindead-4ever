@@ -24,6 +24,7 @@ local function everything(ns)
 	W.scripts.OnDragStop(W)
 	_G.EventRegistry:TriggerEvent("EditMode.Exit")
 	ns.StepFrame.AskSkip()
+	SlashCmdList.PATHMARK("stats") -- the page "Your run" (Welle 8)
 	ns.MinimapButton.Click("LeftButton")
 	ns.MinimapButton.Click("LeftButton")
 	ns.Arrow.Update(1)
@@ -62,6 +63,7 @@ describe("Combat lockdown", function()
 		assert.are.same({}, wow.blocked)
 		assert.are.same({ ns.settingsCategoryID }, wow.world.settings.opened)
 		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+		assert.is_true(rawget(_G.PathmarkStatsFrame, "shown")) -- Welle 8: the page opened after the fight
 		-- the usage hint came after the fight and waits behind settings and first start (M13)
 		assert.is_false(_G.HelpTip:IsShowing(ns.StepFrame.frame))
 		_G.PathmarkSetupFrame:Hide()
@@ -148,5 +150,11 @@ describe("Combat lockdown", function()
 		assert.is_true(seen["C_QuestLog.RemoveQuestWatch"], "RemoveQuestWatch not caught")
 		assert.is_true(seen["ObjectiveTrackerFrame:SetAlpha"], "tracker alpha not caught")
 		assert.is_true(seen["Frame:StartMoving"], "window drag not caught") -- owner reading 16
+		assert.is_true(seen["PathmarkStatsFrame:Show"], "page Your run not caught") -- Welle 8
+		local kinds = 0
+		for _ in pairs(seen) do
+			kinds = kinds + 1
+		end
+		io.stdout:write(("\n[combat] counter-check: %d blocked calls of %d kinds"):format(#wow.blocked, kinds))
 	end)
 end)
