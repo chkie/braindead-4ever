@@ -4,7 +4,7 @@ Every feature has one status: **planned**, **built** (code and offline tests pas
 
 Only a person sets **verified in game**, after playing it, never a test or the probe. The probe only measures (`OK`, `MISSING`, `ERROR`, `SECRET`, `FAILED`, `ARGERROR`).
 
-Last update: 2026-11-02
+Last update: 2026-11-03
 
 ## API probe (AP 3)
 
@@ -122,7 +122,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Time forecast | 1.0 | built (logic; shown in the XP line tooltip since Welle 5b) | `time.xp`, `time.xpmax`, `time.rested`, `time.played` |
 | Optional automation (accept, turn in, reward) | 1.0 | planned | `auto.accept`, `auto.complete`, `auto.reward`, `auto.acknowledge`, `auto.autoaccept`, `auto.gossip`, `auto.gossipselect`, `auto.greeting` |
 | Group and duo | 1.0 | planned | `group.ingroup`, `group.members`, M11 checks |
-| Personal review "your way to 60" | 1.0 | planned | export (M11) and website (AP 9) |
+| Personal review: page "Your run" and review card at level 10, 20 and 30 in the game (Welle 8); "your way to 60" on the website | 1.0 | built in the game (offline; module `stats`, module `statspage`); website planned | `mod.stats.*`, `mod.statspage.*`; website: export (M11) and AP 9 |
 | Later: route studio, dungeon inserts, profession leveling, controller | after 1.0 | planned | checked one by one when due |
 
 ## Tooling
@@ -211,7 +211,7 @@ The windows of the approved design v2 (owner approval 2026-11-01; one look "Mode
 | Settings (module `settings`, `mod.settings.*`): main page with four options and two buttons; Play style, Display, Arrow and Map, Accessibility, Credits | built | tooltips one sentence each, positive labels, dependent options greyed out |
 | Positions (owner readings 16 and 17, Welle 5c): default place top right where Blizzard's quest tracker stands, measured at login and after layout, display and UI scale changes from `MinimapCluster`, `MultiBarRight` and `MultiBarLeft` (shown or not) and bars 6 to 8 at the right edge, gap 10 units; left of `ObjectiveTrackerFrame` while the tracker shows; fixed place TOPRIGHT -115/-266 when nothing can be measured. The step window moves by dragging its header band outside a fight ("Lock window" on the Display page stops that), the arrow with Shift held (click-free otherwise, rule P7), both in Blizzard's Edit Mode (`EditMode.Enter`/`EditMode.Exit`); a saved place is never overwritten; "Reset" on the Display page | built | `spec/ui_place_spec.lua` and `spec/ui_move_spec.lua` with Blizzard's frames in Retail measures (wow-ui-source live 12.1.5 and forever 1.60.1); counter-check: the old place TOPRIGHT -80/-260 lies on the tracker and reaches into the right bars; Edit Mode check in the client: `docs/TESTING-RETAIL.md` §4; Edit Mode layouts per UI type in Forever (gamepad) are not followed yet |
 | Size 75 to 200 %, Blizzard's text size (`userFontScale`), quest text contrast raises the background to 80 % | built | |
-| No protected call in combat: settings, setup window, HelpTip, waypoint and sound wait for the end of the fight; no window moves or sizes in a fight | built | `spec/ui_combat_spec.lua` with a counter-check: without the guard the test records 26 blocked calls of 11 kinds |
+| No protected call in combat: settings, setup window, HelpTip, waypoint and sound wait for the end of the fight; no window moves or sizes in a fight | built | `spec/ui_combat_spec.lua` with a counter-check: without the guard the test records 27 blocked calls of 12 kinds (since Welle 8 with the page "Your run") |
 | Performance offline (Lua 5.1, stand-ins): arrow 0.001 ms per frame without allocation; step window 0.0001 ms per frame; quest log updates refresh only the window's texts (0.2 ms with the 20-step scroll list of Welle 5b, at most 5 per second: 0.017 ms per frame); a step or route change refreshes window, pins and arrow (0.7 ms) and recomputes XP balance and dungeon hint (0.46 ms); quest tracker pass with 25 quests 0.28 ms per burst of quest events (0.023 ms per frame at most); interface code about 0.27 MB | built | `spec/ui_perf_spec.lua`; binding values: `C_AddOnProfiler` in the client (release gate T16) |
 | Developer preview `/pathmark preview <state>` for every design state | built | developer build only (`Pathmark/Probe/Preview.lua`) |
 | Window size (owner reading point 14, Welle 5b): grip at the bottom right (Blizzard's `PanelResizeButtonTemplate`), width 260 to 500, the height sets the visible next steps 0 to 10 and "steps ahead" follows both ways, the next 20 steps in a Blizzard ScrollBox with `MinimalScrollBar`, the rest scrolls; size per account, "Reset" resets it; never in a fight | built | 20 steps in the list is a chosen value; `spec/ui_size_spec.lua` |
@@ -221,3 +221,17 @@ The windows of the approved design v2 (owner approval 2026-11-01; one look "Mode
 | Hint level 1 in the step window (Welle 5b): the riddle of the player's zone as its own gold line "Hint: …" in the look of the rumor line; it goes after the next completed step and the next riddle of the zone follows; none with "Just follow the arrow", none new in a fight | built | `spec/ui_hints_spec.lua` with the ATT finds of Elwynn Forest |
 | Hint level 2 on the world map (Welle 5b): the area of a find as a circle of Blizzard's atlases (`UI-prey-Scoutingmap-ring` over `common-mask-circle` tinted gold), sized in map units and scaling with the terrain, tooltip "Area" with one sentence per kind as in design v2 view 4; clicks go through to the map | built | the faint disc (18 %) is a chosen value; map pins now take mouse motion at creation, so the map wires their tooltips (Blizzard_MapCanvas.lua forever) |
 | Key bindings (`Bindings.xml`), TomTom hand-over | planned | concept §2.7 and §2.3, not part of this plan |
+
+## Your run (Welle 8)
+
+The player's own statistics and the comparison with the class from the run vault ([RUN-STATS.md](RUN-STATS.md)). Module `stats` (`mod.stats.*`) keeps the tally per character and the best times of the account; module `statspage` (`mod.statspage.*`) shows the page and the review card.
+
+| Feature | Status | Note |
+| --- | --- | --- |
+| Tally per level: active seconds as the run section of the vault, breaks apart, XP from quest rewards, enemies and other, time fighting, moving, flying and other, quests done and skipped, deaths; module runs | built | `spec/stats_spec.lua` on dummy records, `spec/ui_stats_spec.lua` in a session; new events `PLAYER_STARTED_MOVING` and `PLAYER_STOPPED_MOVING` (Forever docs `UnitDocumentation.lua`); XP of a quest whose `QUEST_TURNED_IN` never comes stays under "other" |
+| Comparison with the class: median and rank per level, route section and band of ten levels, apart by way of play (follows the route, free play, partly); from 10 runs of other players, else "collecting"; built in slices only while a window waits, never in a fight | built | counter-checks: without the minimum nine runs show a median, without the fight guard the build reads the vault in a fight |
+| Page "Your run": right-click menu, minimap button menu, `/pathmark stats`; tabs levels, sections, best times; a bar per row with a line at the median; never opens by itself, waits for the end of a fight | built | Blizzard templates (`BasicFrameTemplateWithInset`, `PanelTabButtonTemplate`, WowScrollBox), Blizzard's XP bar atlas `UI-HUD-ExperienceBar-Fill-Experience` (Forever and live inventories); counter-check: without the out-of-combat queue the page opens in a fight |
+| Review card at level 10, 20 and 30: once per character, after the level-up banner, not in a fight or an instance, closable, switched off on the card or on the settings page Display | built | counter-check: without the shown mark the card comes a second time |
+| Best times per band of ten levels over every character of the account, with race and class | built | `PathmarkDB.stats`, taken over from the vault's own sections at the first start (migration to schema 1) |
+| Cost offline (Lua 5.1, stand-ins): page closed 0 per frame, an event 0.3 µs; page open with 5000 sections 0.019 ms per frame over 10 s (longest frame 1.2 ms), review card 0.02 ms; comparison +104 KB, saved tally of a level-30 character about 8 KB | built | `spec/stats_perf_spec.lua`; binding values: `C_AddOnProfiler` in the client (gate T16) |
+| Developer preview `stats`, `stats0`, `recap10`, `recap30` | built | `docs/TESTING-RETAIL.md` §2 |

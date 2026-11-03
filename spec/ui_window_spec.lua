@@ -281,6 +281,7 @@ describe("Step window", function()
 				"divider",
 				"Report a problem",
 				"Share data",
+				"Your run",
 				"Settings",
 				"Pause guidance",
 			}, texts)

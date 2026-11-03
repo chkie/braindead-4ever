@@ -2,7 +2,7 @@
 
 Design stage 2 (concept §2.12): the addon runs in the Retail 12.1.5 test bed and every view of the approved design v2 is captured as a screenshot. The developer preview puts each window into each state of the design, also states the test bed cannot reach by itself (abandoned quest with follow-ups, optional dungeon, rumor, route falls short).
 
-Last update: 2026-11-02
+Last update: 2026-11-03
 
 ## 1. Install
 
@@ -50,6 +50,10 @@ The live route in Retail uses Forever quest IDs and maps, so quest names may sho
 | 4 Riddle (hint level 1, Welle 5b) | play style "With hints", then `/pathmark preview riddle` | gold line "Hint: A book waits to be read in the south of …" above the current step, same look as the rumor line |
 | 4 Area (hint level 2, Welle 5b) | `/pathmark preview area`, then open the world map (M) | a round gold ring (not an oval) with a faint gold disc around your position, about 100 yards across; hover shows "Area" and "A book lies within the marked circle."; zoom in and out: the circle grows and shrinks with the map; clicks on the map still work inside it |
 | 5 Settings | `/pathmark preview settings` (or Esc, Options, AddOns, Pathmark) | main page and the five sub pages; a usage hint still open waits until the settings close |
+| 6 Your run, with comparison (Welle 8) | `/pathmark preview stats`; hover a row; click the tabs below the window | window "Your run" in Blizzard's frame, header "Level 12 • race • class", six summary values, table newest level on top with time, a bar in Blizzard's XP bar look and a white line at the class median, median and "faster than" in percent, XP per hour; level 12 says "running" in grey; row tooltip with active time, breaks, XP from quests, enemies and other, time fighting, moving, flying and other, quests, deaths, way of play and the class median; tabs "Sections" and "Best times"; tabs sit below the window like Blizzard's character window; Escape closes it |
+| 6 Your run, without comparison data | `/pathmark preview stats0` | "collecting" in the median column, no line on the bars, "collecting data" for XP per hour and the end of the route; nothing reads like a number that is not there |
+| 6 Review card at level 10 | `/pathmark preview recap10` | card "Review" in the middle: "Level 10 reached", race, class and way of play, active play time of levels 1 to 10 large, class median with the number of runs, "faster than" in percent, best time of the account marked "new, this character", XP per hour, quests, deaths, time by activity, a bar per level with the median line, legend, the check box "Show the review at level 10, 20 and 30", "All values" and "Close", "Pathmark" in the footer; good to screenshot |
+| 6 Review card at level 30, too few runs | `/pathmark preview recap30` | the same card with "collecting data (6 of 10 runs)" and no "faster than" line; best time of another character (race and class named) |
 
 ## 3. Blizzard's quest tracker (Welle 5b, owner reading points 15 and 16)
 
@@ -76,6 +80,17 @@ In Retail the Forever quests are missing, so the live route cannot be checked th
 4. Grind on until the route reaches a travel step into a new zone: it stops there and offers the block that fits ("Go there", "Keep route"); in a fight no new banner appears.
 5. Skip a quest in the middle of a zone, then stand still a moment: the next steps may change their order (only when the way gets at least 5 % shorter); in a fight nothing changes until it ends. `/reload` keeps the order; undo of the skip brings the plan order back.
 6. Profiling: with `C_AddOnProfiler` (or `/pathmark probe run`) the route module stays under 0.1 ms per frame on average during steps 3 to 5.
+
+## 3b. Your run in the live game (Welle 8)
+
+Retail lacks the Forever quests, so these checks wait for the Forever client; steps 1 to 3 work in Retail too.
+
+1. `/pathmark stats`, the right-click menu "Your run" and the minimap button's right-click menu open the page; `/pathmark stats` again closes it. After a login nothing opens by itself.
+2. Start a fight, then type `/pathmark stats`: nothing opens until the fight ends, then the page comes.
+3. Walk, fight and take a flight for a while, then level up: the level's tooltip splits the time into fighting, moving, flying and other, and XP into quests, enemies and other. A flight path counts as flying; standing at a quest giver counts as other.
+4. Reach level 10 (or 20, 30) out of a fight: about three seconds after the level-up the review card opens once. Close it, `/reload`, change the zone: it does not come again. Reach the next of these levels inside a dungeon: the card waits until you leave it.
+5. Turn "Show the review at level 10, 20 and 30" off (on the card or settings, Display): the next of these levels brings no card.
+6. Profiling: with `C_AddOnProfiler` (or `/pathmark probe run`) the modules `stats` and `statspage` stay at 0 per frame while the page is closed; with the page open the first second costs most, then nothing.
 
 ## 4. Moving the windows (Welle 5c, owner readings 16 and 17)
 

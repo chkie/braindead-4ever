@@ -171,3 +171,21 @@ ObjectiveTrackerFrame = {}
 ---Pathmark only reads its edges for the step window's default place (UI/StepFrame.lua, Welle 5c).
 ---@type table<string, any>
 MinimapCluster = {}
+
+-- Welle 8: tabs of the page "Your run" (Blizzard_SharedXML/Mainline/SharedUIPanelTemplates.lua, forever).
+
+---@param frame table
+---@param id number
+function PanelTemplates_SetTab(frame, id) end
+
+---@param frame table
+---@param numTabs number
+function PanelTemplates_SetNumTabs(frame, numTabs) end
+
+---@param tab table
+---@param padding? number
+---@param absoluteSize? number
+---@param minWidth? number
+---@param maxWidth? number
+---@param absoluteTextSize? number
+function PanelTemplates_TabResize(tab, padding, absoluteSize, minWidth, maxWidth, absoluteTextSize) end

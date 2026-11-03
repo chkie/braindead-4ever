@@ -2,6 +2,8 @@
 
 Every installation measures how long its character takes for each level and each route module and shares that in the game. Every installation also keeps the run times it hears and passes them on, so one export brings the runs of many players. After the start this measures how fast the route is in real play, apart for players who follow it and players who play freely (plan "Laufzeiten im Austausch", 2026-11-02). Data contribution is part of the addon; there is no switch.
 
+The page "Your run" compares the player's own levels and sections with the vault's runs of the same class ([RUN-STATS.md](RUN-STATS.md)), so the shared times bring every player something back.
+
 Code: `Collector/Runs.lua` (vault, checks, relaying), `Collector/Proto.lua` (message), `Collector/Collect.lua` (`RecordRun`, export), `Collector/Exchange.lua` (receiving, relaying), `Collector/Budget.lua` (channel budget), `Routes/Guide.lua` (sections). Tests: `spec/runs_spec.lua`, `spec/channel_budget_spec.lua`, `tools/tests/test_runs.py`.
 
 ## Message `s`

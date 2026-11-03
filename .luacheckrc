@@ -133,6 +133,12 @@ read_globals = {
 	"StaticPopup_Hide", -- Welle 5d: the developer preview closes the skip dialog of the state before
 	"StaticPopup_Show",
 	"UnitPosition",
+	-- Welle 8: tabs of the page "Your run" (wow-ui-source forever Blizzard_SharedXML/Mainline/
+	-- SharedUIPanelTemplates.lua) and the day of a best time (Lua's os.date, Ketho GlobalAPI forever "date")
+	"PanelTemplates_SetNumTabs",
+	"PanelTemplates_SetTab",
+	"PanelTemplates_TabResize",
+	"date",
 	-- interface strings, colors and sounds (GlobalStrings, FrameXML constants)
 	"CANCEL",
 	"DIM_RED_FONT_COLOR",

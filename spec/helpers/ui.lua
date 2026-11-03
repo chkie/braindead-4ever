@@ -29,6 +29,9 @@ U.AUDITED = {
 	"ObjectiveTrackerFrame:SetAlpha",
 	-- Welle 5c: windows move by drag outside Edit Mode, never in a fight (ENTWURF-LESUNG point 16)
 	"Frame:StartMoving",
+	-- Welle 8: the page "Your run" and the review card open only out of a fight
+	"PathmarkStatsFrame:Show",
+	"PathmarkRecapFrame:Show",
 }
 
 local function Color(r, g, b)
@@ -85,6 +88,11 @@ function U.install(M, W, opts)
 	-- Named frames and fonts of the last session (the client starts a new UI session empty).
 	for _, name in ipairs({
 		"PathmarkSetupFrame",
+		"PathmarkStatsFrame",
+		"PathmarkStatsFrameTab1",
+		"PathmarkStatsFrameTab2",
+		"PathmarkStatsFrameTab3",
+		"PathmarkRecapFrame",
 		"PathmarkFontHeader",
 		"PathmarkFontStep",
 		"PathmarkFontLine",
@@ -259,6 +267,12 @@ function U.install(M, W, opts)
 	function Frame:EnableMouse(on)
 		self.mouse = on
 	end
+	function Frame:SetChecked(on)
+		self.checked = on and true or false
+	end
+	function Frame:GetChecked()
+		return rawget(self, "checked") == true
+	end
 	function Frame:SetMouseMotionEnabled(on)
 		self.motion = on
 	end
@@ -399,10 +413,10 @@ function U.install(M, W, opts)
 				end
 			end
 		end
-		if name == "PathmarkSetupFrame" then
+		if name == "PathmarkSetupFrame" or name == "PathmarkStatsFrame" or name == "PathmarkRecapFrame" then
 			local show = f.Show
 			f.Show = function(self)
-				audit("PathmarkSetupFrame:Show")
+				audit(name .. ":Show")
 				show(self)
 			end
 		end
