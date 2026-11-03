@@ -294,7 +294,10 @@ function UI.Rect(f)
 	end
 	local l, r, t, b = f:GetLeft(), f:GetRight(), f:GetTop(), f:GetBottom()
 	local s, p = f:GetEffectiveScale(), UIParent:GetEffectiveScale()
-	for _, v in ipairs({ l, r, t, b, s, p }) do
+	-- every value on its own: ipairs would stop at the first nil and let it through
+	local values = { l, r, t, b, s, p }
+	for i = 1, 6 do
+		local v = values[i]
 		if type(v) ~= "number" or ns.Util.IsSecret(v) then
 			return nil
 		end

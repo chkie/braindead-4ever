@@ -37,6 +37,17 @@ local ALLOWED_NEW_GLOBALS = {
 	BINDING_NAME_BRAINDEADFOREVER_STATS = true,
 }
 
+-- Blizzard frames the step window measures for its default place (StepFrame.lua).
+local BLIZZARD_FRAMES = {
+	"MinimapCluster",
+	"MultiBarRight",
+	"MultiBarLeft",
+	"MultiBar5",
+	"MultiBar6",
+	"MultiBar7",
+	"ObjectiveTrackerFrame",
+}
+
 local function fileExists(path)
 	local fh = io.open(path, "rb")
 	if fh then
@@ -157,6 +168,12 @@ describe("TOC files", function()
 			for _, locale in ipairs({ "enUS", "deDE" }) do
 				it("loads in order and boots without errors (" .. locale .. ")", function()
 					wow.reset({ flavor = entry.flavor, locale = locale })
+					-- Blizzard's frames exist at ADDON_LOADED but have no rectangle before their first layout
+					-- (owner report 03.11.: the step window failed to start on exactly that).
+					wow.layout({})
+					for _, name in ipairs(BLIZZARD_FRAMES) do
+						_G[name].norect = true
+					end
 					local before = {}
 					for k in pairs(_G) do
 						before[k] = true
@@ -172,9 +189,11 @@ describe("TOC files", function()
 					wow.fire("PLAYER_ENTERING_WORLD", true, false)
 					wow.advance(10)
 
-					for _, name in ipairs({ "collector", "exchange", "report" }) do
-						assert.are.equal("on", ns.Modules.state[name], name)
+					-- every module starts; TomTom is not installed, so its bridge stays off
+					for name, state in pairs(ns.Modules.state) do
+						assert.are.equal(name == "tomtom" and "off" or "on", state, name)
 					end
+					assert.are.equal("on", ns.Modules.state.window)
 					assert.is_table(BraindeadForeverCollectDB)
 					assert.is_string(BraindeadForeverCharDB.id)
 

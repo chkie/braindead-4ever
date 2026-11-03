@@ -306,17 +306,30 @@ function U.install(M, W, opts)
 		end
 		self.sizingPoint = point or "BOTTOMRIGHT"
 	end
-	-- Screen edges: a fixed spot unless a test sets left/top.
+	-- Screen edges: a fixed spot unless a test sets left/top. norect = true: the frame has no rectangle
+	-- yet and all four return nil, like the client before the frame's first layout.
 	function Frame:GetLeft()
+		if rawget(self, "norect") then
+			return nil
+		end
 		return rawget(self, "left") or 100
 	end
 	function Frame:GetTop()
+		if rawget(self, "norect") then
+			return nil
+		end
 		return rawget(self, "top") or 700
 	end
 	function Frame:GetRight()
+		if rawget(self, "norect") then
+			return nil
+		end
 		return rawget(self, "right") or (self:GetLeft() + (self:GetWidth() or 0))
 	end
 	function Frame:GetBottom()
+		if rawget(self, "norect") then
+			return nil
+		end
 		return rawget(self, "bottom") or (self:GetTop() - (self:GetHeight() or 0))
 	end
 	function Frame:SetEnabled(on)
@@ -1011,6 +1024,7 @@ function U.layout(M, W, o)
 	end
 	local function place(f, l, r, t, b, scale)
 		scale = scale or 1
+		f.norect = nil
 		f.left, f.right, f.top, f.bottom = l / scale, r / scale, t / scale, b / scale
 		f.w, f.h, f.scale = (r - l) / scale, (t - b) / scale, scale
 	end
