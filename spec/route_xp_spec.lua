@@ -2,7 +2,7 @@
 -- Routes/XP.lua: experience rules as estimates for the XP balance (owner wish 9, 2026-11-01).
 -- Expected values are hand-computed from the sources named in XP.lua (warcraft.wiki.gg, cmangos,
 -- forever-bugs #138). The kill and quest cases live in tools/tests/fixtures/xp_cases.json, which
--- tools/routekit/xp.py must pass as well (tools/tests/test_sim.py).
+-- tools/routekit/xp.py must pass as well (tools/tests/test_xp.py).
 local wow = require("spec.helpers.wow")
 local json = require("spec.helpers.json")
 

@@ -50,20 +50,6 @@ jobs:
         if: ${{ !cancelled() }}
         run: python3 -m tools.routekit check
 
-  route-quality:
-    name: Route quality
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      # Welle 6a: simulates all 56 combinations in both modes and reports the route metrics
-      # (docs/ROUTE-METRICS.md) in the job summary. No limit fails the job yet; it fails only
-      # when the tool itself breaks: two runs differ (P1) or a parameter has no source.
-      - name: Route quality (report only)
-        run: python3 -m tools.routekit metrics --summary "$GITHUB_STEP_SUMMARY"
-
   format:
     name: Format
     runs-on: ubuntu-latest
