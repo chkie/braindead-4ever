@@ -6,7 +6,11 @@ local wow = require("spec.helpers.wow")
 
 local function load()
 	wow.reset({})
-	return wow.loadFiles({ "Pathmark/Routes/Routes.lua", "Pathmark/Routes/XP.lua", "Pathmark/Routes/Runtime.lua" })
+	return wow.loadFiles({
+		"BraindeadForever/Routes/Routes.lua",
+		"BraindeadForever/Routes/XP.lua",
+		"BraindeadForever/Routes/Runtime.lua",
+	})
 end
 
 local A, B, C, D, E, F = 900001, 900002, 900003, 900004, 900005, 900006

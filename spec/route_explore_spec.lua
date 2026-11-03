@@ -13,7 +13,7 @@ local function session(opts)
 	opts = opts or {}
 	local ns = wow.session(opts)
 	if opts.locale == "deDE" then
-		wow.loadFile("Pathmark/Locales/deDE.lua", "Pathmark", ns) -- the TOC loads it on German clients
+		wow.loadFile("BraindeadForever/Locales/deDE.lua", "BraindeadForever", ns) -- the TOC loads it on German clients
 	end
 	wow.advance(10) -- a clean start, so the start guard keeps every module on
 	wow.world.mapInfo[1429] = { mapID = 1429, name = opts.locale == "deDE" and "Wald von Elwynn" or "Elwynn Forest" }
@@ -22,7 +22,7 @@ local function session(opts)
 end
 
 local function hear(msg, sender)
-	wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, "PARTY", sender or "Anna Sommer")
+	wow.fire("CHAT_MSG_ADDON", "BDF", msg, "PARTY", sender or "Anna Sommer")
 	wow.readInbox()
 end
 
@@ -54,7 +54,7 @@ end
 
 describe("Discovery rules (pure)", function()
 	wow.reset({})
-	local D = wow.loadFiles({ "Pathmark/Routes/Discover.lua" }).Discover
+	local D = wow.loadFiles({ "BraindeadForever/Routes/Discover.lua" }).Discover
 
 	it("shows a foreign find never at level 0, also not on request", function()
 		for _, source in ipairs({ "data", "players" }) do
@@ -228,7 +228,7 @@ describe("Explorer mode", function()
 		hear(HEARD.msg)
 		meetRare(100, 2700, 8800)
 		wow.fire("PLAYER_LOGOUT")
-		local char, saved = _G.PathmarkCharDB, _G.PathmarkDB
+		local char, saved = _G.BraindeadForeverCharDB, _G.BraindeadForeverDB
 		ns = session({ char = char, saved = saved })
 		local f = byKey(ns.Explore.List(1429))
 		assert.are.equal(1, ns.Explore.Level())

@@ -67,7 +67,7 @@ function M.loads(entry, client)
 	return true
 end
 
--- File path inside the repository for a TOC line ("Core\Guard.lua" -> "Pathmark/Core/Guard.lua").
+-- File path inside the repository for a TOC line ("Core\Guard.lua" -> "BraindeadForever/Core/Guard.lua").
 function M.repoPath(addonDir, tocPath)
 	return addonDir .. "/" .. tocPath:gsub("\\", "/")
 end

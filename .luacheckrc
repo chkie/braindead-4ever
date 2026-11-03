@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Luacheck for Pathmark (pattern after BigWigs/Questie). WoW Lua is 5.1.
+-- Luacheck for Braindead Forever (pattern after BigWigs/Questie). WoW Lua is 5.1.
 -- read_globals is the API inventory: list only what the addon really uses, and check each
 -- new name against the Forever API dump before adding it.
 std = "lua51"
@@ -102,7 +102,7 @@ read_globals = {
 			VarType = { other_fields = true },
 		},
 	},
-	StaticPopupDialogs = { fields = { PATHMARK_SKIP_CHAIN = { read_only = false, other_fields = true } } },
+	StaticPopupDialogs = { fields = { BRAINDEADFOREVER_SKIP_CHAIN = { read_only = false, other_fields = true } } },
 	UIErrorsFrame = { fields = { "AddMessage" } },
 	UiMapPoint = { fields = { "CreateFromCoordinates" } },
 	WorldMapFrame = {
@@ -208,14 +208,15 @@ read_globals = {
 	"WOW_PROJECT_ID",
 }
 globals = {
-	"PathmarkDB", -- ## SavedVariables
-	"PathmarkCollectDB", -- ## SavedVariables (collector data)
-	"PathmarkCharDB", -- ## SavedVariablesPerCharacter (random character ID)
-	"SLASH_PATHMARK1",
+	"BraindeadForeverDB", -- ## SavedVariables
+	"BraindeadForeverCollectDB", -- ## SavedVariables (collector data)
+	"BraindeadForeverCharDB", -- ## SavedVariablesPerCharacter (random character ID)
+	"SLASH_BRAINDEADFOREVER1",
+	"SLASH_BRAINDEADFOREVER2",
 	"SlashCmdList",
 	-- key bindings (Bindings.xml, UI/Bindings.lua): the handler and the names on Blizzard's binding page
-	"PathmarkBinding",
-	"BINDING_HEADER_PATHMARK",
+	"BraindeadForeverBinding",
+	"BINDING_HEADER_BRAINDEADFOREVER",
 }
 files["spec/**/*.lua"] = {
 	std = "+busted",

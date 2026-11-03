@@ -20,7 +20,7 @@ U.AUDITED = {
 	"C_Map.ClearUserWaypoint",
 	"C_SuperTrack.SetSuperTrackedUserWaypoint",
 	"PlaySound",
-	"PathmarkSetupFrame:Show",
+	"BraindeadForeverSetupFrame:Show",
 	-- Welle 5b: sizing the step window and Blizzard's quest tracker are kept out of fights by the
 	-- owner's decision (ENTWURF-LESUNG points 14 and 15)
 	"Frame:StartSizing",
@@ -30,8 +30,8 @@ U.AUDITED = {
 	-- Welle 5c: windows move by drag outside Edit Mode, never in a fight (ENTWURF-LESUNG point 16)
 	"Frame:StartMoving",
 	-- Welle 8: the page "Your run" and the review card open only out of a fight
-	"PathmarkStatsFrame:Show",
-	"PathmarkRecapFrame:Show",
+	"BraindeadForeverStatsFrame:Show",
+	"BraindeadForeverRecapFrame:Show",
 }
 
 local function Color(r, g, b)
@@ -87,17 +87,17 @@ function U.install(M, W, opts)
 	end
 	-- Named frames and fonts of the last session (the client starts a new UI session empty).
 	for _, name in ipairs({
-		"PathmarkSetupFrame",
-		"PathmarkStatsFrame",
-		"PathmarkStatsFrameTab1",
-		"PathmarkStatsFrameTab2",
-		"PathmarkStatsFrameTab3",
-		"PathmarkRecapFrame",
-		"PathmarkFontHeader",
-		"PathmarkFontStep",
-		"PathmarkFontLine",
-		"PathmarkFontSmall",
-		"PathmarkFontStatus",
+		"BraindeadForeverSetupFrame",
+		"BraindeadForeverStatsFrame",
+		"BraindeadForeverStatsFrameTab1",
+		"BraindeadForeverStatsFrameTab2",
+		"BraindeadForeverStatsFrameTab3",
+		"BraindeadForeverRecapFrame",
+		"BraindeadForeverFontHeader",
+		"BraindeadForeverFontStep",
+		"BraindeadForeverFontLine",
+		"BraindeadForeverFontSmall",
+		"BraindeadForeverFontStatus",
 	}) do
 		_G[name] = nil
 	end
@@ -413,7 +413,11 @@ function U.install(M, W, opts)
 				end
 			end
 		end
-		if name == "PathmarkSetupFrame" or name == "PathmarkStatsFrame" or name == "PathmarkRecapFrame" then
+		if
+			name == "BraindeadForeverSetupFrame"
+			or name == "BraindeadForeverStatsFrame"
+			or name == "BraindeadForeverRecapFrame"
+		then
 			local show = f.Show
 			f.Show = function(self)
 				audit(name .. ":Show")

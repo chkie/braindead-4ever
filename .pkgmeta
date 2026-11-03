@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # BigWigsMods/packager. YAML: spaces only, no tabs. Dotfiles are always ignored.
-# The addon lives in Pathmark/; move-folders lifts it to the package root.
-package-as: Pathmark
+# The addon lives in BraindeadForever/; move-folders lifts it to the package root.
+package-as: BraindeadForever
 
 move-folders:
-  Pathmark/Pathmark: Pathmark
+  BraindeadForever/BraindeadForever: BraindeadForever
 
 # Release notes in English and German, written by hand (CHANGELOG.md); without this key the packager
 # would build them from the commit subjects.
@@ -13,7 +13,7 @@ manual-changelog:
   markup-type: markdown
 
 ignore:
-  - Pathmark/Probe
+  - BraindeadForever/Probe
   - data
   - decoder
   - docs

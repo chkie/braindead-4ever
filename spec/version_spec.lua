@@ -10,7 +10,7 @@ local S = require("spec.helpers.uisession")
 local function sent(dist)
 	local out = {}
 	for _, m in ipairs(wow.world.sent) do
-		if m.prefix == "Pathmark" and m.msg:sub(1, 2) == "a;" and (not dist or m.dist == dist) then
+		if m.prefix == "BDF" and m.msg:sub(1, 2) == "a;" and (not dist or m.dist == dist) then
 			out[#out + 1] = m
 		end
 	end
@@ -19,13 +19,13 @@ end
 
 -- A version message of another player arrives (party by default) and the exchange reads its inbox.
 local function hear(ns, who, msg, dist)
-	wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, dist or "PARTY", who)
+	wow.fire("CHAT_MSG_ADDON", "BDF", msg, dist or "PARTY", who)
 	wow.readInbox(ns)
 end
 
 describe("Version notice", function()
 	describe("versions", function()
-		local V = require("spec.helpers.wow").loadFiles({ "Pathmark/Collector/Version.lua" }).Version
+		local V = require("spec.helpers.wow").loadFiles({ "BraindeadForever/Collector/Version.lua" }).Version
 
 		it("reads release tags and leaves development builds out", function()
 			assert.are.same({ 0, 1, 10, pre = false }, V.Parse("v0.1.10"))
@@ -87,8 +87,8 @@ describe("Version notice", function()
 		it("is never read in a fight: the notice comes after it", function()
 			local ns = S.login({ version = "v0.1.0" })
 			S.combat(true)
-			wow.fire("CHAT_MSG_ADDON", "Pathmark", "a;1;0;1;1;0", "PARTY", "Anna Sommer")
-			wow.fire("CHAT_MSG_ADDON", "Pathmark", "a;1;0;1;1;0", "PARTY", "Ben Winter")
+			wow.fire("CHAT_MSG_ADDON", "BDF", "a;1;0;1;1;0", "PARTY", "Anna Sommer")
+			wow.fire("CHAT_MSG_ADDON", "BDF", "a;1;0;1;1;0", "PARTY", "Ben Winter")
 			wow.advance(5)
 			assert.is_nil(ns.newerVersion)
 			S.combat(false)
@@ -100,7 +100,10 @@ describe("Version notice", function()
 			local ns = S.login({ version = "v0.1.0", saved = { flags = { window = false } } })
 			hear(ns, "Anna Sommer", "a;1;0;1;1;0")
 			hear(ns, "Ben Winter", "a;1;0;1;1;0")
-			assert.are.equal("|cffff8800Pathmark|r: version 0.1.1 is available, you have v0.1.0.", wow.output())
+			assert.are.equal(
+				"|cffff8800Braindead Forever|r: version 0.1.1 is available, you have v0.1.0.",
+				wow.output()
+			)
 		end)
 	end)
 

@@ -30,7 +30,7 @@ local function login(opts)
 		wow.world.questLog[#wow.world.questLog + 1] = { questID = q, objectives = {} }
 	end
 	local ns = wow.loadFiles(wow.addonFiles())
-	wow.fire("ADDON_LOADED", "Pathmark")
+	wow.fire("ADDON_LOADED", "BraindeadForever")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
 	if ns.Route.Mode() ~= mode then
@@ -178,11 +178,11 @@ describe("Dungeon hint: balance rule (made-up data)", function()
 	local function setup()
 		wow.reset({})
 		local ns = wow.loadFiles({
-			"Pathmark/Routes/Routes.lua",
-			"Pathmark/Routes/XP.lua",
-			"Pathmark/Routes/Prereq.lua",
-			"Pathmark/Routes/Dungeon.lua",
-			"Pathmark/Routes/Runtime.lua",
+			"BraindeadForever/Routes/Routes.lua",
+			"BraindeadForever/Routes/XP.lua",
+			"BraindeadForever/Routes/Prereq.lua",
+			"BraindeadForever/Routes/Dungeon.lua",
+			"BraindeadForever/Routes/Runtime.lua",
 		})
 		local world = {
 			IsFlagged = function()

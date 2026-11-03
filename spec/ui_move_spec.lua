@@ -176,7 +176,7 @@ describe("Step window, free drag", function()
 		end
 		assert.is_number(at["checkbox:lock"], table.concat(list, ", "))
 		assert.is_true(at["checkbox:lock"] == at["dropdown:tracker"] + 1, table.concat(list, ", "))
-		assert.is_false(wow.world.settings.settings.PATHMARK_LOCK:GetValue())
+		assert.is_false(wow.world.settings.settings.BRAINDEADFOREVER_LOCK:GetValue())
 	end)
 end)
 

@@ -2,12 +2,12 @@
 -- Design v2, view 3 "Erststart": one window two seconds after the first login, once per account,
 -- never in combat; detected race, class, level and start zone without a question; exactly one question
 -- with three cards, nothing preselected; a card sets play style and hint level (3, 1, 0) and closes;
--- closing picks "With hints"; reopened from the settings and with /pathmark setup.
+-- closing picks "With hints"; reopened from the settings and with /bdf setup.
 local wow = require("spec.helpers.wow")
 local S = require("spec.helpers.uisession")
 
 local function dialog()
-	return _G.PathmarkSetupFrame
+	return _G.BraindeadForeverSetupFrame
 end
 
 local function first(opts)
@@ -26,7 +26,7 @@ describe("First start", function()
 		assert.are.equal("BasicFrameTemplateWithInset", d.template)
 		assert.are.same({ 560, 330 }, { d.w, d.h })
 		assert.are.equal("CENTER", d.points[1][1])
-		assert.are.equal("Set up Pathmark", d.TitleText.text)
+		assert.are.equal("Set up Braindead Forever", d.TitleText.text)
 		assert.are.equal("Detected", d.detectedLabel.text)
 		assert.are.equal("Mensch • Krieger • Level 1 • Route starts in Elwynn Forest", d.detected.text)
 		assert.are.equal("How do you want to play?", d.question.text)
@@ -39,13 +39,13 @@ describe("First start", function()
 			"With hints / Hint level 1",
 			"Discover on my own / Hint level 0",
 		}, titles)
-		assert.matches("^Pathmark shares what you discover", d.data.text)
+		assert.matches("^Braindead Forever shares what you discover", d.data.text)
 		assert.matches("Closing picks “With hints”%.$", d.foot.text)
 		-- the route has not switched before the player chose
 		assert.are.equal("speed", ns.Route.Mode())
 		local found = false
 		for _, name in ipairs(_G.UISpecialFrames) do
-			found = found or name == "PathmarkSetupFrame"
+			found = found or name == "BraindeadForeverSetupFrame"
 		end
 		assert.is_true(found, "Escape does not close the setup")
 	end)
@@ -95,15 +95,15 @@ describe("First start", function()
 		assert.are.same({}, wow.blocked)
 	end)
 
-	it("reopens from /pathmark setup; closing it then changes nothing", function()
+	it("reopens from /bdf setup; closing it then changes nothing", function()
 		local ns = S.login({ style = "self" })
-		SlashCmdList.PATHMARK("setup")
+		SlashCmdList.BRAINDEADFOREVER("setup")
 		local d = dialog()
 		assert.is_true(rawget(d, "shown"))
 		assert.are.equal("You can change this any time under “Play style” in the settings.", d.foot.text)
 		d.CloseButton:Click()
 		assert.are.equal("self", ns.UI.Get("style"))
-		SlashCmdList.PATHMARK("setup")
+		SlashCmdList.BRAINDEADFOREVER("setup")
 		d.cards[1]:Click()
 		assert.are.equal("arrow", ns.UI.Get("style"))
 		assert.are.equal(0, #wow.world.helptips) -- the usage hint belongs to the first start only
@@ -130,7 +130,7 @@ describe("First start", function()
 		first({ locale = "deDE" })
 		wow.advance(2)
 		local d = dialog()
-		assert.are.equal("Pathmark einrichten", d.TitleText.text)
+		assert.are.equal("Braindead Forever einrichten", d.TitleText.text)
 		assert.are.equal("Mensch • Krieger • Stufe 1 • Route ab Wald von Elwynn", d.detected.text)
 		assert.are.equal("Wie willst du spielen?", d.question.text)
 		assert.are.equal("Einfach dem Pfeil folgen", d.cards[1].title.text)

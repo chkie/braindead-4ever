@@ -23,7 +23,7 @@ end
 
 describe("Hardcore-safe mode", function()
 	describe("rule", function()
-		local H = wow.loadFiles({ "Pathmark/Routes/Hardcore.lua" }).Hardcore
+		local H = wow.loadFiles({ "BraindeadForever/Routes/Hardcore.lua" }).Hardcore
 		local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3 }
 
 		it("counts the quests a step sends the player to, not the turn-in", function()
@@ -56,7 +56,7 @@ describe("Hardcore-safe mode", function()
 		local n = 0
 		for _, faction in ipairs({ "Alliance", "Horde" }) do
 			local data = {}
-			assert(loadfile("Pathmark/Routes/Data_" .. faction .. ".lua"))("Pathmark", data)
+			assert(loadfile("BraindeadForever/Routes/Data_" .. faction .. ".lua"))("BraindeadForever", data)
 			for q in pairs(data.RouteData[faction]().quests) do
 				n = n + 1
 				assert.is_nil(
@@ -145,7 +145,7 @@ describe("Hardcore-safe mode", function()
 
 		it("has its setting on the Play style page with three values", function()
 			local ns = S.login({ locale = "deDE" })
-			local s = wow.world.settings.settings.PATHMARK_HARDCORE
+			local s = wow.world.settings.settings.BRAINDEADFOREVER_HARDCORE
 			assert.are.equal("Hardcore-sicher", s.name)
 			assert.are.equal("auto", s:GetValue())
 			assert.are.same({ "auto", "on", "off" }, ns.Connect.HARDCORE)

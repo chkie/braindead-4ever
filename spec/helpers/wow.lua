@@ -257,8 +257,8 @@ local function NewWorld(flavor)
 	}
 end
 
--- Fresh client state. opts: flavor ("forever" | "retail"), locale, version, saved (PathmarkDB),
--- collect (PathmarkCollectDB), char (PathmarkCharDB), player (fields of world.player to change).
+-- Fresh client state. opts: flavor ("forever" | "retail"), locale, version, saved (BraindeadForeverDB),
+-- collect (BraindeadForeverCollectDB), char (BraindeadForeverCharDB), player (fields of world.player to change).
 function M.reset(opts)
 	opts = opts or {}
 	local flavor = FLAVORS[opts.flavor or "forever"]
@@ -761,13 +761,14 @@ function M.reset(opts)
 		_G.C_GameRules = {}
 	end
 	_G.SlashCmdList = {}
-	_G.SLASH_PATHMARK1 = nil
+	_G.SLASH_BRAINDEADFOREVER1 = nil
+	_G.SLASH_BRAINDEADFOREVER2 = nil
 	-- the key binding handler holds the last session's namespace (UI/Bindings.lua): a fresh client has none
-	_G.PathmarkBinding = nil
-	_G.PathmarkDB = opts.saved
-	_G.PathmarkCollectDB = opts.collect
-	_G.PathmarkCharDB = opts.char
-	_G.PathmarkCopyFrame = nil
+	_G.BraindeadForeverBinding = nil
+	_G.BraindeadForeverDB = opts.saved
+	_G.BraindeadForeverCollectDB = opts.collect
+	_G.BraindeadForeverCharDB = opts.char
+	_G.BraindeadForeverCopyFrame = nil
 	-- Interface stand-ins (settings, menus, fonts, atlases, map, minimap): spec/helpers/ui.lua.
 	require("spec.helpers.ui").install(M, W, opts)
 end
@@ -845,7 +846,7 @@ end
 function M.loadFiles(paths, addonName, ns)
 	ns = ns or {}
 	for _, p in ipairs(paths) do
-		M.loadFile(p, addonName or "Pathmark", ns)
+		M.loadFile(p, addonName or "BraindeadForever", ns)
 	end
 	return ns
 end
@@ -853,59 +854,59 @@ end
 -- Every file of the addon in TOC order (without the developer probe unless asked).
 function M.addonFiles(withProbe)
 	local files = {
-		"Pathmark/Locales/enUS.lua",
-		"Pathmark/Core/Util.lua",
-		"Pathmark/Core/Guard.lua",
-		"Pathmark/Core/Modules.lua",
-		"Pathmark/Core/CopyWindow.lua",
-		"Pathmark/Collector/Migrate.lua",
-		"Pathmark/Collector/Store.lua",
-		"Pathmark/Collector/Export.lua",
-		"Pathmark/Collector/Proto.lua",
-		"Pathmark/Collector/Runs.lua",
-		"Pathmark/Collector/Budget.lua",
-		"Pathmark/Collector/Version.lua",
-		"Pathmark/Collector/Collect.lua",
-		"Pathmark/Collector/Exchange.lua",
-		"Pathmark/Core/Report.lua",
-		"Pathmark/Routes/Routes.lua",
-		"Pathmark/Routes/Data_Alliance.lua",
-		"Pathmark/Routes/Data_Horde.lua",
-		"Pathmark/Routes/XP.lua",
-		"Pathmark/Routes/Prereq.lua",
-		"Pathmark/Routes/Discover.lua",
-		"Pathmark/Routes/Dungeon.lua",
-		"Pathmark/Routes/Hardcore.lua",
-		"Pathmark/Routes/Forecast.lua",
-		"Pathmark/Routes/Stats.lua",
-		"Pathmark/Routes/Runtime.lua",
-		"Pathmark/Routes/Replan.lua",
-		"Pathmark/Routes/Guide.lua",
-		"Pathmark/Routes/Explore.lua",
-		"Pathmark/Routes/RunStats.lua",
-		"Pathmark/UI/Core.lua",
-		"Pathmark/UI/Theme.lua",
-		"Pathmark/UI/Nav.lua",
-		"Pathmark/UI/Connect.lua",
-		"Pathmark/UI/StepText.lua",
-		"Pathmark/UI/Menu.lua",
-		"Pathmark/UI/StepFrame.lua",
-		"Pathmark/UI/Arrow.lua",
-		"Pathmark/UI/TomTom.lua",
-		"Pathmark/UI/MapPins.lua",
-		"Pathmark/UI/QuestWatch.lua",
-		"Pathmark/UI/Minimap.lua",
-		"Pathmark/UI/Setup.lua",
-		"Pathmark/UI/Settings.lua",
-		"Pathmark/UI/StatsPage.lua",
-		"Pathmark/UI/Bindings.lua",
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Util.lua",
+		"BraindeadForever/Core/Guard.lua",
+		"BraindeadForever/Core/Modules.lua",
+		"BraindeadForever/Core/CopyWindow.lua",
+		"BraindeadForever/Collector/Migrate.lua",
+		"BraindeadForever/Collector/Store.lua",
+		"BraindeadForever/Collector/Export.lua",
+		"BraindeadForever/Collector/Proto.lua",
+		"BraindeadForever/Collector/Runs.lua",
+		"BraindeadForever/Collector/Budget.lua",
+		"BraindeadForever/Collector/Version.lua",
+		"BraindeadForever/Collector/Collect.lua",
+		"BraindeadForever/Collector/Exchange.lua",
+		"BraindeadForever/Core/Report.lua",
+		"BraindeadForever/Routes/Routes.lua",
+		"BraindeadForever/Routes/Data_Alliance.lua",
+		"BraindeadForever/Routes/Data_Horde.lua",
+		"BraindeadForever/Routes/XP.lua",
+		"BraindeadForever/Routes/Prereq.lua",
+		"BraindeadForever/Routes/Discover.lua",
+		"BraindeadForever/Routes/Dungeon.lua",
+		"BraindeadForever/Routes/Hardcore.lua",
+		"BraindeadForever/Routes/Forecast.lua",
+		"BraindeadForever/Routes/Stats.lua",
+		"BraindeadForever/Routes/Runtime.lua",
+		"BraindeadForever/Routes/Replan.lua",
+		"BraindeadForever/Routes/Guide.lua",
+		"BraindeadForever/Routes/Explore.lua",
+		"BraindeadForever/Routes/RunStats.lua",
+		"BraindeadForever/UI/Core.lua",
+		"BraindeadForever/UI/Theme.lua",
+		"BraindeadForever/UI/Nav.lua",
+		"BraindeadForever/UI/Connect.lua",
+		"BraindeadForever/UI/StepText.lua",
+		"BraindeadForever/UI/Menu.lua",
+		"BraindeadForever/UI/StepFrame.lua",
+		"BraindeadForever/UI/Arrow.lua",
+		"BraindeadForever/UI/TomTom.lua",
+		"BraindeadForever/UI/MapPins.lua",
+		"BraindeadForever/UI/QuestWatch.lua",
+		"BraindeadForever/UI/Minimap.lua",
+		"BraindeadForever/UI/Setup.lua",
+		"BraindeadForever/UI/Settings.lua",
+		"BraindeadForever/UI/StatsPage.lua",
+		"BraindeadForever/UI/Bindings.lua",
 	}
 	if withProbe then
-		files[#files + 1] = "Pathmark/Probe/Probe.lua"
-		files[#files + 1] = "Pathmark/Probe/Checks.lua"
-		files[#files + 1] = "Pathmark/Probe/Preview.lua"
+		files[#files + 1] = "BraindeadForever/Probe/Probe.lua"
+		files[#files + 1] = "BraindeadForever/Probe/Checks.lua"
+		files[#files + 1] = "BraindeadForever/Probe/Preview.lua"
 	end
-	files[#files + 1] = "Pathmark/Core/Boot.lua"
+	files[#files + 1] = "BraindeadForever/Core/Boot.lua"
 	return files
 end
 
@@ -915,7 +916,7 @@ function M.session(opts)
 	opts = opts or {}
 	M.reset(opts)
 	local ns = M.loadFiles(M.addonFiles(opts.probe))
-	M.fire("ADDON_LOADED", "Pathmark")
+	M.fire("ADDON_LOADED", "BraindeadForever")
 	M.fire("PLAYER_LOGIN")
 	M.fire("PLAYER_ENTERING_WORLD", true, false)
 	M.ns = ns

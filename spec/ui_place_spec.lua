@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Default place of the step window (owner readings 16 and 17, Welle 5c tasks 13 and 16): top right,
--- where Blizzard's quest tracker stands while Pathmark hides it, with a gap to the right action bars
+-- where Blizzard's quest tracker stands while Braindead Forever hides it, with a gap to the right action bars
 -- (shown or not, bars 6 to 8 when they stand at the right edge) and to the minimap; left of the tracker
 -- while the tracker shows. Measured from Blizzard's frames at login and after layout changes, fixed
 -- values when nothing can be measured. A saved place is never overwritten.
@@ -149,10 +149,10 @@ describe("Default place of the step window", function()
 			end,
 		})
 		wow.advance(2)
-		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
 		assert.are.equal(1, _G.ObjectiveTrackerFrame:GetAlpha()) -- the option starts after the first start
 		assert.is_nil(clash(ns, window(ns), { also = { "ObjectiveTrackerFrame" } }))
-		_G.PathmarkSetupFrame.CloseButton:Click()
+		_G.BraindeadForeverSetupFrame.CloseButton:Click()
 		wow.advance(1)
 		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
 		local win = window(ns)

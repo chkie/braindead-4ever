@@ -13,11 +13,11 @@ local DAY = 20762 -- 2026-11-05, the server day of the test world
 local function pure()
 	wow.reset()
 	return wow.loadFiles({
-		"Pathmark/Locales/enUS.lua",
-		"Pathmark/Core/Util.lua",
-		"Pathmark/Collector/Proto.lua",
-		"Pathmark/Collector/Runs.lua",
-		"Pathmark/Routes/XP.lua",
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Util.lua",
+		"BraindeadForever/Collector/Proto.lua",
+		"BraindeadForever/Collector/Runs.lua",
+		"BraindeadForever/Routes/XP.lua",
 	})
 end
 
@@ -285,7 +285,7 @@ end)
 local function sentRuns(dist)
 	local out = {}
 	for _, m in ipairs(wow.world.sent) do
-		if m.prefix == "Pathmark" and m.msg:sub(1, 2) == "s;" and (not dist or m.dist == dist) then
+		if m.prefix == "BDF" and m.msg:sub(1, 2) == "s;" and (not dist or m.dist == dist) then
 			out[#out + 1] = m
 		end
 	end
@@ -293,7 +293,7 @@ local function sentRuns(dist)
 end
 
 local function receive(msg, sender, dist)
-	wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, dist or "CHANNEL", sender, "", 0, 5, "PathmarkShare", 0)
+	wow.fire("CHAT_MSG_ADDON", "BDF", msg, dist or "CHANNEL", sender, "", 0, 5, "BraindeadShare", 0)
 	wow.readInbox()
 end
 
@@ -307,8 +307,8 @@ describe("Run times in the exchange", function()
 		for seq = 1, ns.Collector.net.db.seq do
 			assert.is_nil((ns.Collector.net.db.chunks[seq] or ""):find("abc123", 1, true))
 		end
-		assert.are.same({ msg }, PathmarkCollectDB.runs.list and { PathmarkCollectDB.runs.list[1] })
-		for k in pairs(PathmarkCollectDB.runs) do
+		assert.are.same({ msg }, BraindeadForeverCollectDB.runs.list and { BraindeadForeverCollectDB.runs.list[1] })
+		for k in pairs(BraindeadForeverCollectDB.runs) do
 			assert.is_nil(tostring(k):find("Anna"))
 		end
 		assert.are.equal(0, ns.Exchange.stats.bad)
@@ -391,17 +391,17 @@ describe("Run times in the exchange", function()
 			"Testrealm",
 			"Player-",
 			"Anna",
-			PathmarkCollectDB.install,
-			PathmarkCharDB.id,
+			BraindeadForeverCollectDB.install,
+			BraindeadForeverCharDB.id,
 		}) do
 			assert.is_nil(text:find(secret, 1, true), secret .. " in a run message")
 		end
 		assert.matches("^[%w;]+$", all[1])
 		-- the token sent is the character's rolled one, no piece of the character or installation ID
 		local tok = all[1]:match("^s;1;(%w+);")
-		assert.are.equal(PathmarkCharDB.run, tok)
-		assert.is_nil(PathmarkCharDB.id:find(tok, 1, true))
-		assert.is_nil(PathmarkCollectDB.install:find(tok, 1, true))
+		assert.are.equal(BraindeadForeverCharDB.run, tok)
+		assert.is_nil(BraindeadForeverCharDB.id:find(tok, 1, true))
+		assert.is_nil(BraindeadForeverCollectDB.install:find(tok, 1, true))
 		-- the export as the website reads it: no name, realm or GUID anywhere, run sections without IDs
 		C_EncodingUtil.SerializeJSON = json.encode
 		C_EncodingUtil.CompressString = function(str, method)
@@ -413,7 +413,7 @@ describe("Run times in the exchange", function()
 		end
 		local runs = table.concat(node.parseJSON(out).runs, "\n")
 		assert.is_true(#runs > 0)
-		for _, id in ipairs({ PathmarkCollectDB.install, PathmarkCharDB.id }) do
+		for _, id in ipairs({ BraindeadForeverCollectDB.install, BraindeadForeverCharDB.id }) do
 			assert.is_nil(runs:find(id, 1, true), id .. " in the exported run sections")
 		end
 	end)
@@ -471,13 +471,13 @@ describe("Run sections from play", function()
 		assert.are.equal(1, #r)
 		local f = runFields(r[1])
 		assert.are.same(
-			{ PathmarkCharDB.run, "1", "1", "s", "l", "1", "0", "240", "300", "100", "2", tostring(DAY) },
+			{ BraindeadForeverCharDB.run, "1", "1", "s", "l", "1", "0", "240", "300", "100", "2", tostring(DAY) },
 			f
 		)
 		local party = sentRuns("PARTY")
 		assert.are.equal(1, #party)
 		assert.are.equal("s;1;" .. table.concat(f, ";"), party[1].msg)
-		assert.is_true(ns.Collector.runs:Has("s;" .. PathmarkCharDB.run .. ";l;1"))
+		assert.is_true(ns.Collector.runs:Has("s;" .. BraindeadForeverCharDB.run .. ";l;1"))
 	end)
 
 	it("reports free play without a route, with the window paused, and counts skipped steps", function()
@@ -523,7 +523,8 @@ describe("Run sections from play", function()
 		wow.session({ player = { level = 1, xp = 0 } })
 		play(180)
 		wow.fire("PLAYER_LOGOUT")
-		local saved = { char = _G.PathmarkCharDB, saved = _G.PathmarkDB, collect = _G.PathmarkCollectDB }
+		local saved =
+			{ char = _G.BraindeadForeverCharDB, saved = _G.BraindeadForeverDB, collect = _G.BraindeadForeverCollectDB }
 		local ns = wow.session({
 			char = saved.char,
 			saved = saved.saved,
@@ -539,9 +540,9 @@ describe("Run sections from play", function()
 		-- a /reload right after the level-up starts nothing twice
 		wow.fire("PLAYER_LOGOUT")
 		ns = wow.session({
-			char = _G.PathmarkCharDB,
-			saved = _G.PathmarkDB,
-			collect = _G.PathmarkCollectDB,
+			char = _G.BraindeadForeverCharDB,
+			saved = _G.BraindeadForeverDB,
+			collect = _G.BraindeadForeverCollectDB,
 			player = { level = 2, xp = 0 },
 		})
 		play(240)

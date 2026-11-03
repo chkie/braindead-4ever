@@ -99,7 +99,7 @@ describe("Step window size", function()
 		local slider
 		for _, cat in ipairs(wow.world.settings.categories) do
 			for _, i in ipairs(cat.inits) do
-				if i.setting and i.setting.variable == "PATHMARK_AHEAD" then
+				if i.setting and i.setting.variable == "BRAINDEADFOREVER_AHEAD" then
 					slider = i
 				end
 			end
@@ -107,7 +107,7 @@ describe("Step window size", function()
 		assert.are.same({ 0, 10, 1 }, { slider.options.min, slider.options.max, slider.options.step })
 		local heights = {}
 		for _, n in ipairs({ 0, 1, 3, 7, 10 }) do
-			_G.Settings.SetValue("PATHMARK_AHEAD", n)
+			_G.Settings.SetValue("BRAINDEADFOREVER_AHEAD", n)
 			assert.are.equal(n, #SF.VisibleRows(), "steps ahead " .. n)
 			heights[#heights + 1] = W.h
 		end
@@ -122,7 +122,7 @@ describe("Step window size", function()
 		for _, n in ipairs({ 1, 4, 6, 9, 10 }) do
 			drag(ns, 300, heightFor(ns, n))
 			assert.are.equal(n, ns.UI.Get("ahead"), "height for " .. n .. " steps")
-			assert.are.equal(n, _G.Settings.GetValue("PATHMARK_AHEAD"))
+			assert.are.equal(n, _G.Settings.GetValue("BRAINDEADFOREVER_AHEAD"))
 			release(ns)
 			assert.are.equal(n, #SF.VisibleRows())
 			assert.are.equal(SF.height, W.h) -- snapped to the content
@@ -144,7 +144,7 @@ describe("Step window size", function()
 
 	it("dragging from 0 steps ahead can show steps again", function()
 		local ns = S.login()
-		_G.Settings.SetValue("PATHMARK_AHEAD", 0)
+		_G.Settings.SetValue("BRAINDEADFOREVER_AHEAD", 0)
 		drag(ns, 300, 600)
 		assert.are.equal(20, #ns.StepFrame.rowBottoms)
 		assert.is_true(ns.UI.Get("ahead") > 0)
@@ -219,7 +219,7 @@ describe("Step window size", function()
 	it("mini view hides the list and the grip; scaling stays", function()
 		local ns = S.login()
 		local SF, W = ns.StepFrame, ns.StepFrame.frame
-		_G.Settings.SetValue("PATHMARK_SCALE", 200)
+		_G.Settings.SetValue("BRAINDEADFOREVER_SCALE", 200)
 		SF.SetMini(true)
 		assert.is_false(shown(SF.grip))
 		assert.is_false(shown(W.listBox))

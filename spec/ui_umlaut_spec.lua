@@ -33,7 +33,7 @@ describe("Umlauts (T19)", function()
 	it("first start: German card texts stay whole inside their cards", function()
 		local ns = S.login({ locale = "deDE", setup = false })
 		wow.advance(3)
-		local d = _G.PathmarkSetupFrame
+		local d = _G.BraindeadForeverSetupFrame
 		assert.is_true(rawget(d, "shown"))
 		local L, Setup = ns.L, ns.Setup
 		local inner = Setup.CARD_W - 20

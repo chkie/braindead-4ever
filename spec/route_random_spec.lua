@@ -63,11 +63,11 @@ end
 describe("Route runtime under random actions", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"Pathmark/Routes/Routes.lua",
-		"Pathmark/Routes/Data_Alliance.lua",
-		"Pathmark/Routes/XP.lua",
-		"Pathmark/Routes/Runtime.lua",
-		"Pathmark/Routes/Replan.lua",
+		"BraindeadForever/Routes/Routes.lua",
+		"BraindeadForever/Routes/Data_Alliance.lua",
+		"BraindeadForever/Routes/XP.lua",
+		"BraindeadForever/Routes/Runtime.lua",
+		"BraindeadForever/Routes/Replan.lua",
 	})
 	local RT = ns.Runtime
 	local data = ns.Routes.Load("Alliance")

@@ -87,7 +87,7 @@ local function login(collect)
 		level = 30,
 		char = veteran(),
 		before = function()
-			_G.PathmarkCollectDB = collect
+			_G.BraindeadForeverCollectDB = collect
 		end,
 	})
 end
@@ -144,7 +144,7 @@ describe("Your run: performance (offline)", function()
 	it("closed page: nothing runs per frame; an event of the tally costs microseconds", function()
 		local ns = login(vault())
 		local RS = ns.RunStats
-		assert.is_nil(_G.PathmarkStatsFrame)
+		assert.is_nil(_G.BraindeadForeverStatsFrame)
 		assert.is_false(rawget(RS.driver, "shown") == true) -- no OnUpdate runs while nothing waits
 		local t = RS.Tally()
 		local N = 200000
@@ -171,12 +171,12 @@ describe("Your run: performance (offline)", function()
 			realClock()
 			collectgarbage("collect")
 			local t0 = os.clock()
-			SlashCmdList.PATHMARK("stats") -- builds the window, renders own values, starts the comparison
+			SlashCmdList.BRAINDEADFOREVER("stats") -- builds the window, renders own values, starts the comparison
 			local open = (os.clock() - t0) * 1000
 			local build, frames, worst, most = drain(ns)
 			local t1 = os.clock()
 			for i = 2, 3 do -- the other two tabs
-				_G["PathmarkStatsFrameTab" .. i].scripts.OnClick(_G["PathmarkStatsFrameTab" .. i])
+				_G["BraindeadForeverStatsFrameTab" .. i].scripts.OnClick(_G["BraindeadForeverStatsFrameTab" .. i])
 			end
 			local tabs = (os.clock() - t1) * 1000 / 2
 			if not best or open + build < best.open + best.build then
@@ -221,7 +221,7 @@ describe("Your run: performance (offline)", function()
 			ns.StatsPage.TryRecap()
 			local start = (os.clock() - t0) * 1000
 			local build, frames, worst, most = drain(ns)
-			assert.is_true(rawget(_G.PathmarkRecapFrame, "shown"))
+			assert.is_true(rawget(_G.BraindeadForeverRecapFrame, "shown"))
 			assert.is_true(most <= ns.RunStats.SLICE)
 			if not best or start + build < best.start + best.build then
 				best = { start = start, build = build, frames = frames, worst = worst }
@@ -251,7 +251,7 @@ describe("Your run: performance (offline)", function()
 		ns.StatsPage.Open()
 		drain(ns)
 		for i = 1, 3 do
-			_G["PathmarkStatsFrameTab" .. i].scripts.OnClick(_G["PathmarkStatsFrameTab" .. i])
+			_G["BraindeadForeverStatsFrameTab" .. i].scripts.OnClick(_G["BraindeadForeverStatsFrameTab" .. i])
 		end
 		local page = settle() - after
 		local index = ns.RunStats.Index()

@@ -14,7 +14,7 @@ end
 local function sent(dist)
 	local out = {}
 	for _, m in ipairs(wow.world.sent) do
-		if m.prefix == "Pathmark" and (not dist or m.dist == dist) then
+		if m.prefix == "BDF" and (not dist or m.dist == dist) then
 			out[#out + 1] = m
 		end
 	end
@@ -44,16 +44,16 @@ describe("Exchange: sending", function()
 	it("registers its prefix and joins the hidden channel 8 s after the first loading screen", function()
 		local ns, X = start()
 		assert.are.equal("on", ns.Modules.state.exchange)
-		assert.is_true(wow.world.prefixes.Pathmark)
+		assert.is_true(wow.world.prefixes.BDF)
 		assert.are.equal("waiting", X.channel.state)
 		wow.advance(8)
 		wow.advance(2)
 		assert.are.equal("on", X.channel.state)
-		assert.are.equal(5, wow.world.channels.PathmarkShare)
-		assert.is_true(wow.world.removedFromChat.PathmarkShare)
+		assert.are.equal(5, wow.world.channels.BraindeadShare)
+		assert.is_true(wow.world.removedFromChat.BraindeadShare)
 		-- chat filter hides every line of the channel, others pass
 		local filter = wow.world.chatFilters.CHAT_MSG_CHANNEL
-		assert.is_true(filter(nil, "CHAT_MSG_CHANNEL", "hi", "x", "", "", "", "", 0, 5, "PathmarkShare"))
+		assert.is_true(filter(nil, "CHAT_MSG_CHANNEL", "hi", "x", "", "", "", "", 0, 5, "BraindeadShare"))
 		assert.is_nil(filter(nil, "CHAT_MSG_CHANNEL", "hi", "x", "", "", "", "", 0, 1, "General"))
 	end)
 
@@ -193,24 +193,24 @@ describe("Exchange: sending", function()
 
 	it("moves to the next channel name when the password is refused", function()
 		local _, X = start()
-		wow.world.refuse.PathmarkShare = "WRONG_PASSWORD"
+		wow.world.refuse.BraindeadShare = "WRONG_PASSWORD"
 		wow.advance(8)
 		wow.advance(2)
 		wow.advance(1)
 		wow.advance(2)
 		assert.are.equal(2, X.channel.slot)
 		assert.are.equal("on", X.channel.state)
-		assert.are.equal(5, wow.world.channels.PathmarkShare2)
+		assert.are.equal(5, wow.world.channels.BraindeadShare2)
 	end)
 
 	it("leaves a channel that someone takes over", function()
 		local _, X = start()
 		wow.advance(10)
-		wow.fire("CHAT_MSG_CHANNEL_NOTICE", "PASSWORD_CHANGED", "Griefer", "", "", "", "", 0, 5, "PathmarkShare")
-		assert.is_nil(wow.world.channels.PathmarkShare)
+		wow.fire("CHAT_MSG_CHANNEL_NOTICE", "PASSWORD_CHANGED", "Griefer", "", "", "", "", 0, 5, "BraindeadShare")
+		assert.is_nil(wow.world.channels.BraindeadShare)
 		wow.advance(4)
 		assert.are.equal("on", X.channel.state)
-		assert.are.equal(5, wow.world.channels.PathmarkShare2)
+		assert.are.equal(5, wow.world.channels.BraindeadShare2)
 	end)
 
 	it("works without a channel when every name is locked", function()
@@ -228,7 +228,7 @@ end)
 
 describe("Exchange: receiving", function()
 	local function receive(msg, sender, dist)
-		wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, dist or "CHANNEL", sender, "", 0, 5, "PathmarkShare", 0)
+		wow.fire("CHAT_MSG_ADDON", "BDF", msg, dist or "CHANNEL", sender, "", 0, 5, "BraindeadShare", 0)
 		wow.readInbox()
 	end
 
@@ -242,7 +242,7 @@ describe("Exchange: receiving", function()
 		for seq = 1, ns.Collector.net.db.seq do
 			assert.is_nil((ns.Collector.net.db.chunks[seq] or ""):find("Anna", 1, true))
 		end
-		assert.is_nil(PathmarkCollectDB.net.senders)
+		assert.is_nil(BraindeadForeverCollectDB.net.senders)
 	end)
 
 	it("confirms a find when a second player reports it, not when the same one repeats it", function()
@@ -261,8 +261,8 @@ describe("Exchange: receiving", function()
 		local ns = start()
 		receive("o;1;2843;1429;4231;6512", "Testchar Brightwood")
 		wow.fire("CHAT_MSG_ADDON", "Questie", "o;1;2843;1429;4231;6512", "PARTY", "Anna Sommer")
-		wow.fire("CHAT_MSG_ADDON", "Pathmark", wow.SECRET, "PARTY", "Anna Sommer")
-		wow.fire("CHAT_MSG_ADDON", "Pathmark", "o;1;2843;1429;4231;6512", "PARTY", wow.SECRET)
+		wow.fire("CHAT_MSG_ADDON", "BDF", wow.SECRET, "PARTY", "Anna Sommer")
+		wow.fire("CHAT_MSG_ADDON", "BDF", "o;1;2843;1429;4231;6512", "PARTY", wow.SECRET)
 		wow.readInbox()
 		assert.are.equal(0, #netRecords(ns, "rx"))
 		assert.are.same({}, wow.errors)

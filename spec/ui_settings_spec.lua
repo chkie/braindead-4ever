@@ -53,7 +53,7 @@ end
 describe("Settings", function()
 	it("register one category with five sub pages as vertical lists, Credits as canvas", function()
 		S.login()
-		local main = byName("Pathmark")
+		local main = byName("Braindead Forever")
 		assert.is_true(main.registered)
 		local subs = {}
 		for _, c in ipairs(categories()) do
@@ -67,7 +67,7 @@ describe("Settings", function()
 	it("main page: four options and two buttons (rule E1)", function()
 		S.login()
 		local kinds = {}
-		for _, i in ipairs(byName("Pathmark").inits) do
+		for _, i in ipairs(byName("Braindead Forever").inits) do
 			kinds[#kinds + 1] = i.kind .. ":" .. (i.setting and i.setting.key or i.name)
 		end
 		assert.are.same({
@@ -106,7 +106,7 @@ describe("Settings", function()
 		}
 		for key, value in pairs(expect) do
 			assert.are.equal(value, ns.UI.Get(key), key)
-			assert.are.equal(value, wow.world.settings.settings["PATHMARK_" .. key:upper()]:GetValue(), key)
+			assert.are.equal(value, wow.world.settings.settings["BRAINDEADFOREVER_" .. key:upper()]:GetValue(), key)
 		end
 	end)
 
@@ -128,37 +128,37 @@ describe("Settings", function()
 	it("apply at once: size, background, steps ahead, combat dim", function()
 		local ns = S.login()
 		local W, F = ns.StepFrame.frame, ns.Arrow.frame
-		_G.Settings.SetValue("PATHMARK_SCALE", 150)
+		_G.Settings.SetValue("BRAINDEADFOREVER_SCALE", 150)
 		assert.are.equal(1.5, W.scale)
 		assert.are.equal(1.5, F.scale)
-		_G.Settings.SetValue("PATHMARK_BGALPHA", 60)
+		_G.Settings.SetValue("BRAINDEADFOREVER_BGALPHA", 60)
 		assert.are.same({ 0, 0, 0, 0.6 }, W.bg.colorTexture)
-		_G.Settings.SetValue("PATHMARK_AHEAD", 1)
+		_G.Settings.SetValue("BRAINDEADFOREVER_AHEAD", 1)
 		assert.are.equal(1, #ns.StepFrame.VisibleRows())
 	end)
 
 	it("size slider runs from 75 to 200 % in steps of 5 and shows percent", function()
 		S.login()
-		local slider = init(byName("Pathmark"), "PATHMARK_SCALE")
+		local slider = init(byName("Braindead Forever"), "BRAINDEADFOREVER_SCALE")
 		assert.are.same({ 75, 200, 5 }, { slider.options.min, slider.options.max, slider.options.step })
 		assert.are.equal("150 %", slider.options.formatter(150))
-		local alpha = init(byName("Display"), "PATHMARK_BGALPHA")
+		local alpha = init(byName("Display"), "BRAINDEADFOREVER_BGALPHA")
 		assert.are.same({ 0, 80, 5 }, { alpha.options.min, alpha.options.max, alpha.options.step })
-		local arrival = init(byName("Arrow and Map"), "PATHMARK_ARRIVAL")
+		local arrival = init(byName("Arrow and Map"), "BRAINDEADFOREVER_ARRIVAL")
 		assert.are.same({ 5, 30, 1 }, { arrival.options.min, arrival.options.max, arrival.options.step })
 		assert.are.equal("12 |4yd:yds", arrival.options.formatter(12))
 	end)
 
 	it("detail level sets several options at once", function()
 		local ns = S.login()
-		_G.Settings.SetValue("PATHMARK_SCOPE", "minimal")
+		_G.Settings.SetValue("BRAINDEADFOREVER_SCOPE", "minimal")
 		assert.are.same({ 0, false, false, false }, {
 			ns.UI.Get("ahead"),
 			ns.UI.Get("pins"),
 			ns.UI.Get("minipins"),
 			ns.UI.Get("sound"),
 		})
-		_G.Settings.SetValue("PATHMARK_SCOPE", "full")
+		_G.Settings.SetValue("BRAINDEADFOREVER_SCOPE", "full")
 		assert.are.same({ 3, true, true, true }, {
 			ns.UI.Get("ahead"),
 			ns.UI.Get("pins"),
@@ -170,21 +170,21 @@ describe("Settings", function()
 	it("play style sets route and hint level; the slider is greyed out at 3 for “follow the arrow”", function()
 		local ns = S.login({ style = "hints" })
 		local page = byName("Play style")
-		local style = init(page, "PATHMARK_STYLE")
-		local hint = init(page, "PATHMARK_HINT")
+		local style = init(page, "BRAINDEADFOREVER_STYLE")
+		local hint = init(page, "BRAINDEADFOREVER_HINT")
 		assert.are.equal(style, hint.parentInit)
 		local values = {}
 		for i, o in ipairs(style.options()) do
 			values[i] = o.value .. "=" .. o.label
 		end
 		assert.are.same({ "arrow=Just follow the arrow", "hints=With hints", "self=Discover on my own" }, values)
-		_G.Settings.SetValue("PATHMARK_STYLE", "self")
+		_G.Settings.SetValue("BRAINDEADFOREVER_STYLE", "self")
 		assert.are.equal(0, ns.UI.Get("hint"))
 		assert.are.equal("explorer", ns.Route.Mode())
 		assert.is_true(hint.modifyPredicate())
-		_G.Settings.SetValue("PATHMARK_HINT", 2)
+		_G.Settings.SetValue("BRAINDEADFOREVER_HINT", 2)
 		assert.are.equal(2, ns.Connect.HintLevel())
-		_G.Settings.SetValue("PATHMARK_STYLE", "arrow")
+		_G.Settings.SetValue("BRAINDEADFOREVER_STYLE", "arrow")
 		assert.are.equal(3, ns.UI.Get("hint"))
 		assert.are.equal("speed", ns.Route.Mode())
 		assert.is_false(hint.modifyPredicate())
@@ -197,8 +197,8 @@ describe("Settings", function()
 	it("indents and greys out the minimap pins under the map pins (E7)", function()
 		local ns = S.login()
 		local page = byName("Arrow and Map")
-		local mini = init(page, "PATHMARK_MINIPINS")
-		assert.are.equal(init(page, "PATHMARK_PINS"), mini.parentInit)
+		local mini = init(page, "BRAINDEADFOREVER_MINIPINS")
+		assert.are.equal(init(page, "BRAINDEADFOREVER_PINS"), mini.parentInit)
 		assert.is_true(mini.modifyPredicate())
 		ns.UI.Set("pins", false)
 		assert.is_false(mini.modifyPredicate())
@@ -206,9 +206,9 @@ describe("Settings", function()
 
 	it("buttons: setup again, Edit Mode hint, reset position", function()
 		local ns = S.login()
-		local main = byName("Pathmark")
+		local main = byName("Braindead Forever")
 		main.inits[7].click()
-		assert.is_true(rawget(_G.PathmarkSetupFrame, "shown"))
+		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
 		main.inits[8].click()
 		assert.matches("Edit Mode", wow.world.uiErrors[1], 1, true)
 		ns.UI.DB().pos = { window = { "CENTER", "CENTER", 0, 0 } }
@@ -257,11 +257,12 @@ describe("Fonts (view 6)", function()
 			local f = _G[def.name]
 			assert.are.equal(_G[def.base], f.copyOf, key)
 		end
-		local find = assert(io.popen('grep -rlE "SetFont\\(|\\.[tT][tT][fF]" Pathmark/UI Pathmark/Core'))
+		local find =
+			assert(io.popen('grep -rlE "SetFont\\(|\\.[tT][tT][fF]" BraindeadForever/UI BraindeadForever/Core'))
 		local hits = find:read("*a")
 		find:close()
 		assert.are.equal("", hits)
-		local ttf = assert(io.popen('find Pathmark -iname "*.ttf" -o -iname "*.otf"'))
+		local ttf = assert(io.popen('find BraindeadForever -iname "*.ttf" -o -iname "*.otf"'))
 		assert.are.equal("", ttf:read("*a"))
 		ttf:close()
 	end)
@@ -272,20 +273,20 @@ describe("Fonts (view 6)", function()
 				W.cvars.userFontScale = "2"
 			end,
 		})
-		assert.are.equal(30, _G.PathmarkFontStep.size)
-		assert.are.equal(24, _G.PathmarkFontSmall.size)
+		assert.are.equal(30, _G.BraindeadForeverFontStep.size)
+		assert.are.equal(24, _G.BraindeadForeverFontSmall.size)
 		ns.UI.Set("scale", 200)
-		assert.are.equal(30, _G.PathmarkFontStep.size) -- the frame scales, the font height stays
+		assert.are.equal(30, _G.BraindeadForeverFontStep.size) -- the frame scales, the font height stays
 		assert.are.equal(2, ns.StepFrame.frame.scale)
 		ns.UI.Set("textSize", false)
-		assert.are.equal(15, _G.PathmarkFontStep.size)
+		assert.are.equal(15, _G.BraindeadForeverFontStep.size)
 		ns.UI.Set("textSize", true)
 		wow.world.cvars.userFontScale = "0.5" -- below Blizzard's minimum 0.8
 		wow.fire("CVAR_UPDATE", "userFontScale", "0.5")
-		assert.are.equal(12, _G.PathmarkFontStep.size)
+		assert.are.equal(12, _G.BraindeadForeverFontStep.size)
 		wow.world.cvars.userFontScale = "1"
 		_G.EventRegistry:TriggerEvent("TextSizeManager.OnTextScaleUpdated", 1)
-		assert.are.equal(15, _G.PathmarkFontStep.size)
+		assert.are.equal(15, _G.BraindeadForeverFontStep.size)
 	end)
 
 	it("high-contrast quest text raises the window background to 80 %", function()

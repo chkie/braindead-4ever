@@ -76,12 +76,12 @@ describe("Step window", function()
 		end)
 
 		it("writes in copies of Blizzard's tracker fonts at 15, 13 and 12", function()
-			assert.are.equal(_G.PathmarkFontStep, W.step.font)
-			assert.are.equal(_G.ObjectiveTrackerFont15, _G.PathmarkFontStep.copyOf)
-			assert.are.equal(15, _G.PathmarkFontStep.size)
-			assert.are.equal(13, _G.PathmarkFontLine.size)
-			assert.are.equal(12, _G.PathmarkFontSmall.size)
-			assert.are.equal(_G.ObjectiveTrackerHeaderFont, _G.PathmarkFontHeader.copyOf)
+			assert.are.equal(_G.BraindeadForeverFontStep, W.step.font)
+			assert.are.equal(_G.ObjectiveTrackerFont15, _G.BraindeadForeverFontStep.copyOf)
+			assert.are.equal(15, _G.BraindeadForeverFontStep.size)
+			assert.are.equal(13, _G.BraindeadForeverFontLine.size)
+			assert.are.equal(12, _G.BraindeadForeverFontSmall.size)
+			assert.are.equal(_G.ObjectiveTrackerHeaderFont, _G.BraindeadForeverFontHeader.copyOf)
 			assert.are.same({ 1, 0.82, 0 }, W.title.textColor)
 			assert.are.same({ 1, 1, 1 }, W.step.textColor)
 			assert.are.same({ 0.8, 0.8, 0.8 }, W.detail.textColor)
@@ -243,9 +243,9 @@ describe("Step window", function()
 			assert.is_nil(ns.UI.DB().hintsSeen.rightclick) -- hidden, not seen
 			_G.SettingsPanel:Hide()
 			assert.is_true(_G.HelpTip:IsShowing(W))
-			SlashCmdList.PATHMARK("setup")
+			SlashCmdList.BRAINDEADFOREVER("setup")
 			assert.is_false(_G.HelpTip:IsShowing(W))
-			_G.PathmarkSetupFrame:Hide()
+			_G.BraindeadForeverSetupFrame:Hide()
 			assert.is_true(_G.HelpTip:IsShowing(W))
 			-- only "Got It" uses it up
 			local tip = wow.world.helptips[#wow.world.helptips]
@@ -272,7 +272,7 @@ describe("Step window", function()
 				texts[i] = item.text or item.kind
 			end
 			assert.are.same({
-				"Pathmark",
+				"Braindead Forever",
 				"Undo",
 				"Skip step",
 				"Previous step",
@@ -318,7 +318,7 @@ describe("Step window", function()
 		it("reports a problem and opens the settings out of combat", function()
 			local ns = S.login()
 			S.item(S.menu(ns), "Report a problem").fn()
-			assert.is_true(_G.PathmarkCopyFrame.shown)
+			assert.is_true(_G.BraindeadForeverCopyFrame.shown)
 			S.item(S.menu(ns), "Settings").fn()
 			assert.are.same({ ns.settingsCategoryID }, wow.world.settings.opened)
 		end)
@@ -341,7 +341,7 @@ describe("Step window", function()
 			local ns = S.login()
 			ns.Modules.state.mappins = "disabled"
 			ns.StepFrame.Refresh()
-			assert.are.equal("Module mappins turned off, see /pathmark status", frame(ns).status.text)
+			assert.are.equal("Module mappins turned off, see /bdf status", frame(ns).status.text)
 		end)
 
 		it("says when there is no route for the race and class", function()
@@ -457,7 +457,7 @@ describe("Step window", function()
 			assert.is_table(info, "no step with follow-up quests in the Elwynn route")
 			ns.StepFrame.AskSkip(info.key)
 			local popup = wow.popup
-			assert.are.equal("PATHMARK_SKIP_CHAIN", popup.which)
+			assert.are.equal("BRAINDEADFOREVER_SKIP_CHAIN", popup.which)
 			local d = popup.dialog
 			assert.are.same({ "Skip", "Cancel", 0, 1, 1, 1 }, {
 				d.button1,

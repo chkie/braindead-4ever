@@ -1,10 +1,21 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Game constants for WoW: Forever 1.60.1 that the route tools need.
 
-Sources (no value here is guessed):
-- races, classes and the 56 combinations: client table CharBaseInfo (product wowf, build
-  1.60.1.70707), ChrRaces PlayableRaceBit, counted in brain chapter 14 §1 on 2026-11-01;
-- uiMapIDs: client tables UiMap/UiMapAssignment (wowf 70707), brain chapter 07 §7;
+Sources (no value here is guessed; client files are not a source, brain chapter 16 §5). The open
+data named here is the same that data/sources holds (licences: NOTICE); "in game" names the addon
+API call that confirms the value once the live client runs.
+- race IDs and factions: All The Things, .contrib/.db/shared/constants/raceIDs.lua (MIT, commit
+  f8d538a), Skyborne 95 (Alliance) and 96 (Horde); in game UnitRace (third return).
+- bit of each race in a quest race mask: on 1,747 of 1,896 quests Polestar forever-db racesMask
+  and All The Things races name the same races (data/sources, counted 2026-11-03); no swap of two
+  bits raises that count, and Polestar uses bits 0 to 7, 32 and 33 only.
+- class IDs and tokens: in game GetClassInfo(classID) and UnitClass; class mask bit = classID - 1
+  agrees on all 488 quests with both Polestar classesMask and All The Things classes.
+- the 56 race and class combinations: brain chapter 14 §1; 20 of them seen played at the start
+  positions of EG Link (data/sources/eglink/starts.jsonl), none outside the list. The other 36
+  have no open source yet: confirm in the character creation of the live client.
+- uiMapIDs: Polestar forever-db table ui_map (data/sources/polestar/ui_map.jsonl), which lists
+  every ID below except 947 (Azeroth); in game C_Map.GetMapInfo.
 - start zones: Classic assignment from brain chapter 14 code pattern 1 (to be confirmed in game),
   Zephras for both Skyborne races.
 """
@@ -41,7 +52,7 @@ CLASSES = {
 }
 CLASS_BY_TOKEN = {v: k for k, v in CLASSES.items()}
 
-# CharBaseInfo wowf 70707: allowed classes per race (brain chapter 14 §1 table).
+# Allowed classes per race (brain chapter 14 §1 table; see the module docstring for the evidence).
 COMBOS = {
     1: (1, 2, 3, 4, 5, 8, 9),
     3: (1, 2, 3, 4, 5, 7),
@@ -89,7 +100,7 @@ def classes_from_mask(mask):
     return out or set()
 
 
-# uiMapIDs (Forever keeps the Classic Era IDs, chapter 07 §7).
+# uiMapIDs (Forever keeps the Classic Era IDs; Polestar ui_map, chapter 07 §7).
 ZONES = {
     1411: "Durotar",
     1412: "Mulgore",
@@ -126,10 +137,12 @@ ZONES = {
 }
 
 # Zones whose world frame changed between Classic Era and Forever (chapter 07 §7):
-# map-percent coordinates from Classic-based sources are not valid there.
+# map-percent coordinates from Classic-based sources are not valid there. Forever frames: Polestar
+# ui_map; warcraft.wiki.gg "Forever map comparison" marks all four as changed. In game:
+# C_Map.GetWorldPosFromMapPos(uiMapID, CreateVector2D(0, 0)) and (1, 1).
 CHANGED_FRAMES = {1412, 1423, 1433, 1453}
 
-# Continents and other maps that are not a zone for routing purposes.
+# Continents and other maps that are not a zone for routing purposes (Polestar ui_map, 947 Azeroth).
 NOT_ZONES = {947, 1414, 1415, 1463, 1464}
 
 # Start module per raceID (chapter 14 code pattern 1; Classic assignment, confirm in game).
@@ -146,7 +159,8 @@ START_MODULE = {
     96: "ZEPHRAS_H",
 }
 
-# Quest IDs from 70000 up are new in Forever (DB2 diff, chapter 08 §9: 1,808 of 1,811 there).
+# Quest IDs from 70000 up are new in Forever: 553 of the 555 quests All The Things marks as added or
+# created in 1.60.1 have such an ID (data/sources/att/quests.jsonl timeline, counted 2026-11-03).
 NEW_QUEST_MIN_ID = 70000
 
 

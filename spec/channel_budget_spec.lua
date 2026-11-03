@@ -16,12 +16,12 @@ local MEAN_MAX, WINDOW_MAX = 0.5, 60
 local function pure()
 	wow.reset()
 	return wow.loadFiles({
-		"Pathmark/Locales/enUS.lua",
-		"Pathmark/Core/Util.lua",
-		"Pathmark/Collector/Proto.lua",
-		"Pathmark/Collector/Runs.lua",
-		"Pathmark/Collector/Budget.lua",
-		"Pathmark/Routes/XP.lua",
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Util.lua",
+		"BraindeadForever/Collector/Proto.lua",
+		"BraindeadForever/Collector/Runs.lua",
+		"BraindeadForever/Collector/Budget.lua",
+		"BraindeadForever/Routes/XP.lua",
 	})
 end
 
@@ -42,13 +42,13 @@ local function find(i)
 end
 
 local function fire(msg, sender, dist)
-	wow.fire("CHAT_MSG_ADDON", "Pathmark", msg, dist or "CHANNEL", sender, "", 0, 5, "PathmarkShare", 0)
+	wow.fire("CHAT_MSG_ADDON", "BDF", msg, dist or "CHANNEL", sender, "", 0, 5, "BraindeadShare", 0)
 end
 
 local function sent(dist, kind)
 	local out = {}
 	for _, m in ipairs(wow.world.sent) do
-		if m.prefix == "Pathmark" and m.dist == dist and (not kind or m.msg:sub(1, 2) == kind .. ";") then
+		if m.prefix == "BDF" and m.dist == dist and (not kind or m.msg:sub(1, 2) == kind .. ";") then
 			out[#out + 1] = m
 		end
 	end
@@ -364,7 +364,7 @@ describe("Cost of a received message (Lua 5.1 offline)", function()
 		for r = 0, rounds - 1 do
 			local t = os.clock()
 			for i = r * batch + 1, (r + 1) * batch do
-				X.Receive("Pathmark", msgs[i], "CHANNEL", senders[i])
+				X.Receive("BDF", msgs[i], "CHANNEL", senders[i])
 			end
 			event = event + os.clock() - t
 			t = os.clock()
@@ -415,8 +415,8 @@ describe("Cost of a received message (Lua 5.1 offline)", function()
 		saved = saved / 1024
 		local inbox = kb(function()
 			for i = 1, X.INBOX_MAX do
-				X.Receive("Pathmark", find(i) .. ";" .. i, "CHANNEL", "Inbox Sender" .. i)
-				X.Receive("Pathmark", find(i) .. ";" .. i, "GUILD", "Guild Sender" .. i)
+				X.Receive("BDF", find(i) .. ";" .. i, "CHANNEL", "Inbox Sender" .. i)
+				X.Receive("BDF", find(i) .. ";" .. i, "GUILD", "Guild Sender" .. i)
 			end
 			return X.inbox
 		end)

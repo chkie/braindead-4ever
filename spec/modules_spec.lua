@@ -4,8 +4,11 @@ local wow = require("spec.helpers.wow")
 
 local function setup(opts, files)
 	wow.reset(opts)
-	local ns =
-		wow.loadFiles(files or { "Pathmark/Locales/enUS.lua", "Pathmark/Core/Guard.lua", "Pathmark/Core/Modules.lua" })
+	local ns = wow.loadFiles(files or {
+		"BraindeadForever/Locales/enUS.lua",
+		"BraindeadForever/Core/Guard.lua",
+		"BraindeadForever/Core/Modules.lua",
+	})
 	ns.db = { flags = {}, safeMode = false }
 	return ns
 end
@@ -88,7 +91,7 @@ describe("Modules", function()
 		ns.Modules.Boot(ns.db)
 		assert.are.equal("error", ns.Modules.state.broken)
 		assert.are.equal("on", ns.Modules.state.fine)
-		assert.are.same({ "Pathmark [broken] init failed" }, wow.errors)
+		assert.are.same({ "Braindead Forever [broken] init failed" }, wow.errors)
 	end)
 
 	it("dispatches events to every active module and registers each event once", function()
@@ -156,10 +159,10 @@ describe("Modules", function()
 
 	it("reports states in the client language", function()
 		local ns = setup({ locale = "deDE" }, {
-			"Pathmark/Locales/enUS.lua",
-			"Pathmark/Locales/deDE.lua",
-			"Pathmark/Core/Guard.lua",
-			"Pathmark/Core/Modules.lua",
+			"BraindeadForever/Locales/enUS.lua",
+			"BraindeadForever/Locales/deDE.lua",
+			"BraindeadForever/Core/Guard.lua",
+			"BraindeadForever/Core/Modules.lua",
 		})
 		ns.Modules.Define("collector", { core = true })
 		ns.Modules.Define("arrow", {})

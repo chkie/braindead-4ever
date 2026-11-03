@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Experience rules, the same as Pathmark/Routes/XP.lua (the addon's XP balance).
+"""Experience rules, the same as BraindeadForever/Routes/XP.lua (the addon's XP balance).
 
 Classic rules with one measured Forever change: a creature below the character gives
 (5 x creature level + 45) reduced by the level difference, not (5 x character level + 45) as in

@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
-"""Compiler: data/routes/<faction> -> Pathmark/Routes/Data_<Faction>.lua (docs/ROUTE-FORMAT.md
+"""Compiler: data/routes/<faction> -> BraindeadForever/Routes/Data_<Faction>.lua (docs/ROUTE-FORMAT.md
 §Compiled form). The output is deterministic, so CI can rebuild it and compare."""
 
 import filecmp
@@ -372,7 +372,7 @@ def _write(target_dir):
 
 
 def run():
-    out = repo_path("Pathmark", "Routes")
+    out = repo_path("BraindeadForever", "Routes")
     os.makedirs(out, exist_ok=True)
     files = _write(out)
     return {os.path.basename(f): os.path.getsize(f) for f in files}
@@ -384,7 +384,7 @@ def check():
         files = _write(tmp)
         bad = []
         for f in files:
-            committed = repo_path("Pathmark", "Routes", os.path.basename(f))
+            committed = repo_path("BraindeadForever", "Routes", os.path.basename(f))
             if not os.path.exists(committed) or not filecmp.cmp(f, committed, shallow=False):
                 bad.append(os.path.basename(f))
         if bad:

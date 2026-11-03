@@ -23,6 +23,6 @@ jobs:
       - name: Post a test message
         if: ${{ env.DISCORD_WEBHOOK_URL != '' }}
         run: |
-          MSG="Test of the Pathmark release notice from ${GITHUB_REPOSITORY}, run ${GITHUB_RUN_ID}."
+          MSG="Test of the Braindead Forever release notice from ${GITHUB_REPOSITORY}, run ${GITHUB_RUN_ID}."
           jq -n --arg c "$MSG" '{content:$c, allowed_mentions:{parse:[]}}' \
             | curl -fsS --retry 3 -H "Content-Type: application/json" -d @- "${DISCORD_WEBHOOK_URL}?wait=true"
