@@ -66,6 +66,8 @@ Measured offline (Lua 5.1 on the development machine, `spec/stats_perf_spec.lua`
 | Review card, full vault | comparison 10 to 13 ms in 21 frames (longest 0.9 ms); 0.02 ms per frame over 10 s |
 | Memory | comparison of 5000 sections +104 KB; saved tally of a level-30 character with 60 module runs about 8 KB of SavedVariables text |
 
+On the shared CI runner the same page took about twice as long on average (0.042 ms per frame) and its longest frame 4 ms. The test therefore takes the fastest of three runs for the average and holds the slice size (at most 250 texts per frame), not a wall-clock peak.
+
 ## Chosen values
 
 | Value | Where | Setting |
