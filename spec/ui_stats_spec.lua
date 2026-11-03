@@ -311,7 +311,7 @@ describe("Your run: review card", function()
 		assert.are.equal("1 h 28 min", R.time.text) -- levels 1 to 8 at 600 s, level 9 the route section's 500.5 s
 		assert.are.equal("Median of your class", R.facts[1].label.text)
 		assert.matches("%(12 runs%)$", R.facts[1].value.text)
-		assert.are.equal("Braindead Forever", R.foot.text)
+		assert.are.equal("Braindead 4ever", R.foot.text)
 		assert.is_true(ns.RunStats.Char().recap[10])
 		R:Hide()
 		-- the same level-up again, a zone change and a new session: the card stays closed

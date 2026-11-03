@@ -5,7 +5,7 @@ local wow = require("spec.helpers.wow")
 
 local function load()
 	wow.reset({})
-	return wow.loadFiles({ "BraindeadForever/Routes/Stats.lua" }).Stats
+	return wow.loadFiles({ "Braindead4Ever/Routes/Stats.lua" }).Stats
 end
 
 -- A vault text as Collector/Proto.lua formats it.

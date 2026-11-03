@@ -73,9 +73,9 @@ end
 describe("Route runtime previews for the step window", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
 	})
 	local RT = ns.Runtime
 

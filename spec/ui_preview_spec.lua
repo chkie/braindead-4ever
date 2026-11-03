@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Probe/Preview.lua (developer build only): "/bdf preview <state>" puts the real windows into each
+-- Probe/Preview.lua (developer build only): "/bd4 preview <state>" puts the real windows into each
 -- state of design v2 for the screenshots of design stage 2 (docs/TESTING-RETAIL.md). Every state runs
 -- without a Lua error and shows what the design shows; "off" goes back to the live route.
 local wow = require("spec.helpers.wow")

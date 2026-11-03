@@ -6,7 +6,7 @@ Code: `Routes/Stats.lua` (tally, comparison, bands; pure Lua), `Routes/RunStats.
 
 ## Where it shows
 
-- **Page:** right-click menu of the step window and of the minimap button ("Your run"), `/bdf stats` (toggles). Never opens by itself; in a fight the command waits for its end. Three tabs: levels, route sections, best times. A row's tooltip has the details.
+- **Page:** right-click menu of the step window and of the minimap button ("Your run"), `/bd4 stats` (toggles). Never opens by itself; in a fight the command waits for its end. Three tabs: levels, route sections, best times. A row's tooltip has the details.
 - **Review card:** at the level-up to 10, 20 and 30, three seconds later (after Blizzard's level-up banner), once per character. It waits while the player fights or is in an instance and comes at the next zone change or loading screen outside. "Show the review at level 10, 20 and 30" on the card and on the settings page Display turns it off; a card due while it is off is dropped. The card is marked as shown when it opens, so it never comes twice. No card when the band has no whole level (the addon came in during its last level).
 
 ## What is counted
@@ -28,7 +28,7 @@ Per level of a character (`BraindeadForeverCharDB.stats.lv[level]`):
 
 Module runs (`BraindeadForeverCharDB.stats.mods`): the "m" sections the route records, the first run per module and version. A level the addon did not see from its start is marked "part" and never compared.
 
-**Events and their evidence** (Forever docs, wow-ui-source branch forever, commit aff0d8c "1.60.1 (70707)", `Blizzard_APIDocumentationGenerated`, read 2026-11-02): `PLAYER_STARTED_MOVING` and `PLAYER_STOPPED_MOVING` (`UnitDocumentation.lua` lines 3946 and 3964, no payload), `PLAYER_REGEN_DISABLED` and `PLAYER_REGEN_ENABLED` (lines 3887 and 3893), `PARTY_KILL` (line 3726, `SecretWhenUnitIdentityRestricted`), `PLAYER_DEAD` (`DeathInfoDocumentation.lua` line 131), `QUEST_TURNED_IN` with `questID`, `xpReward`, `moneyReward` (`QuestLogDocumentation.lua` line 1396), `C_CreatureInfo.GetRaceInfo` and `GetClassInfo` with `raceName` and `className` (`CreatureInfoDocumentation.lua`). All of them are also in Ketho BlizzardInterfaceResources branch forever (commit d1ee569, `Resources/Events.lua`, `Resources/GlobalAPI.lua`). The movement events are new for Braindead Forever; the others were in use already.
+**Events and their evidence** (Forever docs, wow-ui-source branch forever, commit aff0d8c "1.60.1 (70707)", `Blizzard_APIDocumentationGenerated`, read 2026-11-02): `PLAYER_STARTED_MOVING` and `PLAYER_STOPPED_MOVING` (`UnitDocumentation.lua` lines 3946 and 3964, no payload), `PLAYER_REGEN_DISABLED` and `PLAYER_REGEN_ENABLED` (lines 3887 and 3893), `PARTY_KILL` (line 3726, `SecretWhenUnitIdentityRestricted`), `PLAYER_DEAD` (`DeathInfoDocumentation.lua` line 131), `QUEST_TURNED_IN` with `questID`, `xpReward`, `moneyReward` (`QuestLogDocumentation.lua` line 1396), `C_CreatureInfo.GetRaceInfo` and `GetClassInfo` with `raceName` and `className` (`CreatureInfoDocumentation.lua`). All of them are also in Ketho BlizzardInterfaceResources branch forever (commit d1ee569, `Resources/Events.lua`, `Resources/GlobalAPI.lua`). The movement events are new for Braindead 4ever; the others were in use already.
 
 ## Comparison with the class
 
@@ -83,4 +83,4 @@ On the shared CI runner the same page took about twice as long on average (0.042
 
 ## Developer preview
 
-`/bdf preview stats` (page with comparison data), `stats0` (without: "collecting"), `recap10` (card with comparison and a new best time of the account), `recap30` (card while the class has too few runs). The numbers are demo data of the design; the preview does not use up the real card.
+`/bd4 preview stats` (page with comparison data), `stats0` (without: "collecting"), `recap10` (card with comparison and a new best time of the account), `recap30` (card while the class has too few runs). The numbers are demo data of the design; the preview does not use up the real card.

@@ -763,6 +763,7 @@ function M.reset(opts)
 	_G.SlashCmdList = {}
 	_G.SLASH_BRAINDEADFOREVER1 = nil
 	_G.SLASH_BRAINDEADFOREVER2 = nil
+	_G.SLASH_BRAINDEADFOREVER3 = nil
 	-- the key binding handler holds the last session's namespace (UI/Bindings.lua): a fresh client has none
 	_G.BraindeadForeverBinding = nil
 	_G.BraindeadForeverDB = opts.saved
@@ -846,7 +847,7 @@ end
 function M.loadFiles(paths, addonName, ns)
 	ns = ns or {}
 	for _, p in ipairs(paths) do
-		M.loadFile(p, addonName or "BraindeadForever", ns)
+		M.loadFile(p, addonName or "Braindead4Ever", ns)
 	end
 	return ns
 end
@@ -854,59 +855,59 @@ end
 -- Every file of the addon in TOC order (without the developer probe unless asked).
 function M.addonFiles(withProbe)
 	local files = {
-		"BraindeadForever/Locales/enUS.lua",
-		"BraindeadForever/Core/Util.lua",
-		"BraindeadForever/Core/Guard.lua",
-		"BraindeadForever/Core/Modules.lua",
-		"BraindeadForever/Core/CopyWindow.lua",
-		"BraindeadForever/Collector/Migrate.lua",
-		"BraindeadForever/Collector/Store.lua",
-		"BraindeadForever/Collector/Export.lua",
-		"BraindeadForever/Collector/Proto.lua",
-		"BraindeadForever/Collector/Runs.lua",
-		"BraindeadForever/Collector/Budget.lua",
-		"BraindeadForever/Collector/Version.lua",
-		"BraindeadForever/Collector/Collect.lua",
-		"BraindeadForever/Collector/Exchange.lua",
-		"BraindeadForever/Core/Report.lua",
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/Data_Alliance.lua",
-		"BraindeadForever/Routes/Data_Horde.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Prereq.lua",
-		"BraindeadForever/Routes/Discover.lua",
-		"BraindeadForever/Routes/Dungeon.lua",
-		"BraindeadForever/Routes/Hardcore.lua",
-		"BraindeadForever/Routes/Forecast.lua",
-		"BraindeadForever/Routes/Stats.lua",
-		"BraindeadForever/Routes/Runtime.lua",
-		"BraindeadForever/Routes/Replan.lua",
-		"BraindeadForever/Routes/Guide.lua",
-		"BraindeadForever/Routes/Explore.lua",
-		"BraindeadForever/Routes/RunStats.lua",
-		"BraindeadForever/UI/Core.lua",
-		"BraindeadForever/UI/Theme.lua",
-		"BraindeadForever/UI/Nav.lua",
-		"BraindeadForever/UI/Connect.lua",
-		"BraindeadForever/UI/StepText.lua",
-		"BraindeadForever/UI/Menu.lua",
-		"BraindeadForever/UI/StepFrame.lua",
-		"BraindeadForever/UI/Arrow.lua",
-		"BraindeadForever/UI/TomTom.lua",
-		"BraindeadForever/UI/MapPins.lua",
-		"BraindeadForever/UI/QuestWatch.lua",
-		"BraindeadForever/UI/Minimap.lua",
-		"BraindeadForever/UI/Setup.lua",
-		"BraindeadForever/UI/Settings.lua",
-		"BraindeadForever/UI/StatsPage.lua",
-		"BraindeadForever/UI/Bindings.lua",
+		"Braindead4Ever/Locales/enUS.lua",
+		"Braindead4Ever/Core/Util.lua",
+		"Braindead4Ever/Core/Guard.lua",
+		"Braindead4Ever/Core/Modules.lua",
+		"Braindead4Ever/Core/CopyWindow.lua",
+		"Braindead4Ever/Collector/Migrate.lua",
+		"Braindead4Ever/Collector/Store.lua",
+		"Braindead4Ever/Collector/Export.lua",
+		"Braindead4Ever/Collector/Proto.lua",
+		"Braindead4Ever/Collector/Runs.lua",
+		"Braindead4Ever/Collector/Budget.lua",
+		"Braindead4Ever/Collector/Version.lua",
+		"Braindead4Ever/Collector/Collect.lua",
+		"Braindead4Ever/Collector/Exchange.lua",
+		"Braindead4Ever/Core/Report.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/Data_Alliance.lua",
+		"Braindead4Ever/Routes/Data_Horde.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Prereq.lua",
+		"Braindead4Ever/Routes/Discover.lua",
+		"Braindead4Ever/Routes/Dungeon.lua",
+		"Braindead4Ever/Routes/Hardcore.lua",
+		"Braindead4Ever/Routes/Forecast.lua",
+		"Braindead4Ever/Routes/Stats.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Replan.lua",
+		"Braindead4Ever/Routes/Guide.lua",
+		"Braindead4Ever/Routes/Explore.lua",
+		"Braindead4Ever/Routes/RunStats.lua",
+		"Braindead4Ever/UI/Core.lua",
+		"Braindead4Ever/UI/Theme.lua",
+		"Braindead4Ever/UI/Nav.lua",
+		"Braindead4Ever/UI/Connect.lua",
+		"Braindead4Ever/UI/StepText.lua",
+		"Braindead4Ever/UI/Menu.lua",
+		"Braindead4Ever/UI/StepFrame.lua",
+		"Braindead4Ever/UI/Arrow.lua",
+		"Braindead4Ever/UI/TomTom.lua",
+		"Braindead4Ever/UI/MapPins.lua",
+		"Braindead4Ever/UI/QuestWatch.lua",
+		"Braindead4Ever/UI/Minimap.lua",
+		"Braindead4Ever/UI/Setup.lua",
+		"Braindead4Ever/UI/Settings.lua",
+		"Braindead4Ever/UI/StatsPage.lua",
+		"Braindead4Ever/UI/Bindings.lua",
 	}
 	if withProbe then
-		files[#files + 1] = "BraindeadForever/Probe/Probe.lua"
-		files[#files + 1] = "BraindeadForever/Probe/Checks.lua"
-		files[#files + 1] = "BraindeadForever/Probe/Preview.lua"
+		files[#files + 1] = "Braindead4Ever/Probe/Probe.lua"
+		files[#files + 1] = "Braindead4Ever/Probe/Checks.lua"
+		files[#files + 1] = "Braindead4Ever/Probe/Preview.lua"
 	end
-	files[#files + 1] = "BraindeadForever/Core/Boot.lua"
+	files[#files + 1] = "Braindead4Ever/Core/Boot.lua"
 	return files
 end
 
@@ -916,7 +917,7 @@ function M.session(opts)
 	opts = opts or {}
 	M.reset(opts)
 	local ns = M.loadFiles(M.addonFiles(opts.probe))
-	M.fire("ADDON_LOADED", "BraindeadForever")
+	M.fire("ADDON_LOADED", "Braindead4Ever")
 	M.fire("PLAYER_LOGIN")
 	M.fire("PLAYER_ENTERING_WORLD", true, false)
 	M.ns = ns

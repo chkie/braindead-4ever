@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Luacheck for Braindead Forever (pattern after BigWigs/Questie). WoW Lua is 5.1.
+-- Luacheck for Braindead 4ever (pattern after BigWigs/Questie). WoW Lua is 5.1.
 -- read_globals is the API inventory: list only what the addon really uses, and check each
 -- new name against the Forever API dump before adding it.
 std = "lua51"
@@ -213,6 +213,7 @@ globals = {
 	"BraindeadForeverCharDB", -- ## SavedVariablesPerCharacter (random character ID)
 	"SLASH_BRAINDEADFOREVER1",
 	"SLASH_BRAINDEADFOREVER2",
+	"SLASH_BRAINDEADFOREVER3",
 	"SlashCmdList",
 	-- key bindings (Bindings.xml, UI/Bindings.lua): the handler and the names on Blizzard's binding page
 	"BraindeadForeverBinding",

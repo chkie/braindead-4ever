@@ -1,21 +1,21 @@
 # Route runtime
 
-The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `BraindeadForever/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
+The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `Braindead4Ever/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
 
 Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip; Welle 7: replanning; Welle 9, 2026-11-03: hardcore-safe mode, `Route.TopLevel`).
 
 | File | What it does |
 | --- | --- |
-| `BraindeadForever/Routes/XP.lua` | Experience rules: Classic level table, kill XP (Forever rule for creatures below the character), quest XP by level difference, XP needed for a level, kills for a shortfall. Pure Lua; `tools/routekit/xp.py` computes the same (shared cases `tools/tests/fixtures/xp_cases.json`). |
-| `BraindeadForever/Routes/Prereq.lua` | Prerequisites from player observations (Welle 4): the rule shared with `tools/routekit/prereq.py`. Pure Lua. |
-| `BraindeadForever/Routes/Discover.lua` | Explorer mode rules (Welle 4): hint levels, riddle and rumor sentences, the area hint. Pure Lua. |
-| `BraindeadForever/Routes/Dungeon.lua` | Dungeon hint (Welle 4). Pure Lua over the runtime and the compiled dungeon tables. |
-| `BraindeadForever/Routes/Forecast.lua` | Time forecast (Welle 4). Pure Lua. |
-| `BraindeadForever/Routes/Hardcore.lua` | Hardcore-safe mode (Welle 9): which quests of a step are too high or elite. Pure Lua. |
-| `BraindeadForever/Routes/Runtime.lua` | The rules below. Pure Lua: the client state comes in through a world table, so the tests run the same code. |
-| `BraindeadForever/Routes/Replan.lua` | Replanning (Welle 7): over the plan, switch points with alternative modules, reorder in the block. Adds methods to the runtime; pure Lua. |
-| `BraindeadForever/Routes/Guide.lua` | Module `route`: picks the route, feeds game events in, saves progress, offers `ns.Route`. |
-| `BraindeadForever/Routes/Explore.lua` | Module `explore`: own finds, finds of other players, the catalog; offers `ns.Explore`. |
+| `Braindead4Ever/Routes/XP.lua` | Experience rules: Classic level table, kill XP (Forever rule for creatures below the character), quest XP by level difference, XP needed for a level, kills for a shortfall. Pure Lua; `tools/routekit/xp.py` computes the same (shared cases `tools/tests/fixtures/xp_cases.json`). |
+| `Braindead4Ever/Routes/Prereq.lua` | Prerequisites from player observations (Welle 4): the rule shared with `tools/routekit/prereq.py`. Pure Lua. |
+| `Braindead4Ever/Routes/Discover.lua` | Explorer mode rules (Welle 4): hint levels, riddle and rumor sentences, the area hint. Pure Lua. |
+| `Braindead4Ever/Routes/Dungeon.lua` | Dungeon hint (Welle 4). Pure Lua over the runtime and the compiled dungeon tables. |
+| `Braindead4Ever/Routes/Forecast.lua` | Time forecast (Welle 4). Pure Lua. |
+| `Braindead4Ever/Routes/Hardcore.lua` | Hardcore-safe mode (Welle 9): which quests of a step are too high or elite. Pure Lua. |
+| `Braindead4Ever/Routes/Runtime.lua` | The rules below. Pure Lua: the client state comes in through a world table, so the tests run the same code. |
+| `Braindead4Ever/Routes/Replan.lua` | Replanning (Welle 7): over the plan, switch points with alternative modules, reorder in the block. Adds methods to the runtime; pure Lua. |
+| `Braindead4Ever/Routes/Guide.lua` | Module `route`: picks the route, feeds game events in, saves progress, offers `ns.Route`. |
+| `Braindead4Ever/Routes/Explore.lua` | Module `explore`: own finds, finds of other players, the catalog; offers `ns.Explore`. |
 
 ## Module `route`
 
@@ -161,9 +161,9 @@ Quest XP: the client's `GetQuestLogRewardXP` while the quest is in the log, else
 
 | Assumption | Probe check | How |
 | --- | --- | --- |
-| XP per level as in Classic (1 to 60: 4,084,700) | `xp.curve` | `/bdf probe run`: client `UnitXPMax` against the table |
-| Kill XP as in Classic for creatures at or above the character, the Forever rule (forever-bugs #138) below; Forever has no level scaling (chapter 14 §2) | `xp.kill` | kill a creature solo, keep it targeted, `/bdf probe check xp.kill` |
-| Quest XP: Polestar value with the Classic reduction | `xp.quest` | with a route quest in the log: `/bdf probe run` |
+| XP per level as in Classic (1 to 60: 4,084,700) | `xp.curve` | `/bd4 probe run`: client `UnitXPMax` against the table |
+| Kill XP as in Classic for creatures at or above the character, the Forever rule (forever-bugs #138) below; Forever has no level scaling (chapter 14 §2) | `xp.kill` | kill a creature solo, keep it targeted, `/bd4 probe check xp.kill` |
+| Quest XP: Polestar value with the Classic reduction | `xp.quest` | with a route quest in the log: `/bd4 probe run` |
 | Planned levels | none | AP 10 simulation and our measurements |
 
 Until these checks pass in the Forever client, every number of the balance is shown as an estimate.
@@ -322,7 +322,7 @@ Arrival detection for steps with only a `goto` (the route data has none) and hea
 
 ## Window binding (Welle 5)
 
-The windows (`BraindeadForever/UI/`) read the logic only through the adapter `UI/Connect.lua`; a change of an interface above lands there.
+The windows (`Braindead4Ever/UI/`) read the logic only through the adapter `UI/Connect.lua`; a change of an interface above lands there.
 
 | Logic | What the window shows |
 | --- | --- |

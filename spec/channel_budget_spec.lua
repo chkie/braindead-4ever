@@ -16,12 +16,12 @@ local MEAN_MAX, WINDOW_MAX = 0.5, 60
 local function pure()
 	wow.reset()
 	return wow.loadFiles({
-		"BraindeadForever/Locales/enUS.lua",
-		"BraindeadForever/Core/Util.lua",
-		"BraindeadForever/Collector/Proto.lua",
-		"BraindeadForever/Collector/Runs.lua",
-		"BraindeadForever/Collector/Budget.lua",
-		"BraindeadForever/Routes/XP.lua",
+		"Braindead4Ever/Locales/enUS.lua",
+		"Braindead4Ever/Core/Util.lua",
+		"Braindead4Ever/Collector/Proto.lua",
+		"Braindead4Ever/Collector/Runs.lua",
+		"Braindead4Ever/Collector/Budget.lua",
+		"Braindead4Ever/Routes/XP.lua",
 	})
 end
 

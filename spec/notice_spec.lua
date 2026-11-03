@@ -39,7 +39,7 @@ describe("Messages without a command", function()
 		end
 		wow.advance(1)
 		assert.are.equal("disabled", ns.Modules.state.arrow)
-		assert.are.equal("Module arrow turned off, see /bdf status", ns.StepFrame.frame.status.text)
+		assert.are.equal("Module arrow turned off, see /bd4 status", ns.StepFrame.frame.status.text)
 		assert.are.equal("", wow.output())
 	end)
 

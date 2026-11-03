@@ -15,7 +15,7 @@ end
 
 local function load()
 	wow.reset({})
-	return wow.loadFiles({ "BraindeadForever/Routes/XP.lua" }, "BraindeadForever", {}).XP
+	return wow.loadFiles({ "Braindead4Ever/Routes/XP.lua" }, "Braindead4Ever", {}).XP
 end
 
 describe("XP rules", function()

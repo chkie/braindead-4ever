@@ -25,7 +25,7 @@ end
 
 describe("Version notice", function()
 	describe("versions", function()
-		local V = require("spec.helpers.wow").loadFiles({ "BraindeadForever/Collector/Version.lua" }).Version
+		local V = require("spec.helpers.wow").loadFiles({ "Braindead4Ever/Collector/Version.lua" }).Version
 
 		it("reads release tags and leaves development builds out", function()
 			assert.are.same({ 0, 1, 10, pre = false }, V.Parse("v0.1.10"))
@@ -100,10 +100,7 @@ describe("Version notice", function()
 			local ns = S.login({ version = "v0.1.0", saved = { flags = { window = false } } })
 			hear(ns, "Anna Sommer", "a;1;0;1;1;0")
 			hear(ns, "Ben Winter", "a;1;0;1;1;0")
-			assert.are.equal(
-				"|cffff8800Braindead Forever|r: version 0.1.1 is available, you have v0.1.0.",
-				wow.output()
-			)
+			assert.are.equal("|cffff8800Braindead 4ever|r: version 0.1.1 is available, you have v0.1.0.", wow.output())
 		end)
 	end)
 

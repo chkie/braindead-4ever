@@ -39,13 +39,13 @@ function S.login(opts)
 	end
 	local files = wow.addonFiles(opts.probe)
 	if opts.locale == "deDE" then
-		table.insert(files, 2, "BraindeadForever/Locales/deDE.lua") -- the TOC loads it only in German clients
+		table.insert(files, 2, "Braindead4Ever/Locales/deDE.lua") -- the TOC loads it only in German clients
 	end
 	local ns = wow.loadFiles(files)
 	if opts.loaded then
 		opts.loaded(ns) -- the addon files are loaded, nothing has run yet (e.g. to change route data)
 	end
-	wow.fire("ADDON_LOADED", "BraindeadForever")
+	wow.fire("ADDON_LOADED", "Braindead4Ever")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
 	wow.advance(0.5)

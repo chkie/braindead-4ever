@@ -272,7 +272,7 @@ describe("Step window", function()
 				texts[i] = item.text or item.kind
 			end
 			assert.are.same({
-				"Braindead Forever",
+				"Braindead 4ever",
 				"Undo",
 				"Skip step",
 				"Previous step",
@@ -341,7 +341,7 @@ describe("Step window", function()
 			local ns = S.login()
 			ns.Modules.state.mappins = "disabled"
 			ns.StepFrame.Refresh()
-			assert.are.equal("Module mappins turned off, see /bdf status", frame(ns).status.text)
+			assert.are.equal("Module mappins turned off, see /bd4 status", frame(ns).status.text)
 		end)
 
 		it("says when there is no route for the race and class", function()

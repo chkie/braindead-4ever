@@ -1,20 +1,20 @@
-Braindead Forever – third-party data
+Braindead 4ever – third-party data
 
-Braindead Forever's code is licensed under GPL-3.0-or-later with the additional permission in
+Braindead 4ever's code is licensed under GPL-3.0-or-later with the additional permission in
 LICENSE-EXCEPTION.md. The route data is a separate part with its own terms, because it
 contains data from the projects below:
 
   data/sources/polestar/   Polestar forever-db           GPL-3.0-only
   data/sources/eglink/     EG Link output, WoW: Forever  CC BY 4.0
   data/sources/att/        All The Things                MIT
-  data/facts/, data/routes/, BraindeadForever/Routes/Data_*.lua  merged from all three: GPL-3.0-only
+  data/facts/, data/routes/, Braindead4Ever/Routes/Data_*.lua  merged from all three: GPL-3.0-only
 
 These data files do not carry the Ace3 permission of LICENSE-EXCEPTION.md: it can only be
 granted by the copyright holders, and the Polestar data is not ours. Data from these projects
 starts with the status "unbestätigt" (unconfirmed) and is replaced as soon as our own in-game
-measurements cover it. The source form of the compiled data (BraindeadForever/Routes/Data_*.lua) is
+measurements cover it. The source form of the compiled data (Braindead4Ever/Routes/Data_*.lua) is
 the route files in data/routes and the tools in tools/routekit, published at
-https://github.com/chkie/braindead-forever.
+https://github.com/chkie/braindead-4ever.
 
 Which version of each source was used is recorded in data/sources/<source>/SOURCE.json and in
 the #sources line of every route file.
@@ -91,5 +91,5 @@ SOFTWARE.
 -------------------------------------------------------------------------------------------
 World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks
 of Blizzard Entertainment, Inc. in the U.S. and/or other countries. Quest and NPC IDs and
-coordinates describe the game; no game assets and no game text are included. Braindead Forever is not
+coordinates describe the game; no game assets and no game text are included. Braindead 4ever is not
 affiliated with or endorsed by Blizzard Entertainment.

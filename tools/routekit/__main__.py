@@ -4,7 +4,7 @@
   python3 -m tools.routekit import --polestar DIR --eglink DIR --att DIR [--lua PATH]
   python3 -m tools.routekit merge          data/sources -> data/facts
   python3 -m tools.routekit lint [FILES]   check route files (default: data/routes)
-  python3 -m tools.routekit compile        data/routes -> BraindeadForever/Routes
+  python3 -m tools.routekit compile        data/routes -> Braindead4Ever/Routes
   python3 -m tools.routekit check          lint + compile into a temp dir and compare
   python3 -m tools.routekit observe PATHS  player exports -> data/sources/own (run merge after)
   python3 -m tools.routekit runs CSV...     run times from the exchange: medians per section, class, mode

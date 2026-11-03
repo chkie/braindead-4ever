@@ -3,10 +3,10 @@
 local wow = require("spec.helpers.wow")
 
 local FILES = {
-	"BraindeadForever/Locales/enUS.lua",
-	"BraindeadForever/Core/Guard.lua",
-	"BraindeadForever/Core/Modules.lua",
-	"BraindeadForever/Core/Boot.lua",
+	"Braindead4Ever/Locales/enUS.lua",
+	"Braindead4Ever/Core/Guard.lua",
+	"Braindead4Ever/Core/Modules.lua",
+	"Braindead4Ever/Core/Boot.lua",
 }
 
 -- One game session: fresh client with the SavedVariables of the last session.
@@ -15,7 +15,7 @@ local function session(opts)
 	opts = opts or {}
 	wow.reset({ saved = opts.saved, version = opts.version })
 	local ns = wow.loadFiles(FILES)
-	wow.fire("ADDON_LOADED", "BraindeadForever")
+	wow.fire("ADDON_LOADED", "Braindead4Ever")
 	if opts.clean then
 		wow.fire("PLAYER_ENTERING_WORLD", true, false)
 		wow.advance(10)
@@ -89,18 +89,19 @@ describe("Boot", function()
 	end)
 end)
 
-describe("/bdf", function()
+describe("/bd4", function()
 	it("answers before the addon has loaded", function()
 		wow.reset()
 		wow.loadFiles(FILES)
 		SlashCmdList.BRAINDEADFOREVER("")
-		assert.are.equal("Braindead Forever: not loaded yet", wow.output())
+		assert.are.equal("Braindead 4ever: not loaded yet", wow.output())
 	end)
 
 	it("registers the slash command", function()
 		session()
-		assert.are.equal("/bdf", SLASH_BRAINDEADFOREVER1)
-		assert.are.equal("/braindeadforever", SLASH_BRAINDEADFOREVER2)
+		assert.are.equal("/bd4", SLASH_BRAINDEADFOREVER1)
+		assert.are.equal("/braindead4ever", SLASH_BRAINDEADFOREVER2)
+		assert.are.equal("/bdf", SLASH_BRAINDEADFOREVER3)
 		assert.is_function(SlashCmdList.BRAINDEADFOREVER)
 	end)
 
@@ -130,7 +131,7 @@ describe("/bdf", function()
 		SlashCmdList.BRAINDEADFOREVER("errors")
 		assert.matches("1x [arrow] broken", wow.output(), 1, true)
 		SlashCmdList.BRAINDEADFOREVER("status")
-		assert.matches("Braindead Forever dev build=70532 toc=16001 project=18 safe=false", wow.output(), 1, true)
+		assert.matches("Braindead 4ever dev build=70532 toc=16001 project=18 safe=false", wow.output(), 1, true)
 	end)
 
 	it("toggles quiet errors", function()

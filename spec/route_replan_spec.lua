@@ -47,10 +47,10 @@ end
 describe("Replanning: entry anchor", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/Data_Alliance.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/Data_Alliance.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
 	})
 	local RT = ns.Runtime
 	local data = ns.Routes.Load("Alliance")
@@ -347,10 +347,10 @@ end
 describe("Replanning: over the plan and switch points", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
-		"BraindeadForever/Routes/Replan.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Replan.lua",
 	})
 	local RT = ns.Runtime
 
@@ -515,10 +515,10 @@ end
 describe("Replanning: reorder in the block", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
-		"BraindeadForever/Routes/Replan.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Replan.lua",
 	})
 	local RT = ns.Runtime
 
@@ -686,10 +686,10 @@ end)
 describe("Replanning: reorder and steps that open again", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
-		"BraindeadForever/Routes/Replan.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Replan.lua",
 	})
 	local RT = ns.Runtime
 
@@ -765,11 +765,11 @@ end)
 describe("Replanning: time and frame budget of the reorder", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/Data_Alliance.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
-		"BraindeadForever/Routes/Replan.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/Data_Alliance.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Replan.lua",
 	})
 	local RT = ns.Runtime
 	local data = ns.Routes.Load("Alliance")
@@ -850,10 +850,10 @@ end)
 describe("Replanning: alternative modules at switch points", function()
 	wow.reset({})
 	local ns = wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
-		"BraindeadForever/Routes/Replan.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Replan.lua",
 	})
 	local RT, R = ns.Runtime, ns.Routes
 

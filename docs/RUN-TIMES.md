@@ -95,7 +95,7 @@ Simplifications, so that 20,000 clients run in about 25 s: clients older than an
 
 ## Export and analysis
 
-The PM1 export (`/bdf export`) carries the vault's sections not exported yet under the key `runs`, as message texts. `node decoder/cli.mjs --runs < export.txt` writes the run table as CSV:
+The PM1 export (`/bd4 export`) carries the vault's sections not exported yet under the key `runs`, as message texts. `node decoder/cli.mjs --runs < export.txt` writes the run table as CSV:
 
 ```
 token,race,class,mode,kind,section,version,seconds,xp,in_order,level,day,source

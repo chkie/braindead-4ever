@@ -8,9 +8,9 @@ local json = require("spec.helpers.json")
 local function load()
 	wow.reset()
 	return wow.loadFiles({
-		"BraindeadForever/Locales/enUS.lua",
-		"BraindeadForever/Core/Util.lua",
-		"BraindeadForever/Collector/Export.lua",
+		"Braindead4Ever/Locales/enUS.lua",
+		"Braindead4Ever/Core/Util.lua",
+		"Braindead4Ever/Collector/Export.lua",
 	})
 end
 

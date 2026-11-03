@@ -138,7 +138,7 @@ describe("Interface performance (offline)", function()
 		local ns = wow.loadFiles(core)
 		collectgarbage("collect")
 		local before = collectgarbage("count")
-		wow.loadFiles(ui, "BraindeadForever", ns)
+		wow.loadFiles(ui, "Braindead4Ever", ns)
 		collectgarbage("collect")
 		local kb = collectgarbage("count") - before
 		report("interface code loaded: %.0f KB (Lua 5.1, offline)", kb)

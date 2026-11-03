@@ -2,7 +2,7 @@
 -- Design v2, view 3 "Erststart": one window two seconds after the first login, once per account,
 -- never in combat; detected race, class, level and start zone without a question; exactly one question
 -- with three cards, nothing preselected; a card sets play style and hint level (3, 1, 0) and closes;
--- closing picks "With hints"; reopened from the settings and with /bdf setup.
+-- closing picks "With hints"; reopened from the settings and with /bd4 setup.
 local wow = require("spec.helpers.wow")
 local S = require("spec.helpers.uisession")
 
@@ -26,7 +26,7 @@ describe("First start", function()
 		assert.are.equal("BasicFrameTemplateWithInset", d.template)
 		assert.are.same({ 560, 330 }, { d.w, d.h })
 		assert.are.equal("CENTER", d.points[1][1])
-		assert.are.equal("Set up Braindead Forever", d.TitleText.text)
+		assert.are.equal("Set up Braindead 4ever", d.TitleText.text)
 		assert.are.equal("Detected", d.detectedLabel.text)
 		assert.are.equal("Mensch • Krieger • Level 1 • Route starts in Elwynn Forest", d.detected.text)
 		assert.are.equal("How do you want to play?", d.question.text)
@@ -39,7 +39,7 @@ describe("First start", function()
 			"With hints / Hint level 1",
 			"Discover on my own / Hint level 0",
 		}, titles)
-		assert.matches("^Braindead Forever shares what you discover", d.data.text)
+		assert.matches("^Braindead 4ever shares what you discover", d.data.text)
 		assert.matches("Closing picks “With hints”%.$", d.foot.text)
 		-- the route has not switched before the player chose
 		assert.are.equal("speed", ns.Route.Mode())
@@ -95,7 +95,7 @@ describe("First start", function()
 		assert.are.same({}, wow.blocked)
 	end)
 
-	it("reopens from /bdf setup; closing it then changes nothing", function()
+	it("reopens from /bd4 setup; closing it then changes nothing", function()
 		local ns = S.login({ style = "self" })
 		SlashCmdList.BRAINDEADFOREVER("setup")
 		local d = dialog()
@@ -130,7 +130,7 @@ describe("First start", function()
 		first({ locale = "deDE" })
 		wow.advance(2)
 		local d = dialog()
-		assert.are.equal("Braindead Forever einrichten", d.TitleText.text)
+		assert.are.equal("Braindead 4ever einrichten", d.TitleText.text)
 		assert.are.equal("Mensch • Krieger • Stufe 1 • Route ab Wald von Elwynn", d.detected.text)
 		assert.are.equal("Wie willst du spielen?", d.question.text)
 		assert.are.equal("Einfach dem Pfeil folgen", d.cards[1].title.text)

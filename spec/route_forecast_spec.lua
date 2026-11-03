@@ -33,7 +33,7 @@ end
 
 describe("Forecast rules (pure)", function()
 	wow.reset({})
-	local F = wow.loadFiles({ "BraindeadForever/Routes/Forecast.lua" }).Forecast
+	local F = wow.loadFiles({ "Braindead4Ever/Routes/Forecast.lua" }).Forecast
 	-- Route of two modules: a (steps 1-4), b (steps 5-6); the player is at step 2.
 	local function rt(cur)
 		local steps = {}

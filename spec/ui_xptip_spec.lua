@@ -126,7 +126,7 @@ describe("XP line tooltip", function()
 		local W = ns.StepFrame.frame
 		assert.is_true(rawget(W.xpHit, "shown"))
 		W.xpHit.scripts.OnMouseUp(W.xpHit, "RightButton")
-		assert.are.equal("Braindead Forever", wow.menu.items[1].text)
+		assert.are.equal("Braindead 4ever", wow.menu.items[1].text)
 		ns.StepFrame.SetMini(true)
 		assert.is_false(rawget(W.xpHit, "shown"))
 	end)

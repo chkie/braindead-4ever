@@ -59,7 +59,7 @@ describe("TomTom hand-over", function()
 		assert.are.equal("Accept “Wolves Across the Border”", w.opts.title)
 		assert.is_true(w.opts.silent, "no TomTom chat line (rule R2)")
 		assert.is_false(w.opts.persistent)
-		assert.are.equal("Braindead Forever", w.opts.from)
+		assert.are.equal("Braindead 4ever", w.opts.from)
 		assert.are.equal(1, count(tt.waypoints))
 	end)
 

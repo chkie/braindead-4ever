@@ -23,7 +23,7 @@ end
 
 describe("Hardcore-safe mode", function()
 	describe("rule", function()
-		local H = wow.loadFiles({ "BraindeadForever/Routes/Hardcore.lua" }).Hardcore
+		local H = wow.loadFiles({ "Braindead4Ever/Routes/Hardcore.lua" }).Hardcore
 		local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3 }
 
 		it("counts the quests a step sends the player to, not the turn-in", function()
@@ -56,7 +56,7 @@ describe("Hardcore-safe mode", function()
 		local n = 0
 		for _, faction in ipairs({ "Alliance", "Horde" }) do
 			local data = {}
-			assert(loadfile("BraindeadForever/Routes/Data_" .. faction .. ".lua"))("BraindeadForever", data)
+			assert(loadfile("Braindead4Ever/Routes/Data_" .. faction .. ".lua"))("Braindead4Ever", data)
 			for q in pairs(data.RouteData[faction]().quests) do
 				n = n + 1
 				assert.is_nil(

@@ -448,7 +448,7 @@ describe("Collector", function()
 end)
 
 describe("Mandatory data contribution", function()
-	it("refuses /bdf flag for the collector and the exchange", function()
+	it("refuses /bd4 flag for the collector and the exchange", function()
 		start()
 		SlashCmdList.BRAINDEADFOREVER("flag collector off")
 		SlashCmdList.BRAINDEADFOREVER("flag exchange off")

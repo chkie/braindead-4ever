@@ -53,7 +53,7 @@ end
 describe("Settings", function()
 	it("register one category with five sub pages as vertical lists, Credits as canvas", function()
 		S.login()
-		local main = byName("Braindead Forever")
+		local main = byName("Braindead 4ever")
 		assert.is_true(main.registered)
 		local subs = {}
 		for _, c in ipairs(categories()) do
@@ -67,7 +67,7 @@ describe("Settings", function()
 	it("main page: four options and two buttons (rule E1)", function()
 		S.login()
 		local kinds = {}
-		for _, i in ipairs(byName("Braindead Forever").inits) do
+		for _, i in ipairs(byName("Braindead 4ever").inits) do
 			kinds[#kinds + 1] = i.kind .. ":" .. (i.setting and i.setting.key or i.name)
 		end
 		assert.are.same({
@@ -139,7 +139,7 @@ describe("Settings", function()
 
 	it("size slider runs from 75 to 200 % in steps of 5 and shows percent", function()
 		S.login()
-		local slider = init(byName("Braindead Forever"), "BRAINDEADFOREVER_SCALE")
+		local slider = init(byName("Braindead 4ever"), "BRAINDEADFOREVER_SCALE")
 		assert.are.same({ 75, 200, 5 }, { slider.options.min, slider.options.max, slider.options.step })
 		assert.are.equal("150 %", slider.options.formatter(150))
 		local alpha = init(byName("Display"), "BRAINDEADFOREVER_BGALPHA")
@@ -206,7 +206,7 @@ describe("Settings", function()
 
 	it("buttons: setup again, Edit Mode hint, reset position", function()
 		local ns = S.login()
-		local main = byName("Braindead Forever")
+		local main = byName("Braindead 4ever")
 		main.inits[7].click()
 		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
 		main.inits[8].click()
@@ -257,12 +257,11 @@ describe("Fonts (view 6)", function()
 			local f = _G[def.name]
 			assert.are.equal(_G[def.base], f.copyOf, key)
 		end
-		local find =
-			assert(io.popen('grep -rlE "SetFont\\(|\\.[tT][tT][fF]" BraindeadForever/UI BraindeadForever/Core'))
+		local find = assert(io.popen('grep -rlE "SetFont\\(|\\.[tT][tT][fF]" Braindead4Ever/UI Braindead4Ever/Core'))
 		local hits = find:read("*a")
 		find:close()
 		assert.are.equal("", hits)
-		local ttf = assert(io.popen('find BraindeadForever -iname "*.ttf" -o -iname "*.otf"'))
+		local ttf = assert(io.popen('find Braindead4Ever -iname "*.ttf" -o -iname "*.otf"'))
 		assert.are.equal("", ttf:read("*a"))
 		ttf:close()
 	end)
