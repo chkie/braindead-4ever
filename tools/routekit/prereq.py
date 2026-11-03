@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Prerequisites from player observations. The same rule runs in the addon
-(BraindeadForever/Routes/Prereq.lua); tools/tests/fixtures/prereq_cases.json holds the cases both must
+(Braindead4Ever/Routes/Prereq.lua); tools/tests/fixtures/prereq_cases.json holds the cases both must
 agree on.
 
 An observation of quest q is made when a player takes q, or sees an NPC offer q:

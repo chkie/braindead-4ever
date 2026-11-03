@@ -1,11 +1,11 @@
 # Route metrics
 
-How fast Braindead Forever's routes are, measured the same way for all 56 race and class combinations in both modes. This file holds the results; the measuring tools are kept outside this repository. They are not needed to build the addon or the route data (see [ROUTE-FORMAT.md](ROUTE-FORMAT.md)).
+How fast Braindead 4ever's routes are, measured the same way for all 56 race and class combinations in both modes. This file holds the results; the measuring tools are kept outside this repository. They are not needed to build the addon or the route data (see [ROUTE-FORMAT.md](ROUTE-FORMAT.md)).
 
 ## What the numbers are
 
 - **Modellstunden.** Every time in this file is a Modellstunde (model hour): what a model of the game charges for a route, not a forecast of real play time. Rankings between routes carry; absolute hours do not.
-- **Real play time replaces them.** Braindead Forever shares run times per level and route section between players ([RUN-TIMES.md](RUN-TIMES.md)). Once enough runs come in, the routes are measured against real play, published as summarised values (median and number of runs).
+- **Real play time replaces them.** Braindead 4ever shares run times per level and route section between players ([RUN-TIMES.md](RUN-TIMES.md)). Once enough runs come in, the routes are measured against real play, published as summarised values (median and number of runs).
 - **Scope.** Every combination is played to level 30 in both modes; all 56 get there in both.
 
 ## Results 2026-11-01: routes of the current release data (Welle 5)

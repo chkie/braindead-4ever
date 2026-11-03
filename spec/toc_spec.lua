@@ -3,11 +3,11 @@
 local wow = require("spec.helpers.wow")
 local tocReader = require("spec.helpers.toc")
 
-local ADDON = "BraindeadForever"
-local DIR = "BraindeadForever"
+local ADDON = "Braindead4Ever"
+local DIR = "Braindead4Ever"
 local TOCS = {
-	{ file = DIR .. "/BraindeadForever.toc", gameType = "standard", flavor = "retail" },
-	{ file = DIR .. "/BraindeadForever_Camelot.toc", gameType = "camelot", flavor = "forever" },
+	{ file = DIR .. "/Braindead4Ever.toc", gameType = "standard", flavor = "retail" },
+	{ file = DIR .. "/Braindead4Ever_Camelot.toc", gameType = "camelot", flavor = "forever" },
 }
 -- Globals the addon may create. Everything else must stay in the namespace.
 local ALLOWED_NEW_GLOBALS = {
@@ -16,6 +16,7 @@ local ALLOWED_NEW_GLOBALS = {
 	BraindeadForeverCharDB = true,
 	SLASH_BRAINDEADFOREVER1 = true,
 	SLASH_BRAINDEADFOREVER2 = true,
+	SLASH_BRAINDEADFOREVER3 = true,
 	-- Interface (Welle 5): font copies of Blizzard objects (CreateFont needs a name) and the setup
 	-- window (Escape closes frames by name).
 	BraindeadForeverFontHeader = true,
@@ -94,7 +95,7 @@ describe("TOC files", function()
 			local toc = tocReader.parse(entry.file)
 
 			it("has the required directives", function()
-				assert.are.equal("Braindead Forever", toc.directives.Title)
+				assert.are.equal("Braindead 4ever", toc.directives.Title)
 				assert.are.equal("@project-version@", toc.directives.Version)
 				assert.are.equal("BraindeadForeverDB, BraindeadForeverCollectDB", toc.directives.SavedVariables)
 				assert.are.equal("BraindeadForeverCharDB", toc.directives.SavedVariablesPerCharacter)
@@ -184,7 +185,7 @@ describe("TOC files", function()
 					assert.are.equal("dev", ns.version)
 
 					SlashCmdList.BRAINDEADFOREVER("")
-					assert.matches("^Braindead Forever dev build=", wow.output())
+					assert.matches("^Braindead 4ever dev build=", wow.output())
 
 					for k in pairs(_G) do
 						if not before[k] then
@@ -202,7 +203,7 @@ describe(".pkgmeta", function()
 		local fh = assert(io.open(".pkgmeta", "rb"))
 		local text = fh:read("*a")
 		fh:close()
-		assert.is_truthy(text:find("\n  %- BraindeadForever/Probe\n"), "BraindeadForever/Probe not ignored")
+		assert.is_truthy(text:find("\n  %- Braindead4Ever/Probe\n"), "Braindead4Ever/Probe not ignored")
 		assert.is_truthy(text:find("\n  %- decoder\n"), "decoder not ignored")
 	end)
 end)

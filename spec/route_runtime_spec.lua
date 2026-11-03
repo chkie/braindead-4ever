@@ -7,9 +7,9 @@ local wow = require("spec.helpers.wow")
 local function load()
 	wow.reset({})
 	return wow.loadFiles({
-		"BraindeadForever/Routes/Routes.lua",
-		"BraindeadForever/Routes/XP.lua",
-		"BraindeadForever/Routes/Runtime.lua",
+		"Braindead4Ever/Routes/Routes.lua",
+		"Braindead4Ever/Routes/XP.lua",
+		"Braindead4Ever/Routes/Runtime.lua",
 	})
 end
 

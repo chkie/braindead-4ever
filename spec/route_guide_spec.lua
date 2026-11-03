@@ -50,7 +50,7 @@ local function login(opts)
 		wow.world.completed[q] = true
 	end
 	local ns = wow.loadFiles(wow.addonFiles())
-	wow.fire("ADDON_LOADED", "BraindeadForever")
+	wow.fire("ADDON_LOADED", "Braindead4Ever")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
 	return ns

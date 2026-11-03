@@ -42,9 +42,9 @@ end
 
 local function locale(code)
 	wow.reset({ locale = code })
-	local files = { "BraindeadForever/Locales/enUS.lua" }
+	local files = { "Braindead4Ever/Locales/enUS.lua" }
 	if code == "deDE" then
-		files[2] = "BraindeadForever/Locales/deDE.lua"
+		files[2] = "Braindead4Ever/Locales/deDE.lua"
 	end
 	return wow.loadFiles(files).L
 end

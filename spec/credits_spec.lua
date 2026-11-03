@@ -13,7 +13,7 @@ end
 
 -- English texts of the Credits page.
 local function strings()
-	local ns = wow.loadFiles({ "BraindeadForever/Locales/enUS.lua" })
+	local ns = wow.loadFiles({ "Braindead4Ever/Locales/enUS.lua" })
 	return ns.L
 end
 
@@ -60,7 +60,7 @@ describe("CREDITS.md", function()
 	it("has the licence line without warranty, the library line and the trademark line", function()
 		assert.matches("GPL-3.0-or-later", text, 1, true)
 		assert.matches("without any warranty", text, 1, true)
-		assert.matches("Braindead Forever embeds no libraries.", text, 1, true)
+		assert.matches("Braindead 4ever embeds no libraries.", text, 1, true)
 		assert.matches(L.CREDITS_LIBS, text, 1, true)
 		assert.matches("not affiliated with or endorsed by Blizzard Entertainment", text, 1, true)
 		assert.matches("ohne jede Gewährleistung", text, 1, true)

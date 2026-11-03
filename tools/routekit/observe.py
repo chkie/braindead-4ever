@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 """Own data from player exports: prerequisites observed at quest accepts, measured module times and
-flights. Reads PM1 export texts (BraindeadForever/Collector/Export.lua; one or more per file, separated by
+flights. Reads PM1 export texts (Braindead4Ever/Collector/Export.lua; one or more per file, separated by
 whitespace), writes data/sources/own/prereq.jsonl, times.jsonl and flights.jsonl. Run before `merge`:
 
   python3 -m tools.routekit observe EXPORT_DIR_OR_FILES...
@@ -180,7 +180,7 @@ def run(paths):
         os.path.join(out, "SOURCE.json"),
         {
             "source": "own",
-            "name": "Braindead Forever players: data collector exports",
+            "name": "Braindead 4ever players: data collector exports",
             "license": "GPL-3.0-or-later",
             "exports": len(payloads),
             "files": ["prereq.jsonl", "times.jsonl", "flights.jsonl"],

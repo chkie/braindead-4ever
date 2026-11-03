@@ -26,7 +26,7 @@ def cases():
 
 
 def pm1(payload, method="d"):
-    """An export text like BraindeadForever/Collector/Export.lua builds it, with real DEFLATE."""
+    """An export text like Braindead4Ever/Collector/Export.lua builds it, with real DEFLATE."""
     raw = json.dumps(payload).encode("utf-8")
     if method == "d":
         c = zlib.compressobj(9, zlib.DEFLATED, -15)

@@ -17,7 +17,7 @@ local NPC = { guid = "Creature-0-1-0-1-197-0000000001", name = "Marshal" }
 
 local function pure()
 	wow.reset({})
-	return wow.loadFiles({ "BraindeadForever/Routes/Prereq.lua" })
+	return wow.loadFiles({ "Braindead4Ever/Routes/Prereq.lua" })
 end
 
 -- Records of one kind in the collector's own buffer, split into fields.
@@ -117,7 +117,7 @@ end)
 
 describe("Exchange message for prerequisite observations", function()
 	wow.reset({})
-	local Proto = wow.loadFiles({ "BraindeadForever/Collector/Proto.lua" }).Proto
+	local Proto = wow.loadFiles({ "Braindead4Ever/Collector/Proto.lua" }).Proto
 
 	it("carries token, quest, link, unlock and two short ID lists", function()
 		local msg = Proto.Format("p", "a1b2c3", 900002, 900001, 1, "900005.900006", "")

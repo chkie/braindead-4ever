@@ -16,7 +16,7 @@ end
 -- session drops the other faction's data).
 local function topOfData(faction)
 	local data = {}
-	assert(loadfile("BraindeadForever/Routes/Data_" .. faction .. ".lua"))("BraindeadForever", data)
+	assert(loadfile("Braindead4Ever/Routes/Data_" .. faction .. ".lua"))("Braindead4Ever", data)
 	local top = 0
 	for _, m in pairs(data.RouteData[faction]().modules) do
 		top = math.max(top, m.levels[2])
@@ -58,8 +58,8 @@ describe("Coverage", function()
 
 	it("both TOCs name levels 1 to 30 and promise no 60", function()
 		for _, path in ipairs({
-			"BraindeadForever/BraindeadForever.toc",
-			"BraindeadForever/BraindeadForever_Camelot.toc",
+			"Braindead4Ever/Braindead4Ever.toc",
+			"Braindead4Ever/Braindead4Ever_Camelot.toc",
 		}) do
 			local d = tocReader.parse(path).directives
 			assert.matches("levels 1 to 30", d.Notes, 1, true)

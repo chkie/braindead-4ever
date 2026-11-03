@@ -1,13 +1,13 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Compiled route data (BraindeadForever/Routes/Data_*.lua) and the composer (Routes/Routes.lua):
+-- Compiled route data (Braindead4Ever/Routes/Data_*.lua) and the composer (Routes/Routes.lua):
 -- a route for every one of the 56 race and class combinations, in both modes, and a run
 -- through the Elwynn Forest start route with quest-log bookkeeping.
 local wow = require("spec.helpers.wow")
 
 local FILES = {
-	"BraindeadForever/Routes/Routes.lua",
-	"BraindeadForever/Routes/Data_Alliance.lua",
-	"BraindeadForever/Routes/Data_Horde.lua",
+	"Braindead4Ever/Routes/Routes.lua",
+	"Braindead4Ever/Routes/Data_Alliance.lua",
+	"Braindead4Ever/Routes/Data_Horde.lua",
 }
 
 -- 56 combinations from the client table CharBaseInfo (wowf 1.60.1.70707), brain chapter 14 §1.
@@ -45,7 +45,7 @@ local ZEPHRAS = { [2521] = true, [2665] = true }
 
 local function load()
 	wow.reset({})
-	return wow.loadFiles(FILES, "BraindeadForever", {})
+	return wow.loadFiles(FILES, "Braindead4Ever", {})
 end
 
 local function eachCombo(fn)

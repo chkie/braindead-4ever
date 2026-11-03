@@ -13,7 +13,7 @@ local function session(opts)
 	opts = opts or {}
 	local ns = wow.session(opts)
 	if opts.locale == "deDE" then
-		wow.loadFile("BraindeadForever/Locales/deDE.lua", "BraindeadForever", ns) -- the TOC loads it on German clients
+		wow.loadFile("Braindead4Ever/Locales/deDE.lua", "Braindead4Ever", ns) -- the TOC loads it on German clients
 	end
 	wow.advance(10) -- a clean start, so the start guard keeps every module on
 	wow.world.mapInfo[1429] = { mapID = 1429, name = opts.locale == "deDE" and "Wald von Elwynn" or "Elwynn Forest" }
@@ -54,7 +54,7 @@ end
 
 describe("Discovery rules (pure)", function()
 	wow.reset({})
-	local D = wow.loadFiles({ "BraindeadForever/Routes/Discover.lua" }).Discover
+	local D = wow.loadFiles({ "Braindead4Ever/Routes/Discover.lua" }).Discover
 
 	it("shows a foreign find never at level 0, also not on request", function()
 		for _, source in ipairs({ "data", "players" }) do

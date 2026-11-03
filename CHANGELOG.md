@@ -1,4 +1,4 @@
-# Braindead Forever
+# Braindead 4ever
 
 <!--
 Release notes. The packager uses this file for every upload (manual-changelog in .pkgmeta).
@@ -29,9 +29,9 @@ Keep "Known issues" and "Bekannte Probleme" current. Hotfix steps: CONTRIBUTING.
 ## Known issues
 
 - The routes are computed from open data and not played yet; every section is marked as provisional until our own runs replace it.
-- Braindead Forever could not be tested in the Forever client before the start. If a part fails, it turns off and the rest keeps running; after two failed starts the safe mode keeps the core running.
+- Braindead 4ever could not be tested in the Forever client before the start. If a part fails, it turns off and the rest keeps running; after two failed starts the safe mode keeps the core running.
 
 ## Bekannte Probleme
 
 - Die Routen sind aus offenen Daten berechnet und noch nicht gespielt; jeder Abschnitt gilt als vorläufig, bis eigene Läufe ihn ersetzen.
-- Braindead Forever ließ sich vor dem Start nicht im Forever-Client testen. Fällt ein Teil aus, schaltet er ab und der Rest läuft weiter; nach zwei fehlgeschlagenen Starts hält der sichere Modus den Kern am Laufen.
+- Braindead 4ever ließ sich vor dem Start nicht im Forever-Client testen. Fällt ein Teil aus, schaltet er ab und der Rest läuft weiter; nach zwei fehlgeschlagenen Starts hält der sichere Modus den Kern am Laufen.

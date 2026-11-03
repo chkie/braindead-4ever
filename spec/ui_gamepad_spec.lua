@@ -85,15 +85,11 @@ describe("Places per UI type (gamepad)", function()
 		wow.reset({ flavor = "retail" })
 		assert.is_nil(_G.C_InputInterfaceStyle)
 		local ns = wow.loadFiles({
-			"BraindeadForever/Locales/enUS.lua",
-			"BraindeadForever/Core/Util.lua",
-			"BraindeadForever/Core/Guard.lua",
+			"Braindead4Ever/Locales/enUS.lua",
+			"Braindead4Ever/Core/Util.lua",
+			"Braindead4Ever/Core/Guard.lua",
 		})
-		ns = wow.loadFiles(
-			{ "BraindeadForever/Core/Modules.lua", "BraindeadForever/UI/Core.lua" },
-			"BraindeadForever",
-			ns
-		)
+		ns = wow.loadFiles({ "Braindead4Ever/Core/Modules.lua", "Braindead4Ever/UI/Core.lua" }, "Braindead4Ever", ns)
 		assert.is_false(ns.UI.Pad())
 		assert.are.equal("pos", ns.UI.PosKey())
 	end)

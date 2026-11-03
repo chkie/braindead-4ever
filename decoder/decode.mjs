@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-// Reads a Braindead Forever export text (PM1) in the browser or in Node (same WHATWG APIs, Node 22 or newer).
+// Reads a Braindead 4ever export text (PM1) in the browser or in Node (same WHATWG APIs, Node 22 or newer).
 // Format: PM1:<m>:<length>:<adler32-hex>:<base64(compressed(json))>
 //   m = d: Enum.CompressionMethod.Deflate, raw DEFLATE (RFC 1951) -> DecompressionStream("deflate-raw")
 //   m = z: Enum.CompressionMethod.Zlib, RFC 1950 with Adler-32 in the stream -> DecompressionStream("deflate")

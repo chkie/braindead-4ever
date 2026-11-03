@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Default place of the step window (owner readings 16 and 17, Welle 5c tasks 13 and 16): top right,
--- where Blizzard's quest tracker stands while Braindead Forever hides it, with a gap to the right action bars
+-- where Blizzard's quest tracker stands while Braindead 4ever hides it, with a gap to the right action bars
 -- (shown or not, bars 6 to 8 when they stand at the right edge) and to the minimap; left of the tracker
 -- while the tracker shows. Measured from Blizzard's frames at login and after layout changes, fixed
 -- values when nothing can be measured. A saved place is never overwritten.

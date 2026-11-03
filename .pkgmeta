@@ -1,10 +1,10 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 # BigWigsMods/packager. YAML: spaces only, no tabs. Dotfiles are always ignored.
-# The addon lives in BraindeadForever/; move-folders lifts it to the package root.
-package-as: BraindeadForever
+# The addon lives in Braindead4Ever/; move-folders lifts it to the package root.
+package-as: Braindead4Ever
 
 move-folders:
-  BraindeadForever/BraindeadForever: BraindeadForever
+  Braindead4Ever/Braindead4Ever: Braindead4Ever
 
 # Release notes in English and German, written by hand (CHANGELOG.md); without this key the packager
 # would build them from the commit subjects.
@@ -13,7 +13,7 @@ manual-changelog:
   markup-type: markdown
 
 ignore:
-  - BraindeadForever/Probe
+  - Braindead4Ever/Probe
   - data
   - decoder
   - docs

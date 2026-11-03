@@ -1,6 +1,6 @@
 # Route format
 
-Braindead Forever's routes live in the repository as readable text files (`data/routes/**/*.route`). A compiler turns them into compact Lua tables (`BraindeadForever/Routes/Data_<Faction>.lua`) that the addon loads. A linter checks every file and every one of the 56 race and class combinations before a merge. This document is the specification; the tools in `tools/routekit` implement it.
+Braindead 4ever's routes live in the repository as readable text files (`data/routes/**/*.route`). A compiler turns them into compact Lua tables (`Braindead4Ever/Routes/Data_<Faction>.lua`) that the addon loads. A linter checks every file and every one of the 56 race and class combinations before a merge. This document is the specification; the tools in `tools/routekit` implement it.
 
 Format version: 1 (2026-11-01).
 
@@ -17,7 +17,7 @@ data/routes/<faction>/*.route + COMPOSE        (the source form of the route dat
         |  lint (all 56 combinations, against data/facts)
         |  compile
         v
-BraindeadForever/Routes/Data_<Faction>.lua
+Braindead4Ever/Routes/Data_<Faction>.lua
 ```
 
 The route files are the source form of the compiled data: they are read and changed as text, and `compile` turns them into the Lua tables. Everything needed for that is in this repository. The tools that plan and measure the routes are kept outside it; they are not needed to lint, compile or change a route.
@@ -27,7 +27,7 @@ The route files are the source form of the compiled data: they are read and chan
 | `python3 -m tools.routekit import --polestar DIR --eglink DIR --att DIR` | reads the three sources from local clones and writes `data/sources/` |
 | `python3 -m tools.routekit merge` | merges the sources into `data/facts/` with sources and status per value |
 | `python3 -m tools.routekit lint [FILES]` | checks route files; without arguments all files, all 56 combinations and the facts on service NPCs and flights |
-| `python3 -m tools.routekit compile` | writes `BraindeadForever/Routes/Data_Alliance.lua` and `Data_Horde.lua` |
+| `python3 -m tools.routekit compile` | writes `Braindead4Ever/Routes/Data_Alliance.lua` and `Data_Horde.lua` |
 | `python3 -m tools.routekit check` | lint, then compile into a temporary folder and compare with the committed files (CI) |
 
 The tools need Python 3.11 or later (standard library only). Reading All The Things needs Lua 5.1 (`scripts/setup.sh` installs it in `.tools/`).
@@ -224,7 +224,7 @@ Acceptance (Plan, work package 5): ten prepared errors in `tools/tests/fixtures/
 
 ## Compiled form
 
-`BraindeadForever/Routes/Data_<Faction>.lua` sets `ns.RouteData.<Faction>` to a function that returns the data, so only the played faction's tables are built. `BraindeadForever/Routes/Routes.lua` puts a route together (`ns.Routes.Steps(faction, mode, raceID, classID)`).
+`Braindead4Ever/Routes/Data_<Faction>.lua` sets `ns.RouteData.<Faction>` to a function that returns the data, so only the played faction's tables are built. `Braindead4Ever/Routes/Routes.lua` puts a route together (`ns.Routes.Steps(faction, mode, raceID, classID)`).
 
 ```lua
 {

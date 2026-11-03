@@ -27,7 +27,7 @@ local function sorted(list)
 	return out
 end
 
--- Login with quests in the log and marks set before Braindead Forever changed anything. Without opts.saved the
+-- Login with quests in the log and marks set before Braindead 4ever changed anything. Without opts.saved the
 -- player chose "only quests of the route" after Welle 5c (rev 1), so the choice stays.
 local function login(opts)
 	opts = opts or {}
@@ -212,7 +212,7 @@ describe("Blizzard's quest tracker", function()
 		local ns = login()
 		_G.Settings.SetValue("BRAINDEADFOREVER_TRACKER", "hide")
 		wow.advance(0.3)
-		wow.fire("ADDON_ACTION_BLOCKED", "BraindeadForever", "C_QuestLog.RemoveQuestWatch()")
+		wow.fire("ADDON_ACTION_BLOCKED", "Braindead4Ever", "C_QuestLog.RemoveQuestWatch()")
 		assert.are.equal("disabled", ns.Modules.state.questwatch)
 		assert.matches("blocked", ns.Modules.why.questwatch)
 		assert.are.equal("on", ns.Modules.state.window)

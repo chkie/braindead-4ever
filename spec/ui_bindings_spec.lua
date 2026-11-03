@@ -15,7 +15,7 @@ end
 -- { { name = "BRAINDEADFOREVER_X", attrs = "...", body = "..." }, ... } from Bindings.xml
 local function bindings()
 	local out = {}
-	for attrs, body in read("BraindeadForever/Bindings.xml"):gmatch("<Binding%s([^>]*)>(.-)</Binding>") do
+	for attrs, body in read("Braindead4Ever/Bindings.xml"):gmatch("<Binding%s([^>]*)>(.-)</Binding>") do
 		out[#out + 1] = { name = attrs:match('name="([^"]+)"'), attrs = attrs, body = body }
 	end
 	return out
@@ -26,7 +26,7 @@ local function shown(region)
 end
 
 describe("Key bindings", function()
-	it("Bindings.xml has one binding per action, unbound by default, in the Braindead Forever section", function()
+	it("Bindings.xml has one binding per action, unbound by default, in the Braindead 4ever section", function()
 		local ns = S.login()
 		local list = bindings()
 		assert.are.equal(#ns.Bindings.ACTIONS, #list)
@@ -39,7 +39,7 @@ describe("Key bindings", function()
 		end
 		for _, action in ipairs({ "TOGGLE", "CHECK", "SKIP", "BACK", "WINDOW", "MINI", "STATS" }) do
 			assert.is_truthy(
-				read("BraindeadForever/Bindings.xml"):find('"BRAINDEADFOREVER_' .. action .. '"', 1, true),
+				read("Braindead4Ever/Bindings.xml"):find('"BRAINDEADFOREVER_' .. action .. '"', 1, true),
 				action
 			)
 		end
@@ -51,7 +51,7 @@ describe("Key bindings", function()
 			deDE = { TOGGLE = "Führung an/aus", CHECK = "Schritt abhaken", WINDOW = "Schrittfenster an/aus" },
 		}) do
 			local ns = S.login({ locale = locale })
-			assert.are.equal("Braindead Forever", _G.BINDING_HEADER_BRAINDEADFOREVER)
+			assert.are.equal("Braindead 4ever", _G.BINDING_HEADER_BRAINDEADFOREVER)
 			for _, action in ipairs(ns.Bindings.ACTIONS) do
 				local name = _G["BINDING_NAME_BRAINDEADFOREVER_" .. action]
 				assert.is_string(name)

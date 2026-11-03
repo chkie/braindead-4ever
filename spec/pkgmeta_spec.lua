@@ -63,7 +63,7 @@ describe(".pkgmeta", function()
 		for _, p in ipairs(ignore) do
 			set[p] = true
 		end
-		for _, p in ipairs({ "tools", "data", "decoder", "spec", "docs", "scripts", "types", "BraindeadForever/Probe" }) do
+		for _, p in ipairs({ "tools", "data", "decoder", "spec", "docs", "scripts", "types", "Braindead4Ever/Probe" }) do
 			assert.is_true(set[p] == true, "not ignored: " .. p)
 		end
 	end)
@@ -71,7 +71,7 @@ describe(".pkgmeta", function()
 	it("packages only addon files and licences", function()
 		assert.is_true(#files > 10)
 		for _, f in ipairs(files) do
-			assert.is_true(LICENCES[f] or BESIDE[f] or f:match("^BraindeadForever/") ~= nil, "would be packaged: " .. f)
+			assert.is_true(LICENCES[f] or BESIDE[f] or f:match("^Braindead4Ever/") ~= nil, "would be packaged: " .. f)
 		end
 		local have = {}
 		for _, f in ipairs(files) do
@@ -89,13 +89,13 @@ describe(".pkgmeta", function()
 			have[f] = true
 		end
 		for _, toc in ipairs({
-			"BraindeadForever/BraindeadForever.toc",
-			"BraindeadForever/BraindeadForever_Camelot.toc",
+			"Braindead4Ever/Braindead4Ever.toc",
+			"Braindead4Ever/Braindead4Ever_Camelot.toc",
 		}) do
 			assert.is_true(have[toc] == true, toc)
 			for _, line in ipairs(tocReader.parse(toc).files) do
-				local path = tocReader.repoPath("BraindeadForever", line.path)
-				if not path:match("^BraindeadForever/Probe/") then
+				local path = tocReader.repoPath("Braindead4Ever", line.path)
+				if not path:match("^Braindead4Ever/Probe/") then
 					assert.is_true(have[path] == true, "TOC file not packaged: " .. path)
 				end
 			end
