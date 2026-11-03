@@ -138,7 +138,7 @@ local function Build()
 	Button(layout, L.BTN_POSITION_LABEL, L.BTN_POSITION, UI.EditModeHint, L.TIP_BTN_POSITION)
 
 	-- Play style
-	local play, playLayout = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_PLAY)
+	local play = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_PLAY)
 	local styleInit = Dropdown(play, "style", L.OPT_STYLE, L.TIP_STYLE, {
 		{ "arrow", L.STYLE_arrow },
 		{ "hints", L.STYLE_hints },
@@ -157,7 +157,6 @@ local function Build()
 		{ "on", L.HC_on, L.TIP_HC_on },
 		{ "off", L.HC_off, L.TIP_HC_off },
 	})
-	Header(playLayout, L.SEC_FINDS, L.INFO_FINDS)
 
 	-- Display
 	local disp, dispLayout = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_DISPLAY)
@@ -194,9 +193,8 @@ local function Build()
 	end
 
 	-- Accessibility
-	local a11y, a11yLayout = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_A11Y)
+	local a11y = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_A11Y)
 	Check(a11y, "textSize", L.OPT_TEXTSIZE, L.TIP_TEXTSIZE)
-	Header(a11yLayout, L.SEC_A11Y, L.INFO_A11Y)
 
 	Credits(cat)
 	Settings.RegisterAddOnCategory(cat)

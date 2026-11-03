@@ -40,9 +40,9 @@ local Num, Str = U.Num, U.Str
 local SP = {
 	NAME = "BraindeadForeverStatsFrame", -- named so that Escape closes it (UISpecialFrames)
 	RECAP_NAME = "BraindeadForeverRecapFrame",
-	W = 600,
+	W = 680, -- German summary values ("54 erledigt • 2 übersprungen") fit (screenshot round 3)
 	H = 480,
-	RECAP_W = 440,
+	RECAP_W = 500, -- the time split of the card fits in German
 	RECAP_H = 500,
 	PAD = 16,
 	ROW = 18, -- one table row
@@ -449,13 +449,13 @@ local function BuildPage()
 	page.sum = {}
 	for i = 1, 6 do
 		local col, line = (i - 1) % 2, math.floor((i - 1) / 2)
-		local x, y = P + col * 290, -62 - line * 18
+		local x, y = P + col * 330, -62 - line * 18
 		local label = Text(page, "GameFontNormal")
 		label:SetPoint("TOPLEFT", x, y)
 		label:SetWidth(130)
 		local value = Text(page, "GameFontHighlight")
 		value:SetPoint("TOPLEFT", x + 134, y)
-		value:SetWidth(150)
+		value:SetWidth(190)
 		page.sum[i] = { label = label, value = value }
 	end
 	-- column headers and the table

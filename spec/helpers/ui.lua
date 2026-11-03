@@ -332,6 +332,9 @@ function U.install(M, W, opts)
 		end
 		return rawget(self, "bottom") or (self:GetTop() - (self:GetHeight() or 0))
 	end
+	function Frame:SetHighlightTexture(texture)
+		self.highlight = texture
+	end
 	function Frame:SetEnabled(on)
 		self.enabled = on and true or false
 	end

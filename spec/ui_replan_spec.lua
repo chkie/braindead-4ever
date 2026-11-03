@@ -202,6 +202,8 @@ describe("Replanning in the step window", function()
 			"Westfall passt besser zu deiner Stufe (geplant ab Stufe 14). Als Nächstes dorthin? Etwa 30 Min. schneller.",
 			text
 		)
-		assert.are.equal("1 Quest ausgelassen: Ihre Abgabe brächte weniger als 80 % EP.", ST.Adjusted(1))
+		-- "ihre" means the quest's: lower case, so it never reads as the polite "Ihre" (screenshot round 3);
+		-- a no-break space keeps "80" and "%" on one line
+		assert.are.equal("1 Quest ausgelassen, weil ihre Abgabe weniger als 80\194\160% EP brächte.", ST.Adjusted(1))
 	end)
 end)
