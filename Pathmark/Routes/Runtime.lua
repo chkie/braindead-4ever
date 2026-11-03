@@ -417,6 +417,18 @@ function RT:Earlier()
 	return out
 end
 
+-- A detour of the route: a travel step of a class insert (R24: class quests in zones the route does
+-- not visit, `!return "Klassenquest"`). A return of a core module into a zone left earlier
+-- (`!return "<reason>"`, R09) is a zone change like any other. Without module data every return step
+-- counts as a detour (the route data before Welle 6b had class returns only).
+function RT:Detour(s)
+	if not s or not s.ret then
+		return false
+	end
+	local m = self.modules[s.module]
+	return not m or m.kind == "class"
+end
+
 -- An open step the route may pass without the player: far below the character's level (a travel step
 -- into a new zone only on the first start), before the entry anchor (RT:Anchor), or a travel step
 -- whose next quest shows progress.
@@ -435,7 +447,7 @@ function RT:Passed(i, ctx)
 		s.lv
 		and s.lv + RT.LEVEL_MARGIN < ctx.level
 		and not self:HoldsLogQuest(i)
-		and (s.kind ~= "travel" or s.ret or ctx.fresh)
+		and (s.kind ~= "travel" or self:Detour(s) or ctx.fresh)
 	then
 		return true
 	end
@@ -868,7 +880,7 @@ function RT:Balance()
 	while j <= n do
 		local s = self.steps[j]
 		local st = self:StepState(j, ctx)
-		if s.kind == "travel" and not s.ret and st ~= "skipped" then
+		if s.kind == "travel" and not self:Detour(s) and st ~= "skipped" then
 			break
 		end
 		if st ~= "skipped" then

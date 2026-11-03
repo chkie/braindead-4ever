@@ -172,7 +172,7 @@ function RT:FittingBlock(i, level)
 	for t = i + 1, #self.steps do
 		local s = self.steps[t]
 		if s.kind == "travel" then
-			if s.ret then
+			if self:Detour(s) then
 				return nil
 			end
 			local plan = self:BlockPlan(t)
@@ -190,7 +190,7 @@ end
 function RT:Switch(ctx)
 	local i = self.cur
 	local s = i and self.steps[i]
-	if not s or s.kind ~= "travel" or s.ret then
+	if not s or s.kind ~= "travel" or self:Detour(s) then
 		return nil
 	end
 	local id = "switch:" .. s.key
