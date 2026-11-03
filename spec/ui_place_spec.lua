@@ -234,6 +234,35 @@ describe("Default place of the step window", function()
 		_G.UIParent.GetRight = nil
 	end)
 
+	it("starts and takes the fixed values when Blizzard's frames exist but have no rectangle yet", function()
+		-- Owner report 03.11.: the frames exist at ADDON_LOADED, GetLeft returns nil, the window failed to start.
+		local ns = login({
+			layout = function()
+				for _, name in ipairs({
+					"MultiBarRight",
+					"MultiBarLeft",
+					"MultiBar5",
+					"MultiBar6",
+					"MultiBar7",
+					"MinimapCluster",
+				}) do
+					_G[name].norect = true
+				end
+			end,
+		})
+		assert.are.same({}, wow.errors)
+		assert.are.equal("on", ns.Modules.state.window)
+		assert.are.same({ -115, -266 }, { ns.StepFrame.frame.points[1][4], ns.StepFrame.frame.points[1][5] })
+		assert.is_nil(ns.UI.Rect(_G.MinimapCluster))
+		-- only some edges known: still no rectangle
+		_G.MinimapCluster.norect = nil
+		_G.MinimapCluster.GetRight = function()
+			return nil
+		end
+		assert.is_nil(ns.UI.Rect(_G.MinimapCluster))
+		_G.MinimapCluster.GetRight = nil
+	end)
+
 	it("the fixed values clear the bars and the minimap of a 1080 screen", function()
 		local ns = login()
 		local fixed = window(ns, -115, -266)
