@@ -214,7 +214,10 @@ function U.install(M, W, opts)
 		return 0, 0
 	end
 	function Frame:SetAtlas(name)
-		self.atlas, self.colorTexture = name, nil
+		self.atlas, self.colorTexture, self.file = name, nil, nil
+	end
+	function Frame:SetTexture(file)
+		self.file, self.atlas, self.colorTexture = file, nil, nil
 	end
 	function Frame:SetColorTexture(r, g, b, a)
 		self.atlas, self.colorTexture = nil, { r, g, b, a }

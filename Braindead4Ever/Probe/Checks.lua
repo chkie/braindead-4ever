@@ -618,7 +618,6 @@ local CHECKS = {
 	{ id = "atlas.glow", kind = "atlas", name = "OBJFX_LineGlow" },
 	{ id = "atlas.collapse", kind = "atlas", name = "UI-QuestTrackerButton-Collapse-All" },
 	{ id = "atlas.parchment", kind = "atlas", name = "QuestBG-Parchment" },
-	{ id = "atlas.arrow", kind = "atlas", name = "Navigation-Tracked-Arrow" },
 	{ id = "atlas.pin", kind = "atlas", name = "Waypoint-MapPin-Tracked" },
 	{ id = "atlas.minipin", kind = "atlas", name = "Waypoint-MapPin-Minimap-Tracked" },
 	{ id = "atlas.questnormal", kind = "atlas", name = "QuestNormal" },
