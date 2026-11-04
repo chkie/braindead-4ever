@@ -98,7 +98,17 @@ local function QuestStep(i, verb, quest)
 	return s
 end
 
-local function Steps(kind)
+-- A demo hint step (A35) with the element as the route data writes it (plan source, unconfirmed), so
+-- its text comes from the step text code and its map symbol from the map pins as on the live route
+-- (state "hints"). `kind` as the route runtime sets it: "other" for a service, "travel" for a flight.
+local function HintStep(i, el, kind)
+	local s = Step(i, "")
+	s.step[1] = el
+	s.kind = kind
+	return s
+end
+
+local function Steps(kind, westfall)
 	local s = {
 		Step(
 			1,
@@ -138,6 +148,13 @@ local function Steps(kind)
 	if kind == "npc" then -- accept from and turn in to an NPC (M4); the names come from NpcNames.SetDemo
 		s[1] = QuestStep(1, 1, Q.wolf)
 		s[2] = QuestStep(2, 3, Q.kob)
+	elseif kind == "hints" then -- A35: trainer, inn, flight point, then a flight into Westfall
+		local R = ns.Routes
+		local V, plan, open = R.VERB, R.SOURCE.plan, R.STATUS.UNCONFIRMED
+		s[1] = HintStep(1, { V.TRAIN, plan, open }, "other")
+		s[2] = HintStep(2, { V.SETHOME, plan, open }, "other")
+		s[3] = HintStep(3, { V.FP, plan, open }, "other")
+		s[4] = HintStep(4, { V.TRAVEL, 2, westfall, plan, open }, "travel") -- travel how 2: fly
 	end
 	-- More steps for the size states (owner reading 14): the list holds 20, the rest scrolls.
 	local order = { Q.echo, Q.skir, Q.report, Q.milly, Q.harvest, Q.grapes, Q.defias, Q.bandanas }
@@ -155,7 +172,7 @@ local function Source(kind, westfall)
 	local history = {}
 	local src = { missing = nil, westfall = westfall }
 	function src.Build() -- after ns.Connect uses this source, so the titles come from it
-		steps = Steps(kind)
+		steps = Steps(kind, src.westfall)
 		-- the abandoned quest is the current step, so note and marked step name the same quest (M9)
 		idx = kind == "abandon" and 3 or 1
 	end
@@ -552,6 +569,7 @@ P.STATES = {
 	"earlier",
 	"npc",
 	"questitem",
+	"hints",
 	"arrow <degrees>",
 	"arrival",
 	"colorblind",
