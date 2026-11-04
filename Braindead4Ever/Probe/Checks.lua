@@ -50,6 +50,16 @@ local function QuestID()
 	return (FirstQuest())
 end
 
+-- Log index of the first quest with a quest item, else of the first quest (0 without one).
+local function ItemIndex()
+	for i = 1, U.Num((C_QuestLog.GetNumQuestLogEntries())) or 0 do
+		if U.Str((GetQuestLogSpecialItemInfo(i))) then
+			return i
+		end
+	end
+	return select(2, FirstQuest())
+end
+
 local function Map()
 	return U.Num(C_Map.GetBestMapForUnit("player")) or 0
 end
@@ -376,6 +386,21 @@ local CHECKS = {
 	},
 	{ id = "qitem.use", kind = "exists", name = "UseQuestLogSpecialItem" },
 	{ id = "qitem.cvar", kind = "cvar", name = "canUseQuestItemWithLeftClick" },
+	-- The button's cooldown and range dot (UI/QuestItem.lua). The range call runs in "run" and in "run
+	-- combat": the button asks it only out of combat until the combat run shows it is allowed there.
+	{
+		id = "qitem.cooldown",
+		kind = "func",
+		name = "GetQuestLogSpecialItemCooldown",
+		args = ItemIndex,
+	},
+	{
+		id = "qitem.range",
+		kind = "func",
+		name = "IsQuestLogSpecialItemInRange",
+		args = ItemIndex,
+	},
+	{ id = "atlas.questitem", kind = "atlas", name = "UI-QuestTrackerButton-QuestItem-Frame" },
 	{
 		-- Creates a secure action button (type "item") out of combat for the first quest item in the log.
 		-- Click it; an ADDON_ACTION_BLOCKED/FORBIDDEN line in the report means the call is not allowed.

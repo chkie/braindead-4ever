@@ -145,6 +145,25 @@ The limits of 0.5 per second and 60 in 60 s hold as before (runs model alone at 
 | Relay gap | `Flights.RELAY_GAP` | 10 s |
 | Legs, flight points seen, messages kept for the export | `Flights.LEGS_MAX`, `NODES_MAX`, `EXPORT_MAX` | 1000, 500, 2000 |
 
+## NPCs of the step texts
+
+Accept and turn-in steps name the quest giver and the turn-in NPC (M4). `compile` writes `Braindead4Ever/Routes/Data_Npcs.lua` from `data/facts/quests.jsonl`: per faction a function (only the played faction's table is built), per quest `{ giver, sources, turn-in, sources, status }`.
+
+```lua
+ns.NpcFacts.Alliance = function()
+	return {
+		[33] = { 196, 3, 196, 1, 0 },   -- giver NPC, sources bit field, turn-in NPC, sources, status
+		[2] = { 0, 0, 12696, 5, 0 },    -- 0: the sources name no single NPC (an item starts quest 2)
+	}
+end
+```
+
+- NPC IDs only, never names: the addon takes the name from the client in the player's language (creature cache or learned when the player meets the NPC, `Braindead4Ever/UI/NpcNames.lua`), so no English name shows in another client.
+- An NPC is kept only when the fact names exactly one NPC and nothing else (no item, no object); with two givers the step stays without a name.
+- Every quest the faction can take (side of the faction, both or unknown), not only the quests of the routes, so a route change needs no new table. Sources and status as in the facts (bit field as for elements, status 0 = unbestätigt).
+
+Tests: `spec/ui_npcnames_spec.lua`, `tools/tests/test_routekit.py` (`Compiler`).
+
 ## Route files
 
 UTF-8, one module per file, `data/routes/<faction>/<module>.route`. `--` starts a comment (outside quotes).

@@ -23,4 +23,8 @@
 	<Binding name="BRAINDEADFOREVER_STATS" category="BINDING_HEADER_BRAINDEADFOREVER">
 		BraindeadForeverBinding("STATS")
 	</Binding>
+	<!-- Quest item button (M8, UI/QuestItem.lua): a click binding on the secure button, so the key uses the
+	     item like a click; its name is set in UI/QuestItem.lua. -->
+	<Binding name="CLICK BraindeadForeverQuestItemButton:LeftButton" category="BINDING_HEADER_BRAINDEADFOREVER">
+	</Binding>
 </Bindings>

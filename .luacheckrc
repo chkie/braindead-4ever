@@ -72,6 +72,8 @@ read_globals = {
 	-- branch forever: GlobalAPI, FrameXML, Frames, Mixins, GlobalStrings; wow-ui-source forever)
 	C_CVar = { fields = { "GetCVar" } },
 	C_Item = { fields = { "GetItemNameByID" } },
+	-- M4: NPC names from the creature cache (TooltipInfoDocumentation.lua forever, Ketho forever d1ee569)
+	C_TooltipInfo = { fields = { "GetHyperlink" } },
 	C_Minimap = { fields = { "GetViewRadius" } },
 	C_SuperTrack = { fields = { "SetSuperTrackedUserWaypoint" } },
 	C_Texture = { fields = { "GetAtlasInfo" } },
@@ -82,7 +84,9 @@ read_globals = {
 	ScrollBoxConstants = { fields = { "UpdateImmediately" } },
 	AddonCompartmentFrame = { fields = { "RegisterAddon" } },
 	EventRegistry = { fields = { "RegisterCallback" } },
-	GameTooltip = { fields = { "AddLine", "Hide", "SetOwner", "SetText", "Show" } },
+	GameTooltip = {
+		fields = { "AddLine", "Hide", "SetHyperlink", "SetOwner", "SetQuestLogSpecialItem", "SetText", "Show" },
+	},
 	HelpTip = { fields = { "ButtonStyle", "Hide", "IsShowing", "Point", "Show" } },
 	MenuUtil = { fields = { "CreateContextMenu" } },
 	MinimalSliderWithSteppersMixin = { fields = { Label = { other_fields = true } } },
@@ -219,9 +223,23 @@ read_globals = {
 	-- developer probe only (Probe/, not packaged)
 	"GetAddOnMemoryUsage",
 	"GetInventoryItemID",
-	"GetQuestLogSpecialItemInfo",
 	"UpdateAddOnMemoryUsage",
 	"debugprofilestop",
+	-- M8 quest item button (Ketho GlobalAPI forever d1ee569; Blizzard_ObjectiveTrackerShared.lua and
+	-- Blizzard_ActionBar/Shared/ActionButton.lua, wow-ui-source forever 17ed2c3)
+	"ACTIONBAR_HOTKEY_FONT_COLOR",
+	"CooldownFrame_Set",
+	"GetBindingKey",
+	"GetBindingText",
+	"GetQuestLogSpecialItemCooldown",
+	"GetQuestLogSpecialItemInfo",
+	"IsQuestLogSpecialItemInRange",
+	"RANGE_INDICATOR",
+	"RED_FONT_COLOR",
+	-- M4: placeholders the client shows while it has no name (GlobalStrings forever)
+	"RETRIEVING_DATA",
+	"UNKNOWN",
+	"UNKNOWNOBJECT",
 	-- error handling and secret values
 	"debugstack",
 	"geterrorhandler",

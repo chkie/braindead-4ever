@@ -50,6 +50,7 @@ T.ATLAS = {
 	minipin = "Waypoint-MapPin-Minimap-Tracked", -- 32x32
 	giver = "QuestNormal", -- 64x64
 	turnin = "QuestTurnin", -- 32x32
+	questitem = "UI-QuestTrackerButton-QuestItem-Frame", -- 48x48, drawn at 42 like Blizzard's tracker (M8)
 	-- hint steps (A35): the minimap tracking symbols, 32x32 each (AtlasInfo forever)
 	trainer = "Class",
 	innkeeper = "Innkeeper",

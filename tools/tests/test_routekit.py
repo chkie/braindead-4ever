@@ -142,6 +142,36 @@ class Compiler(unittest.TestCase):
             lines,
         )
 
+    def test_npc_table(self):
+        """M4: one NPC per giver and turn-in, IDs with sources and status, per faction side; a fact with
+        two NPCs or an item names nobody, and no name string ever reaches the file."""
+        npc = lambda i: {"id": i, "k": "npc"}  # noqa: E731
+        facts = {
+            900001: {"q": 900001, "side": {"v": "A"}, "status": "unbestätigt",
+                     "start": {"src": ["polestar", "att"], "v": [npc(196)]},
+                     "end": {"src": ["polestar"], "v": [npc(197)]}},
+            900002: {"q": 900002, "side": {"v": "B"}, "status": "unbestätigt",
+                     "start": {"src": ["polestar"], "v": [npc(5), npc(6)]},
+                     "end": {"src": ["eglink"], "v": [npc(7)]}},
+            900003: {"q": 900003, "side": {"v": "H"}, "status": "unbestätigt",
+                     "start": {"src": ["polestar"], "v": [{"id": 16305, "k": "item"}]},
+                     "end": {"src": ["polestar"], "v": [npc(8)]}},
+            900004: {"q": 900004, "side": {"v": "A"}, "status": "unbestätigt",
+                     "start": {"src": ["att"], "v": [{"id": 9, "k": "object"}]}},
+        }
+        text = compiler.compile_npcs(facts)
+        alliance, horde = text.split("ns.NpcFacts.Horde")
+        self.assertIn("[900001] = { 196, 3, 197, 1, 0 },", alliance)
+        self.assertIn("[900002] = { 0, 0, 7, 4, 0 },", alliance)  # two givers: no giver named
+        self.assertNotIn("[900003]", alliance)
+        self.assertNotIn("[900004]", alliance + horde)  # an object, no NPC at all
+        self.assertIn("[900003] = { 0, 0, 8, 1, 0 },", horde)
+        self.assertIn("[900002] = { 0, 0, 7, 4, 0 },", horde)
+        self.assertNotIn("[900001]", horde)
+        body = [ln for ln in text.splitlines() if not ln.lstrip().startswith("--") and ln != "local _, ns = ..."]
+        self.assertEqual([], [ln for ln in body if '"' in ln or "'" in ln])
+        self.assertEqual(text, compiler.compile_npcs(dict(reversed(list(facts.items())))))
+
 
 class RepositoryData(unittest.TestCase):
     """The committed route data lints clean for all 56 combinations and the compiled files are

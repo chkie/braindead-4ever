@@ -133,9 +133,11 @@ L.DETAIL_DIST = "%s away"
 -- A plain space: the Chinese client font ARKai_T has no U+00A0 and English is every client's fallback
 L.NBSP = " "
 L.STEP_ACCEPT = "Accept %s"
+L.STEP_ACCEPT_FROM = "Accept %s from %s" -- quest, giver NPC in the client's language (M4)
 L.STEP_COMPLETE = "Complete %s"
 L.STEP_OBJECTIVE = "%s: %s"
 L.STEP_TURNIN = "Turn in %s"
+L.STEP_TURNIN_TO = "Turn in %s to %s"
 L.STEP_COLLECT = "Collect %d %s"
 L.STEP_HS = "Use your hearthstone"
 L.STEP_SETHOME = "Set your hearthstone at the inn"
@@ -277,6 +279,7 @@ L.BINDING_BACK = "Step back"
 L.BINDING_WINDOW = "Step window on/off"
 L.BINDING_MINI = "Mini view"
 L.BINDING_STATS = "Your run"
+L.BINDING_QUESTITEM = "Use quest item" -- the quest item button (M8)
 -- Arrow
 L.BEHIND = "behind you"
 -- Positions (Edit Mode)

@@ -532,6 +532,21 @@ local function ToggleLook()
 	T.SetAtlas(W.toggle.tex, UI.DB().mini and "expand" or "collapse")
 end
 
+-- Quest item button (M8, UI/QuestItem.lua): room at the right of the current step, and the button
+-- follows the step after every layout. Nothing of it is protected in the window itself.
+local function ItemRoom()
+	local qi = ns.QuestItem
+	return qi and M.IsActive("questitem") and qi.Room() or 0
+end
+
+local function ItemFollow(top)
+	local qi = ns.QuestItem
+	if qi and M.IsActive("questitem") then
+		Guard.Call("questitem", qi.Follow, top)
+	end
+end
+SF.ItemFollow = ItemFollow
+
 -- Anchors every visible part from top to bottom and sizes the window to its content.
 function SF.Layout()
 	local mini = UI.DB().mini == true
@@ -581,22 +596,26 @@ function SF.Layout()
 	end
 	W.riddle:SetAlpha(mini and 0 or 1)
 
-	-- current step
+	-- current step; the quest item button (M8) stands at its right
 	local curTop = y
-	W.step:SetWidth(width)
+	local room = W.step:IsShown() and ItemRoom() or 0
+	W.step:SetWidth(width - room)
 	Place(W.step, x, y)
 	W.box:ClearAllPoints()
 	W.box:SetPoint("TOPLEFT", W, "TOPLEFT", SF.LEFT, -(y + 1))
 	y = y + Height(W.step)
 	if W.detail:IsShown() and not mini then
-		W.detail:SetWidth(width)
+		W.detail:SetWidth(width - room)
 		Place(W.detail, x, y + 4)
 		y = y + 4 + Height(W.detail)
 	end
 	if W.warn:IsShown() then
-		W.warn:SetWidth(width)
+		W.warn:SetWidth(width - room)
 		Place(W.warn, x, y + 4)
 		y = y + 4 + Height(W.warn)
+	end
+	if room > 0 then
+		y = math.max(y, curTop + ns.QuestItem.SIZE + 4) -- the next steps start below the button
 	end
 	W.cur:ClearAllPoints()
 	W.cur:SetPoint("TOPLEFT", W, "TOPLEFT", 0, -curTop)
@@ -710,6 +729,7 @@ function SF.Layout()
 	if SF.grip then
 		SF.grip:SetShown(not mini)
 	end
+	ItemFollow(curTop)
 end
 
 -- Looks: background, scale, combat dim, mini toggle -----------------------------------------------
@@ -1145,6 +1165,7 @@ function SF.Refresh(light)
 	end
 	if UI.Paused() then
 		W:Hide()
+		ItemFollow()
 		return
 	end
 	if view.playing then

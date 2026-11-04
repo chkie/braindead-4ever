@@ -93,6 +93,7 @@ function U.install(M, W, opts)
 		"BraindeadForeverStatsFrameTab2",
 		"BraindeadForeverStatsFrameTab3",
 		"BraindeadForeverRecapFrame",
+		"BraindeadForeverQuestItemButton",
 		"BraindeadForeverFontHeader",
 		"BraindeadForeverFontStep",
 		"BraindeadForeverFontLine",
@@ -100,6 +101,59 @@ function U.install(M, W, opts)
 		"BraindeadForeverFontStatus",
 	}) do
 		_G[name] = nil
+	end
+
+	-- Protected frames (brain chapter 05 §1 and §3): a frame made from a secure template is protected, and
+	-- so are its parents (but UIParent, which the addon never changes) and every frame it is anchored to.
+	-- In a fight Show, Hide, SetPoint, ClearAllPoints, SetAllPoints, SetSize, SetWidth, SetHeight,
+	-- SetScale, SetAttribute and RegisterForClicks on such a frame record "Protected:<method>" in
+	-- M.blocked, like the client's ADDON_ACTION_BLOCKED.
+	M.secure = {}
+	local function restricted(f)
+		if rawget(f, "secure") then
+			return true
+		end
+		if f == _G.UIParent then
+			return false
+		end
+		for _, s in ipairs(M.secure) do
+			local p = rawget(s, "parent")
+			while p do
+				if p == f then
+					return true
+				end
+				p = rawget(p, "parent")
+			end
+			for _, pt in ipairs(rawget(s, "points") or {}) do
+				if pt[2] == f then
+					return true
+				end
+			end
+		end
+		return false
+	end
+	M.restricted = restricted
+	local function guard(f, method)
+		if W.combat and restricted(f) then
+			M.blocked[#M.blocked + 1] = "Protected:" .. method
+		end
+	end
+	local create = _G.CreateFrame
+	_G.CreateFrame = function(frameType, name, parent, template)
+		local f = create(frameType, name, parent, template)
+		if type(template) == "string" and template:find("Secure", 1, true) then
+			f.secure = true
+			M.secure[#M.secure + 1] = f
+		end
+		return f
+	end
+	function Frame:SetAttribute(k, v)
+		guard(self, "SetAttribute")
+		self.attributes[k] = v
+	end
+	function Frame:RegisterForClicks(...)
+		guard(self, "RegisterForClicks")
+		self.clicksFor = { ... }
 	end
 
 	-- World state the windows read
@@ -128,12 +182,15 @@ function U.install(M, W, opts)
 
 	-- Widget methods ----------------------------------------------------------------------------------
 	function Frame:SetSize(w, h)
+		guard(self, "SetSize")
 		self.w, self.h = w, h
 	end
 	function Frame:SetWidth(w)
+		guard(self, "SetWidth")
 		self.w = w
 	end
 	function Frame:SetHeight(h)
+		guard(self, "SetHeight")
 		self.h = h
 	end
 	function Frame:GetWidth()
@@ -143,6 +200,7 @@ function U.install(M, W, opts)
 		return rawget(self, "h")
 	end
 	function Frame:SetPoint(point, rel, relPoint, x, y)
+		guard(self, "SetPoint")
 		if type(rel) == "number" then
 			rel, relPoint, x, y = nil, point, rel, relPoint
 		elseif type(relPoint) == "number" then
@@ -153,6 +211,7 @@ function U.install(M, W, opts)
 		list[#list + 1] = { point, rel, relPoint or point, x or 0, y or 0 }
 	end
 	function Frame:ClearAllPoints()
+		guard(self, "ClearAllPoints")
 		self.points = {}
 	end
 	function Frame:GetPoint(i)
@@ -162,9 +221,11 @@ function U.install(M, W, opts)
 		end
 	end
 	function Frame:SetAllPoints(rel)
+		guard(self, "SetAllPoints")
 		self.points = { { "TOPLEFT", rel }, { "BOTTOMRIGHT", rel } }
 	end
 	function Frame:Show()
+		guard(self, "Show")
 		local was = rawget(self, "shown")
 		self.shown = true
 		if not was and self.scripts.OnShow then
@@ -172,6 +233,7 @@ function U.install(M, W, opts)
 		end
 	end
 	function Frame:Hide()
+		guard(self, "Hide")
 		local was = rawget(self, "shown")
 		self.shown = false
 		if was and self.scripts.OnHide then
@@ -202,6 +264,7 @@ function U.install(M, W, opts)
 		return rawget(self, "alpha") or 1
 	end
 	function Frame:SetScale(s)
+		guard(self, "SetScale")
 		self.scale = s
 	end
 	function Frame:GetScale()
@@ -605,6 +668,70 @@ function U.install(M, W, opts)
 			return W.items[id]
 		end,
 	}
+
+	-- Quest items (M8): a quest log entry may carry item = { id, name, icon, charges, always, cooldown =
+	-- { start, duration, enable }, range = 0 | 1 | nil }. The shapes follow GetQuestLogSpecialItemInfo,
+	-- GetQuestLogSpecialItemCooldown and IsQuestLogSpecialItemInRange as Blizzard's tracker reads them
+	-- (Blizzard_ObjectiveTrackerShared.lua, wow-ui-source forever). Whether the range call is allowed in
+	-- a fight is open, so the addon never makes it there: it is audited.
+	M.knownEvents.BAG_UPDATE_COOLDOWN = true
+	M.knownEvents.UPDATE_BINDINGS = true
+	local function special(i)
+		local e = W.questLog[i]
+		return e and e.item
+	end
+	W.rangeCalls = 0
+	_G.GetQuestLogSpecialItemInfo = function(i)
+		local it = special(i)
+		if it then
+			local link = ("|cffffffff|Hitem:%d::::::::1:::::::|h[%s]|h|r"):format(it.id, it.name or "Item")
+			return link, it.icon or 134400, it.charges or 0, it.always == true
+		end
+	end
+	_G.GetQuestLogSpecialItemCooldown = function(i)
+		local it = special(i)
+		if it then
+			local cd = it.cooldown or { 0, 0, 1 }
+			return cd[1], cd[2], cd[3]
+		end
+	end
+	_G.IsQuestLogSpecialItemInRange = function(i)
+		audit("IsQuestLogSpecialItemInRange")
+		W.rangeCalls = W.rangeCalls + 1
+		local it = special(i)
+		return it and it.range
+	end
+	_G.CooldownFrame_Set = function(cd, start, duration, enable)
+		cd.cooldownSet = { start, duration, enable }
+	end
+	_G.RANGE_INDICATOR = "●"
+	_G.RED_FONT_COLOR = Color(1, 0.125, 0.125)
+	_G.ACTIONBAR_HOTKEY_FONT_COLOR = Color(0.6, 0.6, 0.6)
+	-- Key bindings: W.bindings[command] = key
+	W.bindings = {}
+	_G.GetBindingKey = function(command)
+		return W.bindings[command]
+	end
+	_G.GetBindingText = function(key)
+		return key or ""
+	end
+
+	-- NPC names (M4): the client's creature cache, read through the tooltip data of a unit link
+	-- (TooltipInfoDocumentation.lua forever: C_TooltipInfo.GetHyperlink -> TooltipData with lines).
+	-- W.creatures[npcID] = name in the client's language; unknown creatures give no lines.
+	W.creatures = {}
+	W.tooltipQueries = 0
+	_G.C_TooltipInfo = {
+		GetHyperlink = function(link)
+			W.tooltipQueries = W.tooltipQueries + 1
+			local id = tonumber(tostring(link):match("^unit:Creature%-0%-0%-0%-0%-(%d+)%-"))
+			local name = id and W.creatures[id]
+			return { lines = name and { { leftText = name } } or {} }
+		end,
+	}
+	_G.RETRIEVING_DATA = "Retrieving data"
+	_G.UNKNOWNOBJECT = "Unknown"
+	_G.UNKNOWN = _G.UNKNOWNOBJECT
 
 	-- Positions and maps
 	_G.UnitPosition = function(u)

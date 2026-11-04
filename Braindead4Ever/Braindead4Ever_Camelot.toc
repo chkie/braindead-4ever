@@ -36,6 +36,7 @@ Routes\Routes.lua
 Routes\Data_Alliance.lua
 Routes\Data_Horde.lua
 Routes\Data_Flights.lua
+Routes\Data_Npcs.lua
 Routes\XP.lua
 Routes\Prereq.lua
 Routes\Discover.lua
@@ -52,9 +53,11 @@ UI\Core.lua
 UI\Theme.lua
 UI\Nav.lua
 UI\Connect.lua
+UI\NpcNames.lua
 UI\StepText.lua
 UI\Menu.lua
 UI\StepFrame.lua
+UI\QuestItem.lua
 UI\Arrow.lua
 UI\TomTom.lua
 UI\MapPins.lua
