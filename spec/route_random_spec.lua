@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Random sequences on the real Elwynn route (owner wish 10, 2026-11-01): accept, abandon, play, check,
+-- Random sequences on the real Teldrassil route (owner wish 10, 2026-11-01): accept, abandon, play, check,
 -- skip, back, undo, answer the abandon question, level up and /reload in any order; since Welle 7 also
 -- moving around, fights and the reorder job, which runs up to ten frame slices after every action
 -- (an action every 170 ms, so a long job spans several actions and often gets stale). After every action
@@ -8,6 +8,9 @@ local wow = require("spec.helpers.wow")
 
 local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3, TRAVEL = 6 }
 local ACTIONS = 2500
+-- Night elf warrior. Since 0.9.1 the computed Elwynn route of the human warrior gives the reorder little
+-- to gain (0 to 5 applied reorders per seed measured); Teldrassil and its first core block give 3 to 7.
+local RACE, CLASS = 4, 1
 
 local function deepcopy(t)
 	if type(t) ~= "table" then
@@ -30,7 +33,7 @@ local function Random(seed)
 end
 
 local function newWorld()
-	local w = { flagged = {}, log = {}, level = 1, map = 1429, x = 0, y = 0, combat = false }
+	local w = { flagged = {}, log = {}, level = 1, map = 1438, x = 0, y = 0, combat = false } -- Teldrassil
 	w.api = {
 		IsFlagged = function(q)
 			return w.flagged[q] == true
@@ -71,8 +74,8 @@ describe("Route runtime under random actions", function()
 	})
 	local RT = ns.Runtime
 	local data = ns.Routes.Load("Alliance")
-	-- Elwynn and the first core blocks: long enough for chains, short enough for thousands of actions.
-	local all = ns.Routes.Steps("Alliance", "speed", 1, 1)
+	-- Teldrassil and the first core block: long enough for chains, short enough for thousands of actions.
+	local all = ns.Routes.Steps("Alliance", "speed", RACE, CLASS)
 	local steps = {}
 	for i = 1, 160 do
 		steps[i] = all[i]
@@ -166,11 +169,12 @@ describe("Route runtime under random actions", function()
 		checkOrder(rt, label)
 	end
 
-	-- Plan positions of the route's goto points, to stand somewhere on the route.
+	-- Plan positions of the route's goto points, to stand somewhere on the route (elements with their own
+	-- filter only for this race and class, as in Routes/Runtime.lua).
 	local spots = {}
 	for _, e in ipairs(steps) do
 		for _, el in ipairs(e.step) do
-			if el[1] == 5 then
+			if el[1] == 5 and (not (el.r or el.c) or ns.Routes.Applies(el, RACE, CLASS)) then
 				spots[#spots + 1] = { el[3], el[4] }
 			end
 		end
@@ -181,7 +185,7 @@ describe("Route runtime under random actions", function()
 			local rand = Random(seed)
 			local w = newWorld()
 			local saved = {}
-			local rt = RT.New(steps, data.quests, w.api, saved, { race = 1, class = 1, modules = data.modules })
+			local rt = RT.New(steps, data.quests, w.api, saved, { race = RACE, class = CLASS, modules = data.modules })
 			rt:Evaluate()
 			local counts = {}
 			local t = 0
@@ -195,8 +199,10 @@ describe("Route runtime under random actions", function()
 				return rt.steps[math.max(1, i)]
 			end
 
+			-- The player does what the step says for his race and class: the runtime's elements (step.els)
+			-- leave out elements with their own filter for others.
 			local function play(step)
-				for _, el in ipairs(step.data) do
+				for _, el in ipairs(step.els) do
 					local v, q = el[1], el[2]
 					if v == V.ACCEPT and not w.log[q] and not w.flagged[q] then
 						w.log[q] = { complete = false }
@@ -267,7 +273,8 @@ describe("Route runtime under random actions", function()
 						order[i] = step.key
 					end
 					saved = deepcopy(saved)
-					rt = RT.New(steps, data.quests, w.api, saved, { race = 1, class = 1, modules = data.modules })
+					rt =
+						RT.New(steps, data.quests, w.api, saved, { race = RACE, class = CLASS, modules = data.modules })
 					for i, step in ipairs(rt.steps) do
 						assert.are.equal(order[i], step.key, "reload changed the order")
 					end
@@ -320,7 +327,7 @@ describe("Route runtime under random actions", function()
 			for _, name in ipairs({ "play", "abandon", "check", "skip", "back", "undo", "resolve", "reload", "move" }) do
 				assert.is_true((counts[name] or 0) > 50, name .. " ran only " .. tostring(counts[name]))
 			end
-			-- measured 4 to 8 applied reorders per seed (the rest: no clear gain, a question waits, the player
+			-- measured 3 to 7 applied reorders per seed (the rest: no clear gain, a question waits, the player
 			-- went back, the current step is no movable quest step); every action after one runs on the new order
 			assert.is_true((counts.reorder or 0) >= 3, "reordered only " .. tostring(counts.reorder))
 			io.stdout:write(

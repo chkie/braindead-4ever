@@ -187,6 +187,22 @@ def run(src_dir, out_dir):
                     pos.extend(positions(s["k"], s["id"]))
             if pos:
                 q[pfield] = pos[:MAX_POSITIONS]
+        # A quest started by an item: where the item drops (table item_source, the five droppers
+        # with the highest chance, their spawns), one position for the area as for an item
+        # objective. `startDrop` records that a dropper with spawns exists (the evidence the
+        # route builder needs); without one the quest keeps no start position.
+        items = [s["id"] for s in q.get("start", []) if s["k"] == "item"]
+        if items and "startPos" not in q:
+            pts, n = [], 0
+            for _, kind, ident in sorted(droppers.get(items[0], []), reverse=True)[:5]:
+                found = positions(kind, ident, limit=200)
+                if found:
+                    n += 1
+                    pts.extend(found)
+            c = cluster(pts)
+            if c:
+                q["startPos"] = [c]
+                q["startDrop"] = n
         for o in q.get("obj", []):
             pts = []
             if o["k"] in ("kill", "object") and "id" in o:

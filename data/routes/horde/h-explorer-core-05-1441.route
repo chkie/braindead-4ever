@@ -1,0 +1,82 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module h-explorer-core-05-1441
+#kind core
+#faction Horde
+#mode explorer
+#levels 25-25
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1441 lv=25
+  travel zeppelin 1441 | src=plan status=unbestätigt
+@hf30v8 lv=25 << class=WARLOCK
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@a4841 lv=25
+  accept 4841 | src=polestar,att status=unbestätigt
+  goto 1441 -2443.0,-5455.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@hf30 lv=25 << class=WARRIOR
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@hf30v2 lv=25 << class=PALADIN
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@hf30v3 lv=25 << class=HUNTER,SHAMAN
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@hf30v4 lv=25 << class=ROGUE
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@hf30v5 lv=25 << class=PRIEST
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@hf30v6 lv=25 << class=MAGE
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@hf30v7 lv=25 << class=DRUID
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@fp30 lv=25
+  fp | src=plan status=unbestätigt
+  goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt
+@a4821 lv=25
+  accept 4821 | src=polestar,att status=unbestätigt
+  goto 1441 -2397.5,-5442.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@hb11116n10 lv=25 << race=ORC,TROLL class=WARLOCK
+  goto 1441 -2460.5,-5478.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb11116n9 lv=25 << race=UNDEAD class=WARLOCK
+  goto 1441 -2460.5,-5478.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@c4821 lv=25
+  complete 4821 | src=polestar status=unbestätigt
+  goto 1441 -2736.5,-5587.5 r=10 | src=polestar status=unbestätigt roots=1
+@c4841 lv=25
+  complete 4841 | src=polestar status=unbestätigt
+  goto 1441 -2243.5,-5049.0 r=10 | src=polestar status=unbestätigt roots=1
+@a1149 lv=25
+  accept 1149 | src=polestar,att status=unbestätigt
+  goto 1441 -2807.0,-5183.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c1149 lv=25
+  complete 1149 | src=polestar status=unbestätigt
+@t1149 lv=25
+  turnin 1149 | src=polestar status=unbestätigt
+  goto 1441 -2807.0,-5183.5 r=10 | src=polestar status=unbestätigt roots=1
+@hh11116n10 lv=25 << race=ORC,TROLL class=WARLOCK
+  hs | src=plan status=unbestätigt
+@hh11116n9 lv=25 << race=UNDEAD class=WARLOCK
+  hs | src=plan status=unbestätigt
+@t4841 lv=25
+  turnin 4841 | src=polestar status=unbestätigt
+  goto 1441 -2443.0,-5455.0 r=10 | src=polestar status=unbestätigt roots=1
+@t4821 lv=25
+  turnin 4821 | src=polestar status=unbestätigt
+  accept 4865 | src=polestar,att status=unbestätigt
+  goto 1441 -2397.5,-5442.0 r=10 | src=polestar status=unbestätigt roots=1
+@t4865 lv=25
+  turnin 4865 | src=polestar status=unbestätigt
+  goto 1441 -1381.0,-4915.5 r=10 | src=polestar status=unbestätigt roots=1

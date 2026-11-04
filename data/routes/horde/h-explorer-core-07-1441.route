@@ -1,0 +1,98 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module h-explorer-core-07-1441
+#kind core
+#faction Horde
+#mode explorer
+#levels 26-27
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1441 lv=26 !return "neue Quests"
+  travel zeppelin 1441 | src=plan status=unbestätigt
+@a5064 lv=26
+  accept 5064 | src=polestar,att status=unbestätigt
+  goto 1441 -2443.0,-5455.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@hb11116n12 lv=26 << race=ORC,TROLL class=WARLOCK
+  goto 1441 -2460.5,-5478.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb11116n11v2 lv=26 << race=UNDEAD class=WARLOCK
+  goto 1441 -2460.5,-5478.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@a5147 lv=27 << race=!TAUREN,SKYBORNE_H class=PALADIN,WARLOCK
+  accept 5147 | src=polestar,att status=unbestätigt
+  goto 1441 -2457.5,-5458.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@a4881 lv=26
+  accept 4881 | src=polestar status=unbestätigt
+  goto 1441 -2168.5,-4937.5 r=10 | src=polestar status=unbestätigt roots=1
+@c5064 lv=26
+  complete 5064 | src=polestar status=unbestätigt
+  goto 1441 -1832.0,-4922.5 r=10 | src=polestar status=unbestätigt roots=1
+@t5064 lv=26
+  turnin 5064 | src=polestar status=unbestätigt
+  goto 1441 -2443.0,-5455.0 r=10 | src=polestar status=unbestätigt roots=1
+@t4881 lv=26
+  turnin 4881 | src=polestar status=unbestätigt
+  accept 4966 | src=polestar,att status=unbestätigt
+  goto 1441 -1368.5,-4907.0 r=10 | src=polestar status=unbestätigt roots=1
+@c4966 lv=27
+  complete 4966 | src=polestar status=unbestätigt
+  goto 1441 -1360.0,-4896.5 r=10 | src=polestar status=unbestätigt roots=1
+@t4966 lv=27
+  turnin 4966 | src=polestar status=unbestätigt
+  goto 1441 -1368.5,-4907.0 r=10 | src=polestar status=unbestätigt roots=1
+@a4770 lv=27
+  accept 4770 | src=polestar,att status=unbestätigt
+  goto 1441 -1220.5,-5156.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c4770 lv=27
+  complete 4770 | src=polestar status=unbestätigt
+@t4770 lv=27
+  turnin 4770 | src=polestar status=unbestätigt
+  goto 1441 -1381.0,-4915.5 r=10 | src=polestar status=unbestätigt roots=1
+@hb11116n11 lv=27 << race=UNDEAD class=MAGE
+  goto 1441 -2460.5,-5478.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb11116n12v2 lv=27 << race=TROLL class=MAGE
+  goto 1441 -2460.5,-5478.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@a5147x lv=27 << class=!PALADIN,WARLOCK
+  accept 5147 | src=polestar,att status=unbestätigt
+  goto 1441 -2457.5,-5458.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@a4767 lv=27
+  accept 4767 | src=polestar,att status=unbestätigt
+  goto 1441 -2410.5,-5401.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@a4904 lv=27
+  accept 4904 | src=polestar,att status=unbestätigt
+  goto 1441 -2099.0,-4745.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c5147 lv=27
+  complete 5147 | src=polestar status=unbestätigt
+  goto 1441 -2110.0,-4755.0 r=10 | src=polestar status=unbestätigt roots=1
+@c4904 lv=27
+  complete 4904 | src=polestar status=unbestätigt
+@a4542 lv=27
+  accept 4542 | src=polestar,att status=unbestätigt
+  goto 1441 -1856.0,-4617.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c4542 lv=27
+  complete 4542 | src=polestar status=unbestätigt
+@c4767 lv=27
+  complete 4767 | src=polestar status=unbestätigt
+  goto 1441 -969.5,-5026.5 r=10 | src=polestar status=unbestätigt roots=1
+@hh11116n12 lv=27 << race=TROLL class=MAGE
+  hs | src=plan status=unbestätigt
+@hh11116n12v2 lv=27 << race=ORC,TROLL class=WARLOCK
+  hs | src=plan status=unbestätigt
+@hh11116n11 lv=27 << race=UNDEAD class=MAGE,WARLOCK
+  hs | src=plan status=unbestätigt
+@t4767 lv=27
+  turnin 4767 | src=polestar status=unbestätigt
+  goto 1441 -2410.5,-5401.5 r=10 | src=polestar status=unbestätigt roots=1
+@t4542 lv=27
+  turnin 4542 | src=polestar status=unbestätigt
+  turnin 5147 | src=polestar status=unbestätigt
+  goto 1441 -2443.0,-5455.0 r=10 | src=polestar status=unbestätigt roots=1
+@t4904 lv=27
+  turnin 4904 | src=polestar status=unbestätigt
+  goto 1441 -2456.0,-5480.5 r=10 | src=polestar status=unbestätigt roots=1

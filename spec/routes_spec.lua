@@ -48,6 +48,11 @@ local function load()
 	return wow.loadFiles(FILES, "Braindead4Ever", {})
 end
 
+-- Elements with their own filter count only for their races and classes, as in Routes/Runtime.lua.
+local function mine(R, el, race, class)
+	return not (el.r or el.c) or R.Applies(el, race, class)
+end
+
 local function eachCombo(fn)
 	for faction, races in pairs(COMBOS) do
 		for race, classes in pairs(races) do
@@ -140,13 +145,26 @@ describe("Route data", function()
 				local accepted, turned = {}, {}
 				for _, s in ipairs(R.Steps(faction, mode, race, class)) do
 					for _, el in ipairs(s.step) do
-						local q = el[2]
-						if el[1] == V.ACCEPT then
+						local v, q = el[1], el[2]
+						if not mine(R, el, race, class) then
+							v = nil -- an element with its own filter for other races or classes (as Runtime.lua)
+						end
+						if v == V.ACCEPT then
 							assert.is_nil(accepted[q], ("%s accepted twice in %s"):format(q, s.module))
 							accepted[q] = true
-						elseif el[1] == V.COMPLETE or el[1] == V.TURNIN then
-							assert.is_true(accepted[q] == true, ("%s not accepted before %s"):format(q, s.step.id))
-							if el[1] == V.TURNIN then
+						elseif v == V.COMPLETE or v == V.TURNIN then
+							assert.is_true(
+								accepted[q] == true,
+								("%s not accepted before %s (%s %s %s/%s)"):format(
+									q,
+									s.step.id,
+									mode,
+									faction,
+									race,
+									class
+								)
+							)
+							if v == V.TURNIN then
 								assert.is_nil(turned[q])
 								turned[q] = true
 							end
@@ -175,6 +193,9 @@ describe("Example route Elwynn Forest", function()
 			last = s.step.lv
 			assert.is_true(s.step.lv >= (first or 1), s.step.id)
 			for _, el in ipairs(s.step) do
+				if not mine(R, el, 1, 1) then
+					el = { 0 } -- an element for other classes (as Runtime.lua)
+				end
 				if el[1] == V.ACCEPT then
 					log[el[2]] = true
 				elseif el[1] == V.TURNIN then

@@ -38,6 +38,25 @@ class LinterAcceptance(unittest.TestCase):
         errs = lint_file(os.path.join(FIX, "good", "t-speed-start-elwynn.route"))
         self.assertEqual([], [str(e) for e in errs])
 
+    def test_unknown_prerequisite_at_a_hub_passes_in_speed(self):
+        # an unknown prerequisite is allowed where the module accepts or turns in a quest with
+        # secured prerequisites within lint.HUB_YARDS; the prepared error 09-speed is the same quest
+        # kind at a place the route only passes for an objective
+        with open(os.path.join(FIX, "good", "t-speed-start-elwynn.route"), encoding="utf-8") as fh:
+            text = fh.read()
+        hub = text.replace("  accept 900003 | src=polestar status=unbestätigt\n",
+                           "  accept 900003 | src=polestar status=unbestätigt\n  accept 900004 | src=polestar status=unbestätigt\n", 1)
+        self.assertNotEqual(text, hub)
+        mod = routefmt.parse(hub, "hub.route")
+        errs = lint.lint_all({mod.key: mod}, [compose()], fixture_facts(), combo_list=HUMAN_WARRIOR, modes=("speed",))
+        self.assertEqual([], [str(e) for e in errs])
+        # the same accept alone in a step far from every such step is refused
+        far = text.replace("  complete 900002 | src=polestar status=unbestätigt\n",
+                           "  complete 900002 | src=polestar status=unbestätigt\n  accept 900006 | src=polestar status=unbestätigt\n", 1)
+        mod = routefmt.parse(far, "far.route")
+        errs = lint.lint_all({mod.key: mod}, [compose()], fixture_facts(), combo_list=HUMAN_WARRIOR, modes=("speed",))
+        self.assertEqual(["speed"], sorted({e.code for e in errs}))
+
     def test_ten_prepared_errors_are_found(self):
         files = sorted(glob.glob(os.path.join(FIX, "bad", "*.route")))
         self.assertEqual(10, len(files))
@@ -184,7 +203,16 @@ class RepositoryData(unittest.TestCase):
     def test_routes_lint_clean(self):
         facts = lint.Facts.load()
         mods, comps = lint.load_routes()
-        self.assertGreater(len(mods), 100)
+        # 89 modules since 0.9.1: the routes share their modules across races and classes (before
+        # 0.9.1 there were 182). Fewer than 80 means module files went missing; the check per
+        # combination below is the precise one.
+        self.assertGreaterEqual(len(mods), 80)
+        for race, cls in game.all_combos():
+            comp = next(c for c in comps if c.faction == game.faction_of(race))
+            for mode in routefmt.MODES:
+                keys = comp.route(mode, race, cls)
+                self.assertTrue(keys, (mode, race, cls))
+                self.assertEqual([], [k for k in keys if k not in mods], (mode, race, cls))
         errs = lint.lint_all(mods, comps, facts)
         self.assertEqual([], [str(e) for e in errs[:10]])
 

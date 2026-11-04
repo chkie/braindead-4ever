@@ -1,5 +1,5 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
--- Test fixture with made-up quest IDs. Prepared error (speed): quest without secured prerequisite in the Speed route.
+-- Test fixture with made-up quest IDs. Prepared error (speed): quest with an unknown prerequisite in the Speed route, its giver not at a place the route visits anyway.
 #module t-speed-start-elwynn
 #kind start
 #faction Alliance
@@ -19,13 +19,13 @@
   goto 1429 -150.0,-8900.0 | src=polestar status=unbestätigt
 @c2 lv=2
   complete 900002 | src=polestar status=unbestätigt
+  accept 900006 | src=polestar status=unbestätigt
   goto 1429 -100.0,-8800.0 | src=polestar status=unbestätigt
 @t2 lv=2
   turnin 900002 | src=polestar status=unbestätigt
   goto 1429 -150.0,-8900.0 | src=polestar status=unbestätigt
 @a3 lv=2 << race=HUMAN
   accept 900003 | src=polestar status=unbestätigt
-  accept 900004 | src=polestar status=unbestätigt
   turnin 900003 | src=polestar status=unbestätigt
   goto 1429 -150.0,-8900.0 | src=polestar status=unbestätigt
 @n1 lv=3

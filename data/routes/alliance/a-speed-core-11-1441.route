@@ -1,0 +1,48 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module a-speed-core-11-1441
+#kind core
+#faction Alliance
+#mode speed
+#levels 28-29
+#label vorläufig
+#version 1
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1441 lv=28
+  travel walk 1441 | src=plan status=unbestätigt
+@a1104 lv=28
+  accept 1104 | src=polestar,att status=unbestätigt
+  accept 1105 | src=polestar,att status=unbestätigt
+  goto 1441 -3868.0,-6229.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c1104 lv=28
+  complete 1104 | src=polestar status=unbestätigt
+  goto 1441 -3882.5,-5929.5 r=10 | src=polestar status=unbestätigt roots=1
+@c1105 lv=28
+  complete 1105 | src=polestar status=unbestätigt
+  goto 1441 -3949.5,-5910.5 r=10 | src=polestar status=unbestätigt roots=1
+@t1105 lv=28
+  turnin 1105 | src=polestar status=unbestätigt
+  turnin 1104 | src=polestar status=unbestätigt
+  xp 29 | src=plan status=unbestätigt
+  goto 1441 -3871.5,-6229.0 r=10 | src=polestar status=unbestätigt roots=1
+@a1110 lv=29
+  accept 1110 | src=polestar,att status=unbestätigt
+  goto 1441 -3856.0,-6233.5 r=10 | src=polestar status=unbestätigt roots=1
+@c1110 lv=29
+  complete 1110 | src=polestar status=unbestätigt
+  goto 1441 -3654.5,-5980.5 r=10 | src=polestar status=unbestätigt roots=1
+@t1110 lv=29
+  turnin 1110 | src=polestar status=unbestätigt
+  goto 1441 -3856.0,-6233.5 r=10 | src=polestar status=unbestätigt roots=1
+@a1176 lv=29
+  accept 1176 | src=polestar,att status=unbestätigt
+  goto 1441 -3961.5,-6192.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c1176 lv=29
+  complete 1176 | src=polestar status=unbestätigt
+  goto 1441 -4085.0,-6040.0 r=10 | src=polestar status=unbestätigt roots=1
+@t1176 lv=29
+  turnin 1176 | src=polestar status=unbestätigt
+  goto 1441 -3961.5,-6192.5 r=10 | src=polestar status=unbestätigt roots=1

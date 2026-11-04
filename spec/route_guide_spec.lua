@@ -36,6 +36,13 @@ local function deepcopy(t)
 	return c
 end
 
+local Routes -- ns.Routes of the current session (login)
+
+-- Elements with their own filter count only for their races and classes, as in Routes/Runtime.lua.
+local function mine(el, race, class)
+	return not (el.r or el.c) or Routes.Applies(el, race, class)
+end
+
 -- A session for one character. opts: faction, race, class (IDs), level, completed (set), char, saved.
 local function login(opts)
 	opts = opts or {}
@@ -50,6 +57,7 @@ local function login(opts)
 		wow.world.completed[q] = true
 	end
 	local ns = wow.loadFiles(wow.addonFiles())
+	Routes = ns.Routes
 	wow.fire("ADDON_LOADED", "Braindead4Ever")
 	wow.fire("PLAYER_LOGIN")
 	wow.fire("PLAYER_ENTERING_WORLD", true, false)
@@ -90,12 +98,16 @@ local function logEntry(q)
 	end
 end
 
--- The player does what the current step says, with the events the client sends.
+-- The player does what the current step says for the character's race and class (elements with their
+-- own filter for others are not his), with the events the client sends.
 local function play(step, opts)
 	opts = opts or {}
 	local W = wow.world
 	for _, el in ipairs(step) do
 		local v, q = el[1], el[2]
+		if not mine(el, W.player.race[3], W.player.class[3]) then
+			v = nil
+		end
 		if v == V.ACCEPT and not logEntry(q) and not W.completed[q] then
 			W.questLog[#W.questLog + 1] = { questID = q, objectives = {} }
 			wow.fire("QUEST_ACCEPTED", q)
@@ -218,6 +230,27 @@ describe("Route module", function()
 		assert.is_table(R.Current())
 	end)
 
+	it("shows a step with the elements of the character's class only (element filters)", function()
+		-- a-speed-start-elwynn/t7 accepts the class letters as elements with their own filter
+		local function letters(class)
+			local ns = login({ class = class })
+			for _, info in ipairs(ns.Route.Upcoming(100)) do
+				if info.key == "a-speed-start-elwynn/t7" then
+					local out = {}
+					for _, el in ipairs(info.step) do
+						if el[1] == V.ACCEPT and el[2] >= 3100 and el[2] <= 3105 then
+							out[#out + 1] = el[2]
+						end
+					end
+					return out
+				end
+			end
+		end
+		assert.are.same({ 3100 }, letters(1)) -- warrior
+		assert.are.same({ 3101 }, letters(2)) -- paladin
+		assert.are.same({ 3102 }, letters(4)) -- rogue
+	end)
+
 	it("moves on when the character outlevels steps (grinding instead of quests)", function()
 		local ns = login()
 		local R = ns.Route
@@ -235,7 +268,7 @@ describe("Route module", function()
 			for _, s in ipairs(base.Routes.Steps(who[1], "speed", who[2], who[3])) do
 				if s.step.lv <= 10 then
 					for _, el in ipairs(s.step) do
-						if el[1] <= V.TURNIN then
+						if el[1] <= V.TURNIN and mine(el, who[2], who[3]) then
 							done[el[2]] = true
 						end
 					end
@@ -244,11 +277,24 @@ describe("Route module", function()
 			local ns = login({ faction = who[1], race = who[2], class = who[3], level = 12, completed = done })
 			local cur = ns.Route.Current()
 			assert.is_true(cur.lv >= 10, who[1] .. " level 12 starts at planned level " .. cur.lv)
+			-- the entry may be the travel step into the next zone (no quests): then its next quest step counts
+			local first = cur
+			if #cur.quests == 0 then
+				assert.are.equal("travel", cur.kind, cur.key)
+				first = nil
+				for _, n in ipairs(ns.Route.Upcoming(10)) do
+					if #n.quests > 0 then
+						first = n
+						break
+					end
+				end
+				assert.is_table(first, "no quest step after " .. cur.key)
+			end
 			local open = false
-			for _, q in ipairs(cur.quests) do
+			for _, q in ipairs(first.quests) do
 				open = open or not done[q]
 			end
-			assert.is_true(open, "every quest of " .. cur.key .. " is done already")
+			assert.is_true(open, "every quest of " .. first.key .. " is done already")
 			ns = login({ faction = who[1], race = who[2], class = who[3], level = 25 })
 			assert.is_true(ns.Route.Current().lv >= 20, who[1] .. " level 25 at " .. ns.Route.Current().lv)
 		end
@@ -261,10 +307,17 @@ describe("Route module", function()
 		R.RegisterCallback("QuestAbandoned", "test", function(_, q)
 			asked[#asked + 1] = q
 		end)
-		play(R.Current().step) -- accept 33
 		play(R.Current().step) -- accept 783
+		play(R.Current().step) -- turn in 783, accept 7
+		play(R.Current().step) -- accept 33
 		local cur = R.Current().key
-		table.remove(wow.world.questLog, 1) -- abandon 33
+		assert.are.equal("a-speed-start-elwynn/c7", cur)
+		for i, e in ipairs(wow.world.questLog) do -- abandon 33
+			if e.questID == 33 then
+				table.remove(wow.world.questLog, i)
+				break
+			end
+		end
 		wow.fire("QUEST_REMOVED", 33, false)
 		wow.advance(1.5)
 		assert.are.same({ 33 }, asked)
@@ -319,7 +372,7 @@ describe("Route module", function()
 			got[#got + 1] = { "xp", b.toLevel }
 		end)
 		R.Check()
-		assert.are.same({ "ui", "a783", "a33" }, got[1])
+		assert.are.same({ "ui", "t783", "a783" }, got[1])
 		R.Skip()
 		assert.are.same({ "recalc", "skip" }, got[#got])
 		wow.world.player.xp = 250

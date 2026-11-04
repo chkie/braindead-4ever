@@ -11,6 +11,19 @@ local function arrow(ns)
 	return ns.Arrow.frame
 end
 
+-- Login with the first goal (a783) 70 yd north-east of the player (spec/helpers/uisession.lua S.AWAY).
+local function login(opts)
+	opts = opts or {}
+	local before = opts.before
+	opts.before = function(W)
+		S.away(W)
+		if before then
+			before(W)
+		end
+	end
+	return S.login(opts)
+end
+
 local function goal(ns)
 	return ns.Nav.Target(ns.Route.Current())
 end
@@ -28,7 +41,7 @@ end
 
 describe("Arrow", function()
 	it("points to the current goal with its own sharp arrow in a 64x64 square and a black outline", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		assert.is_true(rawget(F, "shown"))
 		assert.are.same({ "TOP", -140 }, { F.points[1][1], F.points[1][5] })
@@ -39,13 +52,13 @@ describe("Arrow", function()
 		assert.are.equal("Interface\\AddOns\\Braindead4Ever\\Media\\arrow-outline", F.outline.file)
 		assert.are.same({ 0, 0, 0, 1 }, F.outline.vertex)
 		assert.is_false(F.mouse) -- not clickable outside Edit Mode
-		assert.are.equal("Accept “Wolves Across the Border”", F.title.text)
+		assert.are.equal("Accept “A Threat Within”", F.title.text)
 		assert.are.equal(1, F.title.maxLines)
 		assert.are.equal(220, F.title.w)
 	end)
 
 	it("colors by course deviation like TomTom: green, yellow, red with “behind you”", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		local t = goal(ns)
 		local cases = {
@@ -76,7 +89,7 @@ describe("Arrow", function()
 	end)
 
 	it("uses blue, white and orange in Blizzard's colorblind mode", function()
-		local ns = S.login({
+		local ns = login({
 			before = function(W)
 				W.cvars.colorblindMode = "1"
 			end,
@@ -95,7 +108,7 @@ describe("Arrow", function()
 	-- Welle 5d, M10: on screen the colorblind arrow was dark green at 5 degrees and gold at 90, because
 	-- the gold atlas multiplied the vertex color. What the client draws must be the palette itself.
 	it("draws blue, white and orange on screen, not the gold atlas tinted (M10)", function()
-		local ns = S.login({
+		local ns = login({
 			before = function(W)
 				W.cvars.colorblindMode = "1"
 			end,
@@ -136,7 +149,7 @@ describe("Arrow", function()
 	-- Welle 5d, M3: the goal and the distance stood at 1.6:1 to 1.8:1 against a bright sky with a 1 px
 	-- shadow. Blizzard's outline fonts put a black edge around every glyph.
 	it("writes goal, distance and “behind you” in Blizzard's outline fonts (M3)", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		assert.are.equal("GameFontHighlightOutline", F.title.template)
 		assert.are.equal("GameFontNormalOutline", F.dist.template)
@@ -145,7 +158,7 @@ describe("Arrow", function()
 
 	-- Welle 5d, M12: Blizzard's dialogs stand at the top center like the arrow; its text showed through.
 	it("hides while one of Blizzard's dialogs is open (M12)", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		frames(ns, 4)
 		assert.are.equal(1, F.alpha)
@@ -159,7 +172,7 @@ describe("Arrow", function()
 	end)
 
 	it("shows the distance with Blizzard's format, at most five times per second", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		frames(ns, 1)
 		assert.are.equal("70 |4yd:yds", F.dist.text)
@@ -170,7 +183,7 @@ describe("Arrow", function()
 			set(self, v)
 		end
 		for i = 1, 60 do -- one second while walking: the number changes every frame
-			S.place(-136.5, -8933.5 + i * 0.5)
+			S.place(S.AWAY.west, S.AWAY.north + i * 0.5)
 			ns.Arrow.Update(1 / 60)
 		end
 		assert.is_true(sets <= 5, "distance text set " .. sets .. " times in one second")
@@ -178,7 +191,7 @@ describe("Arrow", function()
 	end)
 
 	it("arrives at 12 yd: check, “Reached destination”, gone after one second", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		local t = goal(ns)
 		S.place(t.wx + 8, t.wy)
@@ -192,7 +205,7 @@ describe("Arrow", function()
 	end)
 
 	it("shows goal and distance again for the next goal after an arrival (screenshot round 3)", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		local t = goal(ns)
 		S.place(t.wx + 8, t.wy)
@@ -210,7 +223,7 @@ describe("Arrow", function()
 	end)
 
 	it("arrival distance follows the setting (5 to 30 yd)", function()
-		local ns = S.login()
+		local ns = login()
 		ns.UI.Set("arrival", 5)
 		local t = goal(ns)
 		S.place(t.wx + 8, t.wy)
@@ -219,7 +232,7 @@ describe("Arrow", function()
 	end)
 
 	it("has no arrow in instances or on another continent; the step window says why", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		wow.world.player.north = nil -- UnitPosition is nil in instances
 		frames(ns, 4)
@@ -234,7 +247,7 @@ describe("Arrow", function()
 	end)
 
 	it("hides for “show arrow” off, a paused guidance and Blizzard navigation", function()
-		local ns = S.login()
+		local ns = login()
 		local F = arrow(ns)
 		ns.UI.Set("arrow", false)
 		assert.is_false(rawget(F, "shown"))
@@ -257,7 +270,7 @@ describe("Arrow", function()
 	end)
 
 	it("never touches the player's own waypoint without Blizzard navigation", function()
-		S.login()
+		login()
 		assert.is_nil(wow.world.waypoint)
 		assert.is_nil(wow.world.supertrack)
 	end)
@@ -273,7 +286,7 @@ describe("Map pins", function()
 	end
 
 	it("marks the goal with Blizzard's waypoint pin, givers and turn-ins with the quest symbols", function()
-		S.login()
+		login()
 		local list = pins()
 		assert.is_true(#list >= 2)
 		local goalPin = list[1]
@@ -293,7 +306,7 @@ describe("Map pins", function()
 	end)
 
 	it("follows the setting and the pause", function()
-		local ns = S.login()
+		local ns = login()
 		ns.UI.Set("pins", false)
 		assert.are.equal(0, #pins())
 		ns.UI.Set("pins", true)
@@ -303,7 +316,7 @@ describe("Map pins", function()
 	end)
 
 	it("shows the minimap pin only on request and only with map pins on", function()
-		local ns = S.login()
+		local ns = login()
 		local mini = ns.MapPins.mini
 		assert.is_false(rawget(mini, "shown")) -- off by default (scope "Standard")
 		ns.UI.Set("minipins", true)

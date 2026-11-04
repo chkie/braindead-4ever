@@ -41,7 +41,7 @@ describe("Report", function()
 		local ns = wow.session()
 		wow.world.player.x = nil
 		local text = ns.Report.Build()
-		assert.matches("Step: a-speed-start-elwynn/a33", text, 1, true)
+		assert.matches("Step: a-speed-start-elwynn/a783", text, 1, true)
 		assert.matches("Position: map 1429 | no coordinate", text, 1, true)
 		assert.matches("Errors:\n  none", text, 1, true)
 	end)

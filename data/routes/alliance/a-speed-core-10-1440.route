@@ -1,0 +1,67 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module a-speed-core-10-1440
+#kind core
+#faction Alliance
+#mode speed
+#levels 28-28
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1440 lv=28
+  travel boat 1440 | src=plan status=unbestätigt
+@a98417 lv=28
+  accept 98417 | src=polestar,att,eglink status=unbestätigt
+  goto 1440 -3273.8,2910.2 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c98417 lv=28
+  complete 98417 | src=polestar status=unbestätigt
+@t98417 lv=28
+  turnin 98417 | src=polestar,eglink status=unbestätigt
+  accept 98418 | src=polestar,att status=unbestätigt
+  goto 1440 -3273.8,2910.2 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@c98418 lv=28
+  complete 98418 | src=polestar status=unbestätigt
+  goto 1440 -2813.5,2889.5 r=10 | src=polestar status=unbestätigt roots=1
+@t98418 lv=28
+  turnin 98418 | src=polestar status=unbestätigt
+  goto 1440 -3274.0,2912.0 r=10 | src=polestar status=unbestätigt roots=1
+@a1016 lv=28
+  accept 1016 | src=polestar,att status=unbestätigt
+  goto 1440 -1172.0,2089.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c1016 lv=28
+  complete 1016 | src=polestar status=unbestätigt
+@t1016 lv=28
+  turnin 1016 | src=polestar status=unbestätigt
+  goto 1440 -1172.0,2089.5 r=10 | src=polestar status=unbestätigt roots=1
+@a86757 lv=28
+  accept 86757 | src=polestar,att status=unbestätigt
+  goto 1440 -1153.5,2094.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c86757 lv=28
+  complete 86757 | src=polestar status=unbestätigt
+@t86757 lv=28
+  turnin 86757 | src=polestar status=unbestätigt
+  goto 1440 -1153.5,2094.0 r=10 | src=polestar status=unbestätigt roots=1
+@hf28 lv=28
+  goto 1440 -284.6,2827.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@a1054 lv=28
+  accept 1054 | src=polestar,att status=unbestätigt
+  goto 1440 -412.0,2767.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@a1022 lv=28
+  accept 1022 | src=polestar,att status=unbestätigt
+  goto 1440 418.0,2636.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c1054 lv=28
+  complete 1054 | src=polestar status=unbestätigt
+  goto 1440 -584.0,3277.5 r=10 | src=polestar status=unbestätigt roots=1
+@c1022 lv=28
+  complete 1022 | src=polestar status=unbestätigt
+  goto 1440 -1211.5,3169.0 r=10 | src=polestar status=unbestätigt roots=1
+@t1054 lv=28
+  turnin 1054 | src=polestar status=unbestätigt
+  goto 1440 -412.0,2767.0 r=10 | src=polestar status=unbestätigt roots=1
+@t1022 lv=28
+  turnin 1022 | src=polestar status=unbestätigt
+  goto 1440 418.0,2636.5 r=10 | src=polestar status=unbestätigt roots=1

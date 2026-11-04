@@ -242,9 +242,14 @@ describe("Step window size", function()
 	it("German texts keep their umlauts at the narrowest width (T19)", function()
 		local ns = S.login({ locale = "deDE", saved = { ui = { width = 260 } } })
 		local SF, W = ns.StepFrame, ns.StepFrame.frame
+		-- the first step whose title has umlauts is a33, behind a783 and t783 (“Eine Bedrohung von innen”)
+		ns.Route.Check()
+		ns.Route.Check()
+		wow.advance(2)
+		assert.are.equal("a-speed-start-elwynn/a33", ns.Route.Current().key)
 		assert.are.equal(260, W.w)
 		assert.matches("^„Wölfe an der Grenze“ annehmen", W.step.text)
-		assert.matches("^Wald von Elwynn • 1/", W.title.text)
+		assert.matches("^Wald von Elwynn • 3/", W.title.text)
 		for _, fs in ipairs({ W.step, W.detail, W.xp }) do
 			assert.is_true(fs.w > 0 and fs.w <= 260 - 33, "text inside the window")
 		end

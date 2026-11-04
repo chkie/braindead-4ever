@@ -391,6 +391,9 @@ def run():
         starts_item = [s for s in rec.get("start", {}).get("v", []) if s["k"] == "item"]
         if starts_item:
             rec["startItem"] = starts_item[0]["id"]
+            # evidence that the starting item drops (Polestar item_source: droppers with spawns)
+            if p and p.get("startDrop"):
+                rec["startDrop"] = {"v": p["startDrop"], "src": ["polestar"]}
 
         # prerequisites
         breadcrumbs = att_breadcrumbs | ps_breadcrumb_links.get(q, set())

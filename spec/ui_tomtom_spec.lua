@@ -56,7 +56,7 @@ describe("TomTom hand-over", function()
 		local w = tt.added[1]
 		assert.are.equal(1429, w.m)
 		assert.is_true(w.x > 0 and w.x < 1 and w.y > 0 and w.y < 1, "map position 0..1")
-		assert.are.equal("Accept “Wolves Across the Border”", w.opts.title)
+		assert.are.equal("Accept “A Threat Within”", w.opts.title)
 		assert.is_true(w.opts.silent, "no TomTom chat line (rule R2)")
 		assert.is_false(w.opts.persistent)
 		assert.are.equal("Braindead 4ever", w.opts.from)
