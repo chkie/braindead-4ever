@@ -119,7 +119,7 @@ function Report.Build(note)
 end
 
 function Report.Show(note)
-	return ns.ShowCopy(ns.L.REPORT_TITLE, Report.Build(note))
+	return ns.ShowCopy(ns.L.REPORT_TITLE, Report.Build(note), { where = ns.L.REPORT_WHERE })
 end
 
 ns.Commands.report = function(rest)

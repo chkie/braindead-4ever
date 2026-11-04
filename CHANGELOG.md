@@ -20,6 +20,7 @@ Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 - Accept and turn-in steps name the NPC, for example: Accept "Wolves Across the Border" from Eagan Peltskinner. The name is in your game's language. A name shows once your game knows the NPC (seen nearby, targeted or talked to); names you learn are kept for your other characters. Until then the step reads as before.
 - Quest item button: when the quest of the current step has an item to use, a button with the item appears next to the step, with charges, cooldown and the range dot of the game's quest tracker. A key for it: Key Bindings, Braindead 4ever, "Use quest item" (unbound by default). In a fight the button keeps its item and its place until the fight ends.
 - Ready for trainer, hearthstone, flight point and flight steps: a step checks itself off when you open your class trainer, set or use your hearthstone, open the flight map or land after a flight, and the world map marks trainer, innkeeper and flight master with the game's own symbols. The routes take these steps up in a later update.
+- The problem report window and the credits page show the link to our Discord server.
 
 ## 0.9.0 (2026-11-03)
 

@@ -30,6 +30,10 @@ Braindead 4ever tells other players which version of it you run (to your group, 
 
 `/bd4 export` shows your data as a text to copy, for the website that comes later. `/bd4 report` builds a problem report without names.
 
+## Help and problem reports
+
+Discord: discord.gg/ujjEM9NE5D. Right-click the minimap button or the step window and choose "Report a problem" (or type `/bd4 report`): the window shows a text without names to copy, and the link to our Discord. Post the text in the channel #bug-reports. Bugs can also be reported as an [issue](https://github.com/chkie/braindead-4ever/issues) here. The Credits page in the settings shows the link as well.
+
 ## Repository layout
 
 | Path | Content |

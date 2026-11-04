@@ -73,7 +73,7 @@ Records go into a ring buffer of text chunks (`Collector/Store.lua`): one line p
 | NPC names in the client language, zone changes, position samples, deaths, group size, hearthstone bind | built | |
 | Export as `PM1` text (JSON, Deflate, Base64, length and Adler-32), only data not exported yet, acknowledged after Ctrl+C | built | `/bd4 export [all]`; Zlib only after `enc.zlib` passed in the client |
 | Website decoder for the export (`decoder/decode.mjs`) | built | round trip Lua to Node decoder in `spec/export_spec.lua`; browser paste test with the `enc.deflate` text |
-| Report a problem: version, build, module states, step, position, quest log, error buffer, marked player note | built | `/bd4 report [note]` and the step window's right-click menu; missing atlases are listed too |
+| Report a problem: version, build, module states, step, position, quest log, error buffer, marked player note | built | `/bd4 report [note]` and the step window's right-click menu; missing atlases are listed too; the window names the channel #bug-reports and shows the Discord link in a box to copy |
 | Two hours of simulated play without a Lua error, data anonymous | built | `spec/collect_spec.lua`; the acceptance "Forever start" needs two hours in the Forever client |
 
 ## In-game exchange (data contribution, M11)

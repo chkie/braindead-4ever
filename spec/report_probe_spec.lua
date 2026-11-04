@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Core/Report.lua (report a problem) and Probe/ (developer API probe).
 local wow = require("spec.helpers.wow")
+local S = require("spec.helpers.uisession") -- loads the German texts like a German client
 
 describe("Report", function()
 	it("lists version, build, step, position, modules, quest log and errors without names", function()
@@ -43,6 +44,48 @@ describe("Report", function()
 		assert.matches("Step: a-speed-start-elwynn/a33", text, 1, true)
 		assert.matches("Position: map 1429 | no coordinate", text, 1, true)
 		assert.matches("Errors:\n  none", text, 1, true)
+	end)
+end)
+
+-- The report window says where the text belongs and carries the Discord link in a box the player can
+-- select and copy (links are not clickable in the game). The report text itself stays as it was.
+describe("Report window: Discord link", function()
+	local LINK = "discord.gg/ujjEM9NE5D"
+	local WHERE = {
+		enUS = "Post this text in #bug-reports on our Discord:",
+		deDE = "Poste diesen Text im Kanal #bug-reports auf unserem Discord:",
+	}
+
+	for _, locale in ipairs({ "enUS", "deDE" }) do
+		it("names #bug-reports and shows the link in a copyable box (" .. locale .. ")", function()
+			local ns = S.login({ locale = locale })
+			SlashCmdList.BRAINDEADFOREVER("report")
+			local win = ns.CopyWindow()
+			assert.is_true(win:IsShown())
+			assert.are.equal(WHERE[locale], win.where.text)
+			assert.is_true(win.where:IsShown())
+			assert.matches("#bug-reports", win.where.text, 1, true)
+			assert.are.equal("EditBox", win.link.type)
+			assert.is_true(win.link:IsShown())
+			assert.are.equal(LINK, win.link:GetText())
+			-- copyable: the player cannot change it, focus selects it
+			win.link:SetText("changed by the player")
+			win.link.scripts.OnTextChanged(win.link, true)
+			assert.are.equal(LINK, win.link:GetText())
+			assert.is_function(win.link.scripts.OnEditFocusGained)
+			-- the report body is unchanged and carries no link
+			assert.is_nil(win.box:GetText():find("discord", 1, true))
+		end)
+	end
+
+	it("does not show the link in other copy windows", function()
+		local ns = wow.session()
+		ns.ShowCopy("Export", "PM1:x")
+		local win = ns.CopyWindow()
+		assert.is_false(win.where:IsShown())
+		assert.is_false(win.link:IsShown())
+		SlashCmdList.BRAINDEADFOREVER("report")
+		assert.is_true(win.link:IsShown())
 	end)
 end)
 
