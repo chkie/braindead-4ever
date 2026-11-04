@@ -133,6 +133,23 @@ function RT.New(steps, quests, world, saved, opts)
 			end
 		end
 		s.kind = hasQuest and "quest" or travel and "travel" or "other"
+		-- What the character sees of the step (RT:Info): the compiled step without the elements filtered
+		-- out above. Built once per step; the compiled data stays read only and is used as it is when no
+		-- element was filtered out.
+		if #s.els == #data then
+			s.view = data
+		else
+			local view = {}
+			for k, v in pairs(data) do
+				if type(k) ~= "number" then
+					view[k] = v
+				end
+			end
+			for n, el in ipairs(s.els) do
+				view[n] = el
+			end
+			s.view = view
+		end
 		s.travel = travel
 		zone = travel or gotoMap or zone
 		self.steps[i], self.index[s.key] = s, i
@@ -501,7 +518,7 @@ function RT:Info(i)
 		kind = s.kind,
 		label = m and m.label,
 		quests = copy(s.quests),
-		step = s.data,
+		step = s.view, -- the elements of this race and class only
 		chain = chain,
 	}
 end
