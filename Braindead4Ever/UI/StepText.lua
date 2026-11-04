@@ -38,10 +38,10 @@ ns.StepText = ST
 local SRC_AT =
 	{ [1] = 3, [2] = 3, [3] = 3, [4] = 4, [5] = 6, [6] = 4, [7] = 2, [8] = 2, [9] = 2, [10] = 2, [11] = 3, [12] = 3 }
 ST.SRC_AT = SRC_AT
--- Order in texts: as named in the design ("ATT, EG Link und Polestar forever-db").
+-- Order in texts. The game data projects show as one "open game data": the interface names no other addon
+-- (owner 04.11.2026); credits and licences stay in NOTICE and CREDITS.md, as the licences ask.
 local SOURCE_ORDER = { "att", "eglink", "polestar", "own", "plan" }
-local SOURCE_KEY =
-	{ polestar = "SRC_POLESTAR", att = "SRC_ATT", eglink = "SRC_EGLINK", own = "SRC_OWN", plan = "SRC_PLAN" }
+local SOURCE_KEY = { polestar = "SRC_OPEN", att = "SRC_OPEN", eglink = "SRC_OPEN", own = "SRC_OWN", plan = "SRC_PLAN" }
 
 local function bit(v, b)
 	return v % (b * 2) >= b
@@ -213,10 +213,12 @@ function ST.Detail(target, dist, zone)
 end
 
 local function SourceNames(bits)
-	local names = {}
+	local names, seen = {}, {}
 	for _, key in ipairs(SOURCE_ORDER) do
-		if bit(bits, R.SOURCE[key]) then
-			names[#names + 1] = L[SOURCE_KEY[key]]
+		local name = L[SOURCE_KEY[key]]
+		if bit(bits, R.SOURCE[key]) and not seen[name] then
+			seen[name] = true
+			names[#names + 1] = name
 		end
 	end
 	return names
