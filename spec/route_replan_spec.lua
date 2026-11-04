@@ -62,12 +62,17 @@ describe("Replanning: entry anchor", function()
 		return rt
 	end
 
+	-- Elements with their own filter count only for their races and classes, as in Routes/Runtime.lua.
+	local function mine(el)
+		return not (el.r or el.c) or ns.Routes.Applies(el, 1, 1)
+	end
+
 	-- Quest IDs of a step kind in route order: first step of each quest that has this verb.
 	local function firstOf(verb, upTo)
 		local out, seen = {}, {}
 		for i = 1, upTo do
 			for _, el in ipairs(steps[i].step) do
-				if el[1] == verb and not seen[el[2]] then
+				if el[1] == verb and mine(el) and not seen[el[2]] then
 					seen[el[2]] = true
 					out[#out + 1] = { q = el[2], i = i }
 				end
@@ -81,7 +86,7 @@ describe("Replanning: entry anchor", function()
 		local anchor = 0
 		for i = 1, #steps do
 			for _, el in ipairs(steps[i].step) do
-				if el[1] <= V.TURNIN and w.flagged[el[2]] then
+				if el[1] <= V.TURNIN and mine(el) and w.flagged[el[2]] then
 					anchor = i
 				end
 			end
@@ -100,16 +105,27 @@ describe("Replanning: entry anchor", function()
 		return last
 	end
 
-	-- Mixed progress up to step `upTo`: every quest handed in, except every `gap`-th one (never
-	-- taken) and every `logEvery`-th one (still in the log). Returns the gaps.
+	-- Mixed progress up to step `upTo`: every quest taken there handed in, except every `gap`-th one
+	-- (never taken) and every `logEvery`-th one (still in the log). A quest the route hands in only after
+	-- `upTo` is in the log, complete when its objectives come up to `upTo` (the route holds quests over many
+	-- steps since 0.9.1). Returns the gaps.
 	local function play(w, upTo, gap, logEvery)
 		local gaps, k = {}, 0
+		local turnin, done = {}, {}
+		for _, t in ipairs(firstOf(V.TURNIN, upTo)) do
+			turnin[t.q] = true
+		end
+		for _, c in ipairs(firstOf(V.COMPLETE, upTo)) do
+			done[c.q] = true
+		end
 		for _, a in ipairs(firstOf(V.ACCEPT, upTo)) do
 			k = k + 1
 			if gap and k % gap == 0 then
 				gaps[a.q] = a.i
 			elseif logEvery and k % logEvery == 0 then
 				w.log[a.q] = { complete = false }
+			elseif not turnin[a.q] then
+				w.log[a.q] = { complete = done[a.q] == true }
 			else
 				w.flagged[a.q] = true
 			end
@@ -207,16 +223,17 @@ describe("Replanning: entry anchor", function()
 		local target
 		for i = 60, 80 do
 			for _, el in ipairs(steps[i].step) do
-				if el[1] == V.COMPLETE and not target then
+				if el[1] == V.COMPLETE and mine(el) and not target then
 					target = { q = el[2], i = i }
 				end
 			end
 		end
 		assert.is_table(target)
-		-- the route quests between 31 and the target are taken and done (more than half)
+		-- the route quests between 31 and the target are taken and done (more than half), and so are those
+		-- taken up to step 30 that were still in the log there
 		for _, a in ipairs(firstOf(V.ACCEPT, target.i)) do
-			if a.i > 30 and a.q ~= target.q then
-				w.flagged[a.q] = true
+			if (a.i > 30 or w.log[a.q]) and a.q ~= target.q then
+				w.flagged[a.q], w.log[a.q] = true, nil
 			end
 		end
 		w.log[target.q] = { complete = false }
@@ -231,8 +248,9 @@ describe("Replanning: entry anchor", function()
 		local rt = new(w)
 		local saved = rt.saved
 		assert.are.equal(1, rt:Current().index)
-		-- played the first 60 steps without the route (addon off), one quest left out
-		local gaps = play(w, 60, 9)
+		-- played the first 60 steps without the route (addon off), one quest left out: every 28th accept, so
+		-- the one left out (99128) is no part of a step that accepts several quests (t95998 accepts eleven)
+		local gaps = play(w, 60, 28)
 		local again = new(w, deepcopy(saved))
 		assert.is_true(again:Current().index > 50, "re-entry at " .. again:Current().key)
 		local n = 0
@@ -244,7 +262,7 @@ describe("Replanning: entry anchor", function()
 		local w2 = newWorld()
 		w2.level = 3
 		local live = new(w2)
-		play(w2, 60, 9)
+		play(w2, 60, 28)
 		live:Evaluate()
 		local before = live:Current().index
 		w2.level = 6
@@ -779,16 +797,36 @@ describe("Replanning: time and frame budget of the reorder", function()
 		io.stdout:write("\n[replan] " .. fmt:format(...))
 	end
 
-	-- A runtime on the first n steps of Northshire and Elwynn (one segment of movable steps), the player
-	-- at the first quest giver, nothing done: n open points.
+	-- The quest steps of Northshire and Elwynn for the human warrior, in route order. Since 0.9.1 the
+	-- module holds hint steps (trainer, home, hearthstone) that keep their place and cut it into several
+	-- segments of movable steps (none in the routes reaches 80); without them the quest steps make one
+	-- segment of real points, more than REORDER_MAX.
+	local MOVABLE = { [1] = true, [2] = true, [3] = true, [5] = true, [12] = true }
+	local elwynn = {}
+	for _, e in ipairs(all) do
+		local quest, movable = false, true
+		for _, el in ipairs(e.step) do
+			if not (el.r or el.c) or ns.Routes.Applies(el, 1, 1) then
+				quest = quest or el[1] <= V.TURNIN
+				movable = movable and MOVABLE[el[1]] == true
+			end
+		end
+		if e.module == "a-speed-start-elwynn" and quest and movable then
+			elwynn[#elwynn + 1] = e
+		end
+	end
+
+	-- A runtime on the first n quest steps of Northshire and Elwynn (one segment of movable steps), the
+	-- player at the first quest giver (a783), nothing done: n open points.
 	local function route(n)
+		assert.is_true(#elwynn >= n, "quest steps in Elwynn: " .. #elwynn)
 		local steps = {}
 		for i = 1, n do
-			steps[i] = all[i]
+			steps[i] = elwynn[i]
 		end
 		local w = newWorld()
 		w.api.Position = function()
-			return -163, -8869, 0
+			return -136.5, -8933.5, 0
 		end
 		w.api.InCombat = function()
 			return false
@@ -820,7 +858,7 @@ describe("Replanning: time and frame budget of the reorder", function()
 	end)
 
 	it("keeps to 2 ms per frame and stays far under 0.1 ms per frame on average", function()
-		local rt = route(140) -- longer than REORDER_MAX: the job takes the next 80 open steps
+		local rt = route(120) -- longer than REORDER_MAX: the job takes the next 80 open steps
 		rt.want = "skip"
 		local frames, worst, total = 0, 0, 0
 		repeat

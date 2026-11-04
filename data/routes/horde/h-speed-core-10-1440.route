@@ -1,0 +1,40 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module h-speed-core-10-1440
+#kind core
+#faction Horde
+#mode speed
+#levels 28-28
+#label vorläufig
+#version 1
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1440 lv=28 !return "neue Quests"
+  travel walk 1440 | src=plan status=unbestätigt
+@a6504 lv=28
+  accept 6504 | src=polestar,att,eglink status=unbestätigt
+  goto 1440 -2335.7,1935.8 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c6504 lv=28
+  complete 6504 | src=polestar status=unbestätigt
+@t6504 lv=28
+  turnin 6504 | src=polestar,eglink status=unbestätigt
+  goto 1440 -2335.7,1935.8 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@a1918 lv=28
+  accept 1918 | src=polestar status=unbestätigt
+  goto 1440 -952.5,1982.5 r=10 | src=polestar status=unbestätigt roots=1
+@c1918 lv=28
+  complete 1918 | src=polestar status=unbestätigt
+  goto 1440 -952.5,1982.5 r=10 | src=polestar status=unbestätigt roots=1
+@t1918 lv=28
+  turnin 1918 | src=polestar,eglink status=unbestätigt
+  accept 824 | src=polestar,att,eglink status=unbestätigt
+  goto 1440 -2547.2,2363.5 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@c824 lv=28
+  complete 824 | src=polestar status=unbestätigt
+  goto 1440 -952.5,1982.5 r=10 | src=polestar status=unbestätigt roots=1
+@t824 lv=28
+  turnin 824 | src=polestar,eglink status=unbestätigt
+  xp 29 | src=plan status=unbestätigt
+  goto 1440 1030.5,3353.4 r=10 | src=eglink,polestar status=unbestätigt roots=2

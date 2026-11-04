@@ -1,0 +1,47 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module a-explorer-core-13-1424
+#kind core
+#faction Alliance
+#mode explorer
+#levels 29-30
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1424 lv=29
+  travel walk 1424 | src=plan status=unbestätigt
+@hf14 lv=29
+  goto 1424 -513.1,-715.9 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@a98071 lv=29
+  accept 98071 | src=polestar,att status=unbestätigt
+  goto 1424 -601.5,-853.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c98071 lv=29
+  complete 98071 | src=polestar status=unbestätigt
+@t98071 lv=29
+  turnin 98071 | src=polestar status=unbestätigt
+  goto 1424 -601.5,-853.0 r=10 | src=polestar status=unbestätigt roots=1
+@a536 lv=29
+  accept 536 | src=polestar,att status=unbestätigt
+  goto 1424 -580.0,-845.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c536 lv=29
+  complete 536 | src=polestar status=unbestätigt
+  goto 1424 -321.0,-1055.0 r=10 | src=polestar status=unbestätigt roots=1
+@t536 lv=29
+  turnin 536 | src=polestar status=unbestätigt
+  xp 30 | src=plan status=unbestätigt
+  goto 1424 -580.0,-845.5 r=10 | src=polestar status=unbestätigt roots=1
+@fp14 lv=29
+  fp | src=plan status=unbestätigt
+  goto 1424 -513.1,-715.9 r=10 | src=eglink,polestar,att status=unbestätigt
+@a98059 lv=29
+  accept 98059 | src=polestar,att status=unbestätigt
+  goto 1424 -420.5,-669.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c98059 lv=29
+  complete 98059 | src=polestar status=unbestätigt
+@t98059 lv=29
+  turnin 98059 | src=polestar status=unbestätigt
+  goto 1424 -420.5,-669.5 r=10 | src=polestar status=unbestätigt roots=1

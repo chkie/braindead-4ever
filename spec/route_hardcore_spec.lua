@@ -16,6 +16,9 @@ local function questLevel(ns, q, level)
 	ns.StepFrame.Refresh()
 end
 
+-- Quest of the route's first step (a783, accept “A Threat Within”), the current step after the login.
+local FIRST = 783
+
 local function warn(ns)
 	local W = ns.StepFrame.frame
 	return shown(W.warn) and W.warn.text or nil
@@ -65,7 +68,8 @@ describe("Hardcore-safe mode", function()
 				)
 			end
 		end
-		assert.is_true(n > 900, "route quests checked: " .. n)
+		-- 858 measured with the route set of 0.9.1 (89 modules, races share them; before: over 900 in 182)
+		assert.is_true(n > 850, "route quests checked: " .. n)
 	end)
 
 	describe("step window", function()
@@ -73,7 +77,7 @@ describe("Hardcore-safe mode", function()
 			local ns = S.login()
 			assert.are.equal("auto", ns.UI.Get("hardcore"))
 			assert.is_false(ns.Connect.Hardcore())
-			questLevel(ns, 33, 9)
+			questLevel(ns, FIRST, 9)
 			assert.is_nil(warn(ns))
 			ns.UI.Set("hardcore", "on")
 			assert.are.equal("Careful: quest 8 levels above you", warn(ns))
@@ -81,9 +85,9 @@ describe("Hardcore-safe mode", function()
 
 		it("warns from three levels above the character, not at two", function()
 			local ns = S.login({ saved = { ui = { hardcore = "on" } } })
-			questLevel(ns, 33, 3)
+			questLevel(ns, FIRST, 3)
 			assert.is_nil(warn(ns))
-			questLevel(ns, 33, 4)
+			questLevel(ns, FIRST, 4)
 			assert.are.equal("Careful: quest 3 levels above you", warn(ns))
 			wow.world.player.level = 2
 			ns.StepFrame.Refresh()
@@ -99,7 +103,7 @@ describe("Hardcore-safe mode", function()
 				end,
 			})
 			assert.is_true(ns.Connect.Hardcore())
-			questLevel(ns, 33, 9)
+			questLevel(ns, FIRST, 9)
 			assert.is_truthy(warn(ns))
 			ns.UI.Set("hardcore", "off")
 			assert.is_nil(warn(ns))
@@ -110,7 +114,7 @@ describe("Hardcore-safe mode", function()
 				saved = { ui = { hardcore = "on" } },
 				before = function()
 					_G.C_QuestLog.IsEliteQuest = function(q)
-						return q == 33
+						return q == FIRST
 					end
 				end,
 			})
@@ -119,7 +123,7 @@ describe("Hardcore-safe mode", function()
 
 		it("stays in the mini view and speaks German", function()
 			local ns = S.login({ locale = "deDE", saved = { ui = { hardcore = "on" } } })
-			questLevel(ns, 33, 6)
+			questLevel(ns, FIRST, 6)
 			ns.StepFrame.SetMini(true)
 			assert.are.equal("Vorsicht: Quest 5 Stufen über dir", warn(ns))
 			assert.is_nil(warn(ns):find("\226\128\148"), "no em dash")

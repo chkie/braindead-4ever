@@ -5,6 +5,16 @@ local wow = require("spec.helpers.wow")
 
 local S = {}
 
+-- The route starts with a783 (accept 783 "A Threat Within") at the place where the player stands after the
+-- login (spec/helpers/ui.lua: -136.5 west, -8933.5 north). Tests that need the first goal at a distance stand
+-- here instead: 70 yd south-west of it, so the goal lies 70 yd north-east of the player.
+S.AWAY = { west = -110.0, north = -8998.0 }
+
+-- Login option `before` that puts the player at S.AWAY.
+function S.away(W)
+	W.player.west, W.player.north = S.AWAY.west, S.AWAY.north
+end
+
 -- Titles the stand-in client knows (C_QuestLog.GetTitleForQuestID); IDs from the Elwynn route.
 S.TITLES = {
 	enUS = { [33] = "Wolves Across the Border", [783] = "A Threat Within", [7] = "Kobold Camp Cleanup" },

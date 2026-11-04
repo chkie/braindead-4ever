@@ -1,0 +1,41 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module h-explorer-core-08-1413
+#kind core
+#faction Horde
+#mode explorer
+#levels 27-28
+#label vorläufig
+#version 1
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1413 lv=27 !return "neue Quests"
+  travel walk 1413 | src=plan status=unbestätigt
+@a846 lv=27
+  accept 846 | src=polestar,att status=unbestätigt
+  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+@c846 lv=27
+  complete 846 | src=polestar status=unbestätigt
+  goto 1413 -2370.0,-4078.5 r=10 | src=polestar status=unbestätigt roots=1
+@t846 lv=27
+  turnin 846 | src=polestar status=unbestätigt
+  accept 849 | src=polestar,att status=unbestätigt
+  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+@c849 lv=27
+  complete 849 | src=polestar status=unbestätigt
+  goto 1413 -2136.5,-4173.0 r=10 | src=polestar status=unbestätigt roots=1
+@t849 lv=27
+  turnin 849 | src=polestar status=unbestätigt
+  xp 28 | src=plan status=unbestätigt
+  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+@a857 lv=28
+  accept 857 | src=polestar,att,eglink status=unbestätigt
+  goto 1413 -2341.0,-4219.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c857 lv=28
+  complete 857 | src=polestar status=unbestätigt
+  goto 1413 -2356.0,-4081.0 r=10 | src=polestar status=unbestätigt roots=1
+@t857 lv=28
+  turnin 857 | src=polestar,eglink status=unbestätigt
+  goto 1413 -2341.0,-4219.4 r=10 | src=eglink,polestar status=unbestätigt roots=2

@@ -13,7 +13,8 @@ local ITEM = 2875 -- test value: a quest item of quest 33 in the stand-in quest 
 local LINKED = "item:" .. ITEM
 
 -- Quest 33 ("Wolves Across the Border") is in the log with an item; the route's current step is then
--- a783, and c33 (complete 33) comes three steps later.
+-- a783, and c33 (complete 33) comes eleven steps later for the human warrior, right behind c3100. t33
+-- (turn in 33) comes eight steps after c33 and stays the current step when the quest completes.
 local function login(opts)
 	opts = opts or {}
 	local before = opts.before
@@ -40,7 +41,7 @@ end
 
 -- Checks off steps until the current step has this id.
 local function toStep(ns, id)
-	for _ = 1, 10 do
+	for _ = 1, 30 do
 		local cur = ns.Route.Current()
 		if cur and cur.id == id then
 			return cur
@@ -84,30 +85,33 @@ describe("Quest item button (M8)", function()
 		local full = ns.StepFrame.Width() - (ns.StepFrame.LEFT + ns.StepFrame.ICON + ns.StepFrame.GAP_ICON)
 		assert.are.equal(full - ns.StepFrame.RIGHT - ns.QuestItem.ROOM, W.step:GetWidth())
 
-		ns.Connect.Back() -- c7: quest 7 has no item
+		ns.Connect.Back() -- c3100: quest 3100 has no item
 		wow.advance(1)
+		assert.are.equal("c3100", ns.Route.Current().id)
 		assert.is_false(shown(B))
 		assert.is_nil(B:GetAttribute("item")) -- no click uses an old item
 		assert.are.equal(full - ns.StepFrame.RIGHT, W.step:GetWidth())
 		assert.is_nil(B:GetPoint(1)) -- hidden, it is anchored to nothing
 
-		toStep(ns, "c33")
+		toStep(ns, "t33")
 		assert.is_true(shown(B))
 		-- the quest completes: Blizzard's tracker keeps no item of a complete quest
 		wow.world.questLog[1].complete = true
 		wow.world.questLog[1].objectives[1].finished = true
 		wow.fire("QUEST_LOG_UPDATE")
 		wow.advance(1)
+		assert.are.equal("t33", ns.Route.Current().id) -- the step stays, only the quest changed
 		assert.is_false(shown(B))
 		assert.are.same({}, wow.errors)
 	end)
 
 	it("keeps an item marked for complete quests (showItemWhenComplete)", function()
 		local ns = login({ item = { id = ITEM, icon = 133972, always = true } })
-		toStep(ns, "c33")
+		toStep(ns, "t33")
 		wow.world.questLog[1].complete = true
 		wow.fire("QUEST_LOG_UPDATE")
 		wow.advance(1)
+		assert.are.equal("t33", ns.Route.Current().id)
 		assert.is_true(shown(button()))
 	end)
 
@@ -120,7 +124,7 @@ describe("Quest item button (M8)", function()
 		local _, rel = B:GetPoint(1)
 		assert.are.equal(_G.UIParent, rel)
 		assert.is_false(wow.restricted(W))
-		ns.Connect.Back() -- the step changes in the fight: c7 has no item
+		ns.Connect.Back() -- the step changes in the fight: c3100 has no item
 		wow.advance(1)
 		ns.UI.SetPaused(true) -- the guidance pauses in the fight
 		ns.UI.SetPaused(false)

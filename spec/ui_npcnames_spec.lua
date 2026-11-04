@@ -9,9 +9,9 @@
 local wow = require("spec.helpers.wow")
 local S = require("spec.helpers.uisession")
 
--- Elwynn start of the human warrior (Data_Npcs.lua from data/facts): quest 33 is given by NPC 196,
--- quest 783 taken by 197, which also gives quest 7.
-local GIVER_33, TURNIN_783 = 196, 197
+-- Elwynn start of the human warrior (Data_Npcs.lua from data/facts): the route starts with quest 783,
+-- given by NPC 823 and taken by 197, which also gives quest 7.
+local GIVER_783, TURNIN_783 = 823, 197
 
 local function current(ns)
 	return ns.StepFrame.frame.step:GetText()
@@ -49,21 +49,21 @@ describe("NPC names in the steps (M4)", function()
 	it("names the quest giver the client knows, in English", function()
 		local ns = S.login({
 			before = function(W)
-				W.creatures[GIVER_33] = "Eagan Peltskinner"
+				W.creatures[GIVER_783] = "Deputy Willem"
 			end,
 		})
 		assert.are.equal("on", ns.Modules.state.npcnames)
-		assert.are.equal("Accept “Wolves Across the Border” from Eagan Peltskinner", current(ns))
+		assert.are.equal("Accept “A Threat Within” from Deputy Willem", current(ns))
 	end)
 
 	it("German client: the German name in the German word order", function()
 		local ns = S.login({
 			locale = "deDE",
 			before = function(W)
-				W.creatures[GIVER_33] = "Jäger Örtel"
+				W.creatures[GIVER_783] = "Hilfssheriff Willem"
 			end,
 		})
-		assert.are.equal("„Wölfe an der Grenze“ bei Jäger Örtel annehmen", current(ns))
+		assert.are.equal("„Eine Bedrohung von innen“ bei Hilfssheriff Willem annehmen", current(ns))
 	end)
 
 	it("names the turn-in NPC, and an NPC that also gives the next quest only once", function()
@@ -81,7 +81,7 @@ describe("NPC names in the steps (M4)", function()
 	it("without a name the step reads as before", function()
 		local named = S.login()
 		local plain = current(named)
-		assert.are.equal("Accept “Wolves Across the Border”", plain)
+		assert.are.equal("Accept “A Threat Within”", plain)
 		-- the same session without the module (no tooltip API): the same text
 		local off = S.login({
 			before = function()
@@ -97,17 +97,17 @@ describe("NPC names in the steps (M4)", function()
 
 	it("learns the name at the quest dialog, keeps it for the client's language and shows it later", function()
 		local ns = S.login({ locale = "deDE" })
-		assert.are.equal("„Wölfe an der Grenze“ annehmen", current(ns))
-		wow.world.npc = { guid = "Creature-0-1-0-1-196-0000ABCDEF", name = "Jäger Örtel" }
+		assert.are.equal("„Eine Bedrohung von innen“ annehmen", current(ns))
+		wow.world.npc = { guid = "Creature-0-1-0-1-823-0000ABCDEF", name = "Hilfssheriff Willem" }
 		wow.fire("QUEST_DETAIL")
 		wow.advance(1) -- the window redraws once
-		assert.are.equal("„Wölfe an der Grenze“ bei Jäger Örtel annehmen", current(ns))
+		assert.are.equal("„Eine Bedrohung von innen“ bei Hilfssheriff Willem annehmen", current(ns))
 		local saved = _G.BraindeadForeverDB
-		assert.are.equal("Jäger Örtel", saved.npcNames.deDE[GIVER_33])
+		assert.are.equal("Hilfssheriff Willem", saved.npcNames.deDE[GIVER_783])
 		assert.is_nil(saved.npcNames.enUS)
 		-- next session: the client's cache is empty, the learned name stays
 		local again = S.login({ locale = "deDE", saved = saved })
-		assert.are.equal("„Wölfe an der Grenze“ bei Jäger Örtel annehmen", current(again))
+		assert.are.equal("„Eine Bedrohung von innen“ bei Hilfssheriff Willem annehmen", current(again))
 	end)
 
 	it("learns only givers and turn-ins of the route's faction, never from a player or a secret", function()
@@ -138,34 +138,34 @@ describe("NPC names in the steps (M4)", function()
 			wow.advance(0.5)
 		end
 		assert.are.equal(asked, wow.world.tooltipQueries) -- an unknown NPC waits for the next step
-		wow.world.creatures[GIVER_33] = "Eagan Peltskinner" -- the player saw him meanwhile
+		wow.world.creatures[GIVER_783] = "Deputy Willem" -- the player saw him meanwhile
 		ns.Connect.Check()
 		wow.advance(1)
 		ns.Connect.Back() -- the step comes back: asked again, now with a name
 		wow.advance(1)
 		assert.is_true(wow.world.tooltipQueries > asked)
-		assert.are.equal("Accept “Wolves Across the Border” from Eagan Peltskinner", current(ns))
+		assert.are.equal("Accept “A Threat Within” from Deputy Willem", current(ns))
 	end)
 
 	it("never shows a name learned in another language", function()
 		local ns = S.login({
 			locale = "deDE",
-			saved = { npcNames = { enUS = { n = 1, [GIVER_33] = "Eagan Peltskinner" } } },
+			saved = { npcNames = { enUS = { n = 1, [GIVER_783] = "Deputy Willem" } } },
 		})
-		assert.are.equal("„Wölfe an der Grenze“ annehmen", current(ns))
+		assert.are.equal("„Eine Bedrohung von innen“ annehmen", current(ns))
 	end)
 
 	it("counter-check: reading the names of every language shows the English name in the German client", function()
 		local ns = S.login({
 			locale = "deDE",
-			saved = { npcNames = { enUS = { n = 1, [GIVER_33] = "Eagan Peltskinner" } } },
+			saved = { npcNames = { enUS = { n = 1, [GIVER_783] = "Deputy Willem" } } },
 			loaded = function(ns)
 				ns.NpcNames.Saved = function() -- the fault: the language of the client is not checked
 					return ns.db.npcNames.enUS
 				end
 			end,
 		})
-		assert.are.equal("„Wölfe an der Grenze“ bei Eagan Peltskinner annehmen", current(ns))
+		assert.are.equal("„Eine Bedrohung von innen“ bei Deputy Willem annehmen", current(ns))
 	end)
 
 	it("the compiled data holds NPC IDs only, no names", function()

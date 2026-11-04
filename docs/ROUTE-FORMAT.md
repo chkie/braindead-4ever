@@ -66,7 +66,7 @@ Rules applied by `merge` (decided 2026-11-01, revisable):
 
 ## Service NPCs and flights (`data/facts/npcs.jsonl`, `flightnodes.jsonl`, `flightedges.jsonl`)
 
-Facts for the plan elements `train`, `sethome` and `fp` and for planning flights (added 2026-11-03, Welle 10). They are not in the compiled data yet; the routes take them up in a later step. `merge` writes them (`tools/routekit/services.py`); every value has `src`, every record `"status": "unbestätigt"`.
+Facts for the plan elements `train`, `sethome` and `fp` and for planning flights (added 2026-11-03, Welle 10). The routes use them since 0.9.1 for their `train`, `sethome`, `hs`, `fp` and `travel fly` steps; the facts themselves are not in the compiled data. `merge` writes them (`tools/routekit/services.py`); every value has `src`, every record `"status": "unbestätigt"`.
 
 **Service NPCs**, one record per role and NPC, sorted by NPC ID:
 

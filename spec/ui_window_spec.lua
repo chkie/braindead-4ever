@@ -35,15 +35,15 @@ end
 
 describe("Step window", function()
 	describe("normal state", function()
-		local ns = S.login()
+		local ns = S.login({ before = S.away }) -- the first goal 70 yd away (spec/helpers/uisession.lua)
 		local W = frame(ns)
 
 		it("shows the current step, the next three dimmed, and the XP line", function()
 			assert.is_true(shown(W))
 			local cur = ns.Route.Current()
-			assert.are.equal("a-speed-start-elwynn/a33", cur.key)
+			assert.are.equal("a-speed-start-elwynn/a783", cur.key)
 			assert.matches("^Elwynn Forest • 1/%d+$", W.title.text)
-			assert.matches("^Accept “Wolves Across the Border”", W.step.text)
+			assert.matches("^Accept “A Threat Within”", W.step.text)
 			-- the target lies in the zone the header names: only the distance (Welle 5d, Q3)
 			assert.are.equal("70 |4yd:yds away", W.detail.text)
 			local rows = nextRows(ns)
@@ -104,7 +104,7 @@ describe("Step window", function()
 				objectives = { { text = "Diseased Young Wolf slain: 3/8", numFulfilled = 3, numRequired = 8 } },
 			}
 			local text = ns.StepText.Step({ step = { { 2, q, 1, 0 } } }, true)
-			assert.are.equal("“Wolves Across the Border”: Diseased Young Wolf slain", text)
+			assert.are.equal("“A Threat Within”: Diseased Young Wolf slain", text)
 			wow.world.questLog = {}
 		end)
 	end)
@@ -114,7 +114,7 @@ describe("Step window", function()
 		local W = frame(ns)
 		W.cur.scripts.OnEnter(W.cur)
 		local lines = wow.world.tooltip.lines
-		assert.are.equal("“Wolves Across the Border”", lines[1])
+		assert.are.equal("“A Threat Within”", lines[1])
 		assert.matches("^Step 1 of %d+$", lines[2])
 		assert.are.equal("Where the data comes from", lines[3])
 		-- no other addon by name (owner 04.11.2026): the game data projects show as "open game data"
@@ -123,7 +123,11 @@ describe("Step window", function()
 		W.clock.scripts.OnEnter(W.clock)
 		lines = wow.world.tooltip.lines
 		assert.are.equal("Provisional", lines[1])
-		assert.matches("^Too few own runs for this section so far %(0%)%. Source: open game data%.$", lines[2])
+		-- the module's hint steps (train, sethome, hs) come from the route plan (src=plan)
+		assert.matches(
+			"^Too few own runs for this section so far %(0%)%. Source: open game data and route plan%.$",
+			lines[2]
+		)
 	end)
 
 	describe("done", function()
@@ -136,7 +140,7 @@ describe("Step window", function()
 			assert.is_true(shown(W.icon))
 			assert.is_false(shown(W.box))
 			assert.are.same({ 0.6, 0.6, 0.6 }, W.step.textColor)
-			assert.matches("Wolves Across the Border", W.step.text, 1, true)
+			assert.matches("A Threat Within", W.step.text, 1, true)
 			assert.are.equal(1, W.glowAnim.played)
 			assert.are.same({ 878 }, wow.world.sounds)
 			-- glow inside the window edges
@@ -148,18 +152,18 @@ describe("Step window", function()
 			wow.advance(0.9)
 			assert.are_not.equal(first, ns.Route.Current().key)
 			assert.is_true(shown(W.box))
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches("Kobold Camp Cleanup", W.step.text, 1, true) -- t783 hands in 783 and accepts 7
 		end)
 
 		it("comes from the game as well: an accepted quest checks the step", function()
 			local ns = S.login()
 			local W = frame(ns)
-			wow.world.questLog[#wow.world.questLog + 1] = { questID = 33, objectives = {} }
-			wow.fire("QUEST_ACCEPTED", 33)
+			wow.world.questLog[#wow.world.questLog + 1] = { questID = 783, objectives = {} }
+			wow.fire("QUEST_ACCEPTED", 783)
 			wow.advance(0.15)
 			assert.are.equal("UI-QuestTracker-Tracker-Check", W.icon.atlas)
 			wow.advance(1)
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches("Kobold Camp Cleanup", W.step.text, 1, true)
 		end)
 
 		it("adds “(done)” in Blizzard's colorblind mode and stays silent with the sound option off", function()
@@ -201,7 +205,7 @@ describe("Step window", function()
 			W.box:Click()
 			assert.are.equal(0, W.glowAnim.played)
 			assert.are.same({}, wow.world.sounds)
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches("Kobold Camp Cleanup", W.step.text, 1, true)
 			S.combat(false)
 			assert.are.equal(1, W.alpha)
 		end)
@@ -293,7 +297,7 @@ describe("Step window", function()
 			wow.advance(1)
 			local menu = S.menu(ns)
 			local undo = menu.items[2]
-			assert.are.equal("Undo: checked off “Wolves Across the Border”", undo.text)
+			assert.are.equal("Undo: checked off “A Threat Within”", undo.text)
 			assert.is_true(undo.enabled)
 			undo.fn()
 			assert.are.equal(first, ns.Route.Current().key)
@@ -496,13 +500,24 @@ describe("Step window", function()
 	end)
 
 	describe("quest abandoned", function()
+		-- Plays a783, t783 (783 handed in, 7 taken) and a33; the route stands at c7. Then 33 is abandoned.
 		local function abandoned()
 			local ns = S.login()
 			local W = wow.world
-			W.questLog[#W.questLog + 1] = { questID = 33, objectives = {} }
-			wow.fire("QUEST_ACCEPTED", 33)
+			W.questLog[#W.questLog + 1] = { questID = 783, objectives = {} }
+			wow.fire("QUEST_ACCEPTED", 783)
 			wow.advance(2)
 			W.questLog = {}
+			W.completed[783] = true
+			wow.fire("QUEST_TURNED_IN", 783, 40, 0)
+			wow.fire("QUEST_REMOVED", 783)
+			for _, q in ipairs({ 7, 33 }) do
+				W.questLog[#W.questLog + 1] = { questID = q, objectives = {} }
+				wow.fire("QUEST_ACCEPTED", q)
+				wow.advance(2)
+			end
+			assert.are.equal("a-speed-start-elwynn/c7", ns.Route.Current().key)
+			table.remove(W.questLog) -- 33
 			wow.fire("QUEST_REMOVED", 33)
 			wow.advance(1.5)
 			return ns
@@ -523,13 +538,13 @@ describe("Step window", function()
 		end)
 
 		-- Welle 5d, M9: the note named one quest and the window marked the step of another. The runtime
-		-- asks about a quest taken earlier; here the current step is “A Threat Within” (783).
+		-- asks about a quest taken earlier; here the current step is c7 (“Kobold Camp Cleanup”).
 		it("marks only the step of the abandoned quest; another current step stays as it is (M9)", function()
 			local ns = abandoned()
 			local W = frame(ns)
 			local cur = ns.Route.Current()
 			assert.is_false(ns.StepFrame.StepHasQuest(cur, 33))
-			assert.matches("A Threat Within", W.step.text, 1, true)
+			assert.matches("Kobold Camp Cleanup", W.step.text, 1, true)
 			-- the fail symbol stands in front of the note that names the quest, not at the step
 			assert.are.same(
 				{ "TOPLEFT", W, "TOPLEFT" },
@@ -629,9 +644,9 @@ describe("Step window", function()
 	end)
 
 	it("German client: German texts, German quotes and “m” for yards", function()
-		local ns = S.login({ locale = "deDE" })
+		local ns = S.login({ locale = "deDE", before = S.away })
 		local W = frame(ns)
-		assert.are.equal("„Wölfe an der Grenze“ annehmen", W.step.text)
+		assert.are.equal("„Eine Bedrohung von innen“ annehmen", W.step.text)
 		-- Welle 5d, Q2: "|4m" without a colon lost the "m" in the client; Q3: no zone repeated
 		assert.are.equal("70 m entfernt", W.detail.text)
 		-- Welle 5d, Q5: number and "EP" joined by a no-break space, so "EP" never stands alone

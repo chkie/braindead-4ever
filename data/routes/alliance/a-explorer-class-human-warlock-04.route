@@ -1,0 +1,36 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module a-explorer-class-human-warlock-04
+#kind class
+#faction Alliance
+#mode explorer
+#levels 23-23
+#for race=HUMAN class=WARLOCK
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1445 lv=23 !return "Klassenquest"
+  travel walk 1445 | src=plan status=unbestätigt
+@a65602 lv=23
+  accept 65602 | src=polestar status=unbestätigt
+  goto 1445 -2374.0,-2245.5 r=10 | src=polestar status=unbestätigt roots=1
+@c65602 lv=23
+  complete 65602 | src=polestar status=unbestätigt
+@r1453 lv=23 !return "Klassenquest"
+  travel boat 1453 | src=plan status=unbestätigt
+@t65602 lv=23
+  turnin 65602 | src=polestar status=unbestätigt
+  accept 65603 | src=polestar,att status=unbestätigt
+  goto 1453 1041.5,-8983.0 r=10 | src=polestar status=unbestätigt roots=1
+@ht461 lv=23
+  goto 1453 1041.0,-8980.0 r=10 | src=polestar status=unbestätigt roots=1
+  train | src=plan status=unbestätigt
+@c65603 lv=23
+  complete 65603 | src=polestar status=unbestätigt
+  goto 1453 1043.0,-8973.0 r=10 | src=polestar status=unbestätigt roots=1
+@t65603 lv=23
+  turnin 65603 | src=polestar status=unbestätigt
+  goto 1453 1041.5,-8983.0 r=10 | src=polestar status=unbestätigt roots=1

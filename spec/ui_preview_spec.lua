@@ -82,7 +82,7 @@ describe("Developer preview", function()
 		assert.are.equal("Rumor: Someone found something in the Riverglades.", ns.StepFrame.frame.banner.text)
 		SlashCmdList.BRAINDEADFOREVER("preview off")
 		assert.is_false(rawget(ns.StepFrame.frame.banner, "shown"))
-		assert.matches("Wolves Across the Border", ns.StepFrame.frame.step.text, 1, true)
+		assert.matches("A Threat Within", ns.StepFrame.frame.step.text, 1, true) -- the live route's first step
 		assert.are.same({}, wow.errors)
 	end)
 

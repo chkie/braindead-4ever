@@ -1,0 +1,216 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module h-explorer-core-06-1424
+#kind core
+#faction Horde
+#mode explorer
+#levels 25-27
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1424 lv=25
+  travel zeppelin 1424 | src=plan status=unbestätigt
+@a496 lv=25
+  accept 496 | src=polestar,att,eglink status=unbestätigt
+  fp | src=plan status=unbestätigt
+  goto 1424 -900.9,-9.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@hb2388n10 lv=25 << race=ORC,TROLL class=WARRIOR,ROGUE,SHAMAN,MAGE
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n10v2 lv=25 << class=PALADIN
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n10v3 lv=25 << race=TROLL class=PRIEST
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n9 lv=25 << race=UNDEAD,SKYBORNE_H class=WARRIOR
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n9v2 lv=25 << race=ORC,TROLL class=HUNTER
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n9v3 lv=25 << race=UNDEAD class=ROGUE,PRIEST,MAGE
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n12 lv=25 << race=TAUREN class=WARRIOR
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n11v2 lv=25 << race=TAUREN class=HUNTER,SHAMAN,DRUID
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n8 lv=25 << race=SKYBORNE_H class=HUNTER,ROGUE,SHAMAN,DRUID
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@a98094 lv=25
+  accept 98094 | src=polestar,att status=unbestätigt
+  accept 527 | src=polestar,att status=unbestätigt
+  accept 549 | src=polestar,att,eglink status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c98094 lv=25
+  complete 98094 | src=polestar status=unbestätigt
+@a498 lv=25
+  accept 498 | src=polestar,att status=unbestätigt
+  goto 1424 -957.0,-40.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c496 lv=25
+  complete 496 | src=polestar status=unbestätigt
+  goto 1424 -579.5,-406.0 r=10 | src=polestar status=unbestätigt roots=1
+@t496 lv=25
+  turnin 496 | src=polestar status=unbestätigt
+  accept 499 | src=polestar,att status=unbestätigt
+  goto 1424 -899.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+@c499 lv=25
+  complete 499 | src=polestar status=unbestätigt
+@t499 lv=25
+  turnin 499 | src=polestar status=unbestätigt
+  accept 501 | src=polestar,att,eglink status=unbestätigt
+  goto 1424 -902.5,-8.5 r=10 | src=polestar status=unbestätigt roots=1
+@hf13 lv=25
+  goto 1424 -857.5,3.0 r=10 | src=polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@c501 lv=25
+  complete 501 | src=polestar status=unbestätigt
+  goto 1424 -525.5,-259.0 r=10 | src=polestar status=unbestätigt roots=1
+@t501 lv=25
+  turnin 501 | src=polestar status=unbestätigt
+  accept 502 | src=polestar,att status=unbestätigt
+  goto 1424 -899.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+@c502 lv=25
+  complete 502 | src=polestar status=unbestätigt
+@t502 lv=25
+  turnin 502 | src=polestar status=unbestätigt
+  goto 1424 21.5,-353.5 r=10 | src=polestar status=unbestätigt roots=1
+@c527 lv=25
+  complete 527 | src=polestar status=unbestätigt
+  goto 1424 51.5,-424.0 r=10 | src=polestar status=unbestätigt roots=1
+@c549 lv=25
+  complete 549 | src=polestar status=unbestätigt
+  goto 1424 -1421.5,-542.5 r=10 | src=polestar status=unbestätigt roots=1
+@c498 lv=25
+  complete 498 | src=polestar status=unbestätigt
+  goto 1424 -1344.0,-485.5 r=10 | src=polestar status=unbestätigt roots=1
+@hh2388n10 lv=25 << race=ORC,TROLL class=WARRIOR,ROGUE,SHAMAN,MAGE
+  hs | src=plan status=unbestätigt
+@hh2388n10v2 lv=25 << class=PALADIN
+  hs | src=plan status=unbestätigt
+@hh2388n10v3 lv=25 << race=TROLL class=PRIEST
+  hs | src=plan status=unbestätigt
+@hh2388n9 lv=25 << race=UNDEAD,SKYBORNE_H class=WARRIOR
+  hs | src=plan status=unbestätigt
+@hh2388n9v2 lv=25 << race=ORC,TROLL class=HUNTER
+  hs | src=plan status=unbestätigt
+@hh2388n9v3 lv=25 << race=UNDEAD class=ROGUE,PRIEST,MAGE
+  hs | src=plan status=unbestätigt
+@hh2388n12 lv=25 << race=TAUREN class=WARRIOR
+  hs | src=plan status=unbestätigt
+@hh2388n11v5 lv=25 << race=TAUREN class=HUNTER,SHAMAN,DRUID
+  hs | src=plan status=unbestätigt
+@hh2388n8 lv=25 << race=SKYBORNE_H class=HUNTER,ROGUE,SHAMAN,DRUID
+  hs | src=plan status=unbestätigt
+@t549 lv=25
+  turnin 549 | src=polestar status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@t498 lv=25
+  turnin 498 | src=polestar status=unbestätigt
+  goto 1424 -957.0,-40.5 r=10 | src=polestar status=unbestätigt roots=1
+@hb2388n11 lv=25 << race=ORC,TROLL class=WARLOCK
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb2388n10v4 lv=25 << race=UNDEAD class=WARLOCK
+  goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@a509 lv=26 << race=!TAUREN,SKYBORNE_H class=PALADIN,WARLOCK
+  accept 509 | src=polestar,att,eglink status=unbestätigt
+  goto 1424 -900.9,-9.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@a567 lv=26 << race=!TAUREN,SKYBORNE_H class=PALADIN,WARLOCK
+  accept 567 | src=polestar,att,eglink status=unbestätigt
+  goto 1424 -931.8,-21.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t527 lv=25
+  turnin 527 | src=polestar status=unbestätigt
+  accept 528 | src=polestar,att status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@a546 lv=25
+  accept 546 | src=polestar,att status=unbestätigt
+  goto 1424 -921.0,-20.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c528 lv=25
+  complete 528 | src=polestar status=unbestätigt
+  goto 1424 -23.5,-574.5 r=10 | src=polestar status=unbestätigt roots=1
+@t528 lv=26
+  turnin 528 | src=polestar status=unbestätigt
+  accept 529 | src=polestar,att status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@a567x lv=26 << class=!PALADIN,WARLOCK
+  accept 567 | src=polestar,att,eglink status=unbestätigt
+  goto 1424 -931.8,-21.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@a509x lv=26 << class=!PALADIN,WARLOCK
+  accept 509 | src=polestar,att,eglink status=unbestätigt
+  goto 1424 -900.9,-9.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@c529 lv=26
+  complete 529 | src=polestar status=unbestätigt
+  goto 1424 39.0,-547.5 r=10 | src=polestar status=unbestätigt roots=1
+@c567 lv=26
+  complete 567 | src=polestar status=unbestätigt
+  goto 1424 122.5,-504.5 r=10 | src=polestar status=unbestätigt roots=1
+@c546 lv=26
+  complete 546 | src=polestar status=unbestätigt
+  goto 1424 554.5,-1319.5 r=10 | src=polestar status=unbestätigt roots=1
+@c509 lv=26
+  complete 509 | src=polestar status=unbestätigt
+  goto 1424 -999.5,-906.5 r=10 | src=polestar status=unbestätigt roots=1
+@t98094 lv=26
+  turnin 98094 | src=polestar status=unbestätigt
+  accept 98095 | src=polestar,att status=unbestätigt
+  goto 1424 -980.5,-750.5 r=10 | src=polestar status=unbestätigt roots=1
+@c98095 lv=26
+  complete 98095 | src=polestar status=unbestätigt
+@t98095 lv=26
+  turnin 98095 | src=polestar status=unbestätigt
+  goto 1424 -980.5,-750.5 r=10 | src=polestar status=unbestätigt roots=1
+@hh2388n11v4 lv=26 << race=ORC,TROLL class=WARLOCK
+  hs | src=plan status=unbestätigt
+@hh2388n10v7 lv=26 << race=UNDEAD class=WARLOCK
+  hs | src=plan status=unbestätigt
+@t529 lv=26
+  turnin 529 | src=polestar status=unbestätigt
+  turnin 567 | src=polestar status=unbestätigt
+  accept 532 | src=polestar,att status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@t546 lv=26
+  turnin 546 | src=polestar status=unbestätigt
+  goto 1424 -921.0,-20.5 r=10 | src=polestar status=unbestätigt roots=1
+@t509 lv=26
+  turnin 509 | src=polestar status=unbestätigt
+  goto 1424 -899.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
+@c532 lv=26
+  complete 532 | src=polestar status=unbestätigt
+  goto 1424 117.0,-488.5 r=10 | src=polestar status=unbestätigt roots=1
+@t532 lv=26
+  turnin 532 | src=polestar status=unbestätigt
+  accept 539 | src=polestar,att status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@c539 lv=26
+  complete 539 | src=polestar status=unbestätigt
+  goto 1424 68.0,-795.0 r=10 | src=polestar status=unbestätigt roots=1
+@hh2388n11 lv=26 << race=ORC,TROLL class=WARRIOR,ROGUE,SHAMAN,MAGE
+  hs | src=plan status=unbestätigt
+@hh2388n11v2 lv=26 << class=PALADIN
+  hs | src=plan status=unbestätigt
+@hh2388n11v3 lv=26 << race=TROLL class=PRIEST
+  hs | src=plan status=unbestätigt
+@hh2388n10v4 lv=26 << race=UNDEAD,SKYBORNE_H class=WARRIOR
+  hs | src=plan status=unbestätigt
+@hh2388n10v5 lv=26 << race=ORC,TROLL class=HUNTER
+  hs | src=plan status=unbestätigt
+@hh2388n10v6 lv=26 << race=UNDEAD class=ROGUE,PRIEST,MAGE
+  hs | src=plan status=unbestätigt
+@hh2388n13 lv=26 << race=TAUREN class=WARRIOR
+  hs | src=plan status=unbestätigt
+@hh2388n12v2 lv=26 << race=TAUREN class=HUNTER,SHAMAN,DRUID
+  hs | src=plan status=unbestätigt
+@hh2388n9v4 lv=26 << race=SKYBORNE_H class=HUNTER,ROGUE,SHAMAN,DRUID
+  hs | src=plan status=unbestätigt
+@t539 lv=26
+  turnin 539 | src=polestar status=unbestätigt
+  goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1

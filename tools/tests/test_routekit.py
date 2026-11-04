@@ -203,7 +203,16 @@ class RepositoryData(unittest.TestCase):
     def test_routes_lint_clean(self):
         facts = lint.Facts.load()
         mods, comps = lint.load_routes()
-        self.assertGreater(len(mods), 100)
+        # 89 modules since 0.9.1: the routes share their modules across races and classes (before
+        # 0.9.1 there were 182). Fewer than 80 means module files went missing; the check per
+        # combination below is the precise one.
+        self.assertGreaterEqual(len(mods), 80)
+        for race, cls in game.all_combos():
+            comp = next(c for c in comps if c.faction == game.faction_of(race))
+            for mode in routefmt.MODES:
+                keys = comp.route(mode, race, cls)
+                self.assertTrue(keys, (mode, race, cls))
+                self.assertEqual([], [k for k in keys if k not in mods], (mode, race, cls))
         errs = lint.lint_all(mods, comps, facts)
         self.assertEqual([], [str(e) for e in errs[:10]])
 

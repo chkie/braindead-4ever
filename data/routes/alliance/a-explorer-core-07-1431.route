@@ -1,0 +1,234 @@
+-- SPDX-License-Identifier: GPL-3.0-only
+-- Computed route, not played. Source form of Braindead4Ever/Routes/Data_*.lua (python3 -m tools.routekit compile).
+-- Contains data from Polestar forever-db (GPL-3.0-only), EG Link (CC BY 4.0, Efficient Games)
+-- and All The Things (MIT); see NOTICE.
+#module a-explorer-core-07-1431
+#kind core
+#faction Alliance
+#mode explorer
+#levels 24-26
+#label vorläufig
+#version 2
+#sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+
+@r1431 lv=24
+  travel walk 1431 | src=plan status=unbestätigt
+@hf12 lv=24
+  goto 1431 -1259.0,-10514.0 r=10 | src=polestar,att status=unbestätigt roots=2
+  fp | src=plan status=unbestätigt
+@a101 lv=24
+  accept 101 | src=polestar,att status=unbestätigt
+  goto 1431 -1213.0,-10532.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@hb6790n7 lv=24 << race=HUMAN class=WARRIOR,PALADIN,ROGUE,PRIEST
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n7v2 lv=24 << race=HUMAN,DWARF class=HUNTER
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n7v3 lv=24 << race=HUMAN,GNOME class=MAGE,WARLOCK
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n8 lv=24 << race=DWARF,GNOME class=WARRIOR
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n8v2 lv=24 << race=DWARF class=PALADIN,SHAMAN
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n8v3 lv=24 << race=NIGHTELF class=HUNTER,DRUID
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n8v4 lv=24 << race=DWARF,NIGHTELF,GNOME class=ROGUE,PRIEST
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n9 lv=24 << race=NIGHTELF class=WARRIOR
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@hb6790n6 lv=24 << race=SKYBORNE_A class=WARRIOR,HUNTER,ROGUE,MAGE,DRUID
+  goto 1431 -1161.0,-10516.0 r=10 | src=polestar status=unbestätigt roots=1
+  sethome | src=plan status=unbestätigt
+@a56 lv=24
+  accept 56 | src=polestar,att status=unbestätigt
+  goto 1431 -1152.0,-10559.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@a96139 lv=24
+  accept 96139 | src=polestar,att status=unbestätigt
+  goto 1431 -1127.5,-10574.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c96139 lv=24
+  complete 96139 | src=polestar status=unbestätigt
+@t96139 lv=24
+  turnin 96139 | src=polestar status=unbestätigt
+  goto 1431 -1127.5,-10574.0 r=10 | src=polestar status=unbestätigt roots=1
+@c56 lv=24
+  complete 56 | src=polestar status=unbestätigt
+  goto 1431 -1289.5,-10992.0 r=10 | src=polestar status=unbestätigt roots=1
+@t56 lv=25
+  turnin 56 | src=polestar status=unbestätigt
+  accept 57 | src=polestar,att status=unbestätigt
+  goto 1431 -1152.0,-10559.5 r=10 | src=polestar status=unbestätigt roots=1
+@a245 lv=25
+  accept 245 | src=polestar,att status=unbestätigt
+  goto 1431 -385.0,-10923.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c245 lv=25
+  complete 245 | src=polestar status=unbestätigt
+  goto 1431 509.5,-10639.0 r=10 | src=polestar status=unbestätigt roots=1
+@a95 lv=25
+  accept 95 | src=polestar,att status=unbestätigt
+  goto 1431 623.5,-10330.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@a226 lv=25
+  accept 226 | src=polestar,att status=unbestätigt
+  goto 1431 625.0,-10314.5 r=10 | src=polestar,att status=unbestätigt roots=2
+@c226 lv=25
+  complete 226 | src=polestar status=unbestätigt
+  goto 1431 -18.5,-10155.5 r=10 | src=polestar status=unbestätigt roots=1
+@a148 lv=25
+  accept 148 | src=polestar,att status=unbestätigt
+  goto 1431 74.5,-10283.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c57 lv=25
+  complete 57 | src=polestar status=unbestätigt
+  goto 1431 229.0,-10491.5 r=10 | src=polestar status=unbestätigt roots=1
+@c101 lv=25
+  complete 101 | src=polestar status=unbestätigt
+  goto 1431 164.5,-10335.0 r=10 | src=polestar status=unbestätigt roots=1
+@t245 lv=25
+  turnin 245 | src=polestar status=unbestätigt
+  goto 1431 -385.0,-10923.0 r=10 | src=polestar status=unbestätigt roots=1
+@t95 lv=25
+  turnin 95 | src=polestar status=unbestätigt
+  accept 230 | src=polestar,att status=unbestätigt
+  goto 1431 -512.5,-11115.5 r=10 | src=polestar status=unbestätigt roots=1
+@c230 lv=25
+  complete 230 | src=polestar status=unbestätigt
+@hh6790n7 lv=25 << race=HUMAN class=WARRIOR,PALADIN,ROGUE,PRIEST
+  hs | src=plan status=unbestätigt
+@hh6790n7v2 lv=25 << race=HUMAN,DWARF class=HUNTER
+  hs | src=plan status=unbestätigt
+@hh6790n7v3 lv=25 << race=HUMAN,GNOME class=MAGE,WARLOCK
+  hs | src=plan status=unbestätigt
+@hh6790n8 lv=25 << race=DWARF,GNOME class=WARRIOR
+  hs | src=plan status=unbestätigt
+@hh6790n8v2 lv=25 << race=DWARF class=PALADIN,SHAMAN
+  hs | src=plan status=unbestätigt
+@hh6790n8v3 lv=25 << race=NIGHTELF class=HUNTER,DRUID
+  hs | src=plan status=unbestätigt
+@hh6790n8v4 lv=25 << race=DWARF,NIGHTELF,GNOME class=ROGUE,PRIEST
+  hs | src=plan status=unbestätigt
+@hh6790n9 lv=25 << race=NIGHTELF class=WARRIOR
+  hs | src=plan status=unbestätigt
+@hh6790n6 lv=25 << race=SKYBORNE_A class=WARRIOR,HUNTER,ROGUE,MAGE,DRUID
+  hs | src=plan status=unbestätigt
+@t148 lv=25
+  turnin 148 | src=polestar status=unbestätigt
+  accept 149 | src=polestar,att status=unbestätigt
+  goto 1431 -1213.0,-10532.5 r=10 | src=polestar status=unbestätigt roots=1
+@c149 lv=25
+  complete 149 | src=polestar status=unbestätigt
+@t149 lv=25
+  turnin 149 | src=polestar status=unbestätigt
+  accept 154 | src=polestar,att status=unbestätigt
+  goto 1431 -1380.5,-10780.5 r=10 | src=polestar status=unbestätigt roots=1
+@c154 lv=25
+  complete 154 | src=polestar status=unbestätigt
+@t154 lv=25
+  turnin 154 | src=polestar status=unbestätigt
+  turnin 101 | src=polestar,eglink status=unbestätigt
+  accept 157 | src=polestar,att status=unbestätigt
+  goto 1431 -1213.0,-10532.5 r=10 | src=polestar status=unbestätigt roots=1
+@c157 lv=25
+  complete 157 | src=polestar status=unbestätigt
+@t230 lv=25
+  turnin 230 | src=polestar status=unbestätigt
+  accept 262 | src=polestar,att status=unbestätigt
+  goto 1431 623.5,-10330.0 r=10 | src=polestar status=unbestätigt roots=1
+@c262 lv=25
+  complete 262 | src=polestar status=unbestätigt
+@t226 lv=25
+  turnin 226 | src=polestar status=unbestätigt
+  goto 1431 625.0,-10314.5 r=10 | src=polestar status=unbestätigt roots=1
+@t157 lv=25
+  turnin 157 | src=polestar status=unbestätigt
+  accept 158 | src=polestar,att status=unbestätigt
+  goto 1431 74.5,-10283.0 r=10 | src=polestar status=unbestätigt roots=1
+@t262 lv=25
+  turnin 262 | src=polestar status=unbestätigt
+  accept 265 | src=polestar,att status=unbestätigt
+  goto 1431 -1213.0,-10532.5 r=10 | src=polestar status=unbestätigt roots=1
+@c265 lv=25
+  complete 265 | src=polestar status=unbestätigt
+@t57 lv=25
+  turnin 57 | src=polestar status=unbestätigt
+  goto 1431 -1152.0,-10559.5 r=10 | src=polestar status=unbestätigt roots=1
+@t265 lv=25
+  turnin 265 | src=polestar status=unbestätigt
+  accept 266 | src=polestar,att status=unbestätigt
+  goto 1431 -1125.0,-10560.5 r=10 | src=polestar status=unbestätigt roots=1
+@c266 lv=25
+  complete 266 | src=polestar status=unbestätigt
+@t266 lv=25
+  turnin 266 | src=polestar status=unbestätigt
+  turnin 158 | src=polestar status=unbestätigt
+  accept 156 | src=polestar,att status=unbestätigt
+  accept 453 | src=polestar,att status=unbestätigt
+  goto 1431 -1158.5,-10517.5 r=10 | src=polestar status=unbestätigt roots=1
+@c453 lv=25
+  complete 453 | src=polestar status=unbestätigt
+@c156 lv=25
+  complete 156 | src=polestar status=unbestätigt
+  goto 1431 214.0,-10499.0 r=10 | src=polestar status=unbestätigt roots=1
+@t453 lv=25
+  turnin 453 | src=polestar status=unbestätigt
+  accept 268 | src=polestar,att status=unbestätigt
+  goto 1431 337.0,-10731.5 r=10 | src=polestar status=unbestätigt roots=1
+@c268 lv=25
+  complete 268 | src=polestar status=unbestätigt
+@t156 lv=25
+  turnin 156 | src=polestar,eglink status=unbestätigt
+  accept 159 | src=polestar,att,eglink status=unbestätigt
+  goto 1431 -1166.2,-10523.2 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@c159 lv=25
+  complete 159 | src=polestar status=unbestätigt
+@t159 lv=25
+  turnin 159 | src=polestar status=unbestätigt
+  accept 133 | src=polestar,att status=unbestätigt
+  goto 1431 74.5,-10283.0 r=10 | src=polestar status=unbestätigt roots=1
+@c133 lv=26
+  complete 133 | src=polestar status=unbestätigt
+  goto 1431 193.0,-10330.0 r=10 | src=polestar status=unbestätigt roots=1
+@t133 lv=26
+  turnin 133 | src=polestar status=unbestätigt
+  goto 1431 74.5,-10283.0 r=10 | src=polestar status=unbestätigt roots=1
+@t268 lv=26
+  turnin 268 | src=polestar status=unbestätigt
+  accept 323 | src=polestar,att status=unbestätigt
+  goto 1431 623.5,-10330.0 r=10 | src=polestar status=unbestätigt roots=1
+@c323 lv=26
+  complete 323 | src=polestar status=unbestätigt
+  goto 1431 407.5,-10401.0 r=10 | src=polestar status=unbestätigt roots=1
+@t323 lv=26
+  turnin 323 | src=polestar status=unbestätigt
+  goto 1431 623.5,-10330.0 r=10 | src=polestar status=unbestätigt roots=1
+@a173 lv=26
+  accept 173 | src=polestar,att,eglink status=unbestätigt
+  goto 1431 -1198.7,-10579.5 r=10 | src=eglink,att status=unbestätigt roots=2
+@a66 lv=26
+  accept 66 | src=polestar,att,eglink status=unbestätigt
+  goto 1431 -1211.0,-10532.5 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
+@t66 lv=26
+  turnin 66 | src=polestar,eglink status=unbestätigt
+  goto 1431 -1126.0,-10559.8 r=10 | src=eglink,polestar status=unbestätigt roots=2
+@c173 lv=26
+  complete 173 | src=polestar status=unbestätigt
+  goto 1431 -839.0,-10653.5 r=10 | src=polestar status=unbestätigt roots=1
+@a164 lv=26
+  accept 164 | src=polestar,att status=unbestätigt
+  accept 165 | src=polestar,att status=unbestätigt
+  goto 1431 -1201.0,-10594.0 r=10 | src=polestar,att status=unbestätigt roots=2
+@c164 lv=26
+  complete 164 | src=polestar status=unbestätigt
+@t173 lv=26
+  turnin 173 | src=polestar status=unbestätigt
+  goto 1431 -1212.0,-10573.0 r=10 | src=polestar status=unbestätigt roots=1
+@t165 lv=26
+  turnin 165 | src=polestar status=unbestätigt
+  goto 1431 74.5,-10283.0 r=10 | src=polestar status=unbestätigt roots=1
+@t164 lv=26
+  turnin 164 | src=polestar status=unbestätigt
+  goto 1431 623.5,-10330.0 r=10 | src=polestar status=unbestätigt roots=1
