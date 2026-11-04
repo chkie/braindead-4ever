@@ -168,6 +168,55 @@ describe("Developer preview", function()
 		assert.are.equal("„Wölfe an der Grenze“ bei Eagan Peltskinner annehmen", WD.step.text)
 	end)
 
+	-- A35: the hint steps of the routes (trainer, inn, flight point, flight) for the screenshots. Each demo
+	-- step carries an element the route data really has, so its words come from the step text code.
+	it("hints: trainer, inn, flight point and flight steps with the route's elements and words", function()
+		local ns, W = preview("hints")
+		local V = ns.Routes.VERB
+		-- the compiled data of both factions as text (the session releases the other faction's builder)
+		local data = ""
+		for _, faction in ipairs({ "Alliance", "Horde" }) do
+			local f = assert(io.open("Braindead4Ever/Routes/Data_" .. faction .. ".lua"))
+			data = data .. f:read("*a")
+			f:close()
+		end
+		local function has(el) -- the element as the data writes it; a flight may lead to any map
+			local parts = {}
+			for i, v in ipairs(el) do
+				parts[i] = (el[1] == V.TRAVEL and i == 3) and "%d+" or tostring(v)
+			end
+			return data:find("{ " .. table.concat(parts, ", ") .. " }") ~= nil
+		end
+		local steps = { ns.Connect.Current() }
+		for _, s in ipairs(ns.Connect.Upcoming(3)) do
+			steps[#steps + 1] = s
+		end
+		local verbs = {}
+		for i, s in ipairs(steps) do
+			verbs[i] = s.step[1][1]
+			assert.is_true(has(s.step[1]), "element of step " .. i .. " is not in the route data")
+		end
+		assert.are.same({ V.TRAIN, V.SETHOME, V.FP, V.TRAVEL }, verbs)
+		assert.are.equal(2, steps[4].step[1][2]) -- travel how 2: fly
+		assert.are.equal("Learn new skills at your trainer", W.step.text)
+		assert.are.equal("Set your hearthstone at the inn", W.next[1].text.text)
+		assert.are.equal("Get the flight path", W.next[2].text.text)
+		assert.are.equal("Fly to Westfall", W.next[3].text.text)
+		-- world map: the tracking symbols of the three services, no service symbol for the flight
+		local kinds = {}
+		for _, p in ipairs(ns.MapPins.Collect()) do
+			kinds[#kinds + 1] = p.kind
+		end
+		assert.are.same({ "pin", "trainer", "innkeeper", "flightmaster" }, kinds)
+		assert.are.same({}, wow.errors)
+		local _, WD = preview("hints", { locale = "deDE" })
+		assert.are.equal("Beim Lehrer neue Fähigkeiten lernen", WD.step.text)
+		assert.are.equal("Ruhestein im Gasthaus setzen", WD.next[1].text.text)
+		assert.are.equal("Flugpunkt holen", WD.next[2].text.text)
+		assert.are.equal("Nach Westfall fliegen", WD.next[3].text.text)
+		assert.are.same({}, wow.errors)
+	end)
+
 	it("area: a round circle, sized from the map's world size (S8)", function()
 		local ns = preview("area", { style = "hints" })
 		ns.MapPins.Refresh()
