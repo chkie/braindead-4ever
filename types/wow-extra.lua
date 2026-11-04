@@ -189,3 +189,26 @@ function PanelTemplates_SetNumTabs(frame, numTabs) end
 ---@param maxWidth? number
 ---@param absoluteTextSize? number
 function PanelTemplates_TabResize(tab, padding, absoluteSize, minWidth, maxWidth, absoluteTextSize) end
+
+-- 0.9.1, M4 and M8 (wow-ui-source forever 17ed2c3, 1.60.1 build 70755).
+
+---Range dot of action buttons and quest item buttons (Blizzard_ActionBar/Shared/ActionButton.lua).
+---@type string
+RANGE_INDICATOR = "●"
+
+---Sets a cooldown frame from start, duration and enable (Blizzard_FrameXMLUtil/Cooldown.lua).
+---@param cooldown table
+---@param start number
+---@param duration number
+---@param enable number|boolean|nil
+---@param forceShowDrawEdge? boolean
+---@param modRate? number
+function CooldownFrame_Set(cooldown, start, duration, enable, forceShowDrawEdge, modRate) end
+
+---GlobalStrings the client shows while it has no name for a creature.
+---@type string
+RETRIEVING_DATA = "Retrieving data"
+---@type string
+UNKNOWNOBJECT = "Unknown"
+---@type string
+UNKNOWN = "Unknown"

@@ -35,6 +35,9 @@ local ALLOWED_NEW_GLOBALS = {
 	BINDING_NAME_BRAINDEADFOREVER_WINDOW = true,
 	BINDING_NAME_BRAINDEADFOREVER_MINI = true,
 	BINDING_NAME_BRAINDEADFOREVER_STATS = true,
+	-- Quest item button (M8): a secure button needs a name for its click binding, and the binding's name.
+	BraindeadForeverQuestItemButton = true,
+	["BINDING_NAME_CLICK BraindeadForeverQuestItemButton:LeftButton"] = true,
 }
 
 -- Blizzard frames the step window measures for its default place (StepFrame.lua).
