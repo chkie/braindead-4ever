@@ -14,7 +14,7 @@ import copy
 import os
 import unittest
 
-from tools.routekit import geo, lint, observe, routefmt, services
+from tools.routekit import compiler, geo, lint, observe, routefmt, services
 from tools.routekit.importers import polestar
 from tools.routekit.io import read_jsonl
 
@@ -185,6 +185,40 @@ class OwnFlights(unittest.TestCase):
         self.assertEqual({"eglink", "own"}, legs[(6, 4)]["src"])
         self.assertEqual({("eglink", 6, 4), ("own", 6, 4)}, set(timed))
         self.assertEqual({(6, 4): {"v": 119, "src": ["own"], "flights": 1}}, services.measured_seconds(timed))
+
+    def test_flight_legs_received_from_other_players(self):
+        # Two exports of one install that overlap (the second one with "all") and one of another install.
+        a = {"install": "inst", "flightsFrom": 1, "flights": ["h;1;2;4;0", "h;1;6;4;121"]}
+        b = {"install": "inst", "flightsFrom": 1, "flights": ["h;1;2;4;0", "h;1;6;4;121", "h;1;6;4;117"]}
+        c = {"install": "other", "flightsFrom": 7, "flights": ["h;1;6;4;121", "h;1;4;4;50", "h;1;9;8;3", "x;1;6;4;9"]}
+        trips = {t["key"]: t for t in observe.flights([a, b, c])}
+        self.assertEqual({"leg:2>4", "leg:6>4", "net:6>4", "leg:9>8"}, set(trips))
+        self.assertEqual({"key": "net:6>4", "paths": [[6, 4]], "seconds": {"117": 1, "121": 2}}, trips["net:6>4"])
+        self.assertNotIn("seconds", trips["leg:9>8"])  # 3 s is no flight: the connection only
+        # Received seconds count with the own ones for the leg.
+        legs, timed = {}, {}
+        services._legs(list(trips.values()), "own", legs, timed)
+        self.assertEqual({(6, 4): {"v": 121, "src": ["own"], "flights": 3}}, services.measured_seconds(timed))
+        self.assertEqual({(2, 4), (6, 4), (9, 8)}, set(legs))
+
+
+class FlightFacts(unittest.TestCase):
+    def test_compiled_for_the_checks_of_the_exchange(self):
+        nodes = [
+            {"node": 5, "pos": {"v": [1429, 10.4, -20.6]}},
+            {"node": 2, "pos": {"v": [1453, 482.6, -8835.2]}},
+            {"node": 9},  # no position
+        ]
+        edges = [
+            {"from": 5, "to": 2, "seconds": {"v": 135, "src": ["eglink"], "flights": 2}},
+            {"from": 2, "to": 5, "seconds": {"v": 135, "basis": "model"}},
+            {"from": 2, "to": 9},
+        ]
+        text = compiler.compile_flights(nodes, edges, {"secondsPerYard": 0.0484}, {1429: 0, 1453: 0})
+        self.assertIn("\tsecondsPerYard = 0.0484,", text)
+        self.assertIn("\t\t[2] = { 0, 483, -8835 },\n\t\t[5] = { 0, 10, -21 },\n\t\t[9] = {},", text)
+        self.assertIn('\t\t["2>5"] = 0,\n\t\t["2>9"] = 0,\n\t\t["5>2"] = 2,', text)
+        self.assertEqual(text, compiler.compile_flights(list(reversed(nodes)), list(reversed(edges)), {"secondsPerYard": 0.0484}, {1429: 0, 1453: 0}))
 
 
 ROUTE = """#module t-speed-start-elwynn

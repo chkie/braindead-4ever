@@ -63,7 +63,7 @@ ns.Budget = Budget
 -- for chance (spread simulation, spec/channel_budget_spec.lua).
 Budget.SHARE = {
 	runs = 0.15, -- run messages per second on the whole channel: own sections first, then relays
-	finds = 0.1, -- finds and prerequisite observations per second on the whole channel
+	finds = 0.1, -- finds, prerequisite observations, version notices and flight legs per second on the whole channel
 }
 Budget.WINDOW = 3600 -- seconds of channel traffic the estimate looks at
 Budget.SENDERS_MAX = 20000 -- players assumed while no sender was heard twice (largest size simulated)

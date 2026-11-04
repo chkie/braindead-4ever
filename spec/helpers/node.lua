@@ -71,6 +71,15 @@ function M.runs(text)
 	return out
 end
 
+-- The flight leg table (CSV) of an export text, as `node decoder/cli.mjs --flights` writes it.
+function M.flights(text)
+	local out, err = run("decoder/cli.mjs --flights", text)
+	if err:match("^ERROR:") or out == "" then
+		return nil, (err:gsub("%s+$", ""))
+	end
+	return out
+end
+
 -- Parses JSON text into a Lua table through node (keeps the tests free of a Lua JSON decoder):
 -- node prints the value as a Lua table constructor.
 function M.parseJSON(text)

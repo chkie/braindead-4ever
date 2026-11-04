@@ -19,6 +19,18 @@
 --   reach     for EXPORTERS clients: when each section of another player first reached them (heard
 --             on the channel). reach[n] is the share of sections that reached an exporter within n
 --             rounds after the end of the round they were produced in
+--   flights   flights = true (Welle 11, docs/ROUTE-FORMAT.md §Flights in the exchange) adds the
+--             flight legs with the real Collector/Flights.lua and the facts of Routes/Data_Flights.lua:
+--             the network is every fact leg between two placed flight points, its seconds the model
+--             value times 0.9 to 1.3; a share UNKNOWN of the legs is left out of the facts the clients
+--             get, so only players can bring them. Every TAXI_EVERY seconds of play a client opens a
+--             flight master at a random point (the legs of the point and of its neighbours go into the
+--             vault, as from the flight master's map) and with probability DIRECT takes a flight without
+--             a stop (its seconds, +-2, are offered like a find). Finds are then real: one per
+--             FIND_EVERY seconds of play, due 30 to 90 s later, waiting FIND_WAIT for a credit. A
+--             credit of the find pool goes to the first due find or own flight, else to the next relay
+--             of the flight vault (Flights:NextRelay), as in Exchange.Pump and Exchange.RelayFlights.
+--             Every online client's flight vault hears every flight message.
 -- Simplifications (said in docs/RUN-TIMES.md), all exact for the traffic, which is what the budget
 -- guards:
 --   estimate  every client older than Budget.WINDOW hears the same channel, so they share one Budget
@@ -48,6 +60,11 @@ M.DEFAULTS = {
 	cohort = 60,
 	full = 100,
 	seed = 20261102,
+	flights = false,
+	taxiEvery = 1800,
+	direct = 0.5,
+	unknown = 0.3,
+	findEvery = 60,
 }
 
 M.CHANNEL_GAP = 2 -- as Exchange.CHANNEL_GAP
@@ -164,10 +181,81 @@ local function Reach(o, exporters, born)
 end
 M.Reach = Reach
 
--- ns: namespace with Proto, Runs, Budget and XP loaded; opts overrides M.DEFAULTS. Returns
+-- The flight network of the facts for the simulation: legs between placed points with their seconds,
+-- the facts the clients get (a share o.unknown of the legs left out) and the legs out of each point.
+local function Network(o, facts, rnd)
+	local legs, out, given, hidden = {}, {}, {}, {}
+	local keys = {}
+	for key in pairs(facts.legs) do
+		keys[#keys + 1] = key
+	end
+	table.sort(keys)
+	for _, key in ipairs(keys) do
+		local a, b = key:match("^(%d+)>(%d+)$")
+		a, b = tonumber(a), tonumber(b)
+		local na, nb = facts.nodes[a], facts.nodes[b]
+		if na and nb and na[1] and nb[1] and na[1] == nb[1] then
+			local dx, dy = na[2] - nb[2], na[3] - nb[3]
+			local model = math.sqrt(dx * dx + dy * dy) * facts.secondsPerYard
+			local leg = { a = a, b = b, key = key, secs = math.floor(model * (0.9 + 0.4 * rnd()) + 0.5) }
+			legs[#legs + 1] = leg
+			out[a] = out[a] or {}
+			out[a][#out[a] + 1] = leg
+			if rnd() < o.unknown then
+				hidden[key] = true
+			else
+				given[key] = facts.legs[key]
+			end
+		end
+	end
+	local from = {}
+	for a in pairs(out) do
+		from[#from + 1] = a
+	end
+	table.sort(from)
+	return {
+		legs = legs,
+		out = out,
+		from = from,
+		hidden = hidden,
+		facts = { secondsPerYard = facts.secondsPerYard, nodes = facts.nodes, legs = given },
+	}
+end
+
+-- Share of the keys in `want` that are in `got`, mean over the exporters, and of the keys in `want`
+-- that reached at least one exporter. filter(key) limits the keys.
+local function Share(exporters, want, field, filter)
+	local total, any, sum = 0, 0, 0
+	for key in pairs(want) do
+		if not filter or filter(key) then
+			total = total + 1
+			local hit = false
+			for _, e in ipairs(exporters) do
+				if e[field][key] then
+					hit = true
+				end
+			end
+			any = any + (hit and 1 or 0)
+		end
+	end
+	for _, e in ipairs(exporters) do
+		local n = 0
+		for key in pairs(want) do
+			if (not filter or filter(key)) and e[field][key] then
+				n = n + 1
+			end
+		end
+		sum = sum + (total > 0 and n / total or 0)
+	end
+	return { total = total, mean = #exporters > 0 and sum / #exporters or 0, any = total > 0 and any / total or 0 }
+end
+
+-- ns: namespace with Proto, Runs, Budget and XP loaded (and Flights with FlightFacts for flights =
+-- true); opts overrides M.DEFAULTS. Returns
 -- { receivedPerSec, maxReceivedPerSec, maxWindow, channelPerSec, sentPerHour, relayedPerHour,
 --   reach = { [n] = { mean, min } }, collected, produced, sentOwn, online, estimate = { mean, p05, p95 },
---   peakNew, peakRate, messages }.
+--   peakNew, peakRate, messages, flights = { messages, perHour, relayed, offered, finds, legs, hidden,
+--   reach = { legs, hidden, timed } } }; reach entries: { total, mean, any } (Share).
 function M.Run(ns, opts)
 	local o = Options(opts)
 	local rnd = Rng(o.seed)
@@ -187,6 +275,14 @@ function M.Run(ns, opts)
 	local function exp(rate)
 		return -math.log(1 - rnd()) / rate
 	end
+
+	local Flights, net = ns.Flights, nil
+	if o.flights then
+		assert(o.budget, "the flight legs run with the budget only")
+		net = Network(o, assert(ns.FlightFacts, "Routes/Data_Flights.lua not loaded"), rnd)
+	end
+	local fout = { messages = 0, relayed = 0, offered = 0, finds = 0, dropped = 0, byRound = {} }
+	local othersSaw, othersTimed = {}, {} -- legs a client other than the exporters observed, measured
 
 	local clients = {}
 	for i = 1, o.clients do
@@ -212,6 +308,13 @@ function M.Run(ns, opts)
 		}
 		if i <= o.exporters then
 			clients[i].reach, clients[i].own = {}, {}
+		end
+		if net then
+			clients[i].flights = Flights.New({}, { clock = clock, facts = net.facts, proto = Proto })
+			clients[i].fsent = 0
+			if i <= o.exporters then
+				clients[i].freach, clients[i].ftimed = {}, {}
+			end
 		end
 	end
 	-- session plan
@@ -301,6 +404,21 @@ function M.Run(ns, opts)
 			f = assert(Proto.Parse(msg))
 			parsed[msg] = f
 		end
+		if f.kind == "h" then
+			fout.messages = fout.messages + 1
+			local r = math.floor(now / o.round) + 1
+			fout.byRound[r] = (fout.byRound[r] or 0) + 1
+			local key = f[1] .. ">" .. f[2]
+			for c in pairs(online) do
+				if c ~= from and c.flights:Hear(f, from.name, true) == "new" and c.freach then
+					c.freach[key] = c.freach[key] or now
+					if f[3] > 0 then
+						c.ftimed[key] = c.ftimed[key] or now
+					end
+				end
+			end
+			return
+		end
 		local key = Runs.KeyOf(msg)
 		for c in pairs(listeners) do
 			if c ~= from then
@@ -342,9 +460,33 @@ function M.Run(ns, opts)
 			sentOwn = sentOwn + 1
 			c.credit.runs, sent = false, true
 		end
-		if not sent and o.budget and c.credit.finds then
+		if not sent and o.budget and c.credit.finds and not net then
 			Broadcast(c, nil)
 			c.credit.finds, sent = false, true
+		end
+		local findDue = false
+		if net then
+			-- the queue of the find pool: finds and own flights, the first due one goes
+			local list, i = c.finds, 1
+			while i <= #list do
+				if now - list[i].at >= M.FIND_WAIT then
+					table.remove(list, i)
+					fout.dropped = fout.dropped + 1
+				elseif not sent and c.credit.finds and list[i].at <= now then
+					local item = table.remove(list, i)
+					Broadcast(c, item.msg)
+					if item.msg then
+						fout.offered = fout.offered + 1
+						c.fsent = c.fsent + 1
+					else
+						fout.finds = fout.finds + 1
+					end
+					c.credit.finds, sent = false, true
+				else
+					findDue = findDue or list[i].at <= now
+					i = i + 1
+				end
+			end
 		end
 		if not sent and not o.budget then
 			while #c.finds > 0 and now - c.finds[1] >= M.FIND_WAIT do
@@ -367,6 +509,17 @@ function M.Run(ns, opts)
 				Retry(c, c.runs.nextRelay)
 			end
 		end
+		if net and not sent and c.credit.finds and not findDue then
+			local msg = c.flights:NextRelay()
+			if msg then
+				fout.relayed = fout.relayed + 1
+				c.fsent = c.fsent + 1
+				Broadcast(c, msg)
+				c.credit.finds, sent = false, true
+			elseif now < c.flights.nextRelay then
+				Retry(c, c.flights.nextRelay)
+			end
+		end
 		if sent then
 			c.nextChannelAt = now + M.CHANNEL_GAP
 			if not o.budget or c.credit.runs or c.credit.finds then
@@ -384,6 +537,12 @@ function M.Run(ns, opts)
 		c.pending, c.finds, c.credit, c.retry = {}, {}, {}, nil
 		c.nextChannelAt, c.chan0, c.sent0 = 0, chan, c.sent
 		c.runs:StartSession()
+		if net then
+			c.flights:StartSession()
+			c.offered = {}
+			at(now + rnd(1, o.taxiEvery), "taxi", c, c.sid)
+			at(now + o.findEvery, "find", c, c.sid)
+		end
 		online[c], nonline = true, nonline + 1
 		if c.hears then
 			listeners[c] = true
@@ -455,10 +614,50 @@ function M.Run(ns, opts)
 			end
 		elseif kind == "find" then
 			if c.on and c.sid == ev.b then
-				at(now + M.FIND_EVERY, "find", c, c.sid)
 				local due = now + rnd(30, 90)
-				c.finds[#c.finds + 1] = due
+				if net then
+					at(now + o.findEvery, "find", c, c.sid)
+					c.finds[#c.finds + 1] = { at = due }
+				else
+					at(now + M.FIND_EVERY, "find", c, c.sid)
+					c.finds[#c.finds + 1] = due
+				end
 				at(due, "retry", c, c.sid)
+			end
+		elseif kind == "taxi" then
+			if c.on and c.sid == ev.b then
+				at(now + o.taxiEvery, "taxi", c, c.sid)
+				-- a flight master: the legs of its point and of the points one leg away
+				local here = net.from[rnd(1, #net.from)]
+				local legs = {}
+				for _, leg in ipairs(net.out[here]) do
+					legs[#legs + 1] = leg
+					for _, next in ipairs(net.out[leg.b] or {}) do
+						legs[#legs + 1] = next
+					end
+				end
+				for _, leg in ipairs(legs) do
+					c.flights:Own(leg.a, leg.b, 0, false)
+					if not c.freach then
+						othersSaw[leg.key] = true
+					end
+				end
+				if rnd() < o.direct then
+					local direct = net.out[here]
+					local leg = direct[rnd(1, #direct)]
+					local msg = c.flights:Own(leg.a, leg.b, leg.secs + rnd(-2, 2), true)
+					if not c.freach then
+						othersSaw[leg.key], othersTimed[leg.key] = true, true
+					end
+					local key = "h;" .. leg.key
+					if msg and not c.offered[key] then
+						c.offered[key] = true
+						local due = now + rnd(30, 90)
+						c.finds[#c.finds + 1] = { at = due, msg = msg }
+						at(due, "retry", c, c.sid)
+					end
+				end
+				TrySend(c)
 			end
 		elseif kind == "retry" then
 			if c.on and c.sid == ev.b then
@@ -531,6 +730,24 @@ function M.Run(ns, opts)
 		for _ in pairs(e.reach) do
 			out.collected = out.collected + 1 / #exporters
 		end
+	end
+	if net then
+		local hours = secs / 3600
+		fout.perHour = (fout.relayed + fout.offered) / hours
+		fout.legs = #net.legs
+		fout.hidden = 0
+		for _ in pairs(net.hidden) do
+			fout.hidden = fout.hidden + 1
+		end
+		local function hidden(key)
+			return net.hidden[key]
+		end
+		fout.reach = {
+			legs = Share(exporters, othersSaw, "freach"),
+			hidden = Share(exporters, othersSaw, "freach", hidden),
+			timed = Share(exporters, othersTimed, "ftimed"),
+		}
+		out.flights = fout
 	end
 	table.sort(ratios)
 	if #ratios > 0 then

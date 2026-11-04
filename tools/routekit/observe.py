@@ -14,7 +14,10 @@ Records used (docs/STATUS.md, data collector):
   taxilegs kind, dt, map, x, y, node, legs                    (legs "a>b;b>c" of a flight master's map)
   flight  kind, dt, map, x, y, from, to, points               (a chosen flight, points "a;b;c")
   land    kind, dt, map, x, y, to, seconds                    (the landing of the chosen flight)
-Exports overlap when a player exports "all"; chunks are counted once per install and sequence.
+Flight legs other players sent (export key "flights", messages "h;1;from;to;seconds" as in
+Collector/Proto.lua; "flightsFrom" = sequence of the first) add legs and, with seconds, flights.
+Exports overlap when a player exports "all"; chunks and received flight legs are counted once per
+install and sequence.
 """
 
 import base64
@@ -111,10 +114,32 @@ def _own_chunks(payloads):
                 yield install, chunk
 
 
+RECEIVED = re.compile(r"^h;1;(\d{1,7});(\d{1,7});(\d{1,7})$")
+
+
+def _received(payloads):
+    """Flight legs received from other players, each once per install and sequence: (from, to,
+    seconds), seconds 0 when only the connection was seen."""
+    seen = set()
+    for n, p in enumerate(payloads):
+        install = p.get("install") or ""
+        first = p.get("flightsFrom")
+        for i, msg in enumerate(p.get("flights") or []):
+            key = (install, int(first) + i) if isinstance(first, (int, float)) else (n, i)
+            m = RECEIVED.match(str(msg))
+            if key in seen or not m:
+                continue
+            seen.add(key)
+            a, b, secs = (int(x) for x in m.groups())
+            if a != b:
+                yield a, b, secs
+
+
 def flights(payloads):
     """Trips and legs in the layout of data/sources/eglink/flights.jsonl: trips "from>to" with the
     flight points flown and the counted seconds of a landing paired with the flight chosen before
-    it; legs "leg:a>b" from the flight master's map."""
+    it; legs "leg:a>b" from the flight master's map and from other players; "net:a>b" with the
+    seconds other players flew without a stop (the game already checked them, Collector/Flights.lua)."""
     trips, last = {}, {}
 
     def trip(key):
@@ -140,6 +165,12 @@ def flights(payloads):
                 if chosen and chosen[1] == int(f[5]) and chosen[2] and FLIGHT_SECONDS_MIN <= secs <= FLIGHT_SECONDS_MAX:
                     t = trip("%d>%d" % chosen[:2])
                     t["seconds"][str(secs)] = t["seconds"].get(str(secs), 0) + 1
+    for a, b, secs in _received(payloads):
+        trip("leg:%d>%d" % (a, b))["paths"].add((a, b))
+        if FLIGHT_SECONDS_MIN <= secs <= FLIGHT_SECONDS_MAX:
+            t = trip("net:%d>%d" % (a, b))
+            t["paths"].add((a, b))
+            t["seconds"][str(secs)] = t["seconds"].get(str(secs), 0) + 1
     out = []
     for t in trips.values():
         if not t["paths"]:

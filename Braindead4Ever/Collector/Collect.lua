@@ -25,6 +25,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- (objects, books, rare enemies, vignettes, flight masters) as text records in a ring buffer
 -- (Store.lua) and offers discoveries to the in-game exchange (Exchange.lua). Run times of levels and
 -- route modules (Routes/Guide.lua) go to the exchange as "s" messages and into the run vault (Runs.lua).
+-- Flight legs and the seconds of flights without a stop go into the flight vault (Flights.lua); a
+-- measured flight is offered to the exchange as an "h" message, the legs of a flight master's map are
+-- relayed by the exchange.
 -- Patterns after Polestar Recorder (GPL-3.0), QuestieTrace (GPL-3.0) and JourneyTracker (MIT); own code.
 -- Anonymity: never the player's, realm, guild or chat names; player GUIDs are dropped; time inside a
 -- chunk is relative, the date only as a day number. The combat log is never registered (in Forever it
@@ -33,6 +36,7 @@ of the Ace3 libraries used as well as that of the covered work.
 local _, ns = ...
 local L = ns.L
 local U, Store, Migrate, Export, Proto, Runs = ns.Util, ns.Store, ns.Migrate, ns.Export, ns.Proto, ns.Runs
+local Flights = ns.Flights
 local M, Guard = ns.Modules, ns.Guard
 local Num, Str, Ref, Pos, ParseGUID = U.Num, U.Str, U.Ref, U.Pos, U.ParseGUID
 
@@ -70,7 +74,7 @@ local recent, lastTurn, listing, offerSeen = {}, nil, nil, {}
 local scanQueued, lastMap, lastX, lastY, onTaxi, rosterTimer = false, nil, nil, nil, false, nil
 -- Flights (docs/ROUTE-FORMAT.md §Service NPCs and flights): the flight point of the open flight master,
 -- its slots (slot index -> node ID), per flight point the known points the legs were last read for, and
--- the flight taken (to, start time) until the landing.
+-- the flight taken (from, to, stops, start time) until the landing.
 local taxiHere, taxiSlots, legsRead, flight = nil, {}, {}, nil
 
 local function Rec(kind, map, x, y, ...)
@@ -472,7 +476,7 @@ local function Save()
 	end
 	if root ~= C.root then
 		for k, v in pairs(C.root) do
-			if root[k] == nil and k ~= "own" and k ~= "net" and k ~= "runs" then
+			if root[k] == nil and k ~= "own" and k ~= "net" and k ~= "runs" and k ~= "flights" then
 				root[k] = v
 			end
 		end
@@ -480,6 +484,7 @@ local function Save()
 	root.own = own:Rebind(root.own)
 	root.net = net:Rebind(root.net)
 	root.runs = C.runs:Rebind(root.runs)
+	root.flights = C.flights:Rebind(root.flights)
 	own:Flush()
 	net:Flush()
 	BraindeadForeverCollectDB, C.root = root, root
@@ -563,6 +568,7 @@ local function Init()
 	root.own = type(root.own) == "table" and root.own or {}
 	root.net = type(root.net) == "table" and root.net or {}
 	root.runs = type(root.runs) == "table" and root.runs or {}
+	root.flights = type(root.flights) == "table" and root.flights or {}
 	BraindeadForeverCollectDB, C.root = root, root
 
 	BraindeadForeverCharDB = type(BraindeadForeverCharDB) == "table" and BraindeadForeverCharDB or {}
@@ -584,6 +590,7 @@ local function Init()
 			return ns.XP and ns.XP.TO_LEVEL
 		end,
 	})
+	C.flights = Flights.New(root.flights, { clock = GetTime })
 end
 
 -- Flight points of the trip to a slot of the open flight master: { from, stop, ..., to } as node IDs,
@@ -613,7 +620,7 @@ local function OnTakeTaxi(slot)
 		return
 	end
 	local path = C.TaxiPath(s)
-	flight = { to = to, at = GetTime() }
+	flight = { from = taxiHere, to = to, hops = path and #path - 1, at = GetTime() }
 	Here("flight", taxiHere, to, path and table.concat(path, ";") or nil)
 end
 
@@ -626,6 +633,19 @@ local function HookTaxi()
 	end
 	hooksecurefunc("TakeTaxiNode", Guard.Wrap("collector", OnTakeTaxi))
 	taxiHooked = true
+end
+
+-- A landing after a flight without a stop: the seconds of that leg go into the flight vault and,
+-- when they add something for others, to the exchange like a find (group, guild, channel).
+local function Flown(f, secs)
+	if f.hops ~= 1 or not f.from then
+		return
+	end
+	local msg, counted = C.flights:Own(f.from, f.to, secs, true)
+	local X = ns.Exchange
+	if msg and X and X.Offer then
+		X.Offer("h", f.from, f.to, counted)
+	end
 end
 
 local function Stop()
@@ -883,6 +903,7 @@ local events = {
 		end
 		table.sort(known)
 		taxiHere = here
+		C.flights:SeeNodes(known)
 		local knownText = table.concat(known, ";")
 		local k, npc = Ref("npc")
 		local map, x, y = Here("flightmaster", k == "c" and npc or nil, here, knownText)
@@ -908,6 +929,11 @@ local events = {
 			local text = table.concat(legs, ";")
 			if text ~= "" then
 				Rec("taxilegs", map, x, y, here, text)
+			end
+			-- Into the flight vault; the exchange relays the ones others may lack on the channel.
+			for _, leg in ipairs(legs) do
+				local a, b = leg:match("^(%d+)>(%d+)$")
+				C.flights:Own(tonumber(a), tonumber(b), 0, false)
 			end
 		end
 	end,
@@ -959,7 +985,9 @@ local events = {
 				0.2,
 				Guard.Wrap("collector", function()
 					if f then
-						Here("land", f.to, math.floor(GetTime() - f.at + 0.5))
+						local secs = math.floor(GetTime() - f.at + 0.5)
+						Here("land", f.to, secs)
+						Flown(f, secs)
 					else
 						Here("land")
 					end
@@ -1000,8 +1028,9 @@ local events = {
 }
 
 -- Export text of the chunks not exported yet (all = everything still in the buffer), with the run
--- sections of the vault not exported yet under their own key "runs" (messages as in Proto.lua).
--- Returns text, ownLast, netLast, more, runsLast | nil, reason.
+-- sections of the vault not exported yet under their own key "runs" and the received flight legs
+-- under "flights" (messages as in Proto.lua; "flightsFrom" = seq of the first, so overlapping exports
+-- count each message once). Returns text, ownLast, netLast, more, runsLast, flightsLast | nil, reason.
 function C.BuildExport(all)
 	if not own then
 		return nil, L.EXPORT_OFF
@@ -1011,7 +1040,8 @@ function C.BuildExport(all)
 	local ownChunks, ownLast = own:Chunks(all and 0 or own.db.acked, C.EXPORT_RAW_MAX)
 	local netChunks, netLast = net:Chunks(all and 0 or net.db.acked, C.EXPORT_RAW_MAX / 2)
 	local runList, runsLast = C.runs:Since(all and 0 or C.runs.db.acked)
-	if #ownChunks == 0 and #netChunks == 0 and #runList == 0 then
+	local flightList, flightsLast, flightsFrom = C.flights:Since(all and 0 or C.flights.db.acked)
+	if #ownChunks == 0 and #netChunks == 0 and #runList == 0 and #flightList == 0 then
 		return nil, L.EXPORT_NOTHING
 	end
 	local payload = {
@@ -1022,13 +1052,15 @@ function C.BuildExport(all)
 		own = ownChunks,
 		net = netChunks,
 		runs = runList,
+		flights = flightList,
+		flightsFrom = flightsFrom,
 	}
 	local text, err = Export.Build(payload, Export.GameCodec(C.CODEC))
 	if not text then
 		return nil, L.EXPORT_FAILED:format(err)
 	end
 	local more = #(own:Chunks(ownLast, 1)) > 0 or #(net:Chunks(netLast, 1)) > 0
-	return text, ownLast, netLast, more, runsLast
+	return text, ownLast, netLast, more, runsLast, flightsLast
 end
 
 function C.ShowExport(all)
@@ -1040,7 +1072,7 @@ function C.ShowExport(all)
 		print(L.MSG_AFTER_COMBAT)
 		return
 	end
-	local text, ownLast, netLast, more, runsLast = C.BuildExport(all)
+	local text, ownLast, netLast, more, runsLast, flightsLast = C.BuildExport(all)
 	if not text then
 		print(ownLast)
 		return
@@ -1051,6 +1083,7 @@ function C.ShowExport(all)
 			own:Ack(ownLast)
 			net:Ack(netLast)
 			C.runs:Ack(runsLast)
+			C.flights:Ack(flightsLast)
 		end,
 	})
 end

@@ -41,6 +41,10 @@ of the Ace3 libraries used as well as that of the covered work.
 -- Version notice ("a", Collector/Version.lua): the addon version goes once to each group the player is
 -- in, once per session to the guild and once per session on the channel. On the channel it needs a
 -- credit of the finds pool like a find, so it stays inside the channel budget and adds no traffic.
+-- Flight legs ("h", Collector/Flights.lua, Welle 11): received ones go into the flight vault. A
+-- measured own flight is offered like a find; the vault's legs are relayed on the hidden channel with
+-- a credit of the finds pool, only while no own find is due there, and only while they add something
+-- for others (saturation), so they take no share of their own.
 -- Receiving costs next to nothing: the event checks the prefix and puts the raw text into a small
 -- inbox (INBOX_MAX, the oldest give way). The ticker reads the inbox in slices (SLICE messages,
 -- SLICE_MS), never in combat, never in an instance and never below MIN_FPS frames per second.
@@ -303,6 +307,42 @@ function X.Relay()
 	return true
 end
 
+-- Passes one leg of the flight vault on (Collector/Flights.lua): only over the hidden channel, with a
+-- credit of the finds pool, only while no own message of that pool is due there (own finds first) and
+-- the queue has room. Flights.RELAY_GAP keeps it to one message per 10 s at most; the vault offers only
+-- legs that add something for others. Nothing is relayed in a fight or an instance.
+function X.RelayFlights()
+	local C = ns.Collector
+	local flights = C and C.flights
+	if not flights or X.channel.state ~= "on" or not X.CanSend() then
+		return false
+	end
+	if not X.Quiet() or Waiting(X.inbox.channel) > 0 then
+		return false
+	end
+	local q = X.queue
+	if #q >= X.QUEUE_MAX / 2 then
+		return false
+	end
+	local now = GetTime()
+	for _, item in ipairs(q) do
+		if item.dist == "CHANNEL" and item.pool == "finds" and item.at <= now then
+			return false -- an own find is due: it takes the next credit
+		end
+	end
+	if not X.budget:Has("finds") then
+		return false
+	end
+	local msg = flights:NextRelay()
+	if not msg then
+		return false
+	end
+	X.stats.relayed = X.stats.relayed + 1
+	Enqueue(msg, "CHANNEL", false)
+	X.Pump()
+	return true
+end
+
 -- Version notice: the own version once per group membership, once per session to guild and channel
 -- (on the channel with a finds credit like a find; Pump drops it after FIND_WAIT without one). Called
 -- by the ticker; a build without a release version ("dev", untagged) announces nothing.
@@ -430,6 +470,20 @@ local function Evaluate(text, dist, sender, at)
 		if C and C.runs then
 			X.stats.received = X.stats.received + 1
 			C.runs:Hear(find, text, who, dist == "CHANNEL")
+		end
+		return
+	end
+	if find.kind == "h" then
+		-- Flight leg: counts towards the sender's limit like a find, goes into the flight vault.
+		b.finds = b.finds + 1
+		if b.finds > X.SENDER_MAX then
+			X.muted[who] = true
+			return
+		end
+		local C = ns.Collector
+		if C and C.flights then
+			X.stats.received = X.stats.received + 1
+			C.flights:Hear(find, who, dist == "CHANNEL")
 		end
 		return
 	end
@@ -721,6 +775,7 @@ local function Init()
 			X.Announce()
 			X.Pump()
 			X.Relay()
+			X.RelayFlights()
 		end)
 	)
 end
