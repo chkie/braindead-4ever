@@ -53,6 +53,7 @@ local UI = {
 		tracker = "hide", -- Blizzard's quest tracker: keep | route | hide (owner readings 15 and 16)
 		lock = false, -- "Lock window": the header band no longer drags the step window (owner reading 16)
 		recap = true, -- review card at level 10, 20 and 30 (Welle 8, UI/StatsPage.lua)
+		auto = false, -- optional automation of route quest dialogs, off by default (UI/Auto.lua, A74)
 	},
 	-- Revision of the defaults in BraindeadForeverDB.ui.rev. UI.DB fills every default into the saved table, so
 	-- a value equal to an old default was never chosen: it takes the new default, any other value is the

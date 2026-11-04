@@ -15,6 +15,7 @@ Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 - After you reach a goal, the arrow shows the name and distance of the next goal again.
 - German texts in the settings and on the page "Your run" no longer get cut off.
 - The step tooltip and the Credits page say "open game data" for imported quest and map data; credits and licences are in the file NOTICE.
+- Optional automation, off by default: one switch on the main settings page accepts and hands in the quests of the route when you talk to the NPC and takes the reward when there is no choice. Other quests, other dialog options and quests with several rewards stay yours; hold Shift to pause it for a dialog. It never acts in a fight, and in the hardcore-safe mode it takes no quest the route warns about.
 - Flight connections and the times of flights without a stop are now shared with other players of Braindead 4ever, as flight point IDs and seconds only, within the existing limit of the hidden channel.
 
 ## 0.9.0 (2026-11-03)

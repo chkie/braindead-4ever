@@ -230,6 +230,10 @@ describe("Developer preview", function()
 		assert.are.equal("arrow", ns.UI.Get("style")) -- closing the preview changes nothing
 		SlashCmdList.BRAINDEADFOREVER("preview settings")
 		assert.are.same({ ns.settingsCategoryID }, wow.world.settings.opened)
+		-- the automation switch (A74): main page, scrolled to its label
+		SlashCmdList.BRAINDEADFOREVER("preview auto")
+		assert.are.same({ ns.settingsCategoryID, ns.settingsCategoryID }, wow.world.settings.opened)
+		assert.are.equal("Automate route quests", wow.world.settings.scrolledTo)
 		SlashCmdList.BRAINDEADFOREVER("preview nonsense")
 		assert.matches("normal | tooltip | done", wow.output(), 1, true)
 	end)

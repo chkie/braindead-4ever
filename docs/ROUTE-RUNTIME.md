@@ -2,7 +2,7 @@
 
 The logic behind the step window: which step is current, how the addon sees that a step is done, checking, skipping with follow-up quests, going back, undo, abandoned quests and the XP balance. The step window (Welle 5, `Braindead4Ever/UI/`) reads this interface only through the adapter `UI/Connect.lua`; this document is that interface.
 
-Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip; Welle 7: replanning; Welle 9, 2026-11-03: hardcore-safe mode, `Route.TopLevel`).
+Status: built and tested offline (busted, Lua 5.1); not run in a client yet. Last update: 2026-11-01 (Welle 4: prerequisites from player data, explorer mode, dungeon hint, time forecast; Welle 5: window binding; Welle 5b: `Route.Quests`, riddle, area, forecast tooltip; Welle 7: replanning; Welle 9, 2026-11-03: hardcore-safe mode, `Route.TopLevel`; 2026-11-04: `Route.DialogQuests`, `Route.QuestDanger` for the optional automation).
 
 | File | What it does |
 | --- | --- |
@@ -121,6 +121,8 @@ A step is **done** when every counted element is done or the player checked it, 
 | `Route.LevelSection()` | Welle 8: the current level section `{ l, full, secs, xp, guided, n, d }` (read only) |
 | `Route.ModuleKey(number)` | Welle 8: key of the module with this module number (`Proto.ModuleNumber`), nil when the faction has none |
 | `Route.Danger(info)` | hardcore-safe mode (§Hardcore-safe mode): `{ quest, elite = true }`, `{ quest, gap, level }` or nil |
+| `Route.DialogQuests()` | optional automation (`Braindead4Ever/UI/Auto.lua`): `{ accept = { [questID] = true }, turnin = { [questID] = true } }` of the current step and the next `Route.DIALOG_AHEAD` = 3 open steps, without skipped quests and their follow-up quests and without passed steps; nil without a route |
+| `Route.QuestDanger(questID)` | the hardcore-safe rule (§Hardcore-safe mode) for one quest: `{ quest, elite = true }`, `{ quest, gap, level }` or nil; the automation takes no such quest in the hardcore-safe mode |
 | `Route.TopLevel()` | highest level the route data reaches (top of the highest module band), nil without a route; the step window names it at the end of the route |
 | `Route.Runtime()` | the runtime object, for diagnostics and tests only |
 
@@ -341,5 +343,6 @@ The windows (`Braindead4Ever/UI/`) read the logic only through the adapter `UI/C
 | `Route.Quests` | option "Blizzard's quest tracker" (Welle 5b): with "only quests of the route" the tracker follows the route's quests in the log |
 | `Route.Offer`, `AnswerOffer`, `OfferChanged` | Welle 7: the replanning question as a banner with two buttons ("Adjust" or "Go there", "Keep route"); no new question in a fight; after "Adjust" the status line counts the quests left out |
 | `Route.Earlier` | Welle 7: "N quests skipped earlier" with the first five names in the tooltip of the XP line |
+| `Route.DialogQuests`, `Route.QuestDanger` | optional automation (requirement A74): which quests a dialog may accept and hand in, and which the hardcore-safe mode leaves to the player |
 
 Since Welle 5b also: `show = "riddle"` of the player's zone as the line "Hint: …" in the step window (one at a time, the next after a completed step) and `show = "area"` as a circle on the world map with the tooltip "Area".

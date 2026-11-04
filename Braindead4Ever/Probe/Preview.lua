@@ -543,6 +543,7 @@ P.STATES = {
 	"colorblind",
 	"setup",
 	"settings",
+	"auto",
 	"stats",
 	"stats0",
 	"recap10",
@@ -659,6 +660,10 @@ function P.Run(state, arg)
 		ns.Setup.Open(true, true) -- the first start's footer (S6)
 	elseif state == "settings" then
 		ns.Menu.OpenSettings()
+	elseif state == "auto" then -- the automation switch on the main page (A74), scrolled into view
+		UI.OutOfCombat("settings", function()
+			Settings.OpenToCategory(ns.settingsCategoryID, ns.L.OPT_AUTO)
+		end)
 	elseif state == "stats" or state == "stats0" then
 		ns.StatsPage.Use(StatsSource(state == "stats")) -- with and without enough runs of other players
 		ns.StatsPage.Open()
