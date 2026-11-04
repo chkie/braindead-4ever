@@ -40,7 +40,14 @@ function ns.CreateLinkBox(parent, width, onEscape)
 	box:SetSize(width, 20)
 	box:SetAutoFocus(false)
 	box:SetFontObject(ChatFontNormal)
-	box:SetText(ns.DISCORD_LINK)
+	-- Text set before the box is drawn can stay invisible until the cursor moves (the Credits page
+	-- showed an empty box in the screenshot round of 04.11.); cursor to the start and again on show.
+	local function Fill(self)
+		self:SetText(ns.DISCORD_LINK)
+		self:SetCursorPosition(0)
+	end
+	Fill(box)
+	box:SetScript("OnShow", Fill)
 	box:SetScript("OnEscapePressed", onEscape or function(self)
 		self:ClearFocus()
 	end)
