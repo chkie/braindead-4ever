@@ -90,6 +90,14 @@ local function Step(i, text, quest)
 	}
 end
 
+-- A demo step with a real quest element (verb 1 accept, 3 turn in), so its text comes from the step
+-- text code with the NPC name (state "npc", M4).
+local function QuestStep(i, verb, quest)
+	local s = Step(i, "", quest)
+	s.step[1] = { verb, quest, 1, 0 }
+	return s
+end
+
 local function Steps(kind)
 	local s = {
 		Step(
@@ -127,6 +135,10 @@ local function Steps(kind)
 			Q.kob
 		),
 	}
+	if kind == "npc" then -- accept from and turn in to an NPC (M4); the names come from NpcNames.SetDemo
+		s[1] = QuestStep(1, 1, Q.wolf)
+		s[2] = QuestStep(2, 3, Q.kob)
+	end
 	-- More steps for the size states (owner reading 14): the list holds 20, the rest scrolls.
 	local order = { Q.echo, Q.skir, Q.report, Q.milly, Q.harvest, Q.grapes, Q.defias, Q.bandanas }
 	for i = 5, 24 do
@@ -538,6 +550,8 @@ P.STATES = {
 	"over",
 	"switch",
 	"earlier",
+	"npc",
+	"questitem",
 	"arrow <degrees>",
 	"arrival",
 	"colorblind",
@@ -594,6 +608,12 @@ function P.Clear(state)
 	end
 	UI.DB().mini = nil
 	SF.ApplyLook() -- collapse button and combat dimming of the state before
+	if ns.NpcNames and state ~= "npc" then
+		ns.NpcNames.SetDemo(nil) -- demo NPC names (M4) of the state before
+	end
+	if ns.QuestItem and state ~= "questitem" then
+		ns.QuestItem.SetDemo(nil) -- demo quest item button (M8) of the state before
+	end
 	local SP = ns.StatsPage -- "Your run" (Welle 8): page and card of the state before close
 	if SP then
 		SP.Use(nil)
@@ -648,6 +668,16 @@ function P.Run(state, arg)
 		SetSize(SF.MIN_WIDTH, 3) -- German umlauts and two-line steps at the narrowest width (T19)
 	elseif state == "wide" then
 		SetSize(SF.MAX_WIDTH, SF.MAX_AHEAD) -- ten steps visible, the rest scrolls
+	elseif state == "npc" then
+		-- M4: the NPC names of the design's example steps (demo data, as in the turn-in demo step)
+		ns.NpcNames.SetDemo({
+			giver = { [Q.wolf] = "Eagan Peltskinner" },
+			turnin = { [Q.kob] = "Marshal McBride" },
+		})
+	elseif state == "questitem" then
+		-- M8: the button with a demo icon, three charges and the gray range dot; it holds no item, so a
+		-- click in the preview uses nothing
+		ns.QuestItem.SetDemo({ icon = "Interface\\Icons\\INV_Misc_QuestionMark", charges = 3, range = 1 })
 	elseif state == "arrow" then
 		ArrowAt(tonumber(arg) or 8, 38)
 	elseif state == "arrival" then

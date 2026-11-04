@@ -22,8 +22,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- SPDX-License-Identifier: GPL-3.0-or-later WITH AdditionRef-Braindead4Ever-Ace3-Exception
 
 -- UI/StepText.lua: the words of the step window, built from step info (docs/ROUTE-RUNTIME.md) and the
--- client. Quest, item and zone names come from the client in the player's language (concept §2.10);
--- names are never stored. Steps in the infinitive (plan §Sprache Nr. 4). Pure text, no frames.
+-- client. Quest, item and zone names come from the client in the player's language (concept §2.10) and
+-- are never stored; NPC names come from UI/NpcNames.lua (M4), also only in the client's language.
+-- Steps in the infinitive (plan §Sprache Nr. 4). Pure text, no frames.
 local _, ns = ...
 local L, U, R = ns.L, ns.Util, ns.Routes
 local V = R.VERB
@@ -128,10 +129,24 @@ local TRAVEL_KEY = {
 	"TRAVEL_HEARTH",
 }
 
-local function Phrase(el, withObjective)
+-- Name of the quest giver or turn-in NPC (M4), nil while the client language has none.
+local function Npc(kind, q)
+	local names = ns.NpcNames
+	return names and names[kind](q) or nil
+end
+ST.Npc = Npc
+
+-- Text of one element; prev = the NPC the step named just before, so "turn in to X, accept from X"
+-- names X once. Returns text, done, needed, questID, NPC named.
+local function Phrase(el, withObjective, prev)
 	local v = el[1]
-	if v == V.ACCEPT then
-		return L.STEP_ACCEPT:format(ST.Quest(el[2]))
+	if v == V.ACCEPT or v == V.TURNIN then
+		local accept = v == V.ACCEPT
+		local npc = Npc(accept and "Giver" or "TurnIn", el[2])
+		if npc and npc ~= prev then
+			return (accept and L.STEP_ACCEPT_FROM or L.STEP_TURNIN_TO):format(ST.Quest(el[2]), npc), nil, nil, nil, npc
+		end
+		return (accept and L.STEP_ACCEPT or L.STEP_TURNIN):format(ST.Quest(el[2])), nil, nil, nil, npc
 	elseif v == V.COMPLETE then
 		local text, have, need = nil, nil, nil
 		if withObjective then
@@ -141,8 +156,6 @@ local function Phrase(el, withObjective)
 			return L.STEP_OBJECTIVE:format(ST.Quest(el[2]), text), have, need, el[2]
 		end
 		return L.STEP_COMPLETE:format(ST.Quest(el[2])), nil, nil, el[2]
-	elseif v == V.TURNIN then
-		return L.STEP_TURNIN:format(ST.Quest(el[2]))
 	elseif v == V.COLLECT then
 		return L.STEP_COLLECT:format(el[3], ST.Item(el[2]))
 	elseif v == V.TRAVEL then
@@ -168,9 +181,10 @@ function ST.Step(info, withObjective)
 	if not step then
 		return ""
 	end
-	local parts, have, need, quest = {}, nil, nil, nil
+	local parts, have, need, quest, npc = {}, nil, nil, nil, nil
 	for _, el in ipairs(step) do
-		local text, h, n, q = Phrase(el, withObjective)
+		local text, h, n, q, named = Phrase(el, withObjective, npc)
+		npc = named
 		if text then
 			parts[#parts + 1] = text
 			if n and not need then
@@ -198,9 +212,9 @@ function ST.Header(info)
 	return L.HEADER:format(zone, info.index, info.total)
 end
 
--- "Westfall • 42 yd": place (zone of the target) and distance. The route data has no NPC or place text,
--- so when the target lies in the zone the header already names, the line says only how far it is
--- ("Orgrimmar • 48" repeated the header, Welle 5d Q3).
+-- "Westfall • 42 yd": place (zone of the target) and distance. The NPC stands in the step text (M4) and
+-- the route data has no place text, so when the target lies in the zone the header already names, the
+-- line says only how far it is ("Orgrimmar • 48" repeated the header, Welle 5d Q3).
 function ST.Detail(target, dist, zone)
 	local place = target and ST.MapName(target.map)
 	if place and place == zone then

@@ -146,6 +146,28 @@ describe("Developer preview", function()
 	end)
 
 	-- Welle 5d, S8: the preview's area had radii in map units and came out as an oval of 1.5:1.
+	-- M4 and M8 (0.9.1): the NPC name in the step text and the quest item button, for the screenshots.
+	it("npc and questitem: NPC names in the steps and the quest item button, cleared by the next state", function()
+		local ns, W = preview("npc")
+		assert.are.equal("Accept “Wolves Across the Border” from Eagan Peltskinner", W.step.text)
+		assert.matches("Turn in “Kobold Camp Cleanup” to Marshal McBride", W.next[1].text.text, 1, true)
+		SlashCmdList.BRAINDEADFOREVER("preview questitem")
+		local B = _G.BraindeadForeverQuestItemButton
+		assert.is_true(rawget(B, "shown"))
+		assert.is_nil(B:GetAttribute("item")) -- a click in the preview uses nothing
+		assert.are.equal("Interface\\Icons\\INV_Misc_QuestionMark", B.icon.file)
+		assert.are.equal(3, B.count.text)
+		assert.is_true(rawget(B.hotkey, "shown"))
+		assert.is_nil(W.step.text:find("Eagan", 1, true)) -- the names of the state before are gone
+		SlashCmdList.BRAINDEADFOREVER("preview off")
+		assert.is_false(rawget(B, "shown"))
+		assert.is_nil(ns.NpcNames.Giver(9000001))
+		assert.are.same({}, wow.errors)
+		-- German client: the German word order
+		local _, WD = preview("npc", { locale = "deDE" })
+		assert.are.equal("„Wölfe an der Grenze“ bei Eagan Peltskinner annehmen", WD.step.text)
+	end)
+
 	it("area: a round circle, sized from the map's world size (S8)", function()
 		local ns = preview("area", { style = "hints" })
 		ns.MapPins.Refresh()

@@ -28,7 +28,12 @@ end
 describe("Key bindings", function()
 	it("Bindings.xml has one binding per action, unbound by default, in the Braindead 4ever section", function()
 		local ns = S.login()
-		local list = bindings()
+		local list = {}
+		for _, b in ipairs(bindings()) do
+			if not b.name:find("^CLICK ") then -- the quest item button's click binding: own test below
+				list[#list + 1] = b
+			end
+		end
 		assert.are.equal(#ns.Bindings.ACTIONS, #list)
 		for i, b in ipairs(list) do
 			local action = ns.Bindings.ACTIONS[i]
@@ -42,6 +47,29 @@ describe("Key bindings", function()
 				read("Braindead4Ever/Bindings.xml"):find('"BRAINDEADFOREVER_' .. action .. '"', 1, true),
 				action
 			)
+		end
+	end)
+
+	-- M8: "Use quest item" clicks the secure quest item button (UI/QuestItem.lua), so the key does what
+	-- a click does, also in a fight. Same section, unbound by default, named in both languages.
+	it("binds the quest item button as a click binding, unbound, named in English and German", function()
+		local clicks = {}
+		for _, b in ipairs(bindings()) do
+			if b.name:find("^CLICK ") then
+				clicks[#clicks + 1] = b
+			end
+		end
+		assert.are.equal(1, #clicks)
+		local b = clicks[1]
+		assert.are.equal("CLICK BraindeadForeverQuestItemButton:LeftButton", b.name)
+		assert.matches('category="BINDING_HEADER_BRAINDEADFOREVER"', b.attrs, 1, true)
+		assert.is_nil(b.attrs:find("default", 1, true))
+		assert.are.equal("", b.body:match("^%s*(.-)%s*$"))
+		for locale, text in pairs({ enUS = "Use quest item", deDE = "Questgegenstand benutzen" }) do
+			local ns = S.login({ locale = locale })
+			assert.are.equal(text, _G["BINDING_NAME_" .. b.name])
+			assert.are.equal(b.name, ns.QuestItem.BINDING)
+			assert.are.equal(_G.BraindeadForeverQuestItemButton, ns.QuestItem.button) -- the name the binding clicks
 		end
 	end)
 
