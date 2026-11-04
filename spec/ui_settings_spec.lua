@@ -269,6 +269,11 @@ describe("Settings", function()
 			box:SetText("changed by the player")
 			box.scripts.OnTextChanged(box, true)
 			assert.are.equal("discord.gg/ujjEM9NE5D", box:GetText())
+			-- shown again (the settings page opens later than the box is made): the link is set anew
+			box:SetText("")
+			assert.is_function(box.scripts.OnShow, locale)
+			box.scripts.OnShow(box)
+			assert.are.equal("discord.gg/ujjEM9NE5D", box:GetText())
 		end
 	end)
 
