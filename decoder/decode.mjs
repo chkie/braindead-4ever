@@ -150,3 +150,22 @@ export function runsCSV(payload) {
 	for (const row of rows.values()) if (row) lines.push(row.join(","));
 	return lines.join("\n") + "\n";
 }
+
+/** Columns of the flight leg table (docs/ROUTE-FORMAT.md §Flights in the exchange). */
+export const FLIGHT_COLUMNS = ["from", "to", "seconds"];
+
+/**
+ * Flight legs other players sent and the exporting client took ("flights", messages "h;1;..." as in
+ * Collector/Proto.lua) as CSV (header line first), one row per message in the order received.
+ * seconds = 0: only the connection was seen. Malformed messages are left out.
+ * @param {any} payload
+ * @returns {string}
+ */
+export function flightsCSV(payload) {
+	const lines = [FLIGHT_COLUMNS.join(",")];
+	for (const msg of payload?.flights ?? []) {
+		const m = /^h;1;(\d{1,7});(\d{1,7});(\d{1,7})$/.exec(String(msg));
+		if (m) lines.push(`${m[1]},${m[2]},${m[3]}`);
+	}
+	return lines.join("\n") + "\n";
+}

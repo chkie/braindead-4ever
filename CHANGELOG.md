@@ -14,6 +14,7 @@ Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 - Round minimap button with the gold ring of the game's own buttons.
 - After you reach a goal, the arrow shows the name and distance of the next goal again.
 - German texts in the settings and on the page "Your run" no longer get cut off.
+- Flight connections and the times of flights without a stop are now shared with other players of Braindead 4ever, as flight point IDs and seconds only, within the existing limit of the hidden channel.
 
 ## 0.9.0 (2026-11-03)
 

@@ -46,6 +46,9 @@ of the Ace3 libraries used as well as that of the covered work.
 --               done in route order, 0..100; level = character level at the end; day = server day
 --   a  addon version (Collector/Version.lua, version notice): major, minor, patch, pre (1 = a pre-release
 --      such as "-beta"). Sent once per group, once per session to guild and channel; no position.
+--   h  flight leg (Collector/Flights.lua, Welle 11): from, to (flight point IDs as the client reports
+--      them in nodeID), seconds of a flight from one to the other without a stop, 0 = only the
+--      connection was seen. Node IDs and seconds only: no position, no name, no token.
 -- giverKind: c = creature, o = game object, i = item, n = none (giverID 0).
 -- Readers skip unknown kinds and other protocol versions without counting them as broken, so a
 -- newer addon version can add kinds without muting older ones.
@@ -78,6 +81,7 @@ local KINDS = {
 	p = { "tok", "id", "gid", "flag", "ids", "ids" },
 	s = { "tok", "id", "id", "mode", "section", "id", "gid", "id", "gid", "pct", "lvl", "gid" },
 	a = { "gid", "gid", "gid", "flag" },
+	h = { "id", "id", "gid" },
 }
 Proto.KINDS = KINDS
 
@@ -204,6 +208,8 @@ function Proto.Key(find)
 		return table.concat({ k, find[1], find[2] }, ";")
 	elseif k == "a" then
 		return table.concat({ k, find[1], find[2], find[3], find[4] }, ";")
+	elseif k == "h" then
+		return table.concat({ k, find[1], find[2] }, ";") -- the leg; its seconds are a measurement
 	end
 	local n = find.n or #KINDS[k]
 	local x, y, map = find[n - 1], find[n], find[n - 2]

@@ -26,6 +26,7 @@ Collector\Store.lua
 Collector\Export.lua
 Collector\Proto.lua
 Collector\Runs.lua
+Collector\Flights.lua
 Collector\Budget.lua
 Collector\Version.lua
 Collector\Collect.lua
@@ -34,6 +35,7 @@ Core\Report.lua
 Routes\Routes.lua
 Routes\Data_Alliance.lua
 Routes\Data_Horde.lua
+Routes\Data_Flights.lua
 Routes\XP.lua
 Routes\Prereq.lua
 Routes\Discover.lua

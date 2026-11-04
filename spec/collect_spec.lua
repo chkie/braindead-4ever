@@ -301,7 +301,8 @@ describe("Collector", function()
 		assert.are.equal(2, #legs)
 		assert.are.equal("2>4;4>6;4>9", legs[2][7])
 
-		-- Own records only: the flight offers nothing to the exchange (the channel budget is untouched).
+		-- A flight with a stop says nothing about one leg: it offers nothing to the exchange (a flight
+		-- without a stop does, spec/flights_spec.lua).
 		local offered, offer = 0, ns.Exchange.Offer
 		ns.Exchange.Offer = function(...)
 			offered = offered + 1

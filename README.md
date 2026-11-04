@@ -24,6 +24,8 @@ What you discover, Braindead 4ever shares in the game with other players who use
 
 Braindead 4ever also shares how long each level and each route part took you: active seconds, experience, race and class as numbers, whether you followed the route, the level and the day. These run times carry a random token that Braindead 4ever rolls once per character and derives from nothing else; it only serves to count each level of a character once. Other copies of Braindead 4ever keep them and pass them on, so the routes can be measured against real play ([format](docs/RUN-TIMES.md)). The page "Your run" (right-click menu, `/bd4 stats`) shows your own times per level and, once at least ten runs of your class have reached you, their median and where you stand ([details](docs/RUN-STATS.md)).
 
+The flight connections you see at a flight master and the seconds of flights without a stop go out the same way, as flight point IDs and seconds only, and other copies pass them on until enough players know them ([details](docs/ROUTE-FORMAT.md#flights-in-the-exchange)).
+
 Braindead 4ever tells other players which version of it you run (to your group, your guild and the hidden channel, once per session), so it can say when a newer version is out.
 
 `/bd4 export` shows your data as a text to copy, for the website that comes later. `/bd4 report` builds a problem report without names.
