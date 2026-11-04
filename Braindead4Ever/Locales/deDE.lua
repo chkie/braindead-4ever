@@ -69,6 +69,7 @@ L.ERR_COLLECT_NEWER =
 	"Daten aus einer neueren Addon-Version, die Aufzeichnung bleibt aus und die Daten bleiben erhalten"
 
 L.REPORT_TITLE = "Braindead 4ever: Fehler melden"
+L.REPORT_WHERE = "Poste diesen Text im Kanal #bug-reports auf unserem Discord:"
 L.REPORT_OFF = "%s: der Fehlerbericht läuft nicht, siehe /bd4 status"
 
 L.PROBE_TITLE = "Braindead-Forever-Sonde"
@@ -380,6 +381,7 @@ L.CREDITS_SOURCES =
 	"Quest- und Kartendaten aus offenen Spieldaten-Projekten. Nennungen und Lizenzen: Datei NOTICE im Addon-Ordner."
 L.CREDITS_LIBS_TITLE = "Bibliotheken"
 L.CREDITS_LIBS = "Braindead 4ever bettet keine Bibliotheken ein."
+L.CREDITS_DISCORD = "Discord:"
 L.CREDITS_TRADEMARK =
 	"Nicht mit Blizzard Entertainment verbunden. World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries."
 -- Dein Lauf (Welle 8)

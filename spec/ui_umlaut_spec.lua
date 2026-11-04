@@ -54,4 +54,18 @@ describe("Umlauts (T19)", function()
 		end
 		assert.matches("Spielweise", d.foot.text, 1, true)
 	end)
+
+	-- The report window sits at 560 wide: the German line above the Discord link has a fixed width inside it,
+	-- wraps in at most two lines and stays whole.
+	it("report window: the German line above the Discord link fits the window", function()
+		local ns = S.login({ locale = "deDE" })
+		SlashCmdList.BRAINDEADFOREVER("report")
+		local win = ns.CopyWindow()
+		assert.is_true(wholeUTF8(win.where.text))
+		assert.are.equal("Poste diesen Text im Kanal #bug-reports auf unserem Discord:", win.where.text)
+		assert.are.equal(2, win.where.maxLines)
+		assert.is_true(win.where.w > 0 and win.where.w <= 560 - 28, "text inside the window")
+		assert.is_true(win.where:GetStringHeight() <= 2 * 14, "at most two lines")
+		assert.is_true(win.link.w <= 560 - 28)
+	end)
 end)

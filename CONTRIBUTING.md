@@ -4,6 +4,10 @@ Thanks for helping. Issues and pull requests are welcome, in English.
 
 For anything larger than a small fix, please open an issue first so we can agree on the approach.
 
+## Reporting a bug
+
+Report bugs first in the channel #bug-reports on our Discord (discord.gg/ujjEM9NE5D), or as an issue here. In the game, "Report a problem" in the right-click menu (or `/bd4 report`) builds the text to post; it contains no names.
+
 ## License of contributions
 
 By opening a pull request you agree that your contribution is licensed under the project license: GPL-3.0-or-later with the additional permission in [LICENSE-EXCEPTION.md](LICENSE-EXCEPTION.md). Only submit work you have the right to submit under that license.

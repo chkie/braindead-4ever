@@ -112,6 +112,10 @@ local function Credits(parent)
 	add(L.CREDITS_SOURCES)
 	add(L.CREDITS_LIBS_TITLE, "GameFontNormal", NORMAL_FONT_COLOR)
 	add(L.CREDITS_LIBS)
+	-- Discord link: a label and a box the player copies from (links are not clickable in the game).
+	local label = add(L.CREDITS_DISCORD)
+	label:SetWidth(0)
+	ns.CreateLinkBox(f, 200):SetPoint("LEFT", label, "RIGHT", 8, 0)
 	add(L.CREDITS_TRADEMARK)
 	SET.credits = f
 	return Settings.RegisterCanvasLayoutSubcategory(parent, f, L.PAGE_CREDITS)

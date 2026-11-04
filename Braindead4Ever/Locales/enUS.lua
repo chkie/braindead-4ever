@@ -79,6 +79,7 @@ L.ERR_COLLECT_NEWER = "data from a newer addon version, recording stays off and 
 
 -- Report a problem
 L.REPORT_TITLE = "Braindead 4ever: report a problem"
+L.REPORT_WHERE = "Post this text in #bug-reports on our Discord:"
 L.REPORT_OFF = "%s: the report is not running, see /bd4 status"
 
 -- Developer probe
@@ -404,6 +405,7 @@ L.CREDITS_SOURCES =
 	"Quest and map data from open game data projects. Credits and licences: the file NOTICE in the addon folder."
 L.CREDITS_LIBS_TITLE = "Libraries"
 L.CREDITS_LIBS = "Braindead 4ever embeds no libraries."
+L.CREDITS_DISCORD = "Discord:"
 L.CREDITS_TRADEMARK =
 	"Not affiliated with Blizzard Entertainment. World of Warcraft, Warcraft and Blizzard Entertainment are trademarks or registered trademarks of Blizzard Entertainment, Inc. in the U.S. and/or other countries."
 -- Your run (Welle 8): page, review card, option. Short and plain, like the game's own windows.

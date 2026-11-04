@@ -29,6 +29,33 @@ local L = ns.L
 
 local win
 
+-- Invite link of the Discord server. Links are not clickable in the game, so it stands in a box the
+-- player can select and copy; it is the same text in every language.
+ns.DISCORD_LINK = "discord.gg/ujjEM9NE5D"
+
+-- A one-line read-only box that shows the Discord link: the player clicks it, the text is selected,
+-- Ctrl+C copies it. Every edit by the player is undone. onEscape: what Escape does while it has focus.
+function ns.CreateLinkBox(parent, width, onEscape)
+	local box = CreateFrame("EditBox", nil, parent)
+	box:SetSize(width, 20)
+	box:SetAutoFocus(false)
+	box:SetFontObject(ChatFontNormal)
+	box:SetText(ns.DISCORD_LINK)
+	box:SetScript("OnEscapePressed", onEscape or function(self)
+		self:ClearFocus()
+	end)
+	box:SetScript("OnTextChanged", function(self, userInput)
+		if userInput then
+			self:SetText(ns.DISCORD_LINK)
+			self:HighlightText()
+		end
+	end)
+	box:SetScript("OnEditFocusGained", function(self)
+		self:HighlightText()
+	end)
+	return box
+end
+
 local function CreateWindow()
 	local f = CreateFrame("Frame", "BraindeadForeverCopyFrame", UIParent, "BackdropTemplate")
 	f:SetSize(560, 380)
@@ -51,9 +78,21 @@ local function CreateWindow()
 	f.title = f:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
 	f.title:SetPoint("TOPLEFT", 14, -12)
 
+	-- Where the text belongs (error report only): one line and the Discord link in a box below it.
+	f.where = f:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
+	f.where:SetPoint("TOPLEFT", 14, -38)
+	f.where:SetWidth(530)
+	f.where:SetJustifyH("LEFT")
+	f.where:SetWordWrap(true)
+	f.where:SetMaxLines(2)
+	f.link = ns.CreateLinkBox(f, 200, function()
+		f:Hide()
+	end)
+	f.link:SetPoint("TOPLEFT", f.where, "BOTTOMLEFT", 0, -4)
+
 	local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-	scroll:SetPoint("TOPLEFT", 12, -40)
 	scroll:SetPoint("BOTTOMRIGHT", -32, 44)
+	f.scroll = scroll
 
 	local box = CreateFrame("EditBox", nil, scroll)
 	box:SetMultiLine(true)
@@ -100,7 +139,8 @@ local function CreateWindow()
 	return f
 end
 
--- opts: { hint = extra status text, onCopy = fn called once after Ctrl+C }. Not in combat.
+-- opts: { hint = extra status text, onCopy = fn called once after Ctrl+C, where = line above the Discord
+-- link box (without it the window has no link) }. Not in combat.
 function ns.ShowCopy(title, text, opts)
 	if InCombatLockdown() then
 		print(L.MSG_AFTER_COMBAT)
@@ -110,6 +150,18 @@ function ns.ShowCopy(title, text, opts)
 	win = win or CreateWindow()
 	win.text, win.onCopy = text, opts.onCopy
 	win.title:SetText(title)
+	win.scroll:ClearAllPoints()
+	if opts.where then
+		win.where:SetText(opts.where)
+		win.where:Show()
+		win.link:Show()
+		win.scroll:SetPoint("TOPLEFT", win.link, "BOTTOMLEFT", -2, -8)
+	else
+		win.where:Hide()
+		win.link:Hide()
+		win.scroll:SetPoint("TOPLEFT", 12, -40)
+	end
+	win.scroll:SetPoint("BOTTOMRIGHT", -32, 44)
 	local status = L.COPY_STATUS:format(#text)
 	if opts.hint then
 		status = status .. " " .. opts.hint

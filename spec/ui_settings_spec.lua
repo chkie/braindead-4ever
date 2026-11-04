@@ -250,6 +250,28 @@ describe("Settings", function()
 		assert.matches("Not affiliated with Blizzard Entertainment", all, 1, true)
 	end)
 
+	it("Credits show the Discord link in a copyable box in both languages", function()
+		for _, locale in ipairs({ "enUS", "deDE" }) do
+			local ns = S.login({ locale = locale })
+			local label, box
+			for _, f in ipairs(wow.frames) do
+				if rawget(f, "parent") == ns.SettingsPage.credits then
+					if f.type == "FontString" and f.text == "Discord:" then
+						label = f
+					elseif f.type == "EditBox" then
+						box = f
+					end
+				end
+			end
+			assert.is_not_nil(label, locale)
+			assert.is_not_nil(box, locale)
+			assert.are.equal("discord.gg/ujjEM9NE5D", box:GetText())
+			box:SetText("changed by the player")
+			box.scripts.OnTextChanged(box, true)
+			assert.are.equal("discord.gg/ujjEM9NE5D", box:GetText())
+		end
+	end)
+
 	it("open from the menu only out of combat", function()
 		local ns = S.login()
 		S.combat(true)
