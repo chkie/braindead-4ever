@@ -38,6 +38,25 @@ class LinterAcceptance(unittest.TestCase):
         errs = lint_file(os.path.join(FIX, "good", "t-speed-start-elwynn.route"))
         self.assertEqual([], [str(e) for e in errs])
 
+    def test_unknown_prerequisite_at_a_hub_passes_in_speed(self):
+        # an unknown prerequisite is allowed where the module accepts or turns in a quest with
+        # secured prerequisites within lint.HUB_YARDS; the prepared error 09-speed is the same quest
+        # kind at a place the route only passes for an objective
+        with open(os.path.join(FIX, "good", "t-speed-start-elwynn.route"), encoding="utf-8") as fh:
+            text = fh.read()
+        hub = text.replace("  accept 900003 | src=polestar status=unbestätigt\n",
+                           "  accept 900003 | src=polestar status=unbestätigt\n  accept 900004 | src=polestar status=unbestätigt\n", 1)
+        self.assertNotEqual(text, hub)
+        mod = routefmt.parse(hub, "hub.route")
+        errs = lint.lint_all({mod.key: mod}, [compose()], fixture_facts(), combo_list=HUMAN_WARRIOR, modes=("speed",))
+        self.assertEqual([], [str(e) for e in errs])
+        # the same accept alone in a step far from every such step is refused
+        far = text.replace("  complete 900002 | src=polestar status=unbestätigt\n",
+                           "  complete 900002 | src=polestar status=unbestätigt\n  accept 900006 | src=polestar status=unbestätigt\n", 1)
+        mod = routefmt.parse(far, "far.route")
+        errs = lint.lint_all({mod.key: mod}, [compose()], fixture_facts(), combo_list=HUMAN_WARRIOR, modes=("speed",))
+        self.assertEqual(["speed"], sorted({e.code for e in errs}))
+
     def test_ten_prepared_errors_are_found(self):
         files = sorted(glob.glob(os.path.join(FIX, "bad", "*.route")))
         self.assertEqual(10, len(files))

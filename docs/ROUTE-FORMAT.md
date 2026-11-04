@@ -252,7 +252,7 @@ The route of a combination: the first `start` module whose filter applies, then 
 - **Start modules**: one per start zone and faction (Elwynn Forest, Dun Morogh, Teldrassil, Durotar, Mulgore, Tirisfal Glades, Zephras Isle for each faction). Start zones per race are measured by EG Link (`data/sources/eglink/starts.jsonl`). Class quests inside the start zone are steps with a class filter.
 - **Core route**: one per faction, split into zone blocks with a level band each. Class quests that stay inside a block's zone are steps with a class filter.
 - **Class inserts**: per race and class, the class quests in zones the route does not visit (capitals, Moonglade); placed after the start module or after the core block whose level band reaches the quest's minimum level. Their travel steps carry `!return "Klassenquest"`.
-- **Speed** (`#mode speed`): no quest without a secured prerequisite, no breadcrumbs.
+- **Speed** (`#mode speed`): no breadcrumbs, no quest with a conflicting prerequisite. A quest whose prerequisite no source knows (`unknown`) is in only when its giver stands within 60 yards of a step of the same module that accepts or turns in a quest with secured prerequisites, a place the route visits anyway; the runtime lists it under `unsure` and skips it when it is not offered. A quest started by an item is in only when Polestar's item sources name a creature or object that drops the item; its `accept` step leads to where the item drops.
 - **Explorer** (`#mode explorer`): also quests with an unknown or conflicting prerequisite and breadcrumbs. Known prerequisites are still enforced.
 
 These are computed routes, not played ones. Until our own measurements arrive, the planned levels (`lv`) stay planning values. How the routes measure: [ROUTE-METRICS.md](ROUTE-METRICS.md).
@@ -274,7 +274,7 @@ Run per file and per combination (56 combinations, both modes). Each error has a
 | `fraktion` | quest belongs to the module's faction |
 | `filter` | a quest only some races or classes can take has a filter that is not wider; per combination: every accepted quest is available to it |
 | `stufe` | planned level within `#levels`; minimum level not above the planned level; quest level at most 2 above it |
-| `speed` | Speed modules contain no quest without a secured prerequisite |
+| `speed` | Speed modules contain no quest without a secured prerequisite, except one with an unknown prerequisite whose accept lies within 60 yards of a step of the module that accepts or turns in a quest with secured prerequisites |
 | `reihenfolge` | per combination: accept before objectives and turn-in, no quest taken twice |
 | `vorquest` | per combination: a prerequisite is handed in before the follow-up is accepted |
 | `gegenstand` | per combination: a quest with items to bring is handed in only after `complete` or `collect` of all items |

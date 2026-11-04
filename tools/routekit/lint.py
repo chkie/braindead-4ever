@@ -4,7 +4,8 @@ where it concerns a quest, the quest ID.
 
 Checks per file: syntax, header, labels, provenance (source present, source allowed by
 decision FD-1101, source backed by data/facts), status, block list of phrases, map frames,
-faction, filters, levels, Speed rule.
+faction, filters, levels, Speed rule (secured prerequisites; an unknown one only at a place the
+module visits anyway).
 Checks per combination (all 56 races x classes, per mode): a route exists, quest order
 (accept before turn-in, prerequisite before follow-up), items before turn-in, travel on
 every zone change, no return to a zone left earlier without a stated reason.
@@ -29,6 +30,7 @@ DATA_VERBS = {"accept", "complete", "turnin", "collect", "goto"}
 AGREE_YARDS = 10.0
 FRAME_MARGIN = 50.0
 LEVEL_ABOVE = 2  # DR 20 §5.6: quest level at most 2 above the planned level
+HUB_YARDS = 60.0  # yards: a quest giver this close to a step of the route stands at a place it visits anyway
 
 # Block list (Plan §Sprache Nr. 5): typical AI phrases, exclamation marks, emoji.
 BLOCKED_PHRASES = [
@@ -222,6 +224,18 @@ def lint_module(mod, facts):
         if foreign:
             E("filter", mod.header_lines["for"], "#for nennt Völker der anderen Fraktion")
 
+    # places the module visits anyway: steps that accept or turn in a quest with secured
+    # prerequisites (Speed rule for quests with an unknown prerequisite)
+    hubs = []
+    for st in mod.steps:
+        g = next((el for el in st.elements if el.verb == "goto"), None)
+        if g is None:
+            continue
+        sq = {el.args["q"] for el in st.elements if el.verb in ("accept", "turnin") and "q" in el.args
+              and facts.pre(el.args["q"]).get("state") == "secured"}
+        if sq:
+            hubs.append((zone_key(g.args["map"]), g.args["wx"], g.args["wy"], sq))
+
     seen = {}
     for st in mod.steps:
         if st.id in seen:
@@ -276,8 +290,10 @@ def lint_module(mod, facts):
                     E("filter", line, "Quest %d nur für Klassen %s; Filter fehlt oder ist zu weit" % (q, sorted(qc)), q)
                 if el.verb == "accept":
                     pre = facts.pre(q)
-                    if mod.mode == "speed" and pre.get("state") != "secured":
-                        E("speed", line, "Quest %d ohne gesicherte Vorbedingung (%s) im Speed-Modus" % (q, pre.get("state")), q)
+                    if mod.mode == "speed" and pre.get("state") != "secured" and not (
+                            pre.get("state") == "unknown" and _at_hub(st, hubs, q)):
+                        E("speed", line, "Quest %d ohne gesicherte Vorbedingung (%s) im Speed-Modus" % (q, pre.get("state"))
+                          + (", Questgeber nicht an einem Ort, den die Route ohnehin besucht" if pre.get("state") == "unknown" else ""), q)
                     rec = facts.q[q]
                     mn = rec.get("min", {}).get("v")
                     lvl = rec.get("level", {}).get("v")
@@ -307,6 +323,18 @@ def lint_module(mod, facts):
             if el.verb == "travel" and el.args["map"] not in game.ZONES and el.args["map"] not in facts.frames.by_map:
                 E("karte", line, "Reiseziel uiMap %d unbekannt" % el.args["map"])
     return errs
+
+
+def _at_hub(step, hubs, q):
+    """Speed rule (decision of 2026-11-03 for Welle 6d): a quest with an unknown prerequisite may be
+    in a Speed route when its accept lies within HUB_YARDS of a step of the same module that accepts
+    or turns in another quest with secured prerequisites, a place the route visits anyway. The
+    runtime treats such a quest as unsure (skip when it is not offered)."""
+    g = next((el for el in step.elements if el.verb == "goto"), None)
+    if g is None:
+        return False
+    z, wx, wy = zone_key(g.args["map"]), g.args["wx"], g.args["wy"]
+    return any(hz == z and geo.dist((hy, hx), (wy, wx)) <= HUB_YARDS and (sq - {q}) for hz, hx, hy, sq in hubs)
 
 
 def _step_zone(step):
