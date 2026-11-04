@@ -8,6 +8,13 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.1 (2026-11-04)
+
+- Sharper arrow: its own high-resolution arrowhead with a notch, so the tip is clear at every angle. Same colors as before.
+- Round minimap button with the gold ring of the game's own buttons.
+- After you reach a goal, the arrow shows the name and distance of the next goal again.
+- German texts in the settings and on the page "Your run" no longer get cut off.
+
 ## 0.9.0 (2026-11-03)
 
 - Step-by-step routes for levels 1 to 30, both factions, all races and classes; levels 30 to 60 follow with updates.

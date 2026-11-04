@@ -104,11 +104,15 @@ end
 -- Ketho AtlasInfo forever), downloaded from wago.tools and decoded on 2026-11-02: 194/113/0.
 S.ARROW_ATLAS = { 194 / 255, 113 / 255, 0 }
 
--- Color of the arrow as the client draws it: atlas times vertex color, desaturated textures gray
--- (luminance weights 0.299/0.587/0.114), an additive copy adds its own color; clamped to 1.
+-- Color of the arrow as the client draws it: texture times vertex color, desaturated textures gray
+-- (luminance weights 0.299/0.587/0.114), an additive copy adds its own color; clamped to 1. The own
+-- arrow texture (Media/arrow.tga, since 0.9.1) is white; the old atlas was orange gold.
 function S.drawnArrow(F)
 	local function layer(tex)
 		local a = S.ARROW_ATLAS
+		if rawget(tex, "file") then
+			a = { 1, 1, 1 }
+		end
 		local base = { a[1], a[2], a[3] }
 		if rawget(tex, "desaturated") then
 			local g = 0.299 * a[1] + 0.587 * a[2] + 0.114 * a[3]

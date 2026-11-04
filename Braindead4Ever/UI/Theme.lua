@@ -46,7 +46,6 @@ T.ATLAS = {
 	box = "checkbox-minimal", -- 30x29, shown at 19x19 in place of the nub
 	tick = "checkmark-minimal",
 	clock = "auctionhouse-icon-clock", -- "provisional" symbol, candidate of concept §2.2
-	arrow = "Navigation-Tracked-Arrow", -- 22x18, points up
 	pin = "Waypoint-MapPin-Tracked", -- 30x30
 	minipin = "Waypoint-MapPin-Minimap-Tracked", -- 32x32
 	giver = "QuestNormal", -- 64x64
