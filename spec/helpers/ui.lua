@@ -976,9 +976,10 @@ function U.install(M, W, opts)
 		CreateDropdown = function(cat, setting, getOptions, tooltip)
 			return Initializer(cat, { kind = "dropdown", setting = setting, options = getOptions, tooltip = tooltip })
 		end,
-		OpenToCategory = function(id)
+		OpenToCategory = function(id, scrollTo)
 			audit("Settings.OpenToCategory")
 			reg.opened[#reg.opened + 1] = id
+			reg.scrolledTo = scrollTo
 			_G.SettingsPanel:Show()
 		end,
 		GetValue = function(variable)

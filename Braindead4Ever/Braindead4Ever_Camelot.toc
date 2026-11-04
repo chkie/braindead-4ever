@@ -59,6 +59,7 @@ UI\Arrow.lua
 UI\TomTom.lua
 UI\MapPins.lua
 UI\QuestWatch.lua
+UI\Auto.lua
 UI\Minimap.lua
 UI\Setup.lua
 UI\Settings.lua

@@ -50,6 +50,7 @@ The live route in Retail uses Forever quest IDs and maps, so quest names may sho
 | 4 Riddle (hint level 1, Welle 5b) | play style "With hints", then `/bd4 preview riddle` | gold line "Hint: A book waits to be read in the south of …" above the current step, same look as the rumor line |
 | 4 Area (hint level 2, Welle 5b) | `/bd4 preview area`, then open the world map (M) | a round gold ring (not an oval) with a faint gold disc around your position, about 100 yards across; hover shows "Area" and "A book lies within the marked circle."; zoom in and out: the circle grows and shrinks with the map; clicks on the map still work inside it |
 | 5 Settings | `/bd4 preview settings` (or Esc, Options, AddOns, Braindead 4ever) | main page and the five sub pages; a usage hint still open waits until the settings close |
+| 5 Automation switch | `/bd4 preview auto` | the settings open on the main page at "Automate route quests", the fifth option, unchecked by default; its tooltip is one sentence and names Shift |
 | 6 Your run, with comparison (Welle 8) | `/bd4 preview stats`; hover a row; click the tabs below the window | window "Your run" in Blizzard's frame, header "Level 12 • race • class", six summary values, table newest level on top with time, a bar in Blizzard's XP bar look and a white line at the class median, median and "faster than" in percent, XP per hour; level 12 says "running" in grey; row tooltip with active time, breaks, XP from quests, enemies and other, time fighting, moving, flying and other, quests, deaths, way of play and the class median; tabs "Sections" and "Best times"; tabs sit below the window like Blizzard's character window; Escape closes it |
 | 6 Your run, without comparison data | `/bd4 preview stats0` | "collecting" in the median column, no line on the bars, "collecting data" for XP per hour and the end of the route; nothing reads like a number that is not there |
 | 6 Review card at level 10 | `/bd4 preview recap10` | card "Review" in the middle: "Level 10 reached", race, class and way of play, active play time of levels 1 to 10 large, class median with the number of runs, "faster than" in percent, best time of the account marked "new, this character", XP per hour, quests, deaths, time by activity, a bar per level with the median line, legend, the check box "Show the review at level 10, 20 and 30", "All values" and "Close", "Braindead 4ever" in the footer; good to screenshot |
@@ -110,6 +111,18 @@ Start from the default: settings, Display, "Reset" (positions and size).
 1. Blizzard settings, Keybindings: a section "Braindead 4ever" lists seven actions (guidance on/off, check off step, skip step, step back, step window on/off, mini view, your run), all unbound. Bind two of them, press them in and out of a fight: the same as the window's buttons, and no "action blocked" message.
 2. With TomTom installed (release gate T20): a TomTom waypoint stands on the current goal, without a TomTom chat line; it moves with the next step and goes on pause. Settings, Arrow and Map: "Hand the goal to TomTom" off removes it. Without TomTom the option is not there.
 3. Settings, Play style, "Hardcore-safe": "Always". A quest 3 or more levels above the character shows a gold "Careful: …" line under the step; no optional dungeon step.
+
+## 4b. Optional automation (requirement A74)
+
+The route uses Forever quest IDs; the old Elwynn quests have the same IDs in Retail, so a new human character in Northshire can check most of it. Turn on "Automate route quests" (settings, main page) and `/console taintLog 1`.
+
+1. Talk to the giver of the current step: the route quest is accepted without a click; a quest the route does not take, or takes only later, stays in the list for you.
+2. Hand in a route quest with one reward or none: it is handed in at once. With several rewards the reward page stays open and you choose.
+3. Hold Shift while you talk to the giver: nothing happens in this dialog, also after you let go. The next dialog works again.
+4. In a fight nothing happens; after it the next dialog works.
+5. A gossip NPC with a route quest and other options (vendor, flight master): only the quest line is chosen, never another option.
+6. Forever client: the same with the gamepad interface. When the log is full, the dialog stays open and the gamepad buttons still work; no repeated pop-ups.
+7. Afterwards `/bd4 status` shows `auto` on; the taint log names no blocked call of Braindead 4ever.
 
 ## 5. Situations per screenshot
 

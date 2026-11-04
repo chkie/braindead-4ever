@@ -755,6 +755,44 @@ function Route.Quests()
 	end) or {}
 end
 
+-- Quests the current part of the route takes and hands in, for the optional automation (UI/Auto.lua):
+-- the current step and the next DIALOG_AHEAD open steps, without quests the player skipped and their
+-- follow-up quests. { accept = { [questID] = true }, turnin = { [questID] = true } }, nil without a route.
+-- Steps the route passed (level rule, entry anchor) are not part of it.
+Route.DIALOG_AHEAD = 3
+function Route.DialogQuests()
+	return Call(function()
+		local out = { accept = {}, turnin = {} }
+		local ctx = rt:Context()
+		local i, n = rt.cur, 0
+		while i and rt.steps[i] and n <= Route.DIALOG_AHEAD do
+			if i == rt.cur or (rt:StepState(i, ctx) == "open" and not rt:Passed(i, ctx)) then
+				n = n + 1
+				for _, el in ipairs(rt.steps[i].els) do
+					local v, q = el[1], el[2]
+					if not ctx.blocked[q] then
+						if v == R.VERB.ACCEPT then
+							out.accept[q] = true
+						elseif v == R.VERB.TURNIN then
+							out.turnin[q] = true
+						end
+					end
+				end
+			end
+			i = i + 1
+		end
+		return out
+	end)
+end
+
+-- Danger of one quest for the character by the hardcore-safe rule (Routes/Hardcore.lua): elite mark of
+-- the client or a quest level too far above; nil when none or without a route.
+function Route.QuestDanger(q)
+	return Call(function()
+		return ns.Hardcore.Check({ q }, rt.quests, world.Level(), IsElite)
+	end)
+end
+
 -- Open question of the replanning (docs/ROUTE-RUNTIME.md §Replanning), or nil:
 -- { kind = "over", id, gap, plan, level, drop } or { kind = "switch", id, plan, level, map, choice, options }.
 function Route.Offer()

@@ -103,6 +103,9 @@ read_globals = {
 		},
 	},
 	StaticPopupDialogs = { fields = { BRAINDEADFOREVER_SKIP_CHAIN = { read_only = false, other_fields = true } } },
+	-- optional automation (UI/Auto.lua, A74); checked against Ketho GlobalAPI forever d1ee569 and
+	-- Gethe forever 17ed2c3 (1.60.1 70755)
+	C_GossipInfo = { fields = { "GetActiveQuests", "GetAvailableQuests", "SelectActiveQuest", "SelectAvailableQuest" } },
 	UIErrorsFrame = { fields = { "AddMessage" } },
 	UiMapPoint = { fields = { "CreateFromCoordinates" } },
 	WorldMapFrame = {
@@ -125,6 +128,25 @@ read_globals = {
 	"GetCursorPosition",
 	"GetPlayerFacing",
 	"IsShiftKeyDown", -- Welle 5c: the arrow moves with Shift held (owner reading 16)
+	-- quest dialog, optional automation (UI/Auto.lua, A74), all in Ketho GlobalAPI forever d1ee569
+	"AcceptQuest",
+	"AcknowledgeAutoAcceptQuest",
+	"CompleteQuest",
+	"GetActiveQuestID",
+	"GetActiveTitle",
+	"GetAvailableQuestInfo",
+	"GetNumActiveQuests",
+	"GetNumAvailableQuests",
+	"GetNumQuestChoices",
+	"GetQuestID",
+	"GetQuestMoneyToGet",
+	"GetQuestReward",
+	"IsQuestCompletable",
+	"QuestFlagsPVP",
+	"QuestGetAutoAccept",
+	"QuestIsFromAreaTrigger",
+	"SelectActiveQuest",
+	"SelectAvailableQuest",
 	"MapCanvasDataProviderMixin",
 	"MapCanvasPinMixin",
 	"Minimap",

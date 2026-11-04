@@ -23,7 +23,8 @@ of the Ace3 libraries used as well as that of the covered work.
 
 -- UI/Settings.lua: module "settings" (design v2, view 5; concept §2.6). Blizzard's settings panel →
 -- AddOns → Braindead 4ever as vertical lists, so Blizzard's search finds every option (rule E5). Main page:
--- four options and two buttons; sub pages Play style, Display, Arrow and Map, Accessibility, Credits
+-- five options (the most rule E1 allows; the fifth is the optional automation, A74) and two buttons; sub
+-- pages Play style, Display, Arrow and Map, Accessibility, Credits
 -- (canvas, licence text only). Every change applies at once (no CommitFlag.Apply, E4); the Defaults
 -- button comes from Blizzard. Dependent options are indented and greyed out with SetParentInitializer
 -- (E7). Tooltips are one sentence each (E2), labels are positive (E3).
@@ -121,7 +122,7 @@ local function Build()
 	SET.category = cat
 	ns.settingsCategoryID = cat:GetID()
 
-	-- Main page: four options, two buttons (E1)
+	-- Main page: five options, two buttons (E1: at most five options; a new option goes to a sub page)
 	Header(layout, L.SEC_BASICS)
 	Dropdown(cat, "scope", L.OPT_SCOPE, L.TIP_SCOPE, {
 		{ "minimal", L.SCOPE_MINIMAL, L.TIP_SCOPE_MINIMAL },
@@ -131,6 +132,11 @@ local function Build()
 	Check(cat, "arrow", L.OPT_ARROW, L.TIP_ARROW)
 	Slider(cat, "scale", L.OPT_SCALE, L.TIP_SCALE, 75, 200, 5, Percent)
 	Check(cat, "sound", L.OPT_SOUND, L.TIP_SOUND)
+	-- Optional automation (A74), off by default: one switch for accept, hand-in and the single reward
+	-- (brain chapter 18 §8 and pattern D put it on the main page); only while the client offers its API.
+	if M.IsActive("auto") then
+		Check(cat, "auto", L.OPT_AUTO, L.TIP_AUTO)
+	end
 	Header(layout, L.SEC_SETUP)
 	Button(layout, L.BTN_SETUP_LABEL, L.BTN_SETUP, function()
 		ns.Setup.Open(true)

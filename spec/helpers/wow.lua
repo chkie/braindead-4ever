@@ -65,6 +65,9 @@ local BASE_EVENTS = {
 	"TAXIMAP_OPENED",
 	"UI_INFO_MESSAGE",
 	"GOSSIP_SHOW",
+	"GOSSIP_CLOSED",
+	"LOADING_SCREEN_ENABLED",
+	"LOADING_SCREEN_DISABLED",
 	"PLAYER_INTERACTION_MANAGER_FRAME_SHOW",
 	"ZONE_CHANGED_NEW_AREA",
 	"PLAYER_CONTROL_LOST",
@@ -575,6 +578,79 @@ function M.reset(opts)
 	_G.GetAvailableQuestInfo = function(i)
 		return false, 0, false, false, W.offers[i]
 	end
+	-- Quest dialog (Mainline/QuestFrame.lua, Forever): W.dialog holds what the open dialog shows; every
+	-- call is recorded in W.dialog.calls and changes nothing, like a call the server ignores. A test plays
+	-- the server's answer by firing the next event.
+	W.dialog = {
+		calls = {}, -- { "AcceptQuest" }, { "SelectAvailableQuest", i }, ...
+		active = {}, -- gossip and greeting: quests to hand in, { { questID = n, isComplete = bool } }
+		choices = 0, -- GetNumQuestChoices
+		completable = true,
+		money = 0, -- GetQuestMoneyToGet
+		autoAccept = false,
+		areaTrigger = false,
+		pvp = false,
+	}
+	local D = W.dialog
+	local function record(name)
+		return function(...)
+			D.calls[#D.calls + 1] = { name, ... }
+		end
+	end
+	for _, name in ipairs({
+		"AcceptQuest",
+		"AcknowledgeAutoAcceptQuest",
+		"ConfirmAcceptQuest",
+		"CompleteQuest",
+		"GetQuestReward",
+		"SelectActiveQuest",
+		"SelectAvailableQuest",
+		"DeclineQuest",
+		"CloseQuest",
+	}) do
+		_G[name] = record(name)
+	end
+	_G.C_GossipInfo.SelectActiveQuest = record("C_GossipInfo.SelectActiveQuest")
+	_G.C_GossipInfo.SelectAvailableQuest = record("C_GossipInfo.SelectAvailableQuest")
+	_G.C_GossipInfo.SelectOption = record("C_GossipInfo.SelectOption")
+	_G.C_GossipInfo.CloseGossip = record("C_GossipInfo.CloseGossip")
+	_G.C_GossipInfo.GetActiveQuests = function()
+		local out = {}
+		for i, a in ipairs(D.active) do
+			out[i] = { questID = a.questID, title = "Quest " .. a.questID, isComplete = a.isComplete }
+		end
+		return out
+	end
+	_G.GetNumActiveQuests = function()
+		return #D.active
+	end
+	_G.GetActiveTitle = function(i)
+		local a = D.active[i]
+		if a then
+			return "Quest " .. a.questID, a.isComplete == true
+		end
+	end
+	_G.GetActiveQuestID = function(i)
+		return D.active[i] and D.active[i].questID
+	end
+	_G.GetNumQuestChoices = function()
+		return D.choices
+	end
+	_G.IsQuestCompletable = function()
+		return D.completable
+	end
+	_G.GetQuestMoneyToGet = function()
+		return D.money
+	end
+	_G.QuestGetAutoAccept = function()
+		return D.autoAccept
+	end
+	_G.QuestIsFromAreaTrigger = function()
+		return D.areaTrigger
+	end
+	_G.QuestFlagsPVP = function()
+		return D.pvp
+	end
 	_G.GetQuestLogRewardXP = function(q)
 		for _, e in ipairs(log()) do
 			if e.questID == q and e.rewardXP then
@@ -898,6 +974,7 @@ function M.addonFiles(withProbe)
 		"Braindead4Ever/UI/TomTom.lua",
 		"Braindead4Ever/UI/MapPins.lua",
 		"Braindead4Ever/UI/QuestWatch.lua",
+		"Braindead4Ever/UI/Auto.lua",
 		"Braindead4Ever/UI/Minimap.lua",
 		"Braindead4Ever/UI/Setup.lua",
 		"Braindead4Ever/UI/Settings.lua",

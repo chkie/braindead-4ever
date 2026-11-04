@@ -1,6 +1,6 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Design v2, view 5 "Einstellungen" and the rules of brain chapter 18 §7.3 (E1 to E7): Blizzard's
--- settings panel with vertical lists, main page with four options and two buttons, sub pages Play
+-- settings panel with vertical lists, main page with five options and two buttons, sub pages Play
 -- style, Display, Arrow and Map, Accessibility and Credits; one-sentence tooltips, positive labels,
 -- greyed-out dependent options, immediate effect. Also view 6 (fonts: Blizzard's Friz Quadrata through
 -- font object copies, no font of our own) and task 5 (size 75 to 200 %, Blizzard's text size).
@@ -64,18 +64,29 @@ describe("Settings", function()
 		assert.are.same({ "Play style", "Display", "Arrow and Map", "Accessibility", "Credits (canvas)" }, subs)
 	end)
 
-	it("main page: four options and two buttons (rule E1)", function()
+	-- Rule E1 (brain chapter 18 §7.3): at most five options and two buttons on the main page. The fifth
+	-- option is the optional automation (A74; chapter 18 §8 and pattern D put it there), so the page is
+	-- full: any further option goes to a sub page.
+	it("main page: five options and two buttons, the most rule E1 allows", function()
 		S.login()
-		local kinds = {}
+		local kinds, count, buttons = {}, 0, 0
 		for _, i in ipairs(byName("Braindead 4ever").inits) do
 			kinds[#kinds + 1] = i.kind .. ":" .. (i.setting and i.setting.key or i.name)
+			if i.setting then
+				count = count + 1
+			elseif i.kind == "button" then
+				buttons = buttons + 1
+			end
 		end
+		assert.is_true(count <= 5, "rule E1: " .. count .. " options on the main page")
+		assert.is_true(buttons <= 2, "rule E1: " .. buttons .. " buttons on the main page")
 		assert.are.same({
 			"header:Basics",
 			"dropdown:scope",
 			"checkbox:arrow",
 			"slider:scale",
 			"checkbox:sound",
+			"checkbox:auto",
 			"header:Setup",
 			"button:Setup",
 			"button:Windows",
@@ -103,6 +114,7 @@ describe("Settings", function()
 			tracker = "hide", -- owner reading 16
 			lock = false,
 			hardcore = "auto", -- Welle 9: follows the realm's rule set
+			auto = false, -- optional automation (A74): off until the player turns it on
 		}
 		for key, value in pairs(expect) do
 			assert.are.equal(value, ns.UI.Get(key), key)
@@ -209,9 +221,9 @@ describe("Settings", function()
 	it("buttons: setup again, Edit Mode hint, reset position", function()
 		local ns = S.login()
 		local main = byName("Braindead 4ever")
-		main.inits[7].click()
-		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
 		main.inits[8].click()
+		assert.is_true(rawget(_G.BraindeadForeverSetupFrame, "shown"))
+		main.inits[9].click()
 		assert.matches("Edit Mode", wow.world.uiErrors[1], 1, true)
 		ns.UI.DB().pos = { window = { "CENTER", "CENTER", 0, 0 } }
 		ns.UI.Place("window")

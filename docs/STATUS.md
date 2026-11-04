@@ -4,7 +4,7 @@ Every feature has one status: **planned**, **built** (code and offline tests pas
 
 Only a person sets **verified in game**, after playing it, never a test or the probe. The probe only measures (`OK`, `MISSING`, `ERROR`, `SECRET`, `FAILED`, `ARGERROR`).
 
-Last update: 2026-11-03
+Last update: 2026-11-04
 
 ## API probe (AP 3)
 
@@ -125,7 +125,7 @@ Stages from the project plan: MVP (first public release) and 1.0. Status refers 
 | Game modes Speed, Explorer, Hardcore-safe | 1.0 | built (hardcore-safe since Welle 9: on Hardcore realms, always or never; warns for quests more than 2 levels above the character, a chosen value, and for quests the client marks elite; no dungeon hint; offline) | `ver.hardcore`, `quest.elite` |
 | Hint levels | 1.0 | built (logic; window with Welle 5) | no client API |
 | Time forecast | 1.0 | built (logic; shown in the XP line tooltip since Welle 5b) | `time.xp`, `time.xpmax`, `time.rested`, `time.played` |
-| Optional automation (accept, turn in, reward) | 1.0 | planned | `auto.accept`, `auto.complete`, `auto.reward`, `auto.acknowledge`, `auto.autoaccept`, `auto.gossip`, `auto.gossipselect`, `auto.greeting` |
+| Optional automation (accept, turn in, reward) | 1.0 | built (offline; module `auto` in `Braindead4Ever/UI/Auto.lua`, off by default, one switch on the main settings page; only quests of the current step and the next three open ones, without skipped quests; reward only with no choice or one; gossip only the route quest's line; never in a fight or a loading screen; Shift pauses the dialog; hardcore-safe mode takes no quest the route warns about; every call once per quest within 10 s, the addon never closes a dialog; `spec/auto_spec.lua` with counter-checks: without the route filter it accepts a foreign quest, without the reward rule it takes one of several rewards, both turn the tests red; Retail and Forever client test pending, gamepad in the Forever client) | `auto.accept`, `auto.complete`, `auto.reward`, `auto.acknowledge`, `auto.autoaccept`, `auto.gossip`, `auto.gossipselect`, `auto.greeting`, `mod.auto.*` |
 | Group and duo | 1.0 | planned | `group.ingroup`, `group.members`, M11 checks |
 | Personal review: page "Your run" and review card at level 10, 20 and 30 in the game (Welle 8); "your way to 60" on the website | 1.0 | built in the game (offline; module `stats`, module `statspage`); website planned | `mod.stats.*`, `mod.statspage.*`; website: export (M11) and AP 9 |
 | Later: route studio, dungeon inserts, profession leveling, controller | after 1.0 | planned | checked one by one when due |
