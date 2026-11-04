@@ -49,10 +49,11 @@ RT.LEVEL_MARGIN = 5
 RT.ANCHOR_SHARE = 0.5
 RT.EARLIER_MAX = 200 -- quests kept in the list "skipped earlier"
 RT.UNDO_MAX = 20
-RT.LOOKAHEAD = 3 -- an event (flight path, hearthstone bound) counts for the current and next 3 steps
+RT.LOOKAHEAD = 3 -- an event (flight path, hearthstone, trainer, landing) counts for the current and next 3 steps
 
 local QUEST = { [V.ACCEPT] = true, [V.COMPLETE] = true, [V.TURNIN] = true }
-local EVENT = { [V.HS] = true, [V.SETHOME] = true, [V.FP] = true }
+local EVENT = { [V.HS] = true, [V.SETHOME] = true, [V.FP] = true, [V.TRAIN] = true }
+local FLY = 2 -- travel how: fly (docs/ROUTE-FORMAT.md, compiled form)
 
 local function copy(t)
 	local c = {}
@@ -91,6 +92,7 @@ function RT.New(steps, quests, world, saved, opts)
 		self.unsure[q] = true
 	end
 	local seen = {}
+	local zone -- zone of the steps so far: target of the last travel, else the map of a goto
 	for i, entry in ipairs(steps) do
 		local data = entry.step
 		local s = {
@@ -104,7 +106,7 @@ function RT.New(steps, quests, world, saved, opts)
 			quests = {}, -- quest IDs in element order
 			has = {}, -- questID -> true
 		}
-		local hasQuest, travel = false, nil
+		local hasQuest, travel, gotoMap = false, nil, nil
 		for _, el in ipairs(data) do
 			if not (el.r or el.c) or not opts.race or R.Applies(el, opts.race, opts.class) then
 				s.els[#s.els + 1] = el
@@ -122,11 +124,17 @@ function RT.New(steps, quests, world, saved, opts)
 					seen[q] = true
 				elseif v == V.TRAVEL then
 					travel = el[3]
+					if el[2] == FLY then
+						s.flyFrom = zone or false -- zone the flight starts in (false: unknown)
+					end
+				elseif v == V.GOTO and not gotoMap then
+					gotoMap = el[2]
 				end
 			end
 		end
 		s.kind = hasQuest and "quest" or travel and "travel" or "other"
 		s.travel = travel
+		zone = travel or gotoMap or zone
 		self.steps[i], self.index[s.key] = s, i
 	end
 	-- Travel steps: the block they lead into ends before the next travel step.
@@ -233,7 +241,9 @@ local function InZone(self, target, map)
 	return false
 end
 
--- true/false for elements that decide whether a step is done, nil for the rest (goto, note, train).
+-- true/false for elements that decide whether a step is done, nil for the rest (goto, note).
+-- A flight (travel fly) is done at the landing; when it leads into another zone, also when the
+-- player is in that zone (a /reload in the air misses the landing).
 function RT:ElementDone(s, el, ctx)
 	local v, w = el[1], self.world
 	if QUEST[v] then
@@ -248,6 +258,12 @@ function RT:ElementDone(s, el, ctx)
 		end
 		return false
 	elseif v == V.TRAVEL then
+		if el[2] == FLY and s.flyFrom ~= nil then
+			if self.saved.marks[s.key] == "e" then
+				return true
+			end
+			return s.flyFrom ~= el[3] and InZone(self, el[3], ctx.map)
+		end
 		return InZone(self, el[3], ctx.map)
 	elseif v == V.XP then
 		return ctx.level >= el[2]
@@ -739,9 +755,10 @@ function RT:Back()
 	return false
 end
 
--- Event seen in the game (flight path learned, hearthstone set or used): marks the first open step
--- among the current and the next LOOKAHEAD steps that has this element.
-function RT:MarkEvent(verb)
+-- Event seen in the game (flight path learned or flight map opened, hearthstone set or used, trainer
+-- window opened, landing after a flight): marks the first open step among the current and the next
+-- LOOKAHEAD steps that has this element; `how` narrows travel elements to one way of travel.
+function RT:MarkEvent(verb, how)
 	local cur = self.cur
 	if not cur then
 		return false
@@ -749,7 +766,7 @@ function RT:MarkEvent(verb)
 	for i = cur, math.min(cur + RT.LOOKAHEAD, #self.steps) do
 		local s = self.steps[i]
 		for _, el in ipairs(s.els) do
-			if el[1] == verb and self.saved.marks[s.key] == nil then
+			if el[1] == verb and (how == nil or el[2] == how) and self.saved.marks[s.key] == nil then
 				self.saved.marks[s.key] = "e"
 				self:Evaluate()
 				return true

@@ -71,11 +71,11 @@ A step key is `<module>/<step id>`; step IDs are chosen by the route author and 
 | `accept` | quest in the log or handed in |
 | `complete` | quest in the log with `C_QuestLog.IsComplete`, or handed in |
 | `turnin` | handed in (`C_QuestLog.IsQuestFlaggedCompleted`, or `QUEST_TURNED_IN` this session) |
-| `travel` | the player's map is the target or one of its parent maps |
+| `travel` | the player's map is the target or one of its parent maps; `travel fly`: the landing was seen for this step or one of the next three (`PLAYER_CONTROL_GAINED` after `UnitOnTaxi`), or, when the flight leads into another zone, the player's map is the target (a `/reload` in the air misses the landing) |
 | `xp` | level reached |
 | `collect` | `C_Item.GetItemCount` reaches the count |
-| `hs`, `sethome`, `fp` | the event was seen (`HEARTHSTONE_BOUND`, flight path message) for this step or one of the next three |
-| `goto`, `note`, `train` | not counted; a step with only these needs the player's check |
+| `hs`, `sethome`, `fp`, `train` | the event was seen for this step or one of the next three: `hs` the player's own hearthstone cast (`UNIT_SPELLCAST_SUCCEEDED`, spell 8690), `sethome` `HEARTHSTONE_BOUND`, `fp` the message "new flight path" or the flight map opened (`TAXIMAP_OPENED`: it opens only at a flight master whose point the character knows), `train` a trainer window opened (`TRAINER_SHOW`; with `C_Trainer.GetTrainerType` profession and pet trainers do not count) |
+| `goto`, `note` | not counted; a step with only these needs the player's check |
 
 A step is **done** when every counted element is done or the player checked it, **skipped** when the player skipped it, when all its quests are skipped, or (travel step) when every step of the zone it leads into is skipped, and **open** otherwise. An element of a skipped quest counts as done.
 
@@ -320,7 +320,7 @@ Not built here (waits for the owner's decision on full zones, chapter 21 §6.3 t
 
 ## Not built here
 
-Arrival detection for steps with only a `goto` (the route data has none) and hearthstone use (no `hs` element in the data); guidance inside dungeons (after 1.0).
+Arrival detection for steps with only a `goto` (the route data has none); guidance inside dungeons (after 1.0). Hint steps (`train`, `sethome`, `hs`, `fp`, `travel fly`) are detected as above; the route data of this version has none yet.
 
 ## Window binding (Welle 5)
 
@@ -328,7 +328,7 @@ The windows (`Braindead4Ever/UI/`) read the logic only through the adapter `UI/C
 
 | Logic | What the window shows |
 | --- | --- |
-| `Route.Current`, `Upcoming`, `Balance`, `StepState` | step window: current step, next steps, XP line, "route falls short" note |
+| `Route.Current`, `Upcoming`, `Balance`, `StepState` | step window: current step, next steps, XP line, "route falls short" note; on the world map the trainer, innkeeper and flight master of a `train`, `sethome` or `fp` step with the tracking symbols `Class`, `Innkeeper`, `FlightMaster` |
 | `Route.Check`, `Skip`, `Back`, `Undo`, `LastAction`, `SkipPreview` | check box, right-click menu ("Undo: …"), skip dialog that names every follow-up quest |
 | `Route.Pending`, `AbandonPreview`, `ResolveAbandon` | abandoned quest: fail symbol and the two buttons |
 | `Route.Module` | clock symbol for provisional sections and its tooltip |

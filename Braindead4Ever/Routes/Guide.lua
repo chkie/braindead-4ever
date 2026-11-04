@@ -44,6 +44,11 @@ local Route = {
 	EVALUATE_DELAY = 0.1, -- quest events come in bursts; one evaluation per burst
 	JOB_BUDGET = 0.002, -- seconds of replanning per frame outside a fight (brain chapter 21 §6.2)
 	REMOVED_DELAY = 1, -- completion flag check after QUEST_REMOVED (Questie, chapter 06 §3)
+	TAXI_DELAY = 1, -- UnitOnTaxi after PLAYER_CONTROL_LOST (as Collector/Collect.lua)
+	HEARTHSTONE_SPELL = 8690, -- spell of the hearthstone, item 6948 (client data, brain chapter 14 §4.6)
+	-- C_Trainer.GetTrainerType: 0 general (class trainers), 2 professions, 3 pets (Forever UI source,
+	-- TrainerConstantsDocumentation); a `train` step is the class trainer, so 2 and 3 do not count
+	OTHER_TRAINER = { [2] = true, [3] = true },
 	SAVE_FORMAT = 1,
 }
 ns.Route = Route
@@ -61,6 +66,7 @@ local offer -- open question of the replanning (Routes/Replan.lua), or nil
 local driver -- frame whose OnUpdate runs the replanning job one slice per frame
 local lastXP, lastMax
 local lastActive -- GetTime() of the last game event; gaps up to Forecast.IDLE_CAP count as play
+local onTaxi = false -- on a flight since PLAYER_CONTROL_LOST (landing marks a `travel fly` step)
 
 -- Callbacks -------------------------------------------------------------------------------------
 
@@ -875,6 +881,8 @@ local function Init()
 		UnitPosition = "UnitPosition",
 		InCombatLockdown = "InCombatLockdown",
 		IsEliteQuest = "C_QuestLog.IsEliteQuest", -- Forever only (hardcore-safe mode)
+		UnitOnTaxi = "UnitOnTaxi",
+		GetTrainerType = "C_Trainer.GetTrainerType",
 	}) do
 		api[name] = M.Optional(path)
 	end
@@ -984,9 +992,51 @@ local events = {
 			rt:MarkEvent(R.VERB.FP)
 		end
 	end,
+	-- The flight map opens only at a flight master whose flight point the character knows (talking to
+	-- an unknown one teaches it first), so an `fp` step is done also when the point was known before.
+	TAXIMAP_OPENED = function()
+		if rt then
+			rt:MarkEvent(R.VERB.FP)
+		end
+	end,
 	HEARTHSTONE_BOUND = function()
 		if rt then
 			rt:MarkEvent(R.VERB.SETHOME)
+		end
+	end,
+	UNIT_SPELLCAST_SUCCEEDED = function(_, _, unit, _, spellID)
+		if rt and Str(unit) == "player" and Num(spellID) == Route.HEARTHSTONE_SPELL then
+			rt:MarkEvent(R.VERB.HS)
+		end
+	end,
+	TRAINER_SHOW = function()
+		if not rt then
+			return
+		end
+		local kind = api.GetTrainerType and Num(api.GetTrainerType())
+		if not (kind and Route.OTHER_TRAINER[kind]) then
+			rt:MarkEvent(R.VERB.TRAIN)
+		end
+	end,
+	PLAYER_CONTROL_LOST = function()
+		if not api.UnitOnTaxi then
+			return
+		end
+		C_Timer.After(
+			Route.TAXI_DELAY,
+			Guard.Wrap("route", function()
+				if api.UnitOnTaxi("player") == true then
+					onTaxi = true
+				end
+			end)
+		)
+	end,
+	PLAYER_CONTROL_GAINED = function()
+		if onTaxi then
+			onTaxi = false
+			if rt then
+				rt:MarkEvent(R.VERB.TRAVEL, 2) -- 2: travel fly
+			end
 		end
 	end,
 }
@@ -1018,6 +1068,8 @@ M.Define("route", {
 			"UnitPosition",
 			"InCombatLockdown",
 			"C_QuestLog.IsEliteQuest",
+			"UnitOnTaxi",
+			"C_Trainer.GetTrainerType",
 		},
 		events = {
 			"PLAYER_LOGOUT",
@@ -1032,6 +1084,11 @@ M.Define("route", {
 			"UPDATE_EXHAUSTION",
 			"UI_INFO_MESSAGE",
 			"HEARTHSTONE_BOUND",
+			"TAXIMAP_OPENED",
+			"UNIT_SPELLCAST_SUCCEEDED",
+			"TRAINER_SHOW",
+			"PLAYER_CONTROL_LOST",
+			"PLAYER_CONTROL_GAINED",
 		},
 	},
 	init = Init,

@@ -22,7 +22,7 @@ local COMBOS = {
 	},
 }
 
-local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3, TRAVEL = 6 }
+local V = { ACCEPT = 1, COMPLETE = 2, TURNIN = 3, TRAVEL = 6, HS = 7, SETHOME = 8, FP = 9, TRAIN = 10 }
 
 -- Plain copy, like SavedVariables written at logout and read at the next login: no shared tables.
 local function deepcopy(t)
@@ -115,9 +115,25 @@ local function play(step, opts)
 				wow.fire("QUEST_TURNED_IN", q, 100, 0)
 			end
 			wow.fire("QUEST_LOG_UPDATE")
+		elseif v == V.TRAVEL and el[2] == 2 then -- a flight: the client takes control, then lands
+			W.onTaxi = true
+			wow.fire("PLAYER_CONTROL_LOST")
+			wow.advance(1.5)
+			W.player.map = el[3]
+			W.onTaxi = false
+			wow.fire("PLAYER_CONTROL_GAINED")
+			wow.fire("ZONE_CHANGED_NEW_AREA")
 		elseif v == V.TRAVEL then
 			W.player.map = el[3]
 			wow.fire("ZONE_CHANGED_NEW_AREA")
+		elseif v == V.TRAIN then
+			wow.fire("TRAINER_SHOW")
+		elseif v == V.FP then
+			wow.fire("TAXIMAP_OPENED", 0)
+		elseif v == V.SETHOME then
+			wow.fire("HEARTHSTONE_BOUND")
+		elseif v == V.HS then
+			wow.fire("UNIT_SPELLCAST_SUCCEEDED", "player", "Cast-1", 8690)
 		end
 	end
 	wow.advance(1.5)

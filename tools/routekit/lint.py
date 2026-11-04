@@ -294,7 +294,10 @@ def lint_module(mod, facts):
                     E("karte", line, "Punkt %.1f,%.1f liegt nicht auf uiMap %d (Achsen vertauscht?)" % (wx, wy, m))
                 if ext:
                     cands = [p for qq in step_quests for p in facts.positions(qq)]
-                    cands += facts.service_positions({e.verb for e in st.elements}, faction)
+                    verbs = {e.verb for e in st.elements}
+                    if any(e.verb == "travel" and e.args.get("how") == "fly" for e in st.elements):
+                        verbs.add("fp")  # a flight lands at the flight master of a flight point
+                    cands += facts.service_positions(verbs, faction)
                     ok = any(
                         zone_key(p[0]) == zone_key(m) and geo.dist((p[2], p[1]), (wy, wx)) <= AGREE_YARDS and set(ext) <= p[3]
                         for p in cands
