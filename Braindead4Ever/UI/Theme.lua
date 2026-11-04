@@ -50,6 +50,10 @@ T.ATLAS = {
 	minipin = "Waypoint-MapPin-Minimap-Tracked", -- 32x32
 	giver = "QuestNormal", -- 64x64
 	turnin = "QuestTurnin", -- 32x32
+	-- hint steps (A35): the minimap tracking symbols, 32x32 each (AtlasInfo forever)
+	trainer = "Class",
+	innkeeper = "Innkeeper",
+	flightmaster = "FlightMaster",
 	-- hint level 2 on the map (Welle 5b): gold ring of Blizzard's scouting map and a white disc tinted gold
 	area = "UI-prey-Scoutingmap-ring", -- 37x37 (74x74 high resolution)
 	areafill = "common-mask-circle", -- 256x256

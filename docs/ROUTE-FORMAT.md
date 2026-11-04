@@ -247,7 +247,7 @@ Run per file and per combination (56 combinations, both modes). Each error has a
 | `syntax`, `kopf`, `schritt` | syntax, required header lines, unique step IDs, no empty step |
 | `herkunft` | every element names its sources (`src=`) |
 | `quelle` | only sources allowed by FD-1101; data elements need a data source |
-| `beleg` | the named sources really hold the quest (data/facts), and a `goto` lies within 10 yards of a position those sources give for a quest of the step, or, in a step with `train`, `sethome` or `fp`, for a class trainer, innkeeper or flight master (or flight point) whose side is not the other faction |
+| `beleg` | the named sources really hold the quest (data/facts), and a `goto` lies within 10 yards of a position those sources give for a quest of the step, or, in a step with `train`, `sethome`, `fp` or `travel fly` (the flight lands at a flight master), for a class trainer, innkeeper or flight master (or flight point) whose side is not the other faction |
 | `status` | status given; `bestätigt` only with `own` |
 | `label` | no section is `stabil` without measurements |
 | `sperrliste` | block list in notes and `#text`: typical AI phrases (for example "tauche ein", "nahtlos", "mühelos", "episch"), exclamation marks, emoji |

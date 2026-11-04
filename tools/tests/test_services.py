@@ -258,6 +258,13 @@ class GotoBackedByServiceNpcs(unittest.TestCase):
         text = ROUTE.replace("-120.5,-8880.0", "-100.0,-8800.0").replace("src=polestar status", "src=att status").replace("train |", "fp |")
         self.assertEqual([], self.errs(text, []))
 
+    def test_flight_point_backs_the_landing_of_a_flight(self):
+        # a flight lands at the flight master: `travel fly` backs the goto like `fp`; a walk does not
+        at_point = ROUTE.replace("-120.5,-8880.0", "-100.0,-8800.0").replace("src=polestar status", "src=att status")
+        fly = at_point.replace("  train | src=plan status=unbestätigt", "  travel fly 1429 | src=plan status=unbestätigt")
+        self.assertEqual([], self.errs(fly, []))
+        self.assertEqual(1, len(self.errs(fly.replace("travel fly", "travel walk"), [])))
+
 
 if __name__ == "__main__":
     unittest.main()

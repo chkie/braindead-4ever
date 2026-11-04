@@ -17,6 +17,7 @@ Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 - The step tooltip and the Credits page say "open game data" for imported quest and map data; credits and licences are in the file NOTICE.
 - Optional automation, off by default: one switch on the main settings page accepts and hands in the quests of the route when you talk to the NPC and takes the reward when there is no choice. Other quests, other dialog options and quests with several rewards stay yours; hold Shift to pause it for a dialog. It never acts in a fight, and in the hardcore-safe mode it takes no quest the route warns about.
 - Flight connections and the times of flights without a stop are now shared with other players of Braindead 4ever, as flight point IDs and seconds only, within the existing limit of the hidden channel.
+- Ready for trainer, hearthstone, flight point and flight steps: a step checks itself off when you open your class trainer, set or use your hearthstone, open the flight map or land after a flight, and the world map marks trainer, innkeeper and flight master with the game's own symbols. The routes take these steps up in a later update.
 
 ## 0.9.0 (2026-11-03)
 

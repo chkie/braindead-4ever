@@ -23,7 +23,9 @@ of the Ace3 libraries used as well as that of the covered work.
 
 -- UI/MapPins.lua: module "mappins" (design v2, view 2 "Karte"): the second channel next to the arrow.
 -- World map: Blizzard's own symbols only (owner reading 7): Waypoint-MapPin-Tracked for the current
--- goal, QuestNormal for quest givers and QuestTurnin for turn-ins of the current and the next steps;
+-- goal, QuestNormal for quest givers and QuestTurnin for turn-ins of the current and the next steps,
+-- Class, Innkeeper and FlightMaster (the minimap tracking symbols) for trainer, hearthstone and flight
+-- point steps;
 -- discovery items of Welle 4 through ns.Connect (own finds with a check, revealed finds as a pin).
 -- Hint level 2 (Welle 5b): the area of a find as a circle in Blizzard's atlases (gold ring of the
 -- scouting map over a faint gold disc), sized in map units and scaling with the terrain, tooltip "Area"
@@ -40,7 +42,7 @@ local V = R.VERB
 
 local P = {
 	TEMPLATE = ADDON .. "PinTemplate",
-	SIZE = { pin = 30, giver = 28, turnin = 22, check = 19 },
+	SIZE = { pin = 30, giver = 28, turnin = 22, check = 19, trainer = 22, innkeeper = 22, flightmaster = 22 },
 	AREA_ALPHA = 0.18, -- the gold disc under the ring (chosen value)
 	MINI_SIZE = 20,
 	MINI_EVERY = 0.1,
@@ -48,6 +50,8 @@ local P = {
 ns.MapPins = P
 
 local points = {} -- world points: { map, wx, wy, kind, title }
+-- Trainer, innkeeper and flight master of a hint step (A35): Blizzard's tracking symbols.
+local SERVICE = { [V.TRAIN] = "trainer", [V.SETHOME] = "innkeeper", [V.FP] = "flightmaster" }
 local provider
 local mini -- minimap pin frame
 
@@ -63,7 +67,7 @@ local function Add(t, kind, title)
 	end
 end
 
--- Current goal, givers and turn-ins of the current and the next steps, a revealed find.
+-- Current goal, givers, turn-ins and service NPCs of the current and the next steps, a revealed find.
 function P.Collect()
 	for i = #points, 1, -1 do
 		points[i] = nil
@@ -89,6 +93,9 @@ function P.Collect()
 					break
 				elseif el[1] == V.TURNIN then
 					Add(t, "turnin", title)
+					break
+				elseif SERVICE[el[1]] then
+					Add(t, SERVICE[el[1]], title)
 					break
 				end
 			end
