@@ -45,16 +45,13 @@ describe("CREDITS.md", function()
 		end
 	end)
 
-	it("names every source of the Credits page with the same licence", function()
-		local n = 0
-		for name, licence in L.CREDITS_SOURCES:gmatch("([^•]-)%s*%(([^)]+)%)") do
-			name = name:match("^%s*(.-)%s*$")
-			n = n + 1
-			local row = text:match("\n| [^\n]*" .. name:gsub("%p", "%%%0") .. "[^\n]*")
-			assert.is_string(row, "missing in CREDITS.md: " .. name)
-			assert.matches(licence, row, 1, true)
+	-- The interface names no other addon (owner 04.11.2026): the Credits page points to NOTICE, and
+	-- the credits the licences ask for stay in NOTICE and CREDITS.md, which ship in the package.
+	it("the Credits page names no source project and points to NOTICE", function()
+		for _, name in ipairs({ "Polestar", "EG Link", "All The Things", "ATT" }) do
+			assert.is_nil(L.CREDITS_SOURCES:find(name, 1, true), name)
 		end
-		assert.are.equal(3, n)
+		assert.matches("NOTICE", L.CREDITS_SOURCES, 1, true)
 	end)
 
 	it("has the licence line without warranty, the library line and the trademark line", function()

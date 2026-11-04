@@ -223,7 +223,7 @@ describe("Settings", function()
 		assert.are.equal("TOPRIGHT", ns.StepFrame.frame.points[1][1])
 	end)
 
-	it("Credits name licence, data sources with licences and the trademark line", function()
+	it("Credits name the licence, point to NOTICE for the data sources and carry the trademark line", function()
 		local ns = S.login()
 		local texts = {}
 		for _, f in ipairs(wow.frames) do
@@ -233,12 +233,8 @@ describe("Settings", function()
 		end
 		local all = table.concat(texts, "\n")
 		assert.matches("GNU General Public License 3.0, without warranty", all, 1, true)
-		assert.matches(
-			"All The Things (MIT) • EG Link (CC BY 4.0) • Polestar forever-db (GPL-3.0-only)",
-			all,
-			1,
-			true
-		)
+		assert.matches("Credits and licences: the file NOTICE in the addon folder.", all, 1, true)
+		assert.is_nil(all:find("Polestar", 1, true))
 		assert.matches("Not affiliated with Blizzard Entertainment", all, 1, true)
 	end)
 

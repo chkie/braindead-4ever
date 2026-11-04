@@ -117,15 +117,13 @@ describe("Step window", function()
 		assert.are.equal("“Wolves Across the Border”", lines[1])
 		assert.matches("^Step 1 of %d+$", lines[2])
 		assert.are.equal("Where the data comes from", lines[3])
-		assert.are.equal("Quest giver: ATT and Polestar forever-db, unconfirmed", lines[4])
-		assert.are.equal("Location: ATT and Polestar forever-db, unconfirmed", lines[5])
+		-- no other addon by name (owner 04.11.2026): the game data projects show as "open game data"
+		assert.are.equal("Quest giver: open game data, unconfirmed", lines[4])
+		assert.are.equal("Location: open game data, unconfirmed", lines[5])
 		W.clock.scripts.OnEnter(W.clock)
 		lines = wow.world.tooltip.lines
 		assert.are.equal("Provisional", lines[1])
-		assert.matches(
-			"^Too few own runs for this section so far %(0%)%. The data comes from ATT.*Polestar forever%-db%.$",
-			lines[2]
-		)
+		assert.matches("^Too few own runs for this section so far %(0%)%. Source: open game data%.$", lines[2])
 	end)
 
 	describe("done", function()
