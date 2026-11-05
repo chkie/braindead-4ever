@@ -8,10 +8,9 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
-## 0.9.2 (unreleased)
+## 0.9.2 (2026-11-05)
 
-- Routes: every prerequisite is now checked against a second source before a quest is left out. Starting zone quests that were wrongly held back come back, for example "Cutting Teeth" in the Valley of Trials together with "Sting of the Scorpid", "Galgar's Cactus Apple Surprise" and the class letters.
-- When the quest giver of the current step does not offer its quest yet, the route no longer waits: it sets the quest aside with its follow-ups, says so in the step window and takes it back as soon as an NPC offers it or you accept it anyway.
+- When the quest giver of the current step does not offer its quest although the route expects it (the quests before it are handed in), the route no longer waits: it sets the quest aside with its follow-ups, says so in the step window and takes it back as soon as an NPC offers it or you accept it anyway. This covers quests whose prerequisites in the open data are wrong, for example "The Adventurer" and "Tomb Weed" in Tirisfal Glades and "Stormy Potential" and "Forgotten Loa Idols" in Durotar.
 - The step window names an XP shortfall only near the end of a zone. At level 1 it counted the whole starting zone as grinding.
 
 ## 0.9.1 (2026-11-04)
@@ -40,4 +39,5 @@ Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 ## Known issues
 
 - The routes are computed from open data and not played yet; every section is marked as provisional until our own runs replace it.
+- The Speed routes leave out some quests in the starting zones that the quest givers offer, for example "Cutting Teeth" in the Valley of Trials. Corrected routes follow with the next update.
 - Braindead 4ever could not be tested in the Forever client before the start. If a part fails, it turns off and the rest keeps running; after two failed starts the safe mode keeps the core running.

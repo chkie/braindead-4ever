@@ -691,10 +691,39 @@ end
 -- prerequisite or a level, and a step the game does not offer must not hold the route. The quest is set
 -- aside like a skip (its follow-up quests with it) and comes back as soon as an NPC offers it (Offered)
 -- or the player takes it (OnAccepted). Undo and Back work as for a skip.
+-- Only when the game should offer it by the route's own data: every prerequisite group has a quest
+-- handed in, and no turn-in before it in its step is still open (a chain at the same NPC lists the
+-- next quest only after the hand-in, so its absence before that says nothing).
+function RT:Expected(q)
+	local w = self.world
+	for _, group in ipairs(self:Groups(q)) do
+		local any = #group == 0
+		for _, m in ipairs(group) do
+			if w.IsFlagged(m) then
+				any = true
+				break
+			end
+		end
+		if not any then
+			return false
+		end
+	end
+	local i = self.accepts[q]
+	for _, el in ipairs(i and self.steps[i].els or NONE) do
+		if el[1] == V.ACCEPT and el[2] == q then
+			break
+		end
+		if el[1] == V.TURNIN and not w.IsFlagged(el[2]) then
+			return false
+		end
+	end
+	return true
+end
+
 function RT:NotOffered(q)
 	local s, w = self.saved, self.world
 	local i = self.accepts[q]
-	if not i or s.roots[q] or w.IsFlagged(q) or w.InLog(q) then
+	if not i or s.roots[q] or w.IsFlagged(q) or w.InLog(q) or not self:Expected(q) then
 		return false
 	end
 	self:Push("notoffered", self.steps[i].key, q)
