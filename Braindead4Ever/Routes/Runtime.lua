@@ -686,6 +686,74 @@ function RT:Skip(key)
 	return true
 end
 
+-- Not offered (owner 2026-11-05, first game test): the giver of an accept in the current part of the
+-- route listed its quests and this one was not among them. The open data can be wrong about a
+-- prerequisite or a level, and a step the game does not offer must not hold the route. The quest is set
+-- aside like a skip (its follow-up quests with it) and comes back as soon as an NPC offers it (Offered)
+-- or the player takes it (OnAccepted). Undo and Back work as for a skip.
+-- Only when the game should offer it by the route's own data: every prerequisite group has a quest
+-- handed in, and no turn-in before it in its step is still open (a chain at the same NPC lists the
+-- next quest only after the hand-in, so its absence before that says nothing).
+function RT:Expected(q)
+	local w = self.world
+	for _, group in ipairs(self:Groups(q)) do
+		local any = #group == 0
+		for _, m in ipairs(group) do
+			if w.IsFlagged(m) then
+				any = true
+				break
+			end
+		end
+		if not any then
+			return false
+		end
+	end
+	local i = self.accepts[q]
+	for _, el in ipairs(i and self.steps[i].els or NONE) do
+		if el[1] == V.ACCEPT and el[2] == q then
+			break
+		end
+		if el[1] == V.TURNIN and not w.IsFlagged(el[2]) then
+			return false
+		end
+	end
+	return true
+end
+
+function RT:NotOffered(q)
+	local s, w = self.saved, self.world
+	local i = self.accepts[q]
+	if not i or s.roots[q] or w.IsFlagged(q) or w.InLog(q) or not self:Expected(q) then
+		return false
+	end
+	self:Push("notoffered", self.steps[i].key, q)
+	s.roots[q] = self.steps[i].key
+	s.deferred = type(s.deferred) == "table" and s.deferred or {}
+	s.deferred[q] = true
+	self:Changed("notoffered")
+	self.notify("NotOffered", q) -- after the step change, which clears the window's message
+	return true
+end
+
+-- An NPC offers a quest the route set aside as not offered: it is back in the route.
+function RT:Offered(q)
+	local s = self.saved
+	if not (type(s.deferred) == "table" and s.deferred[q]) then
+		return false
+	end
+	s.deferred[q] = nil
+	if s.roots[q] then
+		s.roots[q] = nil
+		-- The player stands at the NPC that offers it now: its step is the current one again.
+		local i = self.accepts[q]
+		if i and self.cur and i < self.cur then
+			s.anchor = self.steps[i].key
+		end
+		self:Changed("offered")
+	end
+	return true
+end
+
 -- Quests that skipping the given quests would take with them (not the quests themselves), sorted.
 -- Changes nothing: the roots are added for the computation and removed again.
 function RT:FollowUps(list)
@@ -819,6 +887,9 @@ function RT:OnAccepted(q)
 	if self.saved.pending == q then
 		self.saved.pending = nil
 	end
+	if self:Offered(q) then
+		return true
+	end
 	return self:Evaluate()
 end
 
@@ -932,7 +1003,15 @@ function RT:Balance()
 			break
 		end
 	end
-	local zone = { endIndex = j - 1, nextMap = self.steps[j].travel, nextLevel = nextLevel, routeXP = routeXP }
+	-- stepsLeft: steps from the current one to the zone end; the step window names a shortfall only
+	-- near the end (owner 2026-11-05: at level 1 the line counted the whole start zone as grinding).
+	local zone = {
+		endIndex = j - 1,
+		stepsLeft = j - i,
+		nextMap = self.steps[j].travel,
+		nextLevel = nextLevel,
+		routeXP = routeXP,
+	}
 	b.zone = zone
 	local needed = nextLevel and XP.Needed(level, xp, xpMax, nextLevel)
 	if needed then

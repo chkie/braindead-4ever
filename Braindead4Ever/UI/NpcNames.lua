@@ -165,6 +165,14 @@ function N.Giver(q)
 	return Lookup("giver", 1, q)
 end
 
+-- NPC ID of the single quest giver of a quest (Routes/Data_Npcs.lua), or nil. Not tied to the module
+-- state: the route uses it to see whether an NPC that lists its quests is the giver (Route.Offers).
+function N.GiverID(q)
+	local f = q and Facts()
+	f = f and f[q]
+	return f and f[1] and f[1] > 0 and f[1] or nil
+end
+
 -- Name of the NPC that takes the quest, or nil.
 function N.TurnIn(q)
 	return Lookup("turnin", 3, q)

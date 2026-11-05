@@ -401,9 +401,19 @@ end
 -- "The route falls short of Westfall …" when the route to the next zone does not reach its level.
 -- Without a name for the zone (the client does not know the map) the sentence names no zone instead of
 -- a placeholder (Welle 5d, M8: "bis ?").
+-- Only near the zone end (owner 2026-11-05): at level 1 the balance counts only hand-in XP of the whole
+-- zone and converts the rest into enemies of the current level, which overstated the grinding many
+-- times. Near the end the quest kills are behind the player and the current level is the one he grinds at.
+ST.REACH_STEPS = 5 -- chosen: shown from this many steps before the zone end
+ST.REACH_LEVELS = 2 -- chosen: or from this many levels below the level planned for the next zone
 function ST.Reach(b)
 	local z = b and b.zone
 	if not z or z.enough ~= false or not z.shortfall or z.shortfall <= 0 then
+		return nil
+	end
+	local near = (z.stepsLeft and z.stepsLeft <= ST.REACH_STEPS)
+		or (z.nextLevel and b.level and b.level >= z.nextLevel - ST.REACH_LEVELS)
+	if not near then
 		return nil
 	end
 	local shortfall, kills = ns.Theme.Number(z.shortfall), ns.Theme.Number(z.kills or 0)
