@@ -168,6 +168,18 @@ describe("Exchange: sending", function()
 		assert.are.equal(1, #sent("PARTY"))
 	end)
 
+	-- Live Forever 70790 (probe 05.11.2026): the flag was true outside any fight and the exchange never
+	-- tried to send. The result of SendAddonMessage decides, the flag is only counted.
+	it("tries to send although the outgoing flag is set, and counts the flag", function()
+		local _, X = start()
+		wow.world.group.party = true
+		wow.world.outgoingRestricted = true
+		loot()
+		wow.advance(5)
+		assert.are.equal(1, #sent("PARTY"))
+		assert.is_true((X.stats.flagged or 0) > 0)
+	end)
+
 	it("never sends from a trial or veteran account", function()
 		for _, field in ipairs({ "trial", "veteran" }) do
 			start()

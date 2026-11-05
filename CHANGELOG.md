@@ -8,6 +8,10 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.3 (2026-11-05)
+
+- Sharing in the game works again: since the start, Braindead 4ever sent nothing to your group, guild or the hidden channel, because it trusted a client flag that reports chat for addons as restricted on normal realms. It now tries to send and goes by the server's answer.
+
 ## 0.9.2 (2026-11-05)
 
 - When the quest giver of the current step does not offer its quest although the route expects it (the quests before it are handed in), the route no longer waits: it sets the quest aside with its follow-ups, says so in the step window and takes it back as soon as an NPC offers it or you accept it anyway. This covers quests whose prerequisites in the open data are wrong, for example "The Adventurer" and "Tomb Weed" in Tirisfal Glades and "Stormy Potential" and "Forgotten Loa Idols" in Durotar.

@@ -495,13 +495,14 @@ local CHECKS = {
 			end
 			table.sort(results)
 			return true,
-				("offered %d sent %d received %d confirmed %d dropped %d bad %d queue %d results %s"):format(
+				("offered %d sent %d received %d confirmed %d dropped %d bad %d flagged %d queue %d results %s"):format(
 					s.offered,
 					s.sent,
 					s.received,
 					s.confirmed,
 					s.dropped,
 					s.bad,
+					s.flagged or 0,
 					#X.queue,
 					table.concat(results, ",")
 				)
