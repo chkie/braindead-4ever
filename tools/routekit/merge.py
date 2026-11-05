@@ -12,6 +12,13 @@ Rules (DR 20 §5, decided and revisable; documented in docs/ROUTE-FORMAT.md §Fa
   different set, or for a Classic quest (ID < 70000) when no root states any (the Classic
   databases behind Polestar list chains completely). A new quest no root gives a
   prerequisite for has the state "unknown" and stays out of the Speed route.
+- Cross-check (data/sources/check/prereq.jsonl, owner 2026-11-05: nothing unchecked): a
+  prerequisite group a root states is dropped before the decision when the check refutes it
+  (Classic quest, the reference lists no ID of the group); the record keeps it under
+  `pre.refuted`. A quest whose stated groups are all refuted counts as having none.
+- Game findings (data/sources/check/findings.jsonl): a prerequisite seen in the game is added
+  (`src` "finding"); a quest the game did not offer for an unknown reason is held (`held`) and
+  stays out of every route.
 - Our own observations (data/sources/own/prereq.jsonl, written by `observe` from player
   exports) count as the root "own": confirmed prerequisites like a stated set, a confirmed
   "none" secures a quest that no other root states anything for.
@@ -51,9 +58,38 @@ def _load_own():
     return {r["q"]: r for r in read_jsonl(path)} if os.path.exists(path) else {}
 
 
+def _load_check():
+    """Refuted prerequisite groups per quest and root: {quest: {root: [[id, ...], ...]}}."""
+    path = repo_path("data", "sources", "check", "prereq.jsonl")
+    if not os.path.exists(path):
+        return {}
+    return {r["q"]: r.get("refuted", {}) for r in read_jsonl(path)}
+
+
+def _load_findings():
+    """Game findings (data/sources/check/findings.jsonl): {quest: {"add": [[id]], "hold": text, "ref": text}}."""
+    path = repo_path("data", "sources", "check", "findings.jsonl")
+    if not os.path.exists(path):
+        return {}
+    return {r["q"]: r for r in read_jsonl(path)}
+
+
+def apply_finding(pre, f):
+    """A finding seen in the game outranks the sources: "add" puts prerequisite groups on top of the
+    stated ones (secured); "hold" keeps the quest out of every route until a later finding clears it."""
+    if not f:
+        return pre, None
+    if f.get("add"):
+        have = {tuple(sorted(g)) for g in pre.get("v", [])}
+        v = [list(g) for g in pre.get("v", [])] + [sorted(g) for g in f["add"] if tuple(sorted(g)) not in have]
+        pre = dict(pre, v=v, state="secured", src=sorted(set(pre.get("src", [])) | {"finding"}), finding=f.get("ref", ""))
+    held = {"why": f["hold"]} if f.get("hold") else None
+    return pre, held
+
+
 def _sources():
     out = {}
-    for src in ("polestar", "att", "eglink", "own"):
+    for src in ("polestar", "att", "eglink", "own", "check"):
         p = repo_path("data", "sources", src, "SOURCE.json")
         if os.path.exists(p):
             out[src] = read_json(p)
@@ -166,13 +202,20 @@ def _pre_groups(rec, src, breadcrumbs):
     return sorted(set(groups))
 
 
-def prereq_state(p, a, o, breadcrumbs, is_new, silent):
+def prereq_state(p, a, o, breadcrumbs, is_new, silent, refuted=None):
     """Prerequisite field of one quest from the Polestar record p, the ATT record a and our own
     observation o (data/sources/own/prereq.jsonl). silent: both Polestar and ATT are silent in a
     band where silence counts (see run)."""
     stated = []
+    dropped = {}
     for s, r in (("polestar", p), ("att", a)):
         g = _pre_groups(r, s, breadcrumbs)
+        bad = {tuple(sorted(x)) for x in (refuted or {}).get(s, [])}
+        if g and bad:
+            kept = [grp for grp in g if tuple(sorted(grp)) not in bad]
+            if len(kept) < len(g):
+                dropped[s] = [list(grp) for grp in g if tuple(sorted(grp)) in bad]
+            g = kept
         if g is not None and g:
             stated.append((s, g))
     if o and o.get("pre"):
@@ -190,7 +233,11 @@ def prereq_state(p, a, o, breadcrumbs, is_new, silent):
         pre = {"v": [list(g) for g in v], "src": agree, "state": state}
         if state == "conflict":
             pre["alt"] = {s: [list(g) for g in grp] for s, grp in stated if s not in agree}
+        if dropped:
+            pre["refuted"] = dropped
         return pre
+    if dropped:
+        return {"v": [], "src": sorted(dropped), "state": "secured", "basis": "check-refuted", "refuted": dropped}
     if o and o.get("basis") == "observed-none":
         return {"v": [], "src": ["own"], "state": "secured", "basis": "observed-none"}
     if not is_new and p is not None:
@@ -203,6 +250,8 @@ def prereq_state(p, a, o, breadcrumbs, is_new, silent):
 def run():
     ps, att, eg = _load("polestar"), _load("att"), _load("eglink")
     own = _load_own()
+    check = _load_check()
+    findings = _load_findings()
     frames = geo.Frames(read_jsonl(repo_path("data", "sources", "polestar", "ui_map.jsonl")))
     sources = _sources()
 
@@ -399,7 +448,10 @@ def run():
         breadcrumbs = att_breadcrumbs | ps_breadcrumb_links.get(q, set())
         o = own.get(q)
         silent = p is not None and a is not None and level is not None and silence_counts(level)
-        pre = prereq_state(p, a, o, breadcrumbs, rec["new"], silent)
+        pre = prereq_state(p, a, o, breadcrumbs, rec["new"], silent, check.get(q))
+        pre, held = apply_finding(pre, findings.get(q))
+        if held:
+            rec["held"] = held
         bc = sorted(breadcrumbs & ({x for r in (p, a) if r for x in (r.get("pre") or {}).get("all", []) + (r.get("pre") or {}).get("any", []) + (r.get("pre") or {}).get("bc", [])}))
         if bc:
             pre["breadcrumbs"] = bc

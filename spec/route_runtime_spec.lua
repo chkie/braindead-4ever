@@ -156,6 +156,54 @@ describe("Route runtime", function()
 		assert.are.equal("c", rt.saved.marks["m-test/aA"])
 	end)
 
+	-- Owner 2026-11-05: the giver did not offer the quest of the step (wrong prerequisite in the open
+	-- data); the route must go on and take the quest back when it is offered.
+	it("sets aside a quest its giver does not offer, with its follow-ups, and takes it back when offered", function()
+		local rt = fresh()
+		local events = {}
+		rt.notify = function(event, x)
+			events[#events + 1] = { event, x }
+		end
+		assert.are.equal("aA", rt:Current().id)
+		assert.is_true(rt:NotOffered(A))
+		assert.are.same({ "NotOffered", A }, events[#events])
+		assert.are.equal("aD", rt:Current().id, "the route goes on")
+		local blocked = rt:Blocked()
+		assert.is_true(blocked[A])
+		assert.is_true(blocked[B], "B needs A")
+		assert.is_false(rt:NotOffered(A), "only once")
+		assert.is_true(rt:Offered(A))
+		assert.is_nil(rt:Blocked()[A])
+		assert.are.equal("aA", rt:Current().id, "back in the route")
+		assert.is_false(rt:Offered(A), "nothing set aside any more")
+	end)
+
+	it("takes a set-aside quest back when the player accepts it anyway", function()
+		local rt, w = fresh()
+		rt:NotOffered(A)
+		w:accept(A)
+		rt:OnAccepted(A)
+		assert.is_nil(rt:Blocked()[A])
+		assert.is_nil(rt.saved.deferred[A])
+	end)
+
+	it("never sets aside a quest in the log, handed in or not in the route", function()
+		local rt, w = fresh()
+		w:accept(A)
+		assert.is_false(rt:NotOffered(A))
+		w:turnin(A)
+		assert.is_false(rt:NotOffered(A))
+		assert.is_false(rt:NotOffered(123456))
+	end)
+
+	it("undo brings a set-aside quest back", function()
+		local rt = fresh()
+		rt:NotOffered(A)
+		assert.are.equal("notoffered", rt:LastAction().kind)
+		assert.is_true(rt:Undo())
+		assert.is_nil(rt:Blocked()[A])
+	end)
+
 	it("skips a quest together with every quest that needs it, over three quests", function()
 		local rt, w = fresh()
 		local recalculated
@@ -323,6 +371,7 @@ describe("Route runtime", function()
 		-- planned level after the travel is 7: 1100 (to 5) + 2800 (5) + 3600 (6) = 7500
 		assert.are.equal(7, b.zone.nextLevel)
 		assert.are.equal(1436, b.zone.nextMap)
+		assert.are.equal(b.zone.endIndex - rt.cur + 1, b.zone.stepsLeft)
 		assert.are.equal(7500, b.zone.needed)
 		assert.is_false(b.zone.enough)
 		assert.are.equal(6090, b.zone.shortfall)

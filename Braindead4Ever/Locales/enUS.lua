@@ -211,6 +211,7 @@ L.SKIP_FOLLOW = "Skip with follow-ups"
 L.SKIP = "Skip"
 L.SKIP_ASK = "Skip %s? These follow-up quests are skipped too:"
 L.SKIPPED_0 = "%s skipped. Route recalculated."
+L.NOT_OFFERED = "%s is not offered here yet. The route goes on and comes back to it once it is offered."
 L.SKIPPED_1 = "%s and 1 follow-up quest skipped. Route recalculated."
 L.SKIPPED_N = "%s and %d follow-up quests skipped. Route recalculated."
 -- Replanning (Welle 7)

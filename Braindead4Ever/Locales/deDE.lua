@@ -194,6 +194,8 @@ L.SKIP_FOLLOW = "Mit Folgequests überspringen"
 L.SKIP = "Überspringen"
 L.SKIP_ASK = "%s überspringen? Damit entfallen auch diese Folgequests:"
 L.SKIPPED_0 = "%s übersprungen. Route neu berechnet."
+L.NOT_OFFERED =
+	"%s wird hier noch nicht angeboten. Die Route geht weiter und holt die Quest nach, sobald sie angeboten wird."
 L.SKIPPED_1 = "%s und 1 Folgequest übersprungen. Route neu berechnet."
 L.SKIPPED_N = "%s und %d Folgequests übersprungen. Route neu berechnet."
 L.OVER_ASK = "Du bist %d Stufen über dem Plan. Route anpassen?"

@@ -40,6 +40,7 @@ Only these sources may provide data (decision FD-1101 of 2026-11-01):
 | --- | --- | --- | --- |
 | `polestar` | Polestar forever-db, tables only (not the Polestar guides) | GPL-3.0-only | quests, levels, races and classes, givers, turn-ins, prerequisites, objectives, spawn points, map frames; service NPCs (role and class from the title, faction template, spawn points) |
 | `att` | All The Things, Forever database | MIT | givers, coordinates, prerequisites, races, classes, required level; flight points with their flight master |
+| `check` | cross-check of stated prerequisites (`data/sources/check/SOURCE.json`) | – | only our own quest IDs: which prerequisite group of which root is refuted; no data of the reference |
 | `eglink` | EG Link output (Efficient Games) | CC BY 4.0 | measured giver and turn-in positions, faction per quest, levels and race mask, start positions; service NPCs (window opened, side, where players stood), flights (flight points of each trip, flight seconds) |
 | `own` | our own measurements | GPL-3.0-or-later | everything, once the data collector delivers |
 | `plan` | route logic written by the team | GPL-3.0-or-later | travel steps, notes, planned levels; never IDs or coordinates |
@@ -56,7 +57,7 @@ Rules applied by `merge` (decided 2026-11-01, revisable):
 
 1. **Roots.** `polestar`, `att` and `eglink` count as separate roots. For a new quest (ID 70000 and above) Polestar and EG Link agreeing count as one root, because Polestar takes part of its new-quest data from EG Link.
 2. **Positions.** EG Link (measured) wins over Polestar (spawn point) over ATT (map percent). Positions agree within 10 yards. On the four maps whose frame changed in Forever (Mulgore 1412, Eastern Plaguelands 1423, Redridge Mountains 1433, Stormwind City 1453) map-percent coordinates are not used. The zone of a bare world point is the zone frame that contains it, preferring the quest's ATT zone and then the zone most quests of the same Polestar `zone_area` were measured in.
-3. **Prerequisites.** Groups of quest IDs; one ID per group is enough. Breadcrumb quests are never required. The state is
+3. **Prerequisites.** Groups of quest IDs; one ID per group is enough. Breadcrumb quests are never required. Before the decision, groups listed in `data/sources/check/prereq.jsonl` are dropped: a group one root states for a Classic quest, which our other root lists without it and a reference database does not know as a prerequisite either (two against one). The record keeps them under `pre.refuted` (basis `check-refuted` when none is left). The state is
    - `secured` when at least one root states the prerequisites and no root states something else (a root that names a subset agrees), or when a Classic quest (ID below 70000) has none in any root, or when a new quest has none in both Polestar and ATT in a level band where both roots state prerequisites for at least half of the new quests they list (measured: levels 1 to 10 only, see `data/facts/FACTS.json`);
    - `conflict` when roots state different prerequisites;
    - `unknown` otherwise.

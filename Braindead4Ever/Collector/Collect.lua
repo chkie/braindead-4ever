@@ -311,6 +311,9 @@ local function Listed(greeting)
 	end
 	listing = { k = k, id = id, at = GetTime(), set = set }
 	local Route = ns.Route
+	if Route and Route.Offers then
+		Route.Offers(k, id, set) -- a quest the giver does not offer must not hold the route
+	end
 	if not (Route and Route.Wants) then
 		return
 	end

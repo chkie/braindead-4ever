@@ -8,6 +8,12 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.2 (unreleased)
+
+- Routes: every prerequisite is now checked against a second source before a quest is left out. Starting zone quests that were wrongly held back come back, for example "Cutting Teeth" in the Valley of Trials together with "Sting of the Scorpid", "Galgar's Cactus Apple Surprise" and the class letters.
+- When the quest giver of the current step does not offer its quest yet, the route no longer waits: it sets the quest aside with its follow-ups, says so in the step window and takes it back as soon as an NPC offers it or you accept it anyway.
+- The step window names an XP shortfall only near the end of a zone. At level 1 it counted the whole starting zone as grinding.
+
 ## 0.9.1 (2026-11-04)
 
 - Sharper arrow: its own high-resolution arrowhead with a notch, so the tip is clear at every angle. Same colors as before.

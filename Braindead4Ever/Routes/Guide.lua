@@ -40,6 +40,7 @@ local Route = {
 		XPBalance = true,
 		QuestAbandoned = true,
 		OfferChanged = true,
+		NotOffered = true, -- the giver did not offer the quest of the step (Route.Offers)
 	},
 	EVALUATE_DELAY = 0.1, -- quest events come in bursts; one evaluation per burst
 	JOB_BUDGET = 0.002, -- seconds of replanning per frame outside a fight (brain chapter 21 §6.2)
@@ -788,6 +789,36 @@ function Route.DialogQuests()
 			i = i + 1
 		end
 		return out
+	end)
+end
+
+-- An NPC listed the quests it offers (GOSSIP_SHOW, QUEST_GREETING; Collector/Collect.lua). kind and id
+-- name the NPC (Util.Ref: "c" for a creature), set holds the offered quest IDs. A quest the route set
+-- aside comes back when it is offered; an accept of the current part of the route whose giver this NPC
+-- is and which it does not offer is set aside (RT:NotOffered). Only creatures with a known single giver
+-- (Routes/Data_Npcs.lua): a quest box or a poster lists nothing.
+function Route.Offers(kind, id, set)
+	return Call(function()
+		if type(set) ~= "table" then
+			return false
+		end
+		local changed = false
+		for q in pairs(set) do
+			if rt:Offered(q) then
+				changed = true
+			end
+		end
+		local Names = ns.NpcNames
+		if kind ~= "c" or not id or not (Names and Names.GiverID) then
+			return changed
+		end
+		local dq = Route.DialogQuests()
+		for q in pairs(dq and dq.accept or {}) do
+			if not set[q] and Names.GiverID(q) == id and rt:NotOffered(q) then
+				changed = true
+			end
+		end
+		return changed
 	end)
 end
 

@@ -375,7 +375,7 @@ describe("Step window", function()
 				level = 8,
 				toLevel = 1600,
 				step = { xp = 480, source = "log" },
-				zone = { nextMap = 1436, shortfall = 640, enough = false, kills = 9 },
+				zone = { nextMap = 1436, shortfall = 640, enough = false, kills = 9, stepsLeft = 3 },
 			}
 		end
 		ns.StepFrame.Invalidate()
@@ -389,6 +389,59 @@ describe("Step window", function()
 		assert.are.same({ 1, 0.82, 0 }, W.reach.textColor)
 	end)
 
+	-- Owner 2026-11-05 (first game test, wrong prerequisite in the open data): the giver of the current
+	-- accept lists its quests without it; the route goes on and comes back once it is offered.
+	it("sets aside an accept its giver does not offer and takes it back when offered", function()
+		local ns = S.login()
+		local W = wow.world
+		assert.are.equal("a783", ns.Route.Current().id)
+		W.npc = { guid = "Creature-0-1-0-0-823-0000000000", name = "Deputy Willem" }
+		W.offers = { 7 }
+		wow.fire("GOSSIP_SHOW")
+		wow.advance(1)
+		assert.are_not.equal("a783", ns.Route.Current().id)
+		assert.matches("is not offered here yet", frame(ns).status.text, 1, true)
+		W.offers = { 783, 7 }
+		wow.fire("GOSSIP_SHOW")
+		wow.advance(1)
+		assert.are.equal("a783", ns.Route.Current().id)
+	end)
+
+	it("leaves the route alone when another NPC lists its quests", function()
+		local ns = S.login()
+		local W = wow.world
+		W.npc = { guid = "Creature-0-1-0-0-197-0000000000", name = "Marshal McBride" }
+		W.offers = { 7 }
+		wow.fire("GOSSIP_SHOW")
+		wow.advance(1)
+		assert.are.equal("a783", ns.Route.Current().id)
+	end)
+
+	-- Owner 2026-11-05: a level 1 orc saw "falls short of Silverpine Forest … 209 level 1 enemies" at the
+	-- first step; far from the zone end the line stays empty.
+	it("names no shortfall far from the zone end (level 1, 30 steps, next zone level 11)", function()
+		local ns = S.login()
+		ns.Route.Balance = function()
+			return {
+				level = 1,
+				toLevel = 400,
+				zone = {
+					nextMap = 1421,
+					shortfall = 10430,
+					enough = false,
+					kills = 209,
+					nextLevel = 11,
+					stepsLeft = 30,
+				},
+			}
+		end
+		ns.StepFrame.Invalidate()
+		ns.StepFrame.Refresh()
+		local W = frame(ns)
+		assert.is_falsy(W.reach:IsShown() and W.reach.text ~= "" and W.reach.text)
+		assert.is_nil(ns.StepText.Reach(ns.Route.Balance()))
+	end)
+
 	-- Welle 5d, M8: a zone the client cannot name showed as "bis ?".
 	it("route falls short of a zone the client cannot name: the sentence names no zone (M8)", function()
 		local ns = S.login({ locale = "deDE" })
@@ -396,7 +449,7 @@ describe("Step window", function()
 			return {
 				level = 9,
 				toLevel = 1600,
-				zone = { nextMap = 99999, shortfall = 640, enough = false, kills = 9 },
+				zone = { nextMap = 99999, shortfall = 640, enough = false, kills = 9, nextLevel = 10, stepsLeft = 20 },
 			}
 		end
 		ns.StepFrame.Invalidate()

@@ -5,7 +5,8 @@ where it concerns a quest, the quest ID.
 Checks per file: syntax, header, labels, provenance (source present, source allowed by
 decision FD-1101, source backed by data/facts), status, block list of phrases, map frames,
 faction, filters, levels, Speed rule (secured prerequisites; an unknown one only at a place the
-module visits anyway).
+module visits anyway; up to level 10 a prerequisite that starts only in another zone needs two
+roots, code vorquest-zone).
 Checks per combination (all 56 races x classes, per mode): a route exists, quest order
 (accept before turn-in, prerequisite before follow-up), items before turn-in, travel on
 every zone change, no return to a zone left earlier without a stated reason.
@@ -30,6 +31,7 @@ DATA_VERBS = {"accept", "complete", "turnin", "collect", "goto"}
 AGREE_YARDS = 10.0
 FRAME_MARGIN = 50.0
 LEVEL_ABOVE = 2  # DR 20 §5.6: quest level at most 2 above the planned level
+ZONE_PRE_LEVEL = 10  # owner 2026-11-05: up to this level a prerequisite from another zone needs two roots
 HUB_YARDS = 60.0  # yards: a quest giver this close to a step of the route stands at a place it visits anyway
 
 # Block list (Plan §Sprache Nr. 5): typical AI phrases, exclamation marks, emoji.
@@ -295,6 +297,15 @@ def lint_module(mod, facts):
                         E("speed", line, "Quest %d ohne gesicherte Vorbedingung (%s) im Speed-Modus" % (q, pre.get("state"))
                           + (", Questgeber nicht an einem Ort, den die Route ohnehin besucht" if pre.get("state") == "unknown" else ""), q)
                     rec = facts.q[q]
+                    # Owner 2026-11-05 (788 Cutting Teeth behind 787 in Orgrimmar): an early quest whose
+                    # prerequisite starts only in another zone needs two roots for it
+                    if mod.mode == "speed" and st.lv is not None and st.lv <= ZONE_PRE_LEVEL and len(pre.get("src", [])) < 2:
+                        qz = rec.get("zone")
+                        for group in pre.get("v", []):
+                            zs = [(facts.q.get(x) or {}).get("zone") for x in group]
+                            if qz and all(z and zone_key(z) != zone_key(qz) for z in zs):
+                                E("vorquest-zone", line, "Quest %d (Stufe %d) verlangt %s aus einem anderen Gebiet, belegt nur durch %s"
+                                  % (q, st.lv, "/".join(map(str, group)), ",".join(pre.get("src", [])) or "keine Quelle"), q)
                     mn = rec.get("min", {}).get("v")
                     lvl = rec.get("level", {}).get("v")
                     if st.lv is not None:

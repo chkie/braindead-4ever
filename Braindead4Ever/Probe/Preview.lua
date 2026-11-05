@@ -202,7 +202,7 @@ local function Source(kind, westfall)
 			b.level = 18 -- the dungeon fits from level 18 on (K2: "Stufe 18–24" next to level 3)
 		elseif kind == "reach" then
 			b = { level = 9, toLevel = 1600, step = { xp = 480, source = "log" } }
-			b.zone = { nextMap = src.westfall, shortfall = 640, enough = false, kills = 9 }
+			b.zone = { nextMap = src.westfall, shortfall = 640, enough = false, kills = 9, stepsLeft = 3 }
 		elseif kind == "forecast" then
 			b.level = 5 -- two levels above the plan of the demo steps (level 3)
 		elseif kind == "over" then
