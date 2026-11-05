@@ -744,7 +744,7 @@ function M.reset(opts)
 			return W.lockdown
 		end,
 		AreOutgoingAddonChatMessagesRestricted = function()
-			return false
+			return W.outgoingRestricted == true
 		end,
 	}
 	_G.IsTrialAccount = function()

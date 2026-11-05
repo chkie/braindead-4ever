@@ -148,8 +148,12 @@ function X.CanSend()
 	if Call(api.InChatMessagingLockdown) then
 		return false -- encounter, M+ run or PvP match: keep the queue for later
 	end
+	-- C_ChatInfo.AreOutgoingAddonChatMessagesRestricted is no gate (live Forever 1.60.1 70790,
+	-- 05.11.2026: true outside any fight, and 0 of 84 finds were ever tried). Blizzard's text speaks of
+	-- realm-wide chat for addons; other addons report it true far more often than sends fail. The
+	-- result of SendAddonMessage decides (Pump: RETRY keeps the message); the flag is only counted.
 	if Call(api.AreOutgoingAddonChatMessagesRestricted) then
-		return false
+		X.stats.flagged = (X.stats.flagged or 0) + 1
 	end
 	return true
 end
