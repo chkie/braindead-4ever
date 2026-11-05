@@ -76,9 +76,15 @@ def _load_findings():
 
 def apply_finding(pre, f):
     """A finding seen in the game outranks the sources: "add" puts prerequisite groups on top of the
-    stated ones (secured); "hold" keeps the quest out of every route until a later finding clears it."""
+    stated ones, "drop" removes a stated group the game refuted (both secured); "hold" keeps the quest
+    out of every route until a later finding clears it."""
     if not f:
         return pre, None
+    if f.get("drop"):
+        gone = {tuple(sorted(g)) for g in f["drop"]}
+        v = [list(g) for g in pre.get("v", []) if tuple(sorted(g)) not in gone]
+        if len(v) < len(pre.get("v", [])):
+            pre = dict(pre, v=v, state="secured", src=sorted(set(pre.get("src", [])) | {"finding"}), finding=f.get("ref", ""))
     if f.get("add"):
         have = {tuple(sorted(g)) for g in pre.get("v", [])}
         v = [list(g) for g in pre.get("v", [])] + [sorted(g) for g in f["add"] if tuple(sorted(g)) not in have]

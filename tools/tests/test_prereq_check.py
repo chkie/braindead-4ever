@@ -52,6 +52,13 @@ class GameFindings(unittest.TestCase):
         self.assertEqual([[97281]], pre["v"])
         self.assertEqual({"why": "not offered at level 10"}, held)
 
+    def test_drop_removes_a_group_the_game_refuted(self):
+        pre, held = merge.apply_finding({"v": [[91208]], "src": ["att"], "state": "secured"},
+                                        {"q": 91209, "drop": [[91208]], "ref": "in game"})
+        self.assertEqual([], pre["v"])
+        self.assertIn("finding", pre["src"])
+        self.assertIsNone(held)
+
     def test_no_finding_changes_nothing(self):
         pre = {"v": [[1]], "src": ["att"], "state": "secured"}
         self.assertEqual((pre, None), merge.apply_finding(pre, None))
