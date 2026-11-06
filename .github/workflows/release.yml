@@ -38,6 +38,6 @@ jobs:
         run: |
           TAG="${GITHUB_REF_NAME}"
           URL="https://github.com/${GITHUB_REPOSITORY}/releases/tag/${TAG}"
-          MSG=$(printf 'New version %s on GitHub now: %s\nCurseForge after review (08:00 to 15:00 CET), Wago follows.' "$TAG" "$URL" | cut -c1-1900)
+          MSG=$(printf 'New version %s is out: %s\nThe CurseForge app has it now, Wago follows.' "$TAG" "$URL" | cut -c1-1900)
           jq -n --arg c "$MSG" '{content:$c, allowed_mentions:{parse:[]}}' \
             | curl -fsS --retry 3 -H "Content-Type: application/json" -d @- "${DISCORD_WEBHOOK_URL}?wait=true"
