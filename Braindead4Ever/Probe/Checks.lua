@@ -495,7 +495,7 @@ local CHECKS = {
 			end
 			table.sort(results)
 			return true,
-				("offered %d sent %d received %d confirmed %d dropped %d bad %d flagged %d queue %d results %s"):format(
+				("offered %d sent %d received %d confirmed %d dropped %d bad %d flagged %d queue %d results %s lines %s"):format(
 					s.offered,
 					s.sent,
 					s.received,
@@ -504,7 +504,19 @@ local CHECKS = {
 					s.bad,
 					s.flagged or 0,
 					#X.queue,
-					table.concat(results, ",")
+					table.concat(results, ","),
+					X.stats.lines
+							and ("queued %d sent %d back %d heard %d dropped %d lost %d waiting %d%s"):format(
+								X.stats.lines.queued,
+								X.stats.lines.sent,
+								X.stats.lines.back,
+								X.stats.lines.heard,
+								X.stats.lines.dropped,
+								X.stats.lines.lost,
+								#X.lines.queue,
+								X.lines.off and " off" or (X.lines.nokeys and " nokeys" or "")
+							)
+						or "-"
 				)
 		end,
 	},
@@ -536,6 +548,32 @@ local CHECKS = {
 				codes[i] = tostring(C_ChatInfo.SendAddonMessage(Probe.PREFIX, "burst;" .. i, dist, target))
 			end
 			return true, ("%s: %s, loopback so far %d"):format(dist, table.concat(codes, ","), Probe.loopback or 0)
+		end,
+	},
+	{
+		-- One chat line on the hidden channel (Collector/Exchange.lua, chat lines): the version notice,
+		-- sent at once from the key press that runs the slash command. Run it twice: the second result
+		-- shows whether the server sent the first line back ("back").
+		id = "comm.line",
+		kind = "test",
+		name = "chat line on the channel",
+		manual = true,
+		run = function()
+			local X = ns.Exchange
+			if not X or X.channel.state ~= "on" then
+				return false, "no channel"
+			end
+			-- a developer copy has no version of its own: 0.0.0 marked as a test build tells nobody of
+			-- a newer version
+			local msg = X.versionMsg or ns.Proto.Format("a", 0, 0, 0, 1)
+			local L = X.stats.lines
+			local before = ("before: sent %d back %d dropped %d"):format(L.sent, L.back, L.dropped)
+			X.QueueLine(msg)
+			table.insert(X.lines.queue, 1, table.remove(X.lines.queue)) -- ahead of waiting lines
+			X.lines.nextAt = 0
+			local went = X.SendLine()
+			return went,
+				("%s, now %s%s"):format(before, went and "sent" or "not sent", X.lines.off and ", lines off" or "")
 		end,
 	},
 	{ id = "comm.restrictev", kind = "event", name = "ADDON_RESTRICTION_STATE_CHANGED" },

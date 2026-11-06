@@ -8,6 +8,10 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.4 (2026-11-06)
+
+- Sharing with players outside your group and guild works on WoW Forever. The game does not pass addon messages on in the hidden channel Braindead 4ever uses, so nothing reached other players there. Each find now also goes out as a short line in that channel: one line with one of your key presses or clicks, at most one every two seconds, never in a fight or an instance. No chat window shows these lines. Sharing with your group and guild is unchanged.
+
 ## 0.9.3 (2026-11-05)
 
 - Sharing in the game works again: since the start, Braindead 4ever sent nothing to your group, guild or the hidden channel, because it trusted a client flag that reports chat for addons as restricted on normal realms. It now tries to send and goes by the server's answer.

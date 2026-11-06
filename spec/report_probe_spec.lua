@@ -249,6 +249,24 @@ describe("Probe", function()
 		assert.matches("\nfind.lootsource\tfunc\tGetLootSourceInfo\t-\tNOT RUN\twaits for LOOT_OPENED\t", text, 1, true)
 	end)
 
+	it("sends one chat line on the channel from the key press of the slash command", function()
+		local ns = probe()
+		wow.freeChannel()
+		wow.advance(10) -- channel joined
+		wow.pressing = true -- the Enter key that sends the slash command
+		SlashCmdList.BRAINDEADFOREVER("probe check comm.line")
+		wow.pressing = false
+		assert.matches("before: sent 0 back 0 dropped 0, now sent", result(ns, "comm.line").detail, 1, true)
+		local line = wow.world.chat[#wow.world.chat]
+		assert.are.equal("CHANNEL", line.chatType)
+		assert.matches("^BDF a;1;", line.msg)
+		wow.pressing = true
+		SlashCmdList.BRAINDEADFOREVER("probe check comm.line")
+		wow.pressing = false
+		assert.matches("before: sent 1 back 1 dropped 0", result(ns, "comm.line").detail, 1, true)
+		assert.are.same({}, wow.errors)
+	end)
+
 	it("keeps the SavedVariables marker for the cold start test", function()
 		local ns = probe()
 		ns.Probe.Run()

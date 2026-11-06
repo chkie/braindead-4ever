@@ -45,10 +45,18 @@ of the Ace3 libraries used as well as that of the covered work.
 -- measured own flight is offered like a find; the vault's legs are relayed on the hidden channel with
 -- a credit of the finds pool, only while no own find is due there, and only while they add something
 -- for others (saturation), so they take no share of their own.
+-- Chat lines (live Forever 1.60.1 70790, 06.11.2026: 10 addon messages on the channel came back
+-- Success, none arrived, not even the own echo; ForeverItemFinder 1.2.3 found the same): every message
+-- sent on the hidden channel also goes out as an ordinary chat line "BDF <message>" on the channel.
+-- An addon may chat on a channel only while the game handles a real key press or click, so the lines
+-- wait and one goes per press, LINE_GAP apart. The server sends a player's own line back: a line not
+-- back in LINE_BACK seconds was dropped and goes again after a pause that doubles (at most LINE_TRIES
+-- tries). Received lines go into the channel inbox like addon messages; the chat filter keeps them out
+-- of every chat window. A refused line (no press behind it) stops lines for the session.
 -- Receiving costs next to nothing: the event checks the prefix and puts the raw text into a small
 -- inbox (INBOX_MAX, the oldest give way). The ticker reads the inbox in slices (SLICE messages,
 -- SLICE_MS), never in combat, never in an instance and never below MIN_FPS frames per second.
-local _, ns = ...
+local ADDON, ns = ...
 local U, Proto, Version = ns.Util, ns.Proto, ns.Version
 local M, Guard = ns.Modules, ns.Guard
 local Num, Str = U.Num, U.Str
@@ -72,6 +80,12 @@ local X = {
 	SEEN_MAX = 5000, -- remembered find keys per session
 	RECENT_MAX = 100, -- received finds kept for the interface
 	JOIN_DELAY = 8, -- the game's own channels join first, ours waits so it never takes their numbers
+	LINE_GAP = 2, -- seconds between own chat lines on the channel
+	LINE_BACK = 5, -- seconds a line has to come back from the server, else it was dropped
+	LINE_PAUSE = 10, -- pause after a dropped line, doubled for each drop in a row
+	LINE_PAUSE_MAX = 120,
+	LINE_TRIES = 4, -- sends of one line before it is given up
+	LINE_ROOM = 30, -- lines waiting for a press; the oldest gives way
 	CHANNELS = { "BraindeadShare", "BraindeadShare2", "BraindeadShare3", "BraindeadShare4", "BraindeadShare5" },
 	PASSWORD = "pm1",
 	queue = {},
@@ -95,7 +109,9 @@ local X = {
 		budget = 0, -- finds left off the channel for lack of a credit or in a fight or instance
 		inbox = 0, -- received messages that gave way in a full inbox
 		results = {},
+		lines = { queued = 0, sent = 0, back = 0, heard = 0, dropped = 0, lost = 0 },
 	},
+	lines = { queue = {}, tries = {}, gap = 2, nextAt = 0, off = false },
 	channel = { slot = 1, state = "waiting", tries = 0 },
 }
 ns.Exchange = X
@@ -241,13 +257,15 @@ function X.Pump()
 				return
 			end
 			table.remove(q, i) -- sent or a final error (not in group, no channel, ...)
+			if item.dist == "CHANNEL" and target then
+				-- the chat line carries the message whatever the addon message did (Forever: it never arrives)
+				X.nextChannelAt = now + X.CHANNEL_GAP
+				X.budget:Spend(item.pool)
+				X.QueueLine(item.msg)
+			end
 			if result == R.Success then
 				X.tokens = X.tokens - 1
 				X.stats.sent = X.stats.sent + 1
-				if item.dist == "CHANNEL" then
-					X.nextChannelAt = now + X.CHANNEL_GAP
-					X.budget:Spend(item.pool)
-				end
 			end
 		end
 	end
@@ -603,6 +621,147 @@ function X.Drain()
 	return n
 end
 
+-- Chat lines on the hidden channel --------------------------------------------------------------
+
+X.LINE_PREFIX = Proto.PREFIX .. " "
+
+function X.QueueLine(msg)
+	local L = X.lines
+	if L.off or type(msg) ~= "string" or #msg + #X.LINE_PREFIX > 255 then
+		return false
+	end
+	local qu = L.queue
+	if #qu >= X.LINE_ROOM then
+		table.remove(qu, 1)
+		X.stats.lines.lost = X.stats.lines.lost + 1
+	end
+	qu[#qu + 1] = msg
+	X.stats.lines.queued = X.stats.lines.queued + 1
+	return true
+end
+
+-- The line in flight did not come back: to the front again, unless it has had its tries.
+local function LineDropped(now)
+	local L, st = X.lines, X.stats.lines
+	local text = L.out
+	L.out = nil
+	if not text then
+		return
+	end
+	st.dropped = st.dropped + 1
+	if (L.tries[text] or 0) >= X.LINE_TRIES then
+		L.tries[text] = nil
+		st.lost = st.lost + 1
+	else
+		table.insert(L.queue, 1, text)
+	end
+	L.gap = math.min(X.LINE_PAUSE_MAX, L.gap < X.LINE_PAUSE and X.LINE_PAUSE or L.gap * 2)
+	L.nextAt = now + L.gap
+end
+X.LineDropped = LineDropped
+
+-- The own line came back from the server: it reached the channel.
+local function LineBack(msg)
+	local L = X.lines
+	X.stats.lines.back = X.stats.lines.back + 1
+	if L.out == msg then
+		L.out = nil
+		L.tries[msg] = nil
+		L.gap = math.max(X.LINE_GAP, L.gap / 2)
+		L.nextAt = math.min(L.nextAt, L.outAt + L.gap)
+	end
+end
+
+-- Called only from a key press or a click (WatchPresses): one waiting line goes out.
+function X.SendLine()
+	local L = X.lines
+	if L.off or X.channel.state ~= "on" or not M.IsActive("exchange") or not X.CanSend() or not X.Quiet() then
+		return false
+	end
+	local now = GetTime()
+	if L.out then
+		if now - L.outAt < X.LINE_BACK then
+			return false
+		end
+		LineDropped(now)
+	end
+	if #L.queue == 0 or now < L.nextAt then
+		return false
+	end
+	local num = ChannelNumber()
+	local chat = api.SendChatMessage
+	if not num or not chat then
+		return false
+	end
+	local text = table.remove(L.queue, 1)
+	L.out, L.outAt = text, now
+	L.tries[text] = (L.tries[text] or 0) + 1
+	L.nextAt = now + L.gap
+	X.stats.lines.sent = X.stats.lines.sent + 1
+	pcall(chat, X.LINE_PREFIX .. text, "CHANNEL", nil, num)
+	return true
+end
+
+-- The presses lines go out with: every key (passed on to the game's own bindings) and clicks in the
+-- world. Keyboard propagation can only be set outside a fight.
+local function WatchPresses()
+	local L = X.lines
+	if L.keys then
+		return
+	end
+	if Call(InCombatLockdown) then
+		L.watchAfterCombat = true
+		return
+	end
+	L.watchAfterCombat = nil
+	local press = Guard.Wrap("exchange", X.SendLine)
+	local keys = CreateFrame("Frame", nil, UIParent)
+	pcall(keys.EnableKeyboard, keys, true)
+	if not pcall(keys.SetPropagateKeyboardInput, keys, true) then
+		L.nokeys = true -- no key presses then: clicks in the world still carry lines
+	else
+		keys:SetScript("OnKeyDown", press)
+	end
+	L.keys = keys
+	local world = _G.WorldFrame
+	if type(world) == "table" and world.HookScript then
+		pcall(world.HookScript, world, "OnMouseDown", press)
+	end
+end
+X.WatchPresses = WatchPresses
+
+-- CHAT_MSG_CHANNEL arguments: text, sender, language, channelString, target, flags, zoneChannelID,
+-- channelNumber, channelBaseName, languageID, lineID, guid.
+local function HearLine(text, sender, base, guid)
+	if U.IsSecret(text) or U.IsSecret(sender) or U.IsSecret(base) or U.IsSecret(guid) then
+		return
+	end
+	if type(text) ~= "string" or type(sender) ~= "string" or type(base) ~= "string" then
+		return
+	end
+	if base:lower() ~= ChannelName():lower() or text:sub(1, #X.LINE_PREFIX) ~= X.LINE_PREFIX then
+		return
+	end
+	local msg = text:sub(#X.LINE_PREFIX + 1)
+	local me = Call(UnitGUID, "player")
+	if guid ~= nil and me ~= nil and guid == me then
+		LineBack(msg)
+		return
+	end
+	X.stats.lines.heard = X.stats.lines.heard + 1
+	Receive(Proto.PREFIX, msg, "CHANNEL", sender)
+end
+X.HearLine = HearLine
+
+-- A line the game refused (no press behind it after all): no more lines this session.
+local function Refused(addon, fn)
+	if addon == ADDON and type(fn) == "string" and fn:find("SendChatMessage", 1, true) then
+		local L = X.lines
+		L.off, L.out = true, nil
+		L.queue = {}
+	end
+end
+
 -- Hidden custom channel ---------------------------------------------------------------------------
 
 local function HideChannel()
@@ -716,6 +875,10 @@ local function Notice(kind, name)
 		return
 	end
 	local c = X.channel
+	if kind == "THROTTLED" and X.lines.out then
+		LineDropped(GetTime()) -- the line in flight was dropped by the server
+		return
+	end
 	if kind == "WRONG_PASSWORD" or kind == "BANNED" then
 		c.refused = true
 	elseif TAKEOVER[kind] and c.state == "on" then
@@ -743,10 +906,14 @@ local function Init()
 		ChatFrame_RemoveChannel = "ChatFrame_RemoveChannel",
 		AddMessageEventFilter = "ChatFrameUtil.AddMessageEventFilter",
 		ChatFrame_AddMessageEventFilter = "ChatFrame_AddMessageEventFilter",
+		SendChatMessage = "C_ChatInfo.SendChatMessage",
+		SendChatMessageOld = "SendChatMessage",
 	}) do
 		api[name] = M.Optional(path)
 	end
+	api.SendChatMessage = api.SendChatMessage or api.SendChatMessageOld
 	X.tokens = X.TOKENS
+	X.lines = { queue = {}, tries = {}, gap = X.LINE_GAP, nextAt = 0, off = false }
 	X.budget = ns.Budget.New({ clock = GetTime })
 	local own = Version.Parse(ns.version)
 	X.versions = Version.New(own)
@@ -771,6 +938,7 @@ local function Init()
 			pcall(addFilter, event, Filter)
 		end
 	end
+	WatchPresses()
 	ticker = C_Timer.NewTicker(
 		1,
 		Guard.Wrap("exchange", function()
@@ -790,6 +958,7 @@ local function Stop()
 		ticker = nil
 	end
 	X.queue = {}
+	X.lines.queue, X.lines.out = {}, nil
 	X.inbox = { channel = Inbox(), other = Inbox() }
 	if ChannelNumber() and api.LeaveChannelByName then
 		pcall(api.LeaveChannelByName, ChannelName())
@@ -823,8 +992,14 @@ M.Define("exchange", {
 			"InCombatLockdown",
 			"IsInInstance",
 			"GetFramerate",
+			"C_ChatInfo.SendChatMessage",
+			"UnitGUID",
 		},
 		events = {
+			"CHAT_MSG_CHANNEL",
+			"PLAYER_REGEN_ENABLED",
+			"ADDON_ACTION_BLOCKED",
+			"ADDON_ACTION_FORBIDDEN",
 			"PLAYER_ENTERING_WORLD",
 			"ADDON_RESTRICTION_STATE_CHANGED",
 			"CHAT_MSG_CHANNEL_NOTICE",
@@ -836,6 +1011,20 @@ M.Define("exchange", {
 	events = {
 		CHAT_MSG_ADDON = function(_, _, ...)
 			Receive(...)
+		end,
+		CHAT_MSG_CHANNEL = function(_, _, text, sender, _, _, _, _, _, _, base, _, _, guid)
+			HearLine(text, sender, base, guid)
+		end,
+		PLAYER_REGEN_ENABLED = function()
+			if X.lines.watchAfterCombat then
+				WatchPresses()
+			end
+		end,
+		ADDON_ACTION_BLOCKED = function(_, _, addon, fn)
+			Refused(addon, fn)
+		end,
+		ADDON_ACTION_FORBIDDEN = function(_, _, addon, fn)
+			Refused(addon, fn)
 		end,
 		PLAYER_ENTERING_WORLD = function()
 			if X.joinPlanned then
