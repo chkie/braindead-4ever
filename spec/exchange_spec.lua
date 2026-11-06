@@ -310,3 +310,224 @@ describe("Exchange: receiving", function()
 		assert.are.equal(2 * 1024 * 1024, ns.Collector.own.STORE_BYTES)
 	end)
 end)
+
+-- Live Forever 70790 (probe 06.11.2026): 10 addon messages on the channel came back Success and none
+-- arrived, not even the own echo. Every channel message also goes out as a chat line "BDF <message>",
+-- one per key press or click, and comes back to the sender as its receipt.
+describe("Exchange: chat lines on the hidden channel", function()
+	local function lines()
+		local out = {}
+		for _, l in ipairs(wow.world.chat) do
+			if l.chatType == "CHANNEL" then
+				out[#out + 1] = l
+			end
+		end
+		return out
+	end
+
+	local function channelFind()
+		local ns, X = start()
+		wow.freeChannel()
+		wow.advance(10) -- channel joined
+		loot()
+		wow.advance(91) -- the channel delay is over, the addon message went out
+		return ns, X
+	end
+
+	it("sends a channel message as a chat line only with a key press, and the echo is its receipt", function()
+		local _, X = channelFind()
+		assert.are.equal(1, #sent("CHANNEL"))
+		assert.are.equal(0, #lines(), "no line without a press")
+		assert.are.equal(1, #X.lines.queue)
+		wow.press()
+		local l = lines()
+		assert.are.equal(1, #l)
+		assert.are.equal("BDF o;1;2843;1429;4231;6512", l[1].msg)
+		assert.is_true(l[1].press)
+		assert.are.equal(5, tonumber(l[1].target))
+		assert.are.equal(1, X.stats.lines.back, "the own line came back")
+		assert.is_nil(X.lines.out)
+		assert.are.equal(0, #X.lines.queue)
+		assert.are.same({}, wow.errors)
+	end)
+
+	it("a click in the world carries a line too", function()
+		local _, X = channelFind()
+		wow.press(true)
+		assert.are.equal(1, #lines())
+		assert.are.equal(1, X.stats.lines.back)
+	end)
+
+	it("keeps two seconds between lines", function()
+		local _, X = channelFind()
+		X.QueueLine("o;1;2844;1429;4231;6512")
+		wow.press()
+		wow.press()
+		assert.are.equal(1, #lines())
+		wow.advance(2)
+		wow.press()
+		assert.are.equal(2, #lines())
+	end)
+
+	it("sends a line again that did not come back, with a growing pause, and gives up after four tries", function()
+		local _, X = channelFind()
+		wow.world.dropLines = true
+		wow.press()
+		assert.are.equal(1, #lines())
+		wow.advance(5)
+		wow.press() -- not back in 5 s: dropped, a pause of 10 s starts
+		assert.are.equal(1, X.stats.lines.dropped)
+		assert.are.equal(1, #lines())
+		wow.advance(10)
+		wow.press()
+		assert.are.equal(2, #lines(), "the same line again")
+		assert.are.equal(lines()[1].msg, lines()[2].msg)
+		for _ = 1, 3 do
+			wow.advance(130)
+			wow.press()
+			wow.advance(130)
+			wow.press()
+		end
+		assert.are.equal(4, #lines(), "four tries at most")
+		assert.are.equal(1, X.stats.lines.lost)
+		assert.are.equal(0, #X.lines.queue)
+	end)
+
+	it("a throttle notice drops the line in flight", function()
+		local _, X = channelFind()
+		wow.world.dropLines = true
+		wow.press()
+		wow.fire("CHAT_MSG_CHANNEL_NOTICE", "THROTTLED", "", "", "5. BraindeadShare", "", "", 0, 5, "BraindeadShare")
+		assert.are.equal(1, X.stats.lines.dropped)
+		assert.are.equal(1, #X.lines.queue)
+	end)
+
+	it("sends no line in a fight or an instance, and none when the game refuses lines", function()
+		local _, X = channelFind()
+		wow.world.combat = true
+		wow.press()
+		assert.are.equal(0, #lines())
+		wow.world.combat = false
+		wow.world.instance = true
+		wow.press()
+		assert.are.equal(0, #lines())
+		wow.world.instance = false
+		-- a line without a press behind it is refused: no more lines this session
+		X.SendLine()
+		assert.are.equal(1, #lines())
+		assert.is_true(X.lines.off)
+		X.QueueLine("o;1;2844;1429;4231;6512")
+		wow.press()
+		assert.are.equal(1, #lines())
+	end)
+
+	it("reads a line of another player like an addon message and hides it from the chat windows", function()
+		local ns, X = start()
+		wow.advance(10)
+		wow.fire(
+			"CHAT_MSG_CHANNEL",
+			"BDF o;1;2843;1429;4231;6512",
+			"Anna-Forever",
+			"",
+			"5. BraindeadShare",
+			"",
+			"",
+			0,
+			5,
+			"BraindeadShare",
+			0,
+			7,
+			"Player-1234-0BBBBBB0"
+		)
+		wow.readInbox()
+		assert.are.equal(1, #netRecords(ns, "rx"))
+		assert.are.equal(1, X.stats.lines.heard)
+		assert.are.equal(1, X.stats.received)
+		local filter = wow.world.chatFilters.CHAT_MSG_CHANNEL
+		assert.is_true(
+			filter(
+				nil,
+				"CHAT_MSG_CHANNEL",
+				"BDF o;1;2843;1429;4231;6512",
+				"Anna-Forever",
+				"",
+				"",
+				"",
+				"",
+				0,
+				5,
+				"BraindeadShare"
+			)
+		)
+	end)
+
+	it("ignores lines of other channels, without the prefix, with secret values, and its own echo as a find", function()
+		local ns, X = start()
+		wow.advance(10)
+		local me = wow.world.player.guid
+		wow.fire(
+			"CHAT_MSG_CHANNEL",
+			"BDF o;1;2843;1429;4231;6512",
+			"Anna-Forever",
+			"",
+			"1. General",
+			"",
+			"",
+			0,
+			1,
+			"General",
+			0,
+			7,
+			"Player-1234-0BBBBBB0"
+		)
+		wow.fire(
+			"CHAT_MSG_CHANNEL",
+			"hello",
+			"Anna-Forever",
+			"",
+			"5. BraindeadShare",
+			"",
+			"",
+			0,
+			5,
+			"BraindeadShare",
+			0,
+			8,
+			"Player-1234-0BBBBBB0"
+		)
+		wow.fire(
+			"CHAT_MSG_CHANNEL",
+			wow.SECRET,
+			"Anna-Forever",
+			"",
+			"5. BraindeadShare",
+			"",
+			"",
+			0,
+			5,
+			"BraindeadShare",
+			0,
+			9,
+			"Player-1234-0BBBBBB0"
+		)
+		wow.fire(
+			"CHAT_MSG_CHANNEL",
+			"BDF o;1;2843;1429;4231;6512",
+			"Me-Forever",
+			"",
+			"5. BraindeadShare",
+			"",
+			"",
+			0,
+			5,
+			"BraindeadShare",
+			0,
+			10,
+			me
+		)
+		wow.readInbox()
+		assert.are.equal(0, #netRecords(ns, "rx"))
+		assert.are.equal(0, X.stats.lines.heard)
+		assert.are.same({}, wow.errors)
+	end)
+end)

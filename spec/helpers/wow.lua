@@ -81,6 +81,7 @@ local BASE_EVENTS = {
 	"PLAYER_REGEN_DISABLED",
 	"PLAYER_REGEN_ENABLED",
 	"CHAT_MSG_ADDON",
+	"CHAT_MSG_CHANNEL",
 	"CHAT_MSG_CHANNEL_NOTICE",
 	"UPDATE_CHAT_WINDOWS",
 	"ADDON_RESTRICTION_STATE_CHANGED",
@@ -247,6 +248,7 @@ local function NewWorld(flavor)
 		lockdown = false,
 		prefixes = {},
 		sent = {}, -- { prefix, msg, dist, target }
+		chat = {}, -- chat lines { msg, chatType, target, at, press }
 		sendResult = function()
 			return 0
 		end,
@@ -270,6 +272,7 @@ function M.reset(opts)
 	M.flavor = opts.flavor or "forever"
 	M.clock = 1000
 	M.timers = {}
+	M.pressing = false
 	M.timerSeq = 0
 	M.frames = {}
 	M.errors = {}
@@ -316,6 +319,12 @@ function M.reset(opts)
 		return NewWidget(frameType, name, template, parent)
 	end
 	_G.UIParent = NewWidget("Frame")
+	_G.WorldFrame = NewWidget("Frame")
+	function _G.WorldFrame:HookScript(name, fn)
+		local hooks = rawget(self, "hooks") or {}
+		rawset(self, "hooks", hooks)
+		hooks[name] = fn
+	end
 	_G.UISpecialFrames = {}
 	_G.tinsert = table.insert
 	_G.CLOSE = "Close"
@@ -746,6 +755,40 @@ function M.reset(opts)
 		AreOutgoingAddonChatMessagesRestricted = function()
 			return W.outgoingRestricted == true
 		end,
+		-- Chat lines: recorded with whether a key press or click is being handled (M.press); a line
+		-- without one is refused like in the client (ADDON_ACTION_BLOCKED), a line with one comes back
+		-- to the sender unless W.dropLines is set.
+		SendChatMessage = function(msg, chatType, _, target)
+			local line = { msg = msg, chatType = chatType, target = target, at = M.clock, press = M.pressing == true }
+			W.chat[#W.chat + 1] = line
+			if chatType == "CHANNEL" and not M.pressing then
+				M.fire("ADDON_ACTION_BLOCKED", "Braindead4Ever", "C_ChatInfo.SendChatMessage()")
+				return
+			end
+			if chatType == "CHANNEL" and not W.dropLines then
+				local name
+				for n, num in pairs(W.channels) do
+					if tostring(num) == tostring(target) then
+						name = n
+					end
+				end
+				M.fire(
+					"CHAT_MSG_CHANNEL",
+					msg,
+					W.player.name or "Me",
+					"",
+					"",
+					"",
+					"",
+					0,
+					target,
+					name or "",
+					0,
+					0,
+					W.player.guid
+				)
+			end
+		end,
 	}
 	_G.IsTrialAccount = function()
 		return W.trial
@@ -874,6 +917,27 @@ function M.fire(event, ...)
 			handler(f, event, ...)
 		end
 	end
+end
+
+-- A key press the client hands to every keyboard frame that lets it pass (OnKeyDown), or with
+-- mouse = true a click in the world (WorldFrame OnMouseDown). Chat lines may go out meanwhile.
+function M.press(mouse)
+	M.pressing = true
+	if mouse then
+		local hooks = rawget(_G.WorldFrame, "hooks")
+		local h = hooks and hooks.OnMouseDown
+		if h then
+			h(_G.WorldFrame, "LeftButton")
+		end
+	else
+		for _, f in ipairs(M.frames) do
+			local h = f.scripts.OnKeyDown
+			if h then
+				h(f, "W")
+			end
+		end
+	end
+	M.pressing = false
 end
 
 -- Advance the clock and run due timers in time order; tickers run again every interval.
