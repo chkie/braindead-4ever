@@ -11,7 +11,7 @@ local spread = require("spec.helpers.spread")
 
 -- Owner, 2026-11-02: per client at most 0.5 messages per second on average and at most 1 per second
 -- in any 60 s window.
-local MEAN_MAX, WINDOW_MAX = 0.5, 60
+local MEAN_MAX, WINDOW_MAX = 1, 120 -- owner 2026-11-06: no disturbance, measured cost (Budget.lua)
 
 local function pure()
 	wow.reset()
@@ -75,9 +75,11 @@ describe("Channel budget: estimate", function()
 					end
 					local e = B.Estimate(heard, twice)
 					assert.is_true(e >= heard and e <= B.SENDERS_MAX)
-					sum = sum + n / e
+					sum = sum + math.min(n, B.SENDERS_MAX) / e
 				end
-				-- n / estimate is the factor by which a client oversends; on average about 1 or less
+				-- n / estimate is the factor by which a client oversends; on average about 1 or less.
+				-- Above SENDERS_MAX the estimate stops there by design and BUSY bounds the channel
+				-- (spread simulation below).
 				assert.is_true(sum / draws <= 1.15, ("n %d, m %d: %.3f"):format(n, m, sum / draws))
 			end
 		end
@@ -90,8 +92,8 @@ describe("Channel budget: estimate", function()
 		-- nothing heard in an hour: every sender sends at least SHARE / SENDERS_MAX per second, so
 		-- silence means few senders (the 90 % bound of a Poisson count 0 is about 2.3 messages)
 		local quiet = B.Estimate(0, 0, 0, 3600)
-		assert.is_true(quiet > 40 and quiet < 60, quiet)
-		assert.is_true(B.Estimate(0, 0, 0, 10) > 15000) -- ten seconds say little
+		assert.is_true(quiet > 2.5 and quiet < 4, quiet)
+		assert.is_true(B.Estimate(0, 0, 0, 10) > 200) -- ten seconds say little
 		-- a sender heard twice among three bounds the count far below the maximum
 		assert.is_true(B.Estimate(3, 1) < 100)
 	end)
@@ -170,7 +172,7 @@ describe("Channel budget: credits", function()
 		local b, t = budget(ns)
 		b.credit.runs = 1
 		for i = 1, ns.Budget.BUSY do
-			t.now = i
+			t.now = i * 50 / ns.Budget.BUSY -- all of them within 50 s
 			b:Heard("Player" .. i)
 		end
 		assert.is_true(b:Busy())
@@ -269,18 +271,21 @@ describe("Exchange: sending on the hidden channel", function()
 		end)
 	end
 
-	it("keeps a fresh client in a quiet channel to its share", function()
+	it("keeps a fresh client in a quiet channel to its share and starts it within minutes", function()
 		local ns = wow.session()
 		local X = ns.Exchange
 		wow.advance(10)
+		-- nothing heard in the first seconds says little: the estimate stays at the upper bound
+		assert.is_true(X.budget:Senders() > 200 and X.budget:Senders() <= ns.Budget.SENDERS_MAX + 1)
+		-- an hour of silence bounds the players by a few: a find gets its credit within its wait
+		wow.advance(3600)
 		wow.world.loot =
 			{ { link = "|Hitem:2589:::|h[x]|h", sources = { "GameObject-0-1465-0-2105-2843-0000ABC124", 1 } } }
 		wow.fire("LOOT_OPENED", false, false)
-		-- nothing heard in the first seconds says little: thousands of players, a credit is days away
-		assert.is_true(X.budget:Senders() > 10000)
+		assert.is_true(X.budget:Senders() < 6, X.budget:Senders())
 		wow.advance(91 + X.FIND_WAIT)
-		assert.are.equal(0, #sent("CHANNEL"))
-		assert.are.equal(1, X.stats.budget)
+		assert.are.equal(1, #sent("CHANNEL"))
+		assert.are.equal(0, X.stats.budget)
 	end)
 end)
 

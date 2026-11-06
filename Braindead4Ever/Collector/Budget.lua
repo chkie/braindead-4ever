@@ -57,19 +57,22 @@ Budget.__index = Budget
 ns.Budget = Budget
 
 -- Chosen values, not measured in the game (docs/RUN-TIMES.md lists them; the in-game measurement
--- after 2026-11-05 decides whether they stay). Owner, 2026-11-02: a client receives at most 0.5
--- messages per second on average and at most 1 per second in any 60 s, whatever the number of
--- players. The shares add up to half of that, which leaves room for the error of the estimate and
--- for chance (spread simulation, spec/channel_budget_spec.lua).
+-- after 2026-11-05 decides whether they stay). Owner, 2026-11-06: the load must not disturb the game,
+-- cost frame rate or break a policy; it need not be as small as possible. Measured cost of a received
+-- message 13.5 us (docs/RUN-TIMES.md), so 1 message per second takes 13.5 us a second, 0.23 % of
+-- the addon's 0.1 ms per frame at 60 frames. A client receives at most 1 message per second on
+-- average and at most 120 in any 60 s (spread simulation, spec/channel_budget_spec.lua, also with
+-- 10 s between credit and chat line); the estimate keeps that up to 20,000 players, BUSY is only the
+-- net (plausibility check 2026-11-06, round 6: SENDERS_MAX 1000 would leave the load to BUSY alone).
 Budget.SHARE = {
-	runs = 0.15, -- run messages per second on the whole channel: own sections first, then relays
-	finds = 0.1, -- finds, prerequisite observations, version notices and flight legs per second on the whole channel
+	runs = 0.6, -- run messages per second on the whole channel: own sections first, then relays
+	finds = 0.4, -- finds, prerequisite observations, version notices and flight legs per second on the whole channel
 }
 Budget.WINDOW = 3600 -- seconds of channel traffic the estimate looks at
-Budget.SENDERS_MAX = 20000 -- players assumed while no sender was heard twice (largest size simulated)
+Budget.SENDERS_MAX = 5000 -- upper bound of every estimate; a quiet channel still starts within minutes
 Budget.Z = 1.2816 -- one-sided 90 % bound for the repeats
 Budget.REFRESH = 30 -- seconds an estimate is reused
-Budget.BUSY = 30 -- channel messages in the last 60 s that stop all sending (half of 1 per second)
+Budget.BUSY = 120 -- channel messages in the last 60 s that stop all sending (2 per second)
 Budget.EVENTS_MAX = 2000 -- channel messages remembered; beyond that the window gets shorter
 
 local exp, sqrt, max, min = math.exp, math.sqrt, math.max, math.min

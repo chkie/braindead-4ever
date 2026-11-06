@@ -11,7 +11,7 @@ local spread = require("spec.helpers.spread")
 
 -- Owner, 2026-11-02 (spec/channel_budget_spec.lua): per client at most 0.5 messages per second on
 -- average and at most 1 per second in any 60 s window.
-local MEAN_MAX, WINDOW_MAX = 0.5, 60
+local MEAN_MAX, WINDOW_MAX = 1, 120 -- owner 2026-11-06: no disturbance, measured cost (Budget.lua)
 
 local function pure()
 	wow.reset()
@@ -358,7 +358,12 @@ describe("Flight legs from play", function()
 		receive(H(ns, 2, 5, 133), "Ben Winter")
 		flightMaster()
 		fly(2, 134)
-		assert.are.equal(0, #sentLegs())
+		-- the own flight 2>5 adds nothing and is not offered; the flight master's other legs may be
+		-- relayed on the channel when the budget grants a credit (0.9.7: a quiet channel starts fast)
+		for _, m in ipairs(sentLegs()) do
+			assert.is_nil(m.msg:match("^h;1;2;5;"), m.msg)
+		end
+		assert.are.equal(0, #sentLegs("PARTY"))
 		assert.are.same({ 131, 133, 134 }, ns.Collector.flights.db.legs["2>5"].t)
 	end)
 

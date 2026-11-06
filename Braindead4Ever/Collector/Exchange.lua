@@ -33,9 +33,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- Run times ("s", Collector/Runs.lua): received ones go into the run vault, not into the find buffer;
 -- the vault's sections are passed on over the hidden channel only, one message per 10 s at most, and
 -- only while no own message is due there (own messages first).
--- Channel budget (Collector/Budget.lua, owner 2026-11-02: "so rare that there are really no
--- performance problems"): on the hidden channel every message needs a credit of its pool, so the
--- channel carries about the same small traffic for 100 or 20,000 players. Run messages wait for one,
+-- Channel budget (Collector/Budget.lua; owner 2026-11-06: the load must not disturb, cost frame rate
+-- or break a policy): on the hidden channel every message needs a credit of its pool, so a client
+-- receives at most about one message a second for 100 or 20,000 players. Run messages wait for one,
 -- finds wait FIND_WAIT seconds for one and are then dropped from the channel (group and guild still
 -- get them). Nothing goes on the channel in combat or in an instance.
 -- Version notice ("a", Collector/Version.lua): the addon version goes once to each group the player is
@@ -68,9 +68,9 @@ local X = {
 	DELAY_MIN = 30, -- delay for guild and channel, seconds
 	DELAY_MAX = 90,
 	FIND_WAIT = 60, -- seconds a due find waits for the channel (credit, no fight, no instance), then it is dropped
-	-- Chosen values for the inbox (docs/RUN-TIMES.md): the channel brings about 0.2 messages a second,
-	-- so 100 hold a fight of several minutes; a slice of 10 empties a full inbox in 10 s.
-	INBOX_MAX = 100, -- per inbox (channel, group and guild); the oldest give way
+	-- Chosen values for the inbox (docs/RUN-TIMES.md): the channel brings at most 1 message a second
+	-- (0.9.7), so 200 hold a fight of more than three minutes; a slice of 10 empties a full inbox in 20 s.
+	INBOX_MAX = 200, -- per inbox (channel, group and guild); the oldest give way
 	SLICE = 10, -- messages read per second at most
 	SLICE_MS = 1, -- and milliseconds per slice at most
 	MIN_FPS = 20, -- no reading below this frame rate (ChatThrottleLib's MIN_FPS, brain chapter 13 §6)
@@ -677,6 +677,9 @@ function X.SendLine()
 	local L = X.lines
 	if L.off or X.channel.state ~= "on" or not M.IsActive("exchange") or not X.CanSend() or not X.Quiet() then
 		return false
+	end
+	if X.budget and X.budget.Busy and X.budget:Busy() then
+		return false -- the channel is busy: waiting lines hold back like credits (Budget.BUSY)
 	end
 	local now = GetTime()
 	if L.out then
