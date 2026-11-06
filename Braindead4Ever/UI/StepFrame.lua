@@ -957,7 +957,9 @@ local function RenderBanner(info)
 	if offer and (offer.id == view.offerId or not UI.Fighting()) then
 		view.offerId = offer.id
 		SetLine(W.banner, ST.Offer(offer))
-		W.btnYes:SetText(offer.kind == "switch" and L.SWITCH_GO or L.ADJUST)
+		local class = offer.kind == "class" or offer.kind == "later" or offer.kind == "ready"
+		W.btnYes:SetText(class and L.CLASS_NOW or offer.kind == "switch" and L.SWITCH_GO or L.ADJUST)
+		W.btnNo:SetText(class and L.CLASS_LATER or L.KEEP_ROUTE)
 		W.btnYes:Show()
 		W.btnNo:Show()
 		return true
@@ -1277,8 +1279,11 @@ function SF.Back()
 	SF.Refresh()
 end
 
-local function SkippedMessage(name, n)
+local function SkippedMessage(name, n, later)
 	local key = n == 0 and "SKIPPED_0" or n == 1 and "SKIPPED_1" or "SKIPPED_N"
+	if later then
+		key = n == 0 and "LATER_0" or n == 1 and "LATER_1" or "LATER_N"
+	end
 	return L[key]:format(name, n)
 end
 
@@ -1288,12 +1293,14 @@ function SF.AskSkip(key)
 	local pending = C.Pending()
 	local info = C.Current()
 	local follow, name, run
+	-- a class chain is postponed, never skipped for good (KQ-1105)
+	local later = C.SkipPostpones(not pending and key or nil)
 	if pending then
 		follow = C.AbandonPreview() or {}
 		name = ST.Quest(pending)
 		run = function()
 			if C.ResolveAbandon("skip") then
-				view.message = SkippedMessage(name, #follow)
+				view.message = SkippedMessage(name, #follow, later)
 			end
 			SF.Refresh()
 		end
@@ -1306,7 +1313,7 @@ function SF.AskSkip(key)
 		name = info and info.quests and info.quests[1] and ST.Quest(info.quests[1]) or (info and (ST.Step(info, false)))
 		run = function()
 			if C.Skip(key) then
-				view.message = SkippedMessage(name or "", #follow)
+				view.message = SkippedMessage(name or "", #follow, later)
 			end
 			SF.Refresh()
 		end
@@ -1319,7 +1326,7 @@ function SF.AskSkip(key)
 	for i, q in ipairs(follow) do
 		names[i] = ST.Quest(q)
 	end
-	local text = L.SKIP_ASK:format(name or "") .. "\n\n" .. table.concat(names, "\n")
+	local text = (later and L.LATER_SKIP_ASK or L.SKIP_ASK):format(name or "") .. "\n\n" .. table.concat(names, "\n")
 	view.dialog = { text = text, run = run }
 	StaticPopup_Show(SF.POPUP, text, nil, { run = run })
 	return true

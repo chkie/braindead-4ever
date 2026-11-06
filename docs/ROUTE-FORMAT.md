@@ -298,6 +298,7 @@ Acceptance (Plan, work package 5): ten prepared errors in `tools/tests/fixtures/
     ["a-speed-start-elwynn"] = {
       kind = "start", mode = "speed", levels = { 1, 10 }, label = "vorläufig", version = 1,
       r = { 1 },                             -- module filter: raceIDs (r) and classIDs (c)
+      ready = 10,                            -- class inserts only (ME-1106): minimum level of the first quest it accepts
       steps = {
         { id = "a783", lv = 1, c = { 1 }, ret = nil, <element>, <element>, ... },
       },

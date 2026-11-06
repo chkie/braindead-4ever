@@ -110,7 +110,9 @@ describe("Key bindings", function()
 			popup.dialog.OnAccept(nil, popup.data)
 		end
 		assert.are.equal("skipped", ns.Route.StepState(first))
-		assert.matches("skipped", ns.StepFrame.frame.status.text, 1, true)
+		-- the first Elwynn quests lead to the class letters: their skip postpones (KQ-1105)
+		local word = ns.Route.SkipPostpones(first) and "postponed" or "skipped"
+		assert.matches(word, ns.StepFrame.frame.status.text, 1, true)
 	end)
 
 	it("guidance on and off, step window on and off, mini view", function()

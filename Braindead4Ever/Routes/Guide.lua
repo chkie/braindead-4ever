@@ -540,6 +540,12 @@ function Route.SkipPreview(key)
 	return Call(rt and rt.SkipPreview, rt, key)
 end
 
+-- Whether a skip of the step (or the answer "skip" to an abandon question) postpones a class chain
+-- (KQ-1105): it comes back at the next zone change.
+function Route.SkipPostpones(key)
+	return Call(rt and rt.Postpones, rt, key) == true
+end
+
 function Route.AbandonPreview()
 	return Call(rt and rt.AbandonPreview, rt)
 end

@@ -89,6 +89,7 @@ function RT:DropSet(i, last, ctx)
 				and not w.IsFlagged(q)
 				and not w.InLog(q)
 				and (self.accepts[q] or 0) >= i
+				and not self:ClassChain(q) -- class chains stay (KQ-1105)
 				and Share(self.quests[q], ctx.level) < RT.DROP_SHARE
 			then
 				cand[q], any = true, true
@@ -270,14 +271,140 @@ function RT:Alternatives(module)
 	return out
 end
 
--- The open question of the current step: a switch point first, then "over the plan"; nil when none.
--- Nothing is asked while an abandon question waits.
+-- Class quests (owner 2026-11-05, KQ-1105). At the travel step of a class insert the route announces the
+-- detour and asks "now or later"; later puts the insert on the list "later" (Runtime.lua). At every
+-- later travel step into a new zone, while the list holds quests, it asks whether to play them now as a
+-- side trip (RT:TakeLater); no keeps them on the list for the next zone change.
+function RT:ClassOffer()
+	local s = self.steps[self.cur]
+	if not s or s.kind ~= "travel" or not self:Detour(s) or self.saved.side then
+		return nil
+	end
+	local id = "class:" .. s.key
+	if self.saved.offers and self.saved.offers[id] then
+		return nil
+	end
+	local quests = {}
+	for _, st in ipairs(self.steps) do
+		if st.module == s.module then
+			for _, q in ipairs(st.quests) do
+				if not self.world.IsFlagged(q) then
+					quests[#quests + 1] = q
+				end
+			end
+		end
+	end
+	if #quests == 0 then
+		return nil
+	end
+	return { kind = "class", id = id, key = s.key, map = s.travel, quests = quests }
+end
+
+-- Level hint (owner 2026-11-06, ME-1106): once the character has the level of the first quest of a class
+-- insert (module field ready), the route says so wherever it stands and asks "now or later". Now plays
+-- the insert as a side trip at once (RT:TakeModule) and the route goes on where it was; later leaves it
+-- at its planned place, where the travel step asks again (ClassOffer). Not for an insert whose travel
+-- step is current or due within RT.LOOKAHEAD steps (ClassOffer comes there), not during a side trip,
+-- and not when its first quest is handed in, in the log, skipped or on the list "later".
+function RT:ReadyOffer(ctx)
+	if self.saved.side or not self.cur then
+		return nil
+	end
+	local level = ctx and ctx.level or (self.world.Level() or 1)
+	local offers = type(self.saved.offers) == "table" and self.saved.offers or {}
+	local blocked = ctx and ctx.blocked or self:Blocked()
+	local seen = {}
+	for i = self.cur, #self.steps do
+		local s = self.steps[i]
+		if not seen[s.module] then
+			seen[s.module] = true
+			local m = self.modules[s.module]
+			local id = "ready:" .. s.module
+			if
+				m
+				and m.kind == "class"
+				and type(m.ready) == "number"
+				and level >= m.ready
+				and self:Detour(s)
+				and i > self.cur + RT.LOOKAHEAD
+				and not offers[id]
+				and not offers["class:" .. s.key]
+				and self.saved.marks[s.key] ~= "s"
+			then
+				local first
+				for k = i + 1, #self.steps do
+					local t = self.steps[k]
+					if t.module ~= s.module then
+						break
+					end
+					for _, el in ipairs(t.els) do
+						if el[1] == V.ACCEPT then
+							first = el[2]
+							break
+						end
+					end
+					if first then
+						break
+					end
+				end
+				local w = self.world
+				if
+					first
+					and not w.IsFlagged(first)
+					and not w.InLog(first)
+					and not blocked[first]
+					and not self.saved.later[first]
+				then
+					return {
+						kind = "ready",
+						id = id,
+						key = s.key,
+						module = s.module,
+						map = s.travel,
+						quest = first,
+						level = m.ready,
+						plan = s.lv,
+					}
+				end
+			end
+		end
+	end
+	return nil
+end
+
+function RT:LaterOffer()
+	local s = self.steps[self.cur]
+	if not s or s.kind ~= "travel" or self:Detour(s) or self.saved.side then
+		return nil
+	end
+	local id = "later:" .. s.key
+	if self.saved.offers and self.saved.offers[id] then
+		return nil
+	end
+	local list = self:Later()
+	if #list == 0 then
+		return nil
+	end
+	local n = 0 -- class quests among them, for the question's text
+	for _, q in ipairs(list) do
+		if self.classQ[q] then
+			n = n + 1
+		end
+	end
+	return { kind = "later", id = id, key = s.key, quests = list, classes = math.max(n, 1) }
+end
+
+-- The open question of the current step: the class detour, a switch point, the list "later", the
+-- level hint of a class insert (ME-1106), then "over the plan"; nil when none. Nothing is asked while
+-- an abandon question waits.
 function RT:Offer(ctx)
 	if self.saved.pending or not self.cur or not self.steps[self.cur] then
 		return nil
 	end
 	ctx = ctx or self:Context()
-	return self:Switch(ctx) or self:OverPlan(ctx)
+	-- a switch point first: it decides where the route goes next; the list "later" asks after it at
+	-- the same travel step (or at the new block's), the level hint after both
+	return self:ClassOffer() or self:Switch(ctx) or self:LaterOffer() or self:ReadyOffer(ctx) or self:OverPlan(ctx)
 end
 
 -- Answer to the open question with this id: yes = true takes it. Returns true when answered, or
@@ -290,6 +417,34 @@ function RT:AnswerOffer(id, yes)
 	end
 	local s = self.saved
 	s.offers = type(s.offers) == "table" and s.offers or {}
+	if o.kind == "class" then
+		-- yes: now (the route goes on as planned); no: later, the insert waits on the list "later"
+		if yes then
+			s.offers[id] = "y"
+			return true
+		end
+		self:Push("later", o.key, o.quests[1])
+		s.offers[id] = "n"
+		self:DeferModule(self.steps[self.cur].module)
+		self:Changed("later")
+		return true
+	end
+	if o.kind == "ready" then
+		-- yes: the insert now as a side trip, its travel step asks no more; no: it stays where planned
+		s.offers[id] = yes and "y" or "n"
+		if yes then
+			s.offers["class:" .. o.key] = "y"
+			self:TakeModule(o.module, o.quest)
+		end
+		return true
+	end
+	if o.kind == "later" then
+		s.offers[id] = yes and "y" or "n"
+		if yes then
+			self:TakeLater()
+		end
+		return true
+	end
 	if not yes then
 		s.offers[id] = "n"
 		return true
@@ -319,7 +474,12 @@ function RT:AnswerOffer(id, yes)
 		local step = self.steps[k]
 		s.marks[step.key] = "s"
 		for _, q in ipairs(step.quests) do
-			if not s.roots[q] and not self.world.IsFlagged(q) and not self.world.InLog(q) then
+			if
+				not s.roots[q]
+				and not self.world.IsFlagged(q)
+				and not self.world.InLog(q)
+				and not self:Defer(q, step.key) -- a class chain waits on the list "later" (KQ-1105)
+			then
 				s.roots[q] = step.key
 			end
 		end

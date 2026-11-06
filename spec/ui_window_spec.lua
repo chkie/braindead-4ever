@@ -20,14 +20,16 @@ local function nextRows(ns)
 end
 
 -- First step key (from the current one on) whose skip takes follow-up quests with it.
-local function chainStep(ns)
+-- First step with follow-up quests; postpone = true: one whose skip postpones a class chain (KQ-1105),
+-- else one whose skip leaves the quests out.
+local function chainStep(ns, postpone)
 	local list = { ns.Route.Current() }
 	for _, n in ipairs(ns.Route.Upcoming(80)) do
 		list[#list + 1] = n
 	end
 	for _, info in ipairs(list) do
 		local follow = ns.Route.SkipPreview(info.key)
-		if follow and #follow > 0 then
+		if follow and #follow > 0 and ns.Route.SkipPostpones(info.key) == (postpone == true) then
 			return info, follow
 		end
 	end
@@ -532,6 +534,35 @@ describe("Step window", function()
 			assert.matches("Route recalculated%.$", frame(ns).status.text)
 		end)
 
+		it("a class chain is postponed: the dialog says so and the quests come back (KQ-1105)", function()
+			local ns = S.login()
+			local info, follow = chainStep(ns, true)
+			assert.is_table(info, "no step of a class chain with follow-up quests in the Elwynn route")
+			ns.StepFrame.AskSkip(info.key)
+			local popup = wow.popup
+			assert.matches("^Postpone .*%? It belongs to your class quest", popup.text)
+			popup.dialog.OnAccept(nil, popup.data)
+			assert.are.equal("skipped", ns.Route.StepState(info.key))
+			assert.matches("postponed%. They come back at the next zone change%.$", frame(ns).status.text)
+			local later = {}
+			for _, q in ipairs(ns.Route.Runtime():Later()) do
+				later[q] = true
+			end
+			-- the list holds the class chain; a follow-up without class bond waits with it and opens
+			-- again once the postponed quest is handed in (Runtime.lua RT:Later)
+			local rt, chain = ns.Route.Runtime(), 0
+			for _, q in ipairs(follow) do
+				if rt:ClassChain(q) then
+					chain = chain + 1
+					assert.is_true(later[q] == true, "class chain not on the list later: " .. q)
+				else
+					assert.is_true(rt:Blocked()[q] == true, "follow-up not waiting: " .. q)
+					assert.is_nil(rt:Blocked(true)[q], "follow-up skipped for good: " .. q)
+				end
+			end
+			assert.is_true(chain > 0 or #rt:Later() > 0, "nothing postponed")
+		end)
+
 		it("cancel leaves the route as it was; a step without follow-ups skips at once", function()
 			local ns = S.login()
 			local info = chainStep(ns)
@@ -540,7 +571,7 @@ describe("Step window", function()
 			wow.popup = nil
 			local plain
 			for _, n in ipairs(ns.Route.Upcoming(20)) do
-				if #ns.Route.SkipPreview(n.key) == 0 then
+				if #ns.Route.SkipPreview(n.key) == 0 and not ns.Route.SkipPostpones(n.key) then
 					plain = n
 					break
 				end

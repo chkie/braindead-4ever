@@ -84,13 +84,29 @@ def _element(el):
     return "{ " + ", ".join(out) + " }"
 
 
-def _module(m):
+def _ready(m, facts):
+    """ME-1106: the level from which the game offers the first quest a class insert accepts (its
+    minimum level, else its quest level); the runtime gives the level hint from then on. None when
+    the insert accepts nothing the facts know."""
+    for st in m.steps:
+        for el in st.elements:
+            if el.verb == "accept":
+                rec = facts.get(el.args["q"]) or {}
+                v = (rec.get("min") or {}).get("v") or (rec.get("level") or {}).get("v")
+                return int(v) if v else None
+    return None
+
+
+def _module(m, facts=None):
     lv = m.levels()
     lines = ["\t\t[%s] = {" % _lua_str(m.key)]
     lines.append(
         "\t\t\tkind = %s, mode = %s, levels = { %d, %d }, label = %s, version = %s,"
         % (_lua_str(m.kind), _lua_str(m.mode), lv[0], lv[1], _lua_str(m.header["label"]), m.header["version"])
     )
+    ready = _ready(m, facts or {}) if m.kind == "class" else None
+    if ready:
+        lines.append("\t\t\tready = %d," % ready)
     if m.filter is not None:
         lines.append("\t\t\t" + ", ".join(_ids(m.filter.races, m.filter.classes)) + ",")
     lines.append("\t\t\tsteps = {")
@@ -337,7 +353,7 @@ def compile_faction(faction, mods, comp, facts=None, extra=None):
         "\tmodules = {",
     ]
     for m in fmods:
-        out += _module(m)
+        out += _module(m, facts)
     out.append("\t},")
     out += _compose(comp)
     out += _quests(fmods, facts or {})

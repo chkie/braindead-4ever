@@ -33,6 +33,9 @@ of the Ace3 libraries used as well as that of the covered work.
 -- * From the anchor the route moves forward over every step that is done, skipped or passed.
 -- * Skipping a quest skips every quest that needs it (prerequisite groups from the route data; one
 --   quest per group is enough), transitively; a quest already handed in is never skipped.
+-- * Class quests are never lost (owner 2026-11-05, KQ-1105): skipping, abandoning or passing a quest
+--   of a class chain puts it on the list "later" (saved.later); it comes back at the next zone change
+--   (Replan.lua, question "later") and is played as a side trip (RT:TakeLater).
 local _, ns = ...
 local R, XP = ns.Routes, ns.XP
 local V = R.VERB
@@ -73,6 +76,7 @@ function RT.New(steps, quests, world, saved, opts)
 	saved.marks = type(saved.marks) == "table" and saved.marks or {}
 	saved.roots = type(saved.roots) == "table" and saved.roots or {}
 	saved.undo = type(saved.undo) == "table" and saved.undo or {}
+	saved.later = type(saved.later) == "table" and saved.later or {}
 	local self = setmetatable({
 		world = world,
 		quests = quests or {},
@@ -82,6 +86,7 @@ function RT.New(steps, quests, world, saved, opts)
 		index = {},
 		dependents = {},
 		accepts = {},
+		classQ = {}, -- questID -> true: a class quest (element class filter or a class insert module)
 		unsure = {}, -- questID -> true: no source secures its prerequisites (data: unsure)
 		observed = {}, -- questID -> prerequisite groups confirmed by player observations
 		resolved = {}, -- questID -> "observed" | "observed-none" (Routes/Prereq.lua)
@@ -95,6 +100,8 @@ function RT.New(steps, quests, world, saved, opts)
 	local zone -- zone of the steps so far: target of the last travel, else the map of a goto
 	for i, entry in ipairs(steps) do
 		local data = entry.step
+		local mod = self.modules[entry.module]
+		local classModule = mod and mod.kind == "class"
 		local s = {
 			key = entry.module .. "/" .. data.id,
 			module = entry.module,
@@ -117,6 +124,9 @@ function RT.New(steps, quests, world, saved, opts)
 					if not s.has[q] then
 						s.has[q] = true
 						s.quests[#s.quests + 1] = q
+					end
+					if el.c or classModule then
+						self.classQ[q] = true
 					end
 					if v == V.ACCEPT and not self.accepts[q] then
 						self.accepts[q] = i
@@ -196,16 +206,160 @@ function RT:Reindex()
 		end
 	end
 	self.dependents = dependents
+	self.chainMemo = nil
 end
 
--- Quests that cannot be done any more because the player skipped them or a quest they need.
-function RT:Blocked()
+-- Class chain (KQ-1105): a class quest, or a quest that a class quest of the route needs (directly or
+-- through other quests; one member of a group is enough to count).
+function RT:ClassChain(q)
+	if self.classQ[q] then
+		return true
+	end
+	self.chainMemo = self.chainMemo or {}
+	local memo = self.chainMemo
+	if memo[q] ~= nil then
+		return memo[q]
+	end
+	memo[q] = false -- guards against cycles in the data
+	for _, f in ipairs(self.dependents[q] or {}) do
+		if self:ClassChain(f) then
+			memo[q] = true
+			break
+		end
+	end
+	return memo[q]
+end
+
+-- Puts a quest of a class chain on the list "later" instead of skipping it; true when it did.
+function RT:Defer(q, key)
+	if not self:ClassChain(q) or self.world.IsFlagged(q) then
+		return false
+	end
+	self.saved.later[q] = self.saved.later[q] or key or true
+	self.saved.roots[q] = nil
+	return true
+end
+
+-- Every step of a module (a class insert) is skipped now and its quests wait on the list "later".
+function RT:DeferModule(module)
+	for _, st in ipairs(self.steps) do
+		if st.module == module then
+			self.saved.marks[st.key] = "s"
+			for _, q in ipairs(st.quests) do
+				self:Defer(q, st.key)
+			end
+		end
+	end
+end
+
+-- Quests on the list "later" that are still to do, with the quests of a class chain that need them,
+-- in route order. Quests without a class bond that wait with them are not listed: they open again by
+-- themselves once the postponed quest is handed in.
+function RT:Later()
+	local out, w = {}, self.world
+	for q in pairs(self.saved.later) do
+		if w.IsFlagged(q) then
+			self.saved.later[q] = nil
+		end
+	end
+	local base = self:Spread({ self.saved.roots })
+	for q in pairs(self:Spread({ self.saved.roots, self.saved.later })) do
+		if not base[q] and self:ClassChain(q) then
+			out[#out + 1] = q
+		end
+	end
+	table.sort(out, function(a, b)
+		local ia, ib = self.accepts[a] or math.huge, self.accepts[b] or math.huge
+		if ia ~= ib then
+			return ia < ib
+		end
+		return a < b
+	end)
+	return out
+end
+
+-- Side trip for the quests on the list "later" (KQ-1105): their steps, and every step of a class insert
+-- they belong to, open again and come first; when they are done, the route goes on where it was.
+function RT:TakeLater()
+	local list = self:Later()
+	if #list == 0 or self.saved.side then
+		return false
+	end
+	self:Push("takelater", nil, list[1])
+	local want, mods, keys = {}, {}, {}
+	for _, q in ipairs(list) do
+		want[q] = true
+	end
+	for _, st in ipairs(self.steps) do
+		for _, q in ipairs(st.quests) do
+			if want[q] then
+				keys[st.key] = true
+				local m = self.modules[st.module]
+				if m and m.kind == "class" then
+					mods[st.module] = true
+				end
+			end
+		end
+	end
+	for _, st in ipairs(self.steps) do
+		if mods[st.module] then
+			keys[st.key] = true
+		end
+		if keys[st.key] and self.saved.marks[st.key] == "s" then
+			self.saved.marks[st.key] = nil
+		end
+	end
+	self.saved.side = { back = self.saved.anchor, keys = keys }
+	self:Changed("takelater")
+	return true
+end
+
+-- Side trip into one class insert (ME-1106, level hint "now"): its steps come first, the level rule does
+-- not pass them, and when they are done the route goes on at the step it left. Undo takes it back.
+function RT:TakeModule(module, quest)
+	if self.saved.side then
+		return false
+	end
+	local keys, any = {}, false
+	for _, st in ipairs(self.steps) do
+		if st.module == module then
+			keys[st.key] = true
+			any = true
+			if self.saved.marks[st.key] == "s" then
+				self.saved.marks[st.key] = nil
+			end
+		end
+	end
+	if not any then
+		return false
+	end
+	self:Push("takelater", nil, quest)
+	self.saved.side = { back = self.saved.anchor, keys = keys }
+	self:Changed("takelater")
+	return true
+end
+
+-- Quests the route leaves out now: skipped by the player, waiting on the list "later" (not during the
+-- side trip, RT:TakeLater), and every quest that needs one of them. rootsOnly: the skipped ones only.
+function RT:Blocked(rootsOnly)
+	local seeds = { self.saved.roots }
+	if not rootsOnly and not self.saved.side then
+		seeds[2] = self.saved.later
+	end
+	return self:Spread(seeds)
+end
+
+-- The quests of the seed tables (keys) and, transitively, every quest with a prerequisite group of
+-- them only; handed-in quests never.
+function RT:Spread(seeds)
 	local flagged = self.world.IsFlagged
 	local blocked, queue = {}, {}
-	for q in pairs(self.saved.roots) do
-		if not flagged(q) then
-			blocked[q] = true
-			queue[#queue + 1] = q
+	for _, t in ipairs(seeds) do
+		for q in pairs(t) do
+			if not blocked[q] and not flagged(q) then
+				blocked[q] = true
+				queue[#queue + 1] = q
+			end
 		end
 	end
 	local head = 1
@@ -553,12 +707,36 @@ function RT:Evaluate()
 			from = i
 		end
 		self.recheck = nil
+		local side = type(saved.side) == "table" and saved.side or nil
+		if side then
+			-- side trip (RT:TakeLater): its first open step in route order; the level rule does not pass
+			-- its steps. When none is left, the route goes on at the step it left.
+			for k = 1, n do
+				if side.keys[self.steps[k].key] and self:StepState(k, ctx) == "open" then
+					self.cur = k
+					if prev ~= k then
+						self.notify("StepChanged", self:Info(k), prev and self:Info(prev) or nil)
+					end
+					return self:Current()
+				end
+			end
+			saved.side = nil
+			i, from = side.back and self.index[side.back] or i, nil
+		end
 		if from then
 			ctx.anchor = self:Anchor(from, ctx)
 		end
 		while i <= n do
-			if self:StepState(i, ctx) == "open" and not self:Passed(i, ctx) then
-				break
+			if self:StepState(i, ctx) == "open" then
+				if not self:Passed(i, ctx) then
+					break
+				end
+				-- a class chain the route passes is not lost (KQ-1105): it waits on the list "later"
+				for _, q in ipairs(self.steps[i].quests) do
+					if not self.world.InLog(q) and not ctx.blocked[q] then
+						self:Defer(q, self.steps[i].key)
+					end
+				end
 			end
 			i = i + 1
 		end
@@ -581,8 +759,9 @@ end
 function RT:Upcoming(n)
 	local out, ctx = {}, self:Context()
 	local i = (self.cur or 0) + 1
+	local side = type(self.saved.side) == "table" and self.saved.side.keys or nil
 	while self.steps[i] and #out < (n or 3) do
-		if self:StepState(i, ctx) == "open" and not self:Passed(i, ctx) then
+		if (not side or side[self.steps[i].key]) and self:StepState(i, ctx) == "open" and not self:Passed(i, ctx) then
 			out[#out + 1] = self:Info(i)
 		end
 		i = i + 1
@@ -598,6 +777,8 @@ function RT:Push(kind, key, quest)
 	u[#u + 1] = {
 		marks = copy(s.marks),
 		roots = copy(s.roots),
+		later = copy(s.later),
+		side = s.side and { back = s.side.back, keys = copy(s.side.keys) } or nil,
 		anchor = s.anchor,
 		pin = s.pin,
 		pending = s.pending,
@@ -617,6 +798,8 @@ function RT:Undo()
 	end
 	local s = self.saved
 	s.marks, s.roots = copy(snap.marks), copy(snap.roots)
+	s.later = type(snap.later) == "table" and copy(snap.later) or {}
+	s.side = snap.side
 	s.anchor, s.pin, s.pending = snap.anchor, snap.pin, snap.pending
 	if self.SetOrders then
 		-- a reorder that followed the action goes back with it (Routes/Replan.lua)
@@ -677,8 +860,12 @@ function RT:Skip(key)
 	self:Push("skip", key, self.steps[self.index[key]].quests[1])
 	local s = self.saved
 	s.marks[key] = "s"
+	if self:Detour(self.steps[self.index[key]]) then
+		-- the travel step of a class insert: the whole insert waits on the list "later" (KQ-1105)
+		self:DeferModule(self.steps[self.index[key]].module)
+	end
 	for _, q in ipairs(self.steps[self.index[key]].quests) do
-		if not s.roots[q] and not self.world.IsFlagged(q) then
+		if not s.roots[q] and not self.world.IsFlagged(q) and not self:Defer(q, key) then
 			s.roots[q] = key
 		end
 	end
@@ -788,6 +975,25 @@ function RT:SkipPreview(key)
 		return nil
 	end
 	return self:FollowUps(self.steps[self.index[key]].quests)
+end
+
+-- Whether skipping postpones instead (KQ-1105): the step (default: current) or, while an abandon
+-- question waits, its quest belongs to a class chain that is not handed in.
+function RT:Postpones(key)
+	local q = self.saved.pending
+	if q and key == nil then
+		return self:ClassChain(q) and not self.world.IsFlagged(q)
+	end
+	key = Key(self, key)
+	if not key then
+		return false
+	end
+	for _, x in ipairs(self.steps[self.index[key]].quests) do
+		if self:ClassChain(x) and not self.world.IsFlagged(x) then
+			return true
+		end
+	end
+	return self:Detour(self.steps[self.index[key]])
 end
 
 -- Follow-up quests of the quest an open abandon question is about; nil without a question.
@@ -904,7 +1110,9 @@ function RT:ResolveAbandon(choice)
 	self:Push(choice == "skip" and "skipquest" or "reaccept", key, q)
 	s.pending = nil
 	if choice == "skip" then
-		s.roots[q] = key
+		if not self:Defer(q, key) then
+			s.roots[q] = key
+		end
 	else
 		for _, step in ipairs(self.steps) do
 			if step.has[q] and s.marks[step.key] == "c" then

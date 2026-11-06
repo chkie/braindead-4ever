@@ -15,6 +15,7 @@ ns.RouteData.Horde = function()
 	modules = {
 		["h-explorer-class-orc-warlock-01"] = {
 			kind = "class", mode = "explorer", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 2 }, c = { 9 },
 			steps = {
 				{ id = "r1458", lv = 23, ret = "Klassenquest", { 6, 1, 1458, 16, 0 } },
@@ -33,6 +34,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-orc-warlock-03"] = {
 			kind = "class", mode = "explorer", levels = { 25, 25 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 2 }, c = { 9 },
 			steps = {
 				{ id = "r1454", lv = 25, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -45,6 +47,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-tauren-warrior-00"] = {
 			kind = "class", mode = "explorer", levels = { 12, 12 }, label = "vorläufig", version = 2,
+			ready = 4,
 			r = { 6 }, c = { 1 },
 			steps = {
 				{ id = "r1456", lv = 12, ret = "Klassenquest", { 6, 1, 1456, 16, 0 } },
@@ -56,6 +59,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-troll-mage-05"] = {
 			kind = "class", mode = "explorer", levels = { 26, 26 }, label = "vorläufig", version = 2,
+			ready = 26,
 			r = { 8 }, c = { 8 },
 			steps = {
 				{ id = "r1454", lv = 26, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -67,6 +71,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-troll-warlock-01"] = {
 			kind = "class", mode = "explorer", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 8 }, c = { 9 },
 			steps = {
 				{ id = "r1458", lv = 23, ret = "Klassenquest", { 6, 1, 1458, 16, 0 } },
@@ -85,6 +90,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-troll-warlock-03"] = {
 			kind = "class", mode = "explorer", levels = { 25, 25 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 8 }, c = { 9 },
 			steps = {
 				{ id = "r1454", lv = 25, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -96,6 +102,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-undead-mage-05"] = {
 			kind = "class", mode = "explorer", levels = { 26, 26 }, label = "vorläufig", version = 2,
+			ready = 26,
 			r = { 5 }, c = { 8 },
 			steps = {
 				{ id = "r1454", lv = 26, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -107,6 +114,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-undead-warlock-01"] = {
 			kind = "class", mode = "explorer", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 5 }, c = { 9 },
 			steps = {
 				{ id = "r1458", lv = 23, ret = "Klassenquest", { 6, 1, 1458, 16, 0 } },
@@ -125,6 +133,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-explorer-class-undead-warlock-03"] = {
 			kind = "class", mode = "explorer", levels = { 25, 25 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 5 }, c = { 9 },
 			steps = {
 				{ id = "r1454", lv = 25, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -1449,6 +1458,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-orc-warlock-01"] = {
 			kind = "class", mode = "speed", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 2 }, c = { 9 },
 			steps = {
 				{ id = "r1458", lv = 23, ret = "Klassenquest", { 6, 1, 1458, 16, 0 } },
@@ -1465,6 +1475,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-orc-warlock-03"] = {
 			kind = "class", mode = "speed", levels = { 25, 25 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 2 }, c = { 9 },
 			steps = {
 				{ id = "r1454", lv = 25, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -1477,6 +1488,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-tauren-warrior-00"] = {
 			kind = "class", mode = "speed", levels = { 12, 12 }, label = "vorläufig", version = 2,
+			ready = 4,
 			r = { 6 }, c = { 1 },
 			steps = {
 				{ id = "r1456", lv = 12, ret = "Klassenquest", { 6, 1, 1456, 16, 0 } },
@@ -1488,6 +1500,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-troll-mage-05"] = {
 			kind = "class", mode = "speed", levels = { 26, 26 }, label = "vorläufig", version = 2,
+			ready = 26,
 			r = { 8 }, c = { 8 },
 			steps = {
 				{ id = "r1454", lv = 26, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -1499,6 +1512,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-troll-warlock-01"] = {
 			kind = "class", mode = "speed", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 8 }, c = { 9 },
 			steps = {
 				{ id = "r1458", lv = 23, ret = "Klassenquest", { 6, 1, 1458, 16, 0 } },
@@ -1515,6 +1529,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-troll-warlock-03"] = {
 			kind = "class", mode = "speed", levels = { 25, 25 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 8 }, c = { 9 },
 			steps = {
 				{ id = "r1454", lv = 25, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -1526,6 +1541,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-undead-mage-05"] = {
 			kind = "class", mode = "speed", levels = { 26, 26 }, label = "vorläufig", version = 2,
+			ready = 26,
 			r = { 5 }, c = { 8 },
 			steps = {
 				{ id = "r1454", lv = 26, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },
@@ -1537,6 +1553,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-undead-warlock-01"] = {
 			kind = "class", mode = "speed", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 5 }, c = { 9 },
 			steps = {
 				{ id = "r1458", lv = 23, ret = "Klassenquest", { 6, 1, 1458, 16, 0 } },
@@ -1553,6 +1570,7 @@ ns.RouteData.Horde = function()
 		},
 		["h-speed-class-undead-warlock-03"] = {
 			kind = "class", mode = "speed", levels = { 25, 25 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 5 }, c = { 9 },
 			steps = {
 				{ id = "r1454", lv = 25, ret = "Klassenquest", { 6, 1, 1454, 16, 0 } },

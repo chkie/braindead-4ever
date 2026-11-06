@@ -15,6 +15,7 @@ ns.RouteData.Alliance = function()
 	modules = {
 		["a-explorer-class-gnome-warlock-04"] = {
 			kind = "class", mode = "explorer", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 7 }, c = { 9 },
 			steps = {
 				{ id = "r1445", lv = 23, ret = "Klassenquest", { 6, 1, 1445, 16, 0 } },
@@ -29,6 +30,7 @@ ns.RouteData.Alliance = function()
 		},
 		["a-explorer-class-human-warlock-04"] = {
 			kind = "class", mode = "explorer", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 1 }, c = { 9 },
 			steps = {
 				{ id = "r1445", lv = 23, ret = "Klassenquest", { 6, 1, 1445, 16, 0 } },
@@ -43,6 +45,7 @@ ns.RouteData.Alliance = function()
 		},
 		["a-explorer-class-nightelf-druid-04"] = {
 			kind = "class", mode = "explorer", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 4 }, c = { 11 },
 			steps = {
 				{ id = "r1450", lv = 23, ret = "Klassenquest", { 6, 1, 1450, 16, 0 } },
@@ -1377,6 +1380,7 @@ ns.RouteData.Alliance = function()
 		},
 		["a-speed-class-gnome-warlock-04"] = {
 			kind = "class", mode = "speed", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 7 }, c = { 9 },
 			steps = {
 				{ id = "r1445", lv = 23, ret = "Klassenquest", { 6, 1, 1445, 16, 0 } },
@@ -1391,6 +1395,7 @@ ns.RouteData.Alliance = function()
 		},
 		["a-speed-class-human-warlock-04"] = {
 			kind = "class", mode = "speed", levels = { 23, 23 }, label = "vorläufig", version = 2,
+			ready = 20,
 			r = { 1 }, c = { 9 },
 			steps = {
 				{ id = "r1445", lv = 23, ret = "Klassenquest", { 6, 1, 1445, 16, 0 } },

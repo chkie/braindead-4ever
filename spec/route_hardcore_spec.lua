@@ -48,13 +48,30 @@ describe("Hardcore-safe mode", function()
 		end)
 	end)
 
-	it("the routes hold no quest Polestar types as elite or group, dungeon, raid or PvP", function()
+	-- KQ-1105 (owner 2026-11-05): a class quest that continues a class chain stays in the route also as
+	-- an elite, group or dungeon quest; the hardcore mode warns there by the client's elite mark.
+	it("the routes hold no quest Polestar types as elite or group, dungeon, raid or PvP, but class chains", function()
 		local json = require("spec.helpers.json")
 		local EXCLUDED = { [1] = "elite or group", [41] = "PvP", [62] = "raid", [81] = "dungeon" }
-		local types = {}
+		local types, class, pre = {}, {}, {}
 		for line in io.lines("data/facts/quests.jsonl") do
 			local r = json.decode(line)
 			types[r.q] = r.type
+			class[r.q] = r.classes and r.classes.v ~= nil and r.classes.v ~= json.null
+			pre[r.q] = r.pre and r.pre.v or {}
+		end
+		local function continues(q)
+			if not class[q] then
+				return false
+			end
+			for _, g in ipairs(pre[q]) do
+				for _, m in ipairs(g) do
+					if class[m] then
+						return true
+					end
+				end
+			end
+			return false
 		end
 		local n = 0
 		for _, faction in ipairs({ "Alliance", "Horde" }) do
@@ -62,8 +79,8 @@ describe("Hardcore-safe mode", function()
 			assert(loadfile("Braindead4Ever/Routes/Data_" .. faction .. ".lua"))("Braindead4Ever", data)
 			for q in pairs(data.RouteData[faction]().quests) do
 				n = n + 1
-				assert.is_nil(
-					EXCLUDED[types[q]],
+				assert.is_true(
+					EXCLUDED[types[q]] == nil or continues(q),
 					("quest %d (%s) in the %s routes"):format(q, tostring(EXCLUDED[types[q]]), faction)
 				)
 			end

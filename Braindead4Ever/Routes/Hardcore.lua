@@ -25,7 +25,8 @@ of the Ace3 libraries used as well as that of the covered work.
 -- Lua, no WoW API. It uses only data that exists: the quest level of the route data (`quests`, Polestar
 -- and EG Link) and the elite mark of the client (C_QuestLog.IsEliteQuest, Forever only). It invents no
 -- danger values: no enemy levels, no damage, no death rates. The routes hold no quest that Polestar types
--- as elite or group, dungeon, raid or PvP (data/facts "type"; checked in spec/route_hardcore_spec.lua);
+-- as elite or group, dungeon, raid or PvP (data/facts "type"; checked in spec/route_hardcore_spec.lua),
+-- except a class quest that continues a class chain (owner 2026-11-05: a class chain runs to its end);
 -- the mode warns where the client still marks a route quest elite or a quest lies too far above the
 -- character, and the step window hides the optional dungeon step (UI/Connect.lua).
 local _, ns = ...
