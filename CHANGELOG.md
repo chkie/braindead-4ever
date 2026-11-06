@@ -8,6 +8,10 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.6 (2026-11-06)
+
+- Braindead 4ever is a WoW Forever addon and is no longer offered for Retail.
+
 ## 0.9.5 (2026-11-06)
 
 - Route order fixed where the game offers a quest only after another one is handed in, as players have checked in WoW Forever since the launch:

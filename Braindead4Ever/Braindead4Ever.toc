@@ -1,4 +1,4 @@
-## Interface: 120105, 16001
+## Interface: 16001
 ## Title: Braindead 4ever
 ## Notes: Free leveling guide with routes for levels 1 to 30. Not affiliated with Blizzard Entertainment.
 ## Notes-deDE: Kostenloser Leveling-Guide mit Routen für Stufe 1 bis 30. Nicht mit Blizzard Entertainment verbunden.
@@ -13,7 +13,8 @@
 ## SavedVariables: BraindeadForeverDB, BraindeadForeverCollectDB
 ## SavedVariablesPerCharacter: BraindeadForeverCharDB
 
-# Retail 12.1.5 test bed and fallback. Forever loads Braindead4Ever_Camelot.toc instead.
+# Fallback for Forever clients that read the plain name; Forever loads Braindead4Ever_Camelot.toc.
+# Forever only (owner 2026-11-06): no Retail interface version.
 # Keep the file list identical to Braindead4Ever_Camelot.toc (checked by spec/toc_spec.lua).
 Locales\enUS.lua
 Locales\deDE.lua [AllowLoadTextLocale deDE]

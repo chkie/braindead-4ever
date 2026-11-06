@@ -86,8 +86,8 @@ describe("TOC files", function()
 	local base = tocReader.parse(TOCS[1].file)
 	local camelot = tocReader.parse(TOCS[2].file)
 
-	it("declare the interface versions for Retail 12.1.5 and Forever", function()
-		assert.are.same({ 120105, 16001 }, interfaces(base))
+	it("declare Forever only, no Retail interface version (owner 2026-11-06)", function()
+		assert.are.same({ 16001 }, interfaces(base))
 		assert.are.same({ 16001 }, interfaces(camelot))
 	end)
 
