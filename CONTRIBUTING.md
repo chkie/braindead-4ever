@@ -70,5 +70,5 @@ The release notes come from [CHANGELOG.md](CHANGELOG.md) (`manual-changelog` in 
 1. Branch from the release tag: `git switch -c hotfix/launch v0.1.0` (later hotfixes: `hotfix/<topic>` from the last tag). CI runs on every push to `hotfix/**`.
 2. Fix, add a test that fails without the fix, CI green, owner approval.
 3. Add the version section to `CHANGELOG.md` in English. After renamed or deleted files add: "Restart the game client completely after this update, /reload is not enough."
-4. Tag on the hotfix branch without `alpha` or `beta`, one patch step per hotfix: `git tag -a v0.1.1 -m "v0.1.1"` and push the tag. GitHub Releases has it at once; CurseForge reviews files by hand between 08:00 and 15:00 CET.
+4. Tag on the hotfix branch without `alpha` or `beta`, one patch step per hotfix: `git tag -a v0.1.1 -m "v0.1.1"` and push the tag. GitHub Releases and CurseForge have it at once (updates of the approved project are live without review, observed 2026-11-06).
 5. Merge the hotfix branch back into `main`. Close a bug report only when the file is approved on CurseForge.
