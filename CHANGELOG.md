@@ -8,6 +8,12 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.8 (2026-11-06)
+
+- When you reach the level for your next class quest, the route tells you which quest it is and where to pick it up, and asks: now or later. Now takes you there and then back to the step you left. Later keeps the class quest where the route has planned it.
+- Before the route sends you to a class quest in another zone, it asks: now or later.
+- Class quests are never lost. A step of your class chain that you skip, abandon or pass by level waits on a list, and the route asks again at the next zone change whether you want to do it now.
+
 ## 0.9.7 (2026-11-06)
 
 - Finds reach other players far more often while few players share the hidden channel, as now after the launch: with a handful of players almost every find goes out, instead of about half. Each player receives at most one short message per second on average, which costs well under one percent of the addon's own frame budget.

@@ -427,6 +427,20 @@ end
 -- Replanning question (Welle 7): "You are 3 levels above the plan. Adjust the route?" or the switch
 -- point "Wetlands fits your level better (planned from level 20). Go there next?".
 function ST.Offer(o)
+	if o.kind == "class" then
+		return L.CLASS_ASK:format(ST.MapName(o.map) or L.ZONE_FALLBACK)
+	elseif o.kind == "ready" then
+		-- level hint (ME-1106): quest, giver and place; the giver only when the client knows the name
+		local npc = o.quest and Npc("Giver", o.quest)
+		local zone = ST.MapName(o.map) or L.ZONE_FALLBACK
+		if npc then
+			return L.READY_ASK_NPC:format(ST.Quest(o.quest), npc, zone)
+		end
+		return L.READY_ASK:format(ST.Quest(o.quest), zone)
+	elseif o.kind == "later" then
+		local n = o.classes or (o.quests and #o.quests) or 0
+		return n == 1 and L.LATER_ASK_1 or L.LATER_ASK_N:format(n)
+	end
 	if o.kind == "switch" then
 		local c = o.choice or {}
 		local text = L.SWITCH_ASK:format(ST.MapName(c.map) or L.ZONE_FALLBACK, c.plan or 0)
@@ -452,7 +466,7 @@ function ST.Undo(act)
 	if act.kind == "unknown" or not fmt or fmt == "ACT_" .. tostring(act.kind) then
 		return L.UNDO
 	end
-	if act.kind == "back" or act.kind == "adjust" or act.kind == "switch" then
+	if act.kind == "back" or act.kind == "adjust" or act.kind == "switch" or act.kind == "takelater" then
 		return L.UNDO_ACTION:format(fmt)
 	end
 	return L.UNDO_ACTION:format(fmt:format(act.quest and ST.Quest(act.quest) or ""))

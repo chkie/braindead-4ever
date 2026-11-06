@@ -157,7 +157,9 @@ describe("Route runtime under random actions", function()
 					assert.is_true(blocked[q] == true, label .. ": " .. q .. " needs a skipped quest")
 				end
 				if blocked[q] then
-					assert.is_true(s.roots[q] ~= nil or dead, label .. ": " .. q .. " skipped without reason")
+					-- skipped, postponed (class chain, KQ-1105) or needing one of those
+					local why = s.roots[q] ~= nil or (s.later[q] ~= nil and not s.side) or dead
+					assert.is_true(why, label .. ": " .. q .. " skipped without reason")
 					assert.is_false(w.flagged[q] == true, label .. ": handed-in quest " .. q .. " skipped")
 				end
 			end

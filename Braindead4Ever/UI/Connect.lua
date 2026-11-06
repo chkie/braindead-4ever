@@ -123,6 +123,11 @@ function C.ResolveAbandon(choice)
 	return call("ResolveAbandon", choice) == true
 end
 
+-- Whether a skip postpones a class chain (it comes back at the next zone change, KQ-1105).
+function C.SkipPostpones(key)
+	return call("SkipPostpones", key) == true
+end
+
 -- Follow-up quests a skip would take with it (list of quest IDs), or nil.
 function C.SkipPreview(key)
 	return call("SkipPreview", key)
