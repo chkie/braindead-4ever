@@ -45,12 +45,9 @@
   goto 1424 -941.5,-6.5 r=10 | src=polestar status=unbestätigt roots=1
   sethome | src=plan status=unbestätigt
 @a98094 lv=25
-  accept 98094 | src=polestar,att status=unbestätigt
   accept 527 | src=polestar,att status=unbestätigt
   accept 549 | src=polestar,att,eglink status=unbestätigt
   goto 1424 -928.0,-36.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c98094 lv=25
-  complete 98094 | src=polestar status=unbestätigt
 @a498 lv=25
   accept 498 | src=polestar,att status=unbestätigt
   goto 1424 -957.0,-40.5 r=10 | src=polestar,att status=unbestätigt roots=2
@@ -137,7 +134,10 @@
 @t528 lv=26
   turnin 528 | src=polestar status=unbestätigt
   accept 529 | src=polestar,att status=unbestätigt
+  accept 98094 | src=polestar,att status=unbestätigt
   goto 1424 -928.0,-36.5 r=10 | src=polestar status=unbestätigt roots=1
+@c98094 lv=25
+  complete 98094 | src=polestar status=unbestätigt
 @a567x lv=26 << class=!WARLOCK
   accept 567 | src=polestar,att,eglink status=unbestätigt
   goto 1424 -931.8,-21.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3

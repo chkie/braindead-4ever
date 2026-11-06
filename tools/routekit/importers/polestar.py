@@ -74,6 +74,73 @@ def _rows(path):
                 yield json.loads(line)
 
 
+# Polestar's hand-checked fixes (forever-db/corrections/quests.json, applied by its next
+# `forge data publish`). Owner 2026-11-06: no new Classic data; Forever data replace Classic data.
+# A correction counts only when one of its sources is a Forever source: recording (Polestar
+# Recorder), in-game-check, client (game client tables), eg (EG Link players' caches). cmangos,
+# questie, pfquest and factoruide are Classic or built on Classic data; tdb (ForeverTDB) is a
+# source the project does not take data from (FD-1101), so it does not count either.
+FOREVER_KINDS = {"recording", "in-game-check", "client", "eg"}
+
+
+def _forever_sourced(c):
+    src = c.get("source")
+    src = src if isinstance(src, list) else [src]
+    return any(isinstance(x, dict) and x.get("kind") in FOREVER_KINDS for x in src)
+
+
+def _apply_corrections(db, quests):
+    """Applies the Forever-sourced quest corrections to the records in place; returns the count
+    per field. Fields: races, classes, level, minLevel, xp, start, end, pre (any-of when no split),
+    preAny, preAll."""
+    path = os.path.join(db, "corrections", "quests.json")
+    counts = collections.Counter()
+    if not os.path.exists(path):
+        return counts
+    with open(path, encoding="utf-8") as fh:
+        corr = json.load(fh)
+    for key, c in sorted(corr.items(), key=lambda kv: int(kv[0])):
+        q = quests.get(int(key))
+        st = c.get("set") or {}
+        if q is None or not st:
+            continue
+        if not _forever_sourced(c):
+            counts["skipped (no Forever source)"] += 1
+            continue
+        before = json.dumps(q, sort_keys=True)
+        for src, dst in (("races", "racesMask"), ("classes", "classesMask"), ("level", "level"),
+                         ("minLevel", "min"), ("xp", "xp")):
+            if src in st and st[src] is not None:
+                q[dst] = st[src]
+                counts[src] += 1
+        for field in ("start", "end"):
+            if field in st and isinstance(st[field], dict):
+                q[field] = [{"k": k, "id": i} for k in ("npc", "object", "item") for i in st[field].get(k) or []]
+                q.pop(field + "Pos", None)
+                counts[field] += 1
+        if "preAll" in st or "preAny" in st:
+            pre = q.setdefault("pre", {})
+            for src, mode in (("preAll", "all"), ("preAny", "any")):
+                if src in st:
+                    pre[mode] = list(st[src] or [])
+                    if not pre[mode]:
+                        pre.pop(mode)
+            counts["pre"] += 1
+        elif "pre" in st:
+            pre = q.setdefault("pre", {})
+            pre.pop("all", None)
+            pre["any"] = list(st["pre"] or [])
+            if not pre["any"]:
+                pre.pop("any")
+            counts["pre"] += 1
+        if "pre" in q and not q["pre"]:
+            q.pop("pre")
+        if json.dumps(q, sort_keys=True) != before:
+            q["corrected"] = True
+            counts["quests changed"] += 1
+    return counts
+
+
 def run(src_dir, out_dir):
     db = os.path.join(src_dir, "forever-db")
     data = os.path.join(db, "data")
@@ -137,6 +204,8 @@ def run(src_dir, out_dir):
         if r.get("count") is not None:
             o["count"] = r["count"]
         q.setdefault("obj", []).append(o)
+
+    applied = _apply_corrections(db, quests)
 
     # Which spawns are needed: givers, enders, kill/object targets, droppers of item targets.
     want = collections.defaultdict(set)
@@ -241,6 +310,7 @@ def run(src_dir, out_dir):
     n = write_jsonl(os.path.join(out_dir, "quests.jsonl"), quests.values())
     write_jsonl(os.path.join(out_dir, "npcs.jsonl"), npcs, key="id")
     return {
+        "corrections": dict(applied),
         "quests": n,
         "ui_maps": len(ui_rows),
         "npcs": dict(collections.Counter(r["role"] for r in npcs)),

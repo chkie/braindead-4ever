@@ -8,6 +8,16 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.5 (2026-11-06)
+
+- Route order fixed where the game offers a quest only after another one is handed in, as players have checked in WoW Forever since the launch:
+  - Wetlands: "From the Ashes" now comes after you hand in "War Banners" (all Alliance routes).
+  - Hillsbrad Foothills: "Scout Support" now comes after "Battle of Hillsbrad" part II (all Horde routes).
+  - Deathknell: the Undead Paladin's class quest "A Difficult Path" now comes after "The Mindless Ones".
+  - Sen'jin Village: "Forgotten Loa Idols" now comes after "Report to Sen'jin Village".
+  - Tirisfal Glades (Explorer routes): "The Adventurer" now comes after "The Red Messenger".
+- No quest was added or removed.
+
 ## 0.9.4 (2026-11-06)
 
 - Sharing with players outside your group and guild works on WoW Forever. The game does not pass addon messages on in the hidden channel Braindead 4ever uses, so nothing reached other players there. Each find now also goes out as a short line in that channel: one line with one of your key presses or clicks, at most one every two seconds, never in a fight or an instance. No chat window shows these lines. Sharing with your group and guild is unchanged.

@@ -243,7 +243,6 @@
   complete 97223 | src=polestar status=unbestätigt
 @t99123 lv=7
   turnin 99123 | src=polestar status=unbestätigt
-  accept 97225 | src=polestar,att status=unbestätigt
   goto 1411 -4920.5,-814.0 r=10 | src=polestar status=unbestätigt roots=1
 @t97223 lv=7
   turnin 97223 | src=polestar status=unbestätigt
@@ -252,6 +251,7 @@
   turnin 805 | src=polestar,eglink status=unbestätigt
   accept 823 | src=polestar,att status=unbestätigt
   accept 808 | src=polestar,att status=unbestätigt
+  accept 97225 | src=polestar,att status=unbestätigt
   xp 8 | src=plan status=unbestätigt
   goto 1411 -4919.2,-827.8 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @a826 lv=8
