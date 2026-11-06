@@ -35,7 +35,7 @@ Context checks run by themselves when their window opens: quest dialog (`QUEST_D
 | Feature | Status | Note |
 | --- | --- | --- |
 | TOC for Forever (`Braindead4Ever_Camelot.toc`, interface 16001) | built | 16001 is the beta interface; check the live client on 2026-11-05 with `/dump select(4, GetBuildInfo())` |
-| TOC for the Retail 12.1.5 test bed (`Braindead4Ever.toc`, 120105 and 16001) | built | |
+| TOC `Braindead4Ever.toc` with Forever 16001 only, the Retail test bed ended with the launch (2026-11-06) | built | |
 | Error buffer: first occurrence per session goes to the error handler, repeats are counted | built | `Core/Guard.lua` |
 | Module turns off after 5 errors within 60 s | built | thresholds are chosen values, not measured |
 | Modules declare required API functions and events, checked at login | built | `Core/Modules.lua` |
