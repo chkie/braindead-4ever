@@ -723,7 +723,8 @@ local function WatchPresses()
 		keys:SetScript("OnKeyDown", press)
 	end
 	L.keys = keys
-	local world = _G.WorldFrame
+	-- the world frame: C_UI.GetWorldFrame where the client has it, else the global
+	local world = (api.GetWorldFrame and Call(api.GetWorldFrame)) or rawget(_G, "WorldFrame")
 	if type(world) == "table" and world.HookScript then
 		pcall(world.HookScript, world, "OnMouseDown", press)
 	end
@@ -908,6 +909,7 @@ local function Init()
 		ChatFrame_AddMessageEventFilter = "ChatFrame_AddMessageEventFilter",
 		SendChatMessage = "C_ChatInfo.SendChatMessage",
 		SendChatMessageOld = "SendChatMessage",
+		GetWorldFrame = "C_UI.GetWorldFrame",
 	}) do
 		api[name] = M.Optional(path)
 	end
