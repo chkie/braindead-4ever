@@ -57,41 +57,41 @@ Each session (login or /reload) every section of the vault may go out once, over
 
 ## Channel budget
 
-Every message on the hidden channel reaches every player in it. Without a limit, what each player receives grows with the number of players: the first spread simulation (200 clients) had every client receive about one message per second, and 5,000 players online in one channel would have meant about 100 per second. The owner set the limits on 2026-11-02 ("so rare that there are really no performance problems, that Blizzard does not complain, the addon must stay lean"):
+Every message on the hidden channel reaches every player in it. Without a limit, what each player receives grows with the number of players: the first spread simulation (200 clients) had every client receive about one message per second, and 5,000 players online in one channel would have meant about 100 per second. The owner's frame (2026-11-02: "no performance problems, Blizzard does not complain, the addon must stay lean"; 2026-11-06: "it must not disturb, cost performance or break a policy; it need not be as small as possible") and the measured cost below give the limits:
 
-- A client receives at most 0.5 channel messages per second on average and at most 1 per second in any 60 s, for 100, 1,000, 5,000 and 20,000 players.
+- A client receives at most 1 channel message per second on average and at most 120 in any 60 s, for 100, 1,000, 5,000 and 20,000 players, also with 10 s between a credit and its chat line. Until 0.9.6 the limits were 0.5 and 60; on a channel with few players that left most finds off it.
 - Receiving costs next to nothing; reading happens in slices outside fights and instances and not at a low frame rate.
 - Relays go out only outside fights and instances.
 
 The budget covers both kinds of channel messages, run sections and finds. The version notice (message `a`, Welle 9: major, minor, patch, pre-release flag; once per session on the channel) needs a credit of the finds pool like a find, so it adds nothing to the channel's traffic. Flight legs (message `h`, Welle 11, [ROUTE-FORMAT.md](ROUTE-FORMAT.md) §Flights in the exchange) need a credit of the finds pool too, relays only while no own find is waiting; the spread simulation with them is in `spec/flights_spec.lua`. Group and guild are not part of it.
 
-**Estimate of the players** (`Collector/Budget.lua`). Each client estimates how many players send on the channel and takes only its share of a fixed total: `SHARE[pool] / estimate` messages per second for runs (0.15 in total) and finds (0.1 in total). The estimate is an upper bound, the smaller of two:
+**Estimate of the players** (`Collector/Budget.lua`). Each client estimates how many players send on the channel and takes only its share of a fixed total: `SHARE[pool] / estimate` messages per second for runs (0.6 in total) and finds (0.4 in total). The estimate is an upper bound, the smaller of two:
 
-- **Repeats:** of the players heard in the last hour, how many were heard at least twice. If every player sends a Poisson number of messages, the share of repeated players fixes the messages per player and with it the number of players. The bound takes the low end of a one-sided 90 % interval for the repeats (Wilson-Hilferty), so it errs towards more players. No repeat at all means 20,000 players (`SENDERS_MAX`). A player counts once however much it sends, so a flooding sender moves the estimate by one repeat at most.
+- **Repeats:** of the players heard in the last hour, how many were heard at least twice. If every player sends a Poisson number of messages, the share of repeated players fixes the messages per player and with it the number of players. The bound takes the low end of a one-sided 90 % interval for the repeats (Wilson-Hilferty), so it errs towards more players. No repeat at all means 5,000 players (`SENDERS_MAX`), which is also the upper bound of every estimate. A player counts once however much it sends, so a flooding sender moves the estimate by one repeat at most.
 - **Traffic:** every client sends at least `SHARE / SENDERS_MAX` per second, so the channel's messages per second times `SENDERS_MAX / SHARE` bound the players from above (90 % end of the Poisson interval). This gets a quiet channel going: there, repeats would take hours.
 
-Credits come at random moments (a Poisson process of the client's rate); a pool holds at most one, and a channel message takes one. Run messages wait for a credit, finds wait 60 s and are then left off the channel. A hard stop sits on top: when 30 channel messages arrived in the last 60 s, nobody sends and held credits are dropped. In the simulation the estimate alone keeps the limits; without the stop the results are the same (most in 60 s: 31 instead of 30 at 5,000 clients).
+Credits come at random moments (a Poisson process of the client's rate); a pool holds at most one, and a channel message takes one. Run messages wait for a credit, finds wait 60 s and are then left off the channel. A hard stop sits on top: when 120 channel messages arrived in the last 60 s, nobody sends, held credits are dropped and waiting chat lines hold back. In the simulation the estimate alone keeps the limits at every size (at 20,000 clients 1.05 times the players online). With `SENDERS_MAX` 1,000 the estimate would stop at 0.22 times the players online there and the stop would carry the whole load (plausibility check 2026-11-06, round 6).
 
 **Member count of the channel.** Forever has `GetChannelDisplayInfo` (with a count), `GetNumChannelMembers` and the event `CHANNEL_COUNT_UPDATE` (Ketho BlizzardInterfaceResources, branch forever, `Resources/GlobalAPI.lua` and `Events.lua`, read 2026-11-02). Blizzard's channel pane shows the count only for group channels and fills it after `SetSelectedDisplayChannel` asks the server for the roster (wow-ui-source forever ca8368f, `Blizzard_Channels/Mainline/ChannelFrame.lua`, `ChannelList.lua`); `GetNumChannelMembers` has no documentation. Asking for the roster of a channel with thousands of players would load the server and change the player's channel pane, so the estimate uses the messages only. Sender names stay in memory for the hour of the window and are never saved.
 
-**Receiving.** `CHAT_MSG_ADDON` checks the prefix and puts the raw text with its arrival time into one of two inboxes (channel; group and guild), 100 messages each, the oldest give way. The exchange's one-second ticker reads at most 10 messages and at most 1 ms per second, and only when the player is not fighting, not in an instance and the frame rate is at least 20 (ChatThrottleLib's floor). The estimate takes each message at its arrival time. While the channel inbox holds unread messages, nothing goes on the channel.
+**Receiving.** `CHAT_MSG_ADDON` checks the prefix and puts the raw text with its arrival time into one of two inboxes (channel; group and guild), 200 messages each, the oldest give way. The exchange's one-second ticker reads at most 10 messages and at most 1 ms per second, and only when the player is not fighting, not in an instance and the frame rate is at least 20 (ChatThrottleLib's floor). The estimate takes each message at its arrival time. While the channel inbox holds unread messages, nothing goes on the channel.
 
 **Spread simulation** (`spec/helpers/spread.lua`, run by `spec/channel_budget_spec.lua`): clients with the real `Proto.lua`, `Runs.lua` and `Budget.lua` in one channel; 10 rounds of 4 hours; in each round a client starts one session with probability 0.5, 1 to 3 hours long, at any moment (sessions run on into the next round); one own section per 30 minutes of play, due 30 to 90 s later; every client always has a find waiting. Received means channel messages while online, without the client's own. Reach: the share of other players' sections that reached one exporting client (heard on the channel while it was online) within n rounds after the end of the round they were made in, mean over 10 exporters. Seed 20261102:
 
 | Clients | Online on average | Received per client and s, mean | Busiest client | Most in 60 s | Own sections on the channel | Reach after 1 round | 2 | 5 | 9 | Sections one exporter collected in 10 rounds |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 100 | 22 | 0.137 | 0.159 | 24 | 96 % | 0.290 | 0.493 | 0.873 | 0.969 | 1,122 |
-| 1,000 | 230 | 0.174 | 0.190 | 26 | 60 % | 0.133 | 0.154 | 0.202 | 0.366 | 3,068 |
-| 5,000 | 1,136 | 0.186 | 0.233 | 30 | 16 % | 0.034 | 0.042 | 0.051 | 0.075 | 3,821 |
-| 20,000 | 4,552 | 0.153 | 0.249 | 29 | 3 % | 0.006 | 0.008 | 0.010 | 0.016 | 2,855 |
+| 100 | 22 | 0.453 | 0.583 | 69 | 98 % | 0.367 | 0.724 | 0.994 | 1.000 | 1,350 |
+| 1,000 | 230 | 0.593 | 0.752 | 74 | 95 % | 0.237 | 0.282 | 0.460 | 0.690 | 7,136 |
+| 5,000 | 1,136 | 0.792 | 0.861 | 81 | 56 % | 0.126 | 0.148 | 0.200 | 0.327 | 14,835 |
+| 20,000 | 4,552 | 0.951 | 0.996 | 89 | 20 % | 0.035 | 0.045 | 0.059 | 0.096 | 16,876 |
 
-Limits 0.5 and 60 hold with room at every size; seeds 3, 4 and 5 gave at most 0.181 on average, 0.251 for the busiest client and 30 in 60 s. The estimate was on average 1.3 to 1.6 times the players online (it also counts players who left within the hour). The price is reach: with many players most sections never reach the channel, and one exporter collects a sample of roughly 3,000 sections in 10 rounds, whatever the number of players (seeds 3 to 5: 2,780 to 3,754 from 1,000 players on).
+Limits 1 and 120 hold at every size; with 2, 5 and 10 s between credit and chat line at most 94 in 60 s (plausibility check, round 6). Up to 1,000 clients the estimate was 1.4 to 1.6 times the players online (it also counts players who left within the hour). Small channels, the case after the launch: with 4, 10 and 30 players 99 %, 99 % and 92 % of the finds reach the channel (0.9.6: 55 %, 52 % and 34 %).
 
 Counter-check without budget (the clients send as before the budget, one round so it stays short): 1,000 clients receive 3.79 messages per second on average and up to 311 in 60 s, without counting the relays that start in later rounds.
 
 Simplifications, so that 20,000 clients run in about 25 s: clients older than an hour hear the same channel and share one estimate; younger ones share one per login minute. Above 100 clients only the exporters' vaults hear the channel; the others relay their own sections only. Checked against the exact model: one estimate per login second at 1,000 clients gave reach 0.379 instead of 0.370 after 9 rounds; every vault hearing gave 0.370 instead of 0.366 at 1,000 clients and 0.073 instead of 0.075 at 5,000. The model values are chosen; how many players share a channel in Forever, and whether channels are split by faction, is measured in the game from 2026-11-05.
 
-**Cost** (`spec/channel_budget_spec.lua`, Lua 5.1 on the development machine, not in the game): the event costs 0.5 µs per message, reading 13 µs (parsing, estimate, vault or find buffer). At the limit of 0.5 messages per second that is 0.11 µs per frame at 60 frames per second, 0.11 % of the addon's 0.1 ms. Memory: two full inboxes 21 KB, a full estimate window (2,000 messages from different players) 226 KB, a full run vault of 5,000 sections 1,562 KB in the running game (the texts alone 215 KB), together 1.8 MB of the 10 MB budget; the vault is most of it.
+**Cost** (`spec/channel_budget_spec.lua`, Lua 5.1 on the development machine, not in the game): the event costs 0.5 µs per message, reading 13 µs (parsing, estimate, vault or find buffer). At the limit of 1 message per second that is 0.23 µs per frame at 60 frames per second, 0.23 % of the addon's 0.1 ms. Memory: two full inboxes 42 KB, a full estimate window (2,000 messages from different players) 226 KB, a full run vault of 5,000 sections 1,562 KB in the running game (the texts alone 215 KB), together 1.8 MB of the 10 MB budget; the vault is most of it.
 
 ## Export and analysis
 
@@ -117,14 +117,14 @@ token,race,class,mode,kind,section,version,seconds,xp,in_order,level,day,source
 | Margin over the record pace | `Runs.RECORD_MARGIN` | 1.5 |
 | Guided share for the route mode | `Routes/Guide.lua` `ModeOf` | half of the active seconds |
 | Following the route | `tools/routekit/runs.py` `FOLLOW_MIN` | 80 % in order |
-| Channel shares | `Budget.SHARE` | runs 0.15, finds 0.1 messages per second on the whole channel (half of the owner's 0.5) |
+| Channel shares | `Budget.SHARE` | runs 0.6, finds 0.4 messages per second on the whole channel |
 | Estimate window | `Budget.WINDOW` | 3600 s |
-| Most players assumed | `Budget.SENDERS_MAX` | 20,000 (largest size simulated) |
+| Most players assumed | `Budget.SENDERS_MAX` | 5,000, also the upper bound of every estimate |
 | Confidence of the bounds | `Budget.Z` | one-sided 90 % |
 | Estimate reused for | `Budget.REFRESH` | 30 s |
-| Hard stop | `Budget.BUSY` | 30 channel messages in 60 s |
+| Hard stop | `Budget.BUSY` | 120 channel messages in 60 s |
 | Remembered channel messages | `Budget.EVENTS_MAX` | 2000 |
 | Find waits for the channel | `Exchange.FIND_WAIT` | 60 s |
-| Inbox | `Exchange.INBOX_MAX` | 100 messages each for channel and for group and guild |
+| Inbox | `Exchange.INBOX_MAX` | 200 messages each for channel and for group and guild |
 | Reading per second | `Exchange.SLICE`, `Exchange.SLICE_MS` | 10 messages, 1 ms |
 | Lowest frame rate for reading | `Exchange.MIN_FPS` | 20 |

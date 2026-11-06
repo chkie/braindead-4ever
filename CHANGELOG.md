@@ -8,6 +8,10 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.7 (2026-11-06)
+
+- Finds reach other players far more often while few players share the hidden channel, as now after the launch: with a handful of players almost every find goes out, instead of about half. Each player receives at most one short message per second on average, which costs well under one percent of the addon's own frame budget.
+
 ## 0.9.6 (2026-11-06)
 
 - Braindead 4ever is a WoW Forever addon and is no longer offered for Retail.

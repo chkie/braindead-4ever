@@ -393,6 +393,21 @@ describe("Exchange: chat lines on the hidden channel", function()
 		assert.are.equal(0, #X.lines.queue)
 	end)
 
+	it("holds lines back while the channel is busy", function()
+		local _, X = channelFind()
+		X.budget.Busy = function()
+			return true
+		end
+		wow.press()
+		assert.are.equal(0, #lines())
+		assert.are.equal(1, #X.lines.queue)
+		X.budget.Busy = function()
+			return false
+		end
+		wow.press()
+		assert.are.equal(1, #lines())
+	end)
+
 	it("a throttle notice drops the line in flight", function()
 		local _, X = channelFind()
 		wow.world.dropLines = true
