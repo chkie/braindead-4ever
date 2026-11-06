@@ -56,13 +56,7 @@
   goto 1437 -743.0,-3684.5 r=10 | src=polestar status=unbestätigt roots=1
 @a464 lv=26
   accept 464 | src=polestar,att status=unbestätigt
-  accept 98221 | src=polestar,att status=unbestätigt
   goto 1437 -797.5,-3732.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c98221 lv=26
-  complete 98221 | src=polestar status=unbestätigt
-@t98221 lv=26
-  turnin 98221 | src=polestar status=unbestätigt
-  goto 1437 -797.5,-3732.5 r=10 | src=polestar status=unbestätigt roots=1
 @c464 lv=26
   complete 464 | src=polestar status=unbestätigt
   goto 1437 -2427.5,-3456.5 r=10 | src=polestar status=unbestätigt roots=1
@@ -108,7 +102,13 @@
   hs | src=plan status=unbestätigt
 @t464 lv=26
   turnin 464 | src=polestar status=unbestätigt
+  accept 98221 | src=polestar,att status=unbestätigt
   xp 27 | src=plan status=unbestätigt
+  goto 1437 -797.5,-3732.5 r=10 | src=polestar status=unbestätigt roots=1
+@c98221 lv=26
+  complete 98221 | src=polestar status=unbestätigt
+@t98221 lv=26
+  turnin 98221 | src=polestar status=unbestätigt
   goto 1437 -797.5,-3732.5 r=10 | src=polestar status=unbestätigt roots=1
 @a98208 lv=27
   accept 98208 | src=polestar,att status=unbestätigt

@@ -1,7 +1,7 @@
 {
  "clientBuild": "1.60.1.70532",
- "commit": "463c52c8a65babd48f88f74cb69d640b2025fbe3",
- "commitDate": "2026-10-31T09:12:21+01:00",
+ "commit": "d08cfa074bbc7abefd25773fdf2d0d9a11184ff9",
+ "commitDate": "2026-11-06T11:57:06+01:00",
  "files": [
   "quests.jsonl",
   "ui_map.jsonl",
@@ -13,5 +13,5 @@
  "selection": "quests with min_level <= 30 and level <= 34; tables quest, quest_start, quest_end, quest_prereq, quest_objective, spawn, item_source, ui_map; no titles or names. Service NPCs from tables npc and spawn: class trainers, innkeepers and flight masters chosen by title, with role, class, faction template, a side derived from the sides of the quests NPCs with the same template give and take, and spawn points; no titles or names",
  "source": "polestar",
  "status": "unbestätigt",
- "version": "2026.10.1"
+ "version": "2026.11.1"
 }
