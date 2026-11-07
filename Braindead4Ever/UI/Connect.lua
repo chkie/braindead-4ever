@@ -276,9 +276,11 @@ UI.OnChange("style", C, function(_, _, value)
 	C.ApplyStyle()
 end)
 
--- Rumors (hint level 1, finds of other players): the newest one arrives with FindsChanged(key); the
--- step window shows it once, then it is used up.
-local rumor -- { id = key, text, map }
+-- Rumors (hint level 1, finds of other players): the newest one per zone arrives with
+-- FindsChanged(key); the step window shows it once, in that zone only, then it is used up. A find in
+-- another zone waits there (Discord bug report 07.11.2026: an undead at level 3 in Tirisfal was told
+-- about a quest in the Barrens and read it as an offer to go there).
+local rumors = {} -- map -> { id = key, text, map }
 local seen = {}
 
 local function Entry(key)
@@ -295,12 +297,12 @@ function C.OnFindsChanged(_, key)
 		return
 	end
 	local e = Entry(key)
-	if e and e.show == "rumor" and e.text then
-		rumor = { id = key, text = e.text, map = e.map }
+	if e and e.show == "rumor" and e.text and e.map then
+		rumors[e.map] = { id = key, text = e.text, map = e.map }
 	end
 end
 
--- Newest unseen rumor { id, text, map } or nil; never with "just follow the arrow".
+-- Newest unseen rumor { id, text, map } of the player's zone or nil; never with "just follow the arrow".
 function C.Rumor()
 	if UI.Get("style") == "arrow" then
 		return nil
@@ -308,7 +310,8 @@ function C.Rumor()
 	if source and type(source.Rumor) == "function" then
 		return source.Rumor()
 	end
-	return rumor
+	local map = ns.Util.Num(C_Map.GetBestMapForUnit("player"))
+	return map and rumors[map] or nil
 end
 
 -- Subscribes a window to new finds (rumors, own finds, requests); fn(owner, key?).
@@ -327,8 +330,10 @@ function C.RumorDone(id)
 	if id then
 		seen[id] = true
 	end
-	if rumor and (not id or rumor.id == id) then
-		rumor = nil
+	for map, r in pairs(rumors) do
+		if not id or r.id == id then
+			rumors[map] = nil
+		end
 	end
 end
 
