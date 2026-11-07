@@ -56,6 +56,16 @@ describe("Discovery in the interface", function()
 		assert.is_true(#pinsByTitle() > before)
 	end)
 
+	it("keeps a rumor of another zone until the player is there (Discord report 07.11.2026)", function()
+		local ns = S.login({ style = "hints" })
+		wow.world.player.map = 1420 -- Tirisfal Glades; the find lies in Elwynn Forest
+		hear(ns)
+		assert.is_nil(banner(ns))
+		wow.world.player.map = 1429
+		ns.StepFrame.Refresh()
+		assert.are.equal("Rumor: Other players saw a rare creature in Elwynn Forest.", banner(ns))
+	end)
+
 	it("speaks German in the German client", function()
 		local ns = S.login({ style = "hints", locale = "deDE" })
 		hear(ns)

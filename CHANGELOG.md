@@ -8,6 +8,10 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.9 (2026-11-07)
+
+- A rumor about other players' finds now shows only in the zone of the find. Before, a rumor from any zone could show up at once, for example a quest in the Barrens for a level 3 character in Tirisfal Glades, and read like an offer to go there. A rumor of another zone now waits until you are in that zone.
+
 ## 0.9.8 (2026-11-06)
 
 - When you reach the level for your next class quest, the route tells you which quest it is and where to pick it up, and asks: now or later. Now takes you there and then back to the step you left. Later keeps the class quest where the route has planned it.
