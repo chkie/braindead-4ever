@@ -30,10 +30,11 @@ of the Ace3 libraries used as well as that of the covered work.
 --   * A check mark the player sets himself stays, one he removes stays removed (also after a pause).
 --     Blizzard sets marks on its own after an accept and on progress (Blizzard_ObjectiveTracker.lua,
 --     QuestMapFrame.lua, CVar autoQuestWatch); such a mark is not the player's.
---   * "Hidden" empties the watch list (player marks stay) and sets the tracker's alpha to 0. Hide() is
---     not used: Blizzard's container shows itself again whenever a module has content
---     (Blizzard_ObjectiveTrackerContainer.lua) and a Hide from addon code runs its managed-frame layout
---     tainted (RealUI tracker rewrite 2026-10-05).
+--   * "Hidden" sets the tracker's alpha to 0 and leaves the marks alone: the minimap draws quest areas
+--     only for marked quests (report in #bug-reports, 2026-11-08); marks changed under "only the route"
+--     come back first. Hide() is not used: Blizzard's container shows itself again whenever a module
+--     has content (Blizzard_ObjectiveTrackerContainer.lua) and a Hide from addon code runs its
+--     managed-frame layout tainted (RealUI tracker rewrite 2026-10-05).
 --   * Every call waits for the end of a fight (UI.OutOfCombat). Whether the calls from addon code cause
 --     taint is unconfirmed (docs/TESTING-RETAIL.md, taintLog 2); a blocked action reported for Braindead 4ever
 --     during a call turns only this module off.
@@ -204,7 +205,7 @@ function QW.Restore()
 	return true
 end
 
--- One pass: save the marks once, then only the route's quests (or none) plus the player's own.
+-- One pass: save the marks once, then only the route's quests plus the player's own.
 function QW.Apply()
 	if not (state and M.IsActive("questwatch")) then
 		return
@@ -212,6 +213,13 @@ function QW.Apply()
 	local mode = QW.Mode()
 	if mode == "keep" then
 		QW.Restore()
+		return
+	end
+	if mode == "hide" then
+		-- only the tracker goes: the marks stay, the game keeps setting its own, and the quest areas
+		-- on the minimap follow them (report in #bug-reports, 2026-11-08)
+		QW.Restore()
+		QW.SetTracker(true)
 		return
 	end
 	local list, set = QW.Watched()

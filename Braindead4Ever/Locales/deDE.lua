@@ -364,7 +364,7 @@ L.TRACKER_route = "Nur Quests der Route verfolgen"
 L.TRACKER_hide = "Ausblenden"
 L.TIP_TRACKER_keep = "Braindead 4ever lässt die Questanzeige so, wie du sie eingestellt hast."
 L.TIP_TRACKER_route =
-	"Die Questanzeige folgt den Quests der Route; andere Quests verlassen sie, außer du hakst sie selbst an."
+	"Die Questanzeige folgt den Quests der Route; andere Quests verlassen sie, außer du hakst sie selbst an. Questgebiete auf der Minikarte erscheinen nur für angehakte Quests."
 L.TIP_TRACKER_hide =
 	"Blizzards Questanzeige bleibt ausgeblendet, solange Braindead 4ever dich führt, und das Schrittfenster nimmt ihren Platz ein."
 L.OPT_LOCK = "Fenster fixieren"

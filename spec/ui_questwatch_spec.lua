@@ -1,6 +1,7 @@
 -- SPDX-License-Identifier: GPL-3.0-or-later
 -- Option "Blizzard's quest tracker" (owner reading point 15, Welle 5b task 8): unchanged | only the
--- quests of the route | hidden (default since Welle 5c, owner reading 16). The check marks of the character are saved first and come
+-- quests of the route | hidden (default since Welle 5c, owner reading 16; since 2026-11-08 it leaves the
+-- marks alone). The check marks of the character are saved first and come
 -- back with "unchanged", the pause, a module turned off and at logout; a mark the player sets stays,
 -- one he removes stays removed; marks Blizzard sets by itself after an accept are not the player's;
 -- nothing happens in a fight; an error turns only this module off.
@@ -60,16 +61,15 @@ describe("Blizzard's quest tracker", function()
 	it("hides Blizzard's quest tracker by default and brings it back with the pause and at logout", function()
 		local ns = login({ saved = {} })
 		assert.are.equal("hide", ns.UI.Get("tracker"))
-		assert.are.same({}, wow.world.watches)
+		assert.are.same({ 33, OTHER[1] }, sorted(wow.world.watches)) -- the marks stay
 		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
-		assert.are.same({ 33, OTHER[1] }, ns.QuestWatch.State().saved)
 		ns.UI.SetPaused(true)
 		wow.advance(1)
 		assert.are.same({ 33, OTHER[1] }, sorted(wow.world.watches))
 		assert.are.equal(1, _G.ObjectiveTrackerFrame.alpha)
 		ns.UI.SetPaused(false)
 		wow.advance(1)
-		assert.are.same({}, wow.world.watches)
+		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
 		wow.fire("PLAYER_LOGOUT")
 		assert.are.same({ 33, OTHER[1] }, sorted(wow.world.watches))
 		assert.are.equal(1, _G.ObjectiveTrackerFrame.alpha)
@@ -132,19 +132,30 @@ describe("Blizzard's quest tracker", function()
 		assert.are.same({ 33, 783 }, sorted(wow.world.watches))
 	end)
 
-	it("hidden empties the list but the player's marks and sets the tracker's alpha to 0", function()
+	it("hidden brings the marks of the route mode back and sets the tracker's alpha to 0", function()
 		local ns = login({ log = { 33, 783, OTHER[1], OTHER[2] } })
 		wow.world.watch(OTHER[2], true)
 		wow.advance(1)
 		_G.Settings.SetValue("BRAINDEADFOREVER_TRACKER", "hide")
 		wow.advance(1)
-		assert.are.same({ OTHER[2] }, wow.world.watches)
+		assert.are.same({ 33, OTHER[1], OTHER[2] }, sorted(wow.world.watches))
 		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
 		_G.Settings.SetValue("BRAINDEADFOREVER_TRACKER", "route")
 		wow.advance(1)
 		assert.are.equal(1, _G.ObjectiveTrackerFrame.alpha)
 		assert.are.same({ 33, 783, OTHER[2] }, sorted(wow.world.watches))
 		assert.is_nil(ns.QuestWatch.hidden)
+	end)
+
+	it("hidden leaves Blizzard's own mark after an accept, so the quest area shows on the minimap", function()
+		-- report in #bug-reports, 2026-11-08: without the mark the minimap shows no quest area
+		local ns = login({ saved = {}, log = { 33 }, marks = { 33 } })
+		assert.are.equal("hide", ns.UI.Get("tracker"))
+		accept(OTHER[2])
+		accept(783)
+		wow.advance(1)
+		assert.are.same({ 33, 783, OTHER[2] }, sorted(wow.world.watches))
+		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
 	end)
 
 	it("restores at logout and writes the table back; the next login saves and applies again", function()
@@ -204,7 +215,7 @@ describe("Blizzard's quest tracker", function()
 		assert.are.same({ 33, 783, OTHER[2] }, sorted(wow.world.watches))
 		S.combat(false)
 		assert.are.same({}, wow.blocked)
-		assert.are.same({}, wow.world.watches)
+		assert.are.same({ 33, OTHER[1] }, sorted(wow.world.watches)) -- hidden: the saved marks are back
 		assert.are.equal(0, _G.ObjectiveTrackerFrame.alpha)
 	end)
 
