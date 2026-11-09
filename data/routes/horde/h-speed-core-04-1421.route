@@ -11,8 +11,12 @@
 #version 1
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1411 lv=24 !return "neue Quests"
+  travel walk 1411 | src=plan status=unbestätigt
+@r1420 lv=24 !return "neue Quests"
+  travel zeppelin 1420 | src=plan status=unbestätigt
 @r1421 lv=24 !return "neue Quests"
-  travel zeppelin 1421 | src=plan status=unbestätigt
+  travel walk 1421 | src=plan status=unbestätigt
 @a95034 lv=24 << race=UNDEAD class=PALADIN
   accept 95034 | src=polestar,att status=unbestätigt
   accept 91859 | src=polestar,att status=unbestätigt

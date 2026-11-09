@@ -11,8 +11,12 @@
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1434 lv=28
+  travel walk 1434 | src=plan status=unbestätigt
+@r1413 lv=28
+  travel boat 1413 | src=plan status=unbestätigt
 @r1440 lv=28
-  travel boat 1440 | src=plan status=unbestätigt
+  travel walk 1440 | src=plan status=unbestätigt
 @a98417 lv=28
   accept 98417 | src=polestar,att,eglink status=unbestätigt
   goto 1440 -3273.8,2910.2 r=10 | src=eglink,polestar,att status=unbestätigt roots=3

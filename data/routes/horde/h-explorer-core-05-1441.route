@@ -11,8 +11,12 @@
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1420 lv=25
+  travel walk 1420 | src=plan status=unbestätigt
+@r1411 lv=25
+  travel zeppelin 1411 | src=plan status=unbestätigt
 @r1441 lv=25
-  travel zeppelin 1441 | src=plan status=unbestätigt
+  travel walk 1441 | src=plan status=unbestätigt
 @hf30v8 lv=25 << class=WARLOCK
   goto 1441 -2419.8,-5409.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
   fp | src=plan status=unbestätigt

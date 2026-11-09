@@ -11,8 +11,12 @@
 #version 1
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r2548 lv=29 !return "neue Quests"
+  travel walk 2548 | src=plan status=unbestätigt
+@r1446 lv=29 !return "neue Quests"
+  travel boat 1446 | src=plan status=unbestätigt
 @r1441 lv=29 !return "neue Quests"
-  travel zeppelin 1441 | src=plan status=unbestätigt
+  travel walk 1441 | src=plan status=unbestätigt
 @a1105 lv=29
   accept 1105 | src=polestar,att status=unbestätigt
   accept 1104 | src=polestar,att status=unbestätigt

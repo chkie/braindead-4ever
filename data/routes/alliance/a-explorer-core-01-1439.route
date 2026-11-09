@@ -11,9 +11,19 @@
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1455 lv=11 << race=DWARF,GNOME
+  travel walk 1455 | src=plan status=unbestätigt
+@r1453 lv=11 << race=DWARF,GNOME
+  travel tram 1453 | src=plan status=unbestätigt
+@r1453x lv=11 << race=HUMAN
+  travel walk 1453 | src=plan status=unbestätigt
+@r1416 lv=11 << race=SKYBORNE_A
+  travel airship 1416 | src=plan status=unbestätigt
+@r1424 lv=11 << race=SKYBORNE_A
+  travel walk 1424 | src=plan status=unbestätigt
 @r1439 lv=11
   travel walk 1439 << race=NIGHTELF | src=plan status=unbestätigt
-  travel boat 1439 << race=HUMAN,DWARF,GNOME,SKYBORNE_A | src=plan status=unbestätigt
+  travel boat 1439 << race=DWARF,GNOME,HUMAN,SKYBORNE_A | src=plan status=unbestätigt
 @hf26v9 lv=11 << race=NIGHTELF class=WARRIOR,HUNTER,ROGUE,PRIEST,DRUID
   goto 1439 561.7,6343.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
   fp | src=plan status=unbestätigt
