@@ -11,8 +11,12 @@
 #version 1
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1446 lv=29
+  travel walk 1446 | src=plan status=unbestätigt
+@r2548 lv=29
+  travel boat 2548 | src=plan status=unbestätigt
 @r1434 lv=29
-  travel boat 1434 | src=plan status=unbestätigt
+  travel walk 1434 | src=plan status=unbestätigt
 @a583 lv=29
   accept 583 | src=polestar,att status=unbestätigt
   turnin 583 | src=polestar status=unbestätigt

@@ -14,25 +14,9 @@
 
 @r1450 lv=23 !return "Klassenquest"
   travel walk 1450 | src=plan status=unbestätigt
-@a98394 lv=23
-  accept 98394 | src=polestar,att status=unbestätigt
-  goto 1450 -2679.0,8020.0 r=10 | src=polestar,att status=unbestätigt roots=2
 @hf63 lv=23
   goto 1450 -2401.5,7795.8 r=10 | src=att status=unbestätigt roots=1
   fp | src=plan status=unbestätigt
 @hf49 lv=23
   goto 1450 -2491.5,7455.0 r=10 | src=polestar,att status=unbestätigt roots=2
   fp | src=plan status=unbestätigt
-@t98394 lv=23
-  turnin 98394 | src=polestar status=unbestätigt
-  accept 98396 | src=polestar,att status=unbestätigt
-  accept 98731 | src=polestar,att status=unbestätigt
-  goto 1450 -2729.0,7360.0 r=10 | src=polestar status=unbestätigt roots=1
-@c98396 lv=23
-  complete 98396 | src=polestar status=unbestätigt
-@t98396 lv=23
-  turnin 98396 | src=polestar status=unbestätigt
-  goto 1450 -2729.0,7360.0 r=10 | src=polestar status=unbestätigt roots=1
-@t98731 lv=23
-  turnin 98731 | src=polestar status=unbestätigt
-  goto 1450 -2679.0,8020.0 r=10 | src=polestar status=unbestätigt roots=1

@@ -8,6 +8,14 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.10 (2026-11-09)
+
+- A ride step now names where the ride lands. The zeppelin from Orgrimmar lands in Tirisfal Glades, and a walk step then leads on to Silverpine Forest. Before, the step said "zeppelin to Silverpine Forest". This holds for every boat, zeppelin, airship and tram step in both factions.
+- Quest data as of 9 November. Quests the game offers only after another quest now come after that quest in the route, for example a chain in the Barrens and a quest in Tirisfal Glades. Quest givers that stand somewhere else in Forever have their new places, for example Burning Shadows is handed in in Orgrimmar, with a walk step into the city and back out.
+- A few quests are out of the route until the next large update brings in the quests they need: one Silverpine Forest quest for every Horde character, one more Silverpine Forest quest in the Speed route, and some Undead Paladin and Night Elf Druid class quests. Before, the route asked for them although the game does not offer them yet.
+- "Blizzard's quest tracker: Hidden" (the default) now only hides the tracker and leaves your quest marks alone. The game marks new quests by itself again, and the quest areas show on the minimap. Before, the option removed the marks, and with them the areas on the minimap.
+- The tooltip of "Only quests of the route" says that quest areas on the minimap show only for marked quests. Choose "Unchanged" if you want every quest marked.
+
 ## 0.9.9 (2026-11-07)
 
 - A rumor about other players' finds now shows only in the zone of the find. Before, a rumor from any zone could show up at once, for example a quest in the Barrens for a level 3 character in Tirisfal Glades, and read like an offer to go there. A rumor of another zone now waits until you are in that zone.

@@ -390,7 +390,8 @@ L.TRACKER_keep = "Unchanged"
 L.TRACKER_route = "Only quests of the route"
 L.TRACKER_hide = "Hidden"
 L.TIP_TRACKER_keep = "Braindead 4ever leaves the quest tracker as you set it."
-L.TIP_TRACKER_route = "The tracker follows the quests of the route; other quests leave it unless you mark them."
+L.TIP_TRACKER_route =
+	"The tracker follows the quests of the route; other quests leave it unless you mark them. Quest areas on the minimap show only for marked quests."
 L.TIP_TRACKER_hide =
 	"Blizzard's quest tracker stays hidden while Braindead 4ever guides you, and the step window takes its place."
 L.OPT_LOCK = "Lock window"

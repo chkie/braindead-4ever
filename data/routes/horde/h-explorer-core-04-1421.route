@@ -11,36 +11,16 @@
 #version 1
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1411 lv=24 !return "neue Quests"
+  travel walk 1411 | src=plan status=unbestätigt
+@r1420 lv=24 !return "neue Quests"
+  travel zeppelin 1420 | src=plan status=unbestätigt
 @r1421 lv=24 !return "neue Quests"
-  travel zeppelin 1421 | src=plan status=unbestätigt
-@a95140 lv=24 << race=UNDEAD class=PALADIN
-  accept 95140 | src=polestar,att status=unbestätigt
-  accept 95034 | src=polestar,att status=unbestätigt
-  accept 91859 | src=polestar,att status=unbestätigt
-  goto 1421 1630.0,519.5 r=10 | src=polestar,att status=unbestätigt roots=2
-@c95034 lv=24 << race=UNDEAD class=PALADIN
-  complete 95034 | src=polestar status=unbestätigt
-  goto 1421 1630.0,519.5 r=10 | src=polestar status=unbestätigt roots=1
-@t95034 lv=24 << race=UNDEAD class=PALADIN
-  turnin 95034 | src=polestar status=unbestätigt
-  accept 95036 | src=polestar,att status=unbestätigt
-  goto 1421 1630.0,519.5 r=10 | src=polestar status=unbestätigt roots=1
-@c95036 lv=24 << race=UNDEAD class=PALADIN
-  complete 95036 | src=polestar status=unbestätigt
-@t95036 lv=24 << race=UNDEAD class=PALADIN
-  turnin 95036 | src=polestar status=unbestätigt
-  goto 1421 1629.5,518.0 r=10 | src=polestar status=unbestätigt roots=1
+  travel walk 1421 | src=plan status=unbestätigt
 @a95981 lv=24
   accept 95981 | src=polestar,att,eglink status=unbestätigt
   accept 516 | src=polestar,att,eglink status=unbestätigt
   goto 1421 1601.8,517.2 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@a98299 lv=24
-  accept 98299 | src=polestar,att,eglink status=unbestätigt
-  goto 1421 1594.7,548.3 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@t91859 lv=24 << race=UNDEAD class=PALADIN
-  turnin 91859 | src=polestar status=unbestätigt
-  accept 91860 | src=polestar,att status=unbestätigt
-  goto 1421 1528.5,496.0 r=10 | src=polestar status=unbestätigt roots=1
 @a78261 lv=24
   accept 78261 | src=att status=unbestätigt
   goto 1421 1471.8,-324.1 r=10 | src=att status=unbestätigt roots=1
@@ -51,24 +31,13 @@
   accept 78307 | src=att status=unbestätigt
   turnin 78307 | src=polestar status=unbestätigt
   goto 1421 1472.0,-320.0 r=10 | src=polestar status=unbestätigt roots=1
-@c98299 lv=24
-  complete 98299 | src=polestar status=unbestätigt
-  goto 1421 1514.5,-731.0 r=10 | src=polestar status=unbestätigt roots=1
-@c95140 lv=24 << race=UNDEAD class=PALADIN
-  complete 95140 | src=polestar status=unbestätigt
-  goto 1421 1368.5,-719.0 r=10 | src=polestar status=unbestätigt roots=1
 @c516 lv=24
   complete 516 | src=polestar status=unbestätigt
   goto 1421 966.0,-307.5 r=10 | src=polestar status=unbestätigt roots=1
 @c95981 lv=24
   complete 95981 | src=polestar status=unbestätigt
   goto 1421 820.5,-389.5 r=10 | src=polestar status=unbestätigt roots=1
-@t91860 lv=24 << race=UNDEAD class=PALADIN
-  turnin 91860 | src=polestar status=unbestätigt
-  accept 91861 | src=polestar,att status=unbestätigt
-  goto 1421 725.5,705.0 r=10 | src=polestar status=unbestätigt roots=1
 @t91861 lv=25 << race=UNDEAD class=PALADIN
-  turnin 91861 | src=polestar status=unbestätigt
   accept 91862 | src=polestar,att status=unbestätigt
   goto 1421 698.5,1009.5 r=10 | src=polestar status=unbestätigt roots=1
 @c91862 lv=25 << race=UNDEAD class=PALADIN
@@ -83,8 +52,17 @@
   goto 1421 1603.4,517.3 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @t96204 lv=25 << race=UNDEAD class=PALADIN
   turnin 96204 | src=polestar status=unbestätigt
-  turnin 95140 | src=polestar status=unbestätigt
+  accept 95034 | src=polestar,att status=unbestätigt
   goto 1421 1630.0,519.5 r=10 | src=polestar status=unbestätigt roots=1
-@t98299 lv=24
-  turnin 98299 | src=polestar,eglink status=unbestätigt
-  goto 1421 1596.5,552.6 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@c95034 lv=24 << race=UNDEAD class=PALADIN
+  complete 95034 | src=polestar status=unbestätigt
+  goto 1421 1630.0,519.5 r=10 | src=polestar status=unbestätigt roots=1
+@t95034 lv=24 << race=UNDEAD class=PALADIN
+  turnin 95034 | src=polestar status=unbestätigt
+  accept 95036 | src=polestar,att status=unbestätigt
+  goto 1421 1630.0,519.5 r=10 | src=polestar status=unbestätigt roots=1
+@c95036 lv=24 << race=UNDEAD class=PALADIN
+  complete 95036 | src=polestar status=unbestätigt
+@t95036 lv=24 << race=UNDEAD class=PALADIN
+  turnin 95036 | src=polestar status=unbestätigt
+  goto 1421 1629.5,518.0 r=10 | src=polestar status=unbestätigt roots=1

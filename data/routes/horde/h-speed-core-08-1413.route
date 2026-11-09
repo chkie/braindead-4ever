@@ -15,21 +15,21 @@
   travel walk 1413 | src=plan status=unbestätigt
 @a846 lv=27
   accept 846 | src=polestar,att status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @c846 lv=27
   complete 846 | src=polestar status=unbestätigt
   goto 1413 -2370.0,-4078.5 r=10 | src=polestar status=unbestätigt roots=1
 @t846 lv=27
   turnin 846 | src=polestar status=unbestätigt
   accept 849 | src=polestar,att status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @c849 lv=27
   complete 849 | src=polestar status=unbestätigt
   goto 1413 -2136.5,-4173.0 r=10 | src=polestar status=unbestätigt roots=1
 @t849 lv=27
   turnin 849 | src=polestar status=unbestätigt
   xp 28 | src=plan status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @a857 lv=28
   accept 857 | src=polestar,att,eglink status=unbestätigt
   goto 1413 -2341.0,-4219.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3

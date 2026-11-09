@@ -364,6 +364,9 @@ def lint_route(mods, keys, race, cls, facts, label):
     errs = []
     accepted, completed, turned, collected = set(), set(), set(), {}
     zone, left = None, set()
+    # a step that only travels (walk to a dock's zone, the ride) passes zones on the way; the zone
+    # rules apply at the next step that does something there, with the travel and any !return before it
+    passing, passing_ret, last_pass = False, None, None
     for key in keys:
         mod = mods.get(key)
         if mod is None:
@@ -383,15 +386,21 @@ def lint_route(mods, keys, race, cls, facts, label):
 
             travel_to = [el.args["map"] for el in els if el.verb == "travel"]
             gotos = [el.args["map"] for el in els if el.verb == "goto"]
+            if travel_to and all(el.verb == "travel" for el in els):
+                passing, passing_ret = True, passing_ret or st.ret
+                last_pass = (travel_to[-1], st, mod)
+                continue
+            traveled, ret = bool(travel_to) or passing, st.ret or passing_ret
+            passing, passing_ret = False, None
             new_zone = travel_to[-1] if travel_to else (gotos[0] if gotos else None)
             if new_zone is not None:
                 for g in gotos:
                     if zone_key(g) != zone_key(new_zone):
                         E("reise", st.line, "Schritt @%s führt in zwei Gebiete (%d, %d)" % (st.id, new_zone, g))
                 if zone is not None and zone_key(new_zone) != zone_key(zone):
-                    if not travel_to:
+                    if not traveled:
                         E("reise", st.line, "Gebietswechsel %d -> %d ohne Reiseschritt (travel)" % (zone, new_zone))
-                    if zone_key(new_zone) in left and not st.ret:
+                    if zone_key(new_zone) in left and not ret:
                         E("ruecksprung", st.line, "Rückkehr in das verlassene Gebiet %d ohne Grund (!return)" % new_zone)
                     left.add(zone_key(zone))
                 zone = new_zone
@@ -425,6 +434,11 @@ def lint_route(mods, keys, race, cls, facts, label):
                             if collected.get(it["id"], 0) < it.get("count", 1):
                                 E("gegenstand", el.line, "Quest %d abgegeben ohne Gegenstand %d x%d (complete oder collect fehlt)" % (q, it["id"], it.get("count", 1)), q)
                     turned.add(q)
+    if passing and last_pass is not None and zone is not None:
+        # the route ends on travel steps: their last zone is where the character stays
+        z, st, mod = last_pass
+        if zone_key(z) != zone_key(zone) and zone_key(z) in left and not passing_ret:
+            errs.append(Error("ruecksprung", mod.path, st.line, "Rückkehr in das verlassene Gebiet %d ohne Grund (!return) [%s]" % (z, label), None, mod.key))
     return errs
 
 

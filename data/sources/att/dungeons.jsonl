@@ -19,14 +19,14 @@
 {"area":796,"entrancePct":[[1420,82.6,32.4]],"id":316,"mapID":435,"min":25}
 {"area":2159,"entrancePct":[[1445,52.3,76.2]],"id":760,"mapID":248,"min":60}
 {"area":16544,"id":2959,"timeline":["added 1.60.1.69893"]}
+{"area":16550,"id":2970,"min":35,"timeline":["added 1.60.1.69893"]}
+{"area":16554,"id":2974,"min":55,"timeline":["added 1.60.1.69893"]}
+{"area":16620,"id":2994,"min":48,"timeline":["added 1.60.1.69893"]}
 {"area":17732,"entrancePct":[[1437,48.1,56.4]],"id":2998,"min":23,"timeline":["added 1.60.1.69893"]}
 {"area":16611,"entrancePct":[[1420,50,50]],"id":2999,"min":15,"timeline":["added 1.60.1.69893"]}
+{"area":16667,"id":3001,"min":58,"timeline":["added 1.60.1.69893"]}
+{"area":16842,"id":3039,"min":40,"timeline":["added 1.60.1.69893"]}
 {"area":16919,"entrancePct":[[1455,50,50]],"id":3065,"min":13,"timeline":["added 1.60.1.69893"]}
 {"area":17191,"id":3109,"timeline":["created 1.60.1.69893"]}
 {"id":78789,"min":60,"timeline":["added 1.60.1.69893"]}
 {"id":78790,"min":60,"timeline":["added 1.60.1.69893"]}
-{"id":78791,"min":35,"timeline":["added 1.60.1.69893"]}
-{"id":78792,"min":40,"timeline":["added 1.60.1.69893"]}
-{"id":78793,"min":48,"timeline":["added 1.60.1.69893"]}
-{"id":78794,"min":55,"timeline":["added 1.60.1.69893"]}
-{"id":78795,"min":58,"timeline":["added 1.60.1.69893"]}

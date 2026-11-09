@@ -85,8 +85,9 @@ describe("Hardcore-safe mode", function()
 				)
 			end
 		end
-		-- 858 measured with the route set of 0.9.1 (89 modules, races share them; before: over 900 in 182)
-		assert.is_true(n > 850, "route quests checked: " .. n)
+		-- 858 measured with the route set of 0.9.1 (89 modules, races share them; before: over 900 in 182);
+		-- 849 after the facts of 2026-11-09 (quests whose prerequisite the route never hands in left it)
+		assert.is_true(n > 840, "route quests checked: " .. n)
 	end)
 
 	describe("step window", function()

@@ -11,6 +11,8 @@
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1413 lv=29
+  travel walk 1413 | src=plan status=unbestätigt
 @r1434 lv=29
   travel boat 1434 | src=plan status=unbestätigt
 @a575 lv=29

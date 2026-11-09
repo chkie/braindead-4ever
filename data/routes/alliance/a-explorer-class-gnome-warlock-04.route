@@ -19,8 +19,12 @@
   goto 1445 -2374.0,-2245.5 r=10 | src=polestar status=unbestätigt roots=1
 @c65602 lv=23
   complete 65602 | src=polestar status=unbestätigt
+@r1437 lv=23 !return "Klassenquest"
+  travel boat 1437 | src=plan status=unbestätigt
+@r1455 lv=23 !return "Klassenquest"
+  travel walk 1455 | src=plan status=unbestätigt
 @r1453 lv=23 !return "Klassenquest"
-  travel boat 1453 | src=plan status=unbestätigt
+  travel tram 1453 | src=plan status=unbestätigt
 @t65602 lv=23
   turnin 65602 | src=polestar status=unbestätigt
   accept 65603 | src=polestar,att status=unbestätigt

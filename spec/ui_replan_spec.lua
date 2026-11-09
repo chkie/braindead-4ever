@@ -41,7 +41,7 @@ describe("Replanning in the step window", function()
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
 		local cur = ns.Route.Current()
-		assert.are.equal("a-speed-core-01-1439/r1439", cur.key, "the zone change waits for the player")
+		assert.are.equal("a-speed-core-01-1439/r1453x", cur.key, "the zone change waits for the player")
 		local o = ns.Route.Offer()
 		assert.are.equal("switch", o.kind)
 		assert.are.equal("jump", o.choice.kind)
@@ -63,7 +63,7 @@ describe("Replanning in the step window", function()
 		assert.is_false(shown(W.btnYes))
 		assert.are.equal("Undo: zone switched", S.menu(ns).items[2].text)
 		ns.Route.Undo()
-		assert.are.equal("a-speed-core-01-1439/r1439", ns.Route.Current().key)
+		assert.are.equal("a-speed-core-01-1439/r1453x", ns.Route.Current().key)
 	end)
 
 	it("an alternative module built offline: yes builds the route with it, also after /reload", function()
@@ -125,7 +125,14 @@ describe("Replanning in the step window", function()
 			ns.RouteData.Alliance = function()
 				local data = build()
 				local m = data.modules["a-speed-core-01-1439"]
-				m.steps[1].ret = reason
+				-- every travel step up to the arrival in Darkshore (the ride steps before it carry the
+				-- module's !return like the arrival step does)
+				for _, st in ipairs(m.steps) do
+					st.ret = reason
+					if st.id == "r1439" then
+						break
+					end
+				end
 				if kind then
 					m.kind = kind
 				end
@@ -140,7 +147,7 @@ describe("Replanning in the step window", function()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
-		assert.are.equal("a-speed-core-01-1439/r1439", ns.Route.Current().key)
+		assert.are.equal("a-speed-core-01-1439/r1453x", ns.Route.Current().key)
 		local o = ns.Route.Offer()
 		assert.is_table(o, "a core return is a zone change: the switch point asks")
 		assert.are.equal("switch", o.kind)
@@ -151,9 +158,9 @@ describe("Replanning in the step window", function()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
-		assert.are_not.equal("a-speed-core-01-1439/r1439", ns.Route.Current().key)
+		assert.are_not.equal("a-speed-core-01-1439/r1453x", ns.Route.Current().key)
 		local again = ns.Route.Offer()
-		assert.is_true(again == nil or again.key ~= "a-speed-core-01-1439/r1439")
+		assert.is_true(again == nil or again.key ~= "a-speed-core-01-1439/r1453x")
 	end)
 
 	it("“Keep route” keeps it and does not ask again", function()
@@ -170,7 +177,7 @@ describe("Replanning in the step window", function()
 		assert.are.equal("later", later and later.kind)
 		assert.is_true(ns.Route.AnswerOffer(false))
 		assert.is_nil(ns.Route.Offer())
-		assert.are.equal("a-speed-core-01-1439/r1439", ns.Route.Current().key)
+		assert.are.equal("a-speed-core-01-1439/r1453x", ns.Route.Current().key)
 		assert.is_false(shown(W.banner))
 	end)
 

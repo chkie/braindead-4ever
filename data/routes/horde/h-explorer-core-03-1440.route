@@ -74,7 +74,7 @@
   complete 98252 | src=polestar status=unbestätigt
 @t98252 lv=23
   turnin 98252 | src=polestar status=unbestätigt
-  goto 1440 -545.0,2447.5 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1440 -504.4,2445.6 r=10 | src=polestar status=unbestätigt roots=1
 @hf58 lv=23
   goto 1440 997.4,3371.3 r=10 | src=eglink,polestar,att status=unbestätigt roots=2
   fp | src=plan status=unbestätigt

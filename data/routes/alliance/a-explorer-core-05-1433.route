@@ -11,8 +11,10 @@
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
 
+@r1453 lv=22 !return "neue Quests"
+  travel boat 1453 | src=plan status=unbestätigt
 @r1433 lv=22 !return "neue Quests"
-  travel boat 1433 | src=plan status=unbestätigt
+  travel walk 1433 | src=plan status=unbestätigt
 @a89 lv=22
   accept 89 | src=polestar,att status=unbestätigt
   goto 1433 -2268.5,-9279.5 r=10 | src=polestar status=unbestätigt roots=1

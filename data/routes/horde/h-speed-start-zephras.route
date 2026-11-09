@@ -267,7 +267,7 @@
   goto 2521 1715.4,3313.8 r=10 | src=eglink,polestar status=unbestätigt roots=1
   train | src=plan status=unbestätigt
 @ht254081 lv=7 << class=DRUID
-  goto 2521 1719.0,3303.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 2521 1718.8,3313.3 r=10 | src=polestar status=unbestätigt roots=1
   train | src=plan status=unbestätigt
 @c92517 lv=7
   complete 92517 | src=polestar status=unbestätigt
@@ -293,7 +293,7 @@
   goto 2521 1816.0,3287.0 r=10 | src=polestar status=unbestätigt roots=1
   train | src=plan status=unbestätigt
 @ht254081v2 lv=7 << class=DRUID
-  goto 2521 1719.0,3303.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 2521 1718.8,3313.3 r=10 | src=polestar status=unbestätigt roots=1
   train | src=plan status=unbestätigt
 @t92517 lv=8
   turnin 92517 | src=polestar,eglink status=unbestätigt
@@ -377,40 +377,40 @@
   accept 92683 | src=polestar,att,eglink status=unbestätigt
   accept 92684 | src=polestar,att,eglink status=unbestätigt
   accept 92682 | src=polestar,att,eglink status=unbestätigt
-  goto 2521 1632.5,1918.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+  goto 2521 1611.6,1966.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c92683 lv=9
   complete 92683 | src=polestar status=unbestätigt
 @t92683 lv=9
   turnin 92683 | src=polestar,eglink status=unbestätigt
-  goto 2521 1632.5,1918.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+  goto 2521 1611.6,1966.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c92684 lv=9
   complete 92684 | src=polestar status=unbestätigt
 @t92684 lv=9
   turnin 92684 | src=polestar,eglink status=unbestätigt
-  goto 2521 1632.5,1918.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+  goto 2521 1611.6,1966.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c92682 lv=10
   complete 92682 | src=polestar status=unbestätigt
   goto 2521 1598.0,1943.5 r=10 | src=polestar status=unbestätigt roots=1
 @t92682 lv=10
   turnin 92682 | src=polestar,eglink status=unbestätigt
   accept 92685 | src=polestar,att,eglink status=unbestätigt
-  goto 2521 1632.5,1918.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+  goto 2521 1611.6,1966.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c92685 lv=10
   complete 92685 | src=polestar status=unbestätigt
 @t92685 lv=10
   turnin 92685 | src=polestar,eglink status=unbestätigt
   accept 92693 | src=polestar,att,eglink status=unbestätigt
-  goto 2521 1632.5,1918.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+  goto 2521 1611.6,1966.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c92693 lv=10
   complete 92693 | src=polestar status=unbestätigt
   goto 2521 1633.5,1917.5 r=10 | src=polestar status=unbestätigt roots=1
 @a92698 lv=10
   accept 92698 | src=polestar,att,eglink status=unbestätigt
-  goto 2521 1502.6,2052.3 r=10 | src=eglink status=unbestätigt roots=1
+  goto 2521 1518.3,2059.0 r=10 | src=eglink status=unbestätigt roots=1
 @t92693 lv=10
   turnin 92693 | src=polestar,eglink status=unbestätigt
   turnin 92698 | src=polestar,eglink status=unbestätigt
-  goto 2521 1632.5,1918.3 r=10 | src=eglink,polestar status=unbestätigt roots=1
+  goto 2521 1611.6,1966.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @ht252377 lv=10 << class=WARRIOR
   goto 2521 901.5,2256.0 r=10 | src=polestar status=unbestätigt roots=1
   train | src=plan status=unbestätigt

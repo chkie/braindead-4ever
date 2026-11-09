@@ -91,7 +91,7 @@ describe("Flight vault: checks", function()
 		local ns = pure()
 		local yards, secs = model(ns, 22, 38)
 		assert.is_true(yards * 0.9144 >= 3000, yards) -- 22>38 is a leg of the facts, 3.0 km long
-		assert.is_true(secs > 150 and secs < 170, secs)
+		assert.is_true(secs > 140 and secs < 170, secs) -- 146.6 s with the EG Link flights of 2026-11-09
 		local f = vault(ns)
 		assert.are.equal("implausible", hear(ns, f, H(ns, 22, 38, 5), "Mallory"))
 		assert.is_nil(f.db.legs["22>38"])
@@ -159,8 +159,8 @@ describe("Flight vault: saturation", function()
 		assert.is_nil((f:Own(2, 4, 95, true)), "five measured flights")
 		assert.are.same({ 7, 6 }, { f:Known("2>4") })
 		assert.is_false(f:Wants("2>4", 94))
-		-- the facts' measured flights count: 22>25 has 11, so its seconds are saturated with the sources
-		assert.are.equal(11, ns.FlightFacts.legs["22>25"])
+		-- the facts' measured flights count: 22>25 has 16 (EG Link, 2026-11-09), so its seconds are saturated with the sources
+		assert.are.equal(16, ns.FlightFacts.legs["22>25"])
 		f:Own(22, 25, 0, false)
 		hear(ns, f, H(ns, 22, 25, 0), "Anna Sommer")
 		assert.is_false(f:Wants("22>25", 50))
@@ -608,7 +608,7 @@ describe("Spread simulation with flight legs", function()
 		assert.is_true(r.maxWindow <= WINDOW_MAX, r.maxWindow)
 		local f = r.flights
 		assert.is_true(f.messages > 0)
-		assert.are.equal(97, f.legs)
+		assert.are.equal(111, f.legs) -- flight legs of the facts, EG Link 2026-11-09
 		-- most legs other players saw reach an exporter, the ones the facts lack too
 		assert.is_true(f.reach.legs.any >= 0.9, f.reach.legs.any)
 		assert.is_true(f.reach.hidden.any >= 0.9, f.reach.hidden.any)

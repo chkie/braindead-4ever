@@ -25,8 +25,12 @@
 @t65593 lv=23
   turnin 65593 | src=polestar status=unbestätigt
   goto 1458 57.0,1711.5 r=10 | src=polestar status=unbestätigt roots=1
+@r1420 lv=23 !return "Klassenquest"
+  travel walk 1420 | src=plan status=unbestätigt
+@r1411 lv=23 !return "Klassenquest"
+  travel zeppelin 1411 | src=plan status=unbestätigt
 @r1454 lv=23 !return "Klassenquest"
-  travel zeppelin 1454 | src=plan status=unbestätigt
+  travel walk 1454 | src=plan status=unbestätigt
 @a65601 lv=23
   accept 65601 | src=polestar,att status=unbestätigt
   accept 1508 | src=polestar,att status=unbestätigt
