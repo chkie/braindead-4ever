@@ -617,7 +617,6 @@
   goto 1413 -1345.5,790.5 r=10 | src=polestar status=unbestätigt roots=1
 @a95507 lv=19
   accept 95507 | src=polestar,att,eglink status=unbestätigt
-  accept 95495 | src=polestar,att,eglink status=unbestätigt
   accept 95494 | src=polestar,att,eglink status=unbestätigt
   goto 1413 -1813.0,787.4 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @c95507 lv=19
@@ -625,22 +624,23 @@
 @t95507 lv=19
   turnin 95507 | src=polestar,eglink status=unbestätigt
   goto 1413 -1813.0,787.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@c95495 lv=19
-  complete 95495 | src=polestar status=unbestätigt
 @c95494 lv=19
   complete 95494 | src=polestar status=unbestätigt
 @t95494 lv=19
   turnin 95494 | src=polestar,eglink status=unbestätigt
+  accept 95495 | src=polestar,att,eglink status=unbestätigt
   goto 1413 -1813.0,787.4 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@c95495 lv=19
+  complete 95495 | src=polestar status=unbestätigt
 @t95495 lv=19
   turnin 95495 | src=polestar,eglink status=unbestätigt
   accept 95621 | src=polestar,att,eglink status=unbestätigt
-  accept 95508 | src=polestar,att,eglink status=unbestätigt
   goto 1413 -1633.1,838.2 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c95621 lv=19
   complete 95621 | src=polestar status=unbestätigt
 @t95621 lv=19
   turnin 95621 | src=polestar,eglink status=unbestätigt
+  accept 95508 | src=polestar,att,eglink status=unbestätigt
   goto 1413 -1633.1,838.2 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c95508 lv=19
   complete 95508 | src=polestar status=unbestätigt
@@ -803,7 +803,7 @@
   goto 1413 -1633.0,-3117.0 r=10 | src=polestar status=unbestätigt roots=1
 @a843 lv=22
   accept 843 | src=polestar,att status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @c862 lv=22
   complete 862 | src=polestar status=unbestätigt
   goto 1413 -2376.0,-4074.0 r=10 | src=polestar status=unbestätigt roots=1
@@ -815,7 +815,7 @@
   goto 1413 -1815.5,-3950.0 r=10 | src=polestar status=unbestätigt roots=1
 @t843 lv=22
   turnin 843 | src=polestar status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @ho77x80 lv=22
   goto 1413 -1884.5,-2382.9 r=10 | src=eglink,polestar status=unbestätigt roots=1
   fp | src=plan status=unbestätigt

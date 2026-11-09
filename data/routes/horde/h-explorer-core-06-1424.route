@@ -82,7 +82,7 @@
   complete 502 | src=polestar status=unbestätigt
 @t502 lv=25
   turnin 502 | src=polestar status=unbestätigt
-  goto 1424 21.5,-353.5 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1424 8.1,-369.0 r=10 | src=polestar status=unbestätigt roots=1
 @c527 lv=25
   complete 527 | src=polestar status=unbestätigt
   goto 1424 51.5,-424.0 r=10 | src=polestar status=unbestätigt roots=1

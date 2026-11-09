@@ -94,7 +94,6 @@
   turnin 3901 | src=polestar,eglink status=unbestätigt
   turnin 91208 << class=PALADIN | src=polestar,eglink status=unbestätigt
   turnin 98389 | src=polestar,eglink status=unbestätigt
-  accept 91209 << class=PALADIN | src=polestar,att,eglink status=unbestätigt
   goto 1420 1636.7,1844.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @t3902 lv=5
   turnin 3902 | src=polestar,eglink status=unbestätigt
@@ -246,12 +245,6 @@
 @t99144 lv=7
   turnin 99144 | src=polestar,eglink status=unbestätigt
   goto 1420 308.5,2252.7 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@c91209 lv=7 << class=PALADIN
-  complete 91209 | src=polestar status=unbestätigt
-  goto 1420 311.0,2252.5 r=10 | src=polestar status=unbestätigt roots=1
-@t91209 lv=7 << class=PALADIN
-  turnin 91209 | src=polestar status=unbestätigt
-  goto 1420 311.0,2252.5 r=10 | src=polestar status=unbestätigt roots=1
 @c407 lv=7
   complete 407 | src=polestar status=unbestätigt
 @t97953 lv=7
@@ -426,7 +419,12 @@
 @c427 lv=10
   complete 427 | src=polestar status=unbestätigt
   goto 1420 1552.5,2385.0 r=10 | src=polestar status=unbestätigt roots=1
-@a99153 lv=10
+@t96899 lv=10
+  turnin 96899 | src=polestar,eglink status=unbestätigt
+  accept 96896 | src=polestar,att,eglink status=unbestätigt
+  turnin 96896 | src=polestar,eglink status=unbestätigt
+  goto 1420 2036.6,2490.0 r=10 | src=eglink,polestar status=unbestätigt roots=1
+@a99153h lv=10
   accept 99153 | src=polestar,att,eglink status=unbestätigt
   goto 1420 2118.9,2435.6 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
 @c99153 lv=10
@@ -434,11 +432,6 @@
 @t99153 lv=10
   turnin 99153 | src=polestar,eglink status=unbestätigt
   goto 1420 2118.9,2435.6 r=10 | src=eglink,polestar status=unbestätigt roots=1
-@t96899 lv=10
-  turnin 96899 | src=polestar,eglink status=unbestätigt
-  accept 96896 | src=polestar,att,eglink status=unbestätigt
-  turnin 96896 | src=polestar,eglink status=unbestätigt
-  goto 1420 2036.6,2490.0 r=10 | src=eglink,polestar status=unbestätigt roots=1
 @c354 lv=10
   complete 354 | src=polestar status=unbestätigt
   goto 1420 921.5,2954.5 r=10 | src=polestar status=unbestätigt roots=1

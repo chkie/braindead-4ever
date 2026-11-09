@@ -772,7 +772,7 @@
   goto 1413 -1633.0,-3117.0 r=10 | src=polestar status=unbestätigt roots=1
 @a843 lv=22
   accept 843 | src=polestar,att status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @c862 lv=22
   complete 862 | src=polestar status=unbestätigt
   goto 1413 -2376.0,-4074.0 r=10 | src=polestar status=unbestätigt roots=1
@@ -784,7 +784,7 @@
   goto 1413 -1815.5,-3950.0 r=10 | src=polestar status=unbestätigt roots=1
 @t843 lv=22
   turnin 843 | src=polestar status=unbestätigt
-  goto 1413 -2027.5,-3590.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1413 -2048.3,-3828.3 r=10 | src=polestar status=unbestätigt roots=1
 @ho77x80 lv=22
   goto 1413 -1884.5,-2382.9 r=10 | src=eglink,polestar status=unbestätigt roots=1
   fp | src=plan status=unbestätigt

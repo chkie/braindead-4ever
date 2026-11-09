@@ -67,17 +67,8 @@
   complete 430 | src=polestar status=unbestätigt
 @t430 lv=11
   turnin 430 | src=polestar,eglink status=unbestätigt
-  goto 1421 1207.3,1311.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
-@a425 lv=11
-  accept 425 | src=polestar,att,eglink status=unbestätigt
-  goto 1421 1208.8,1289.7 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@c425 lv=11
-  complete 425 | src=polestar status=unbestätigt
-  goto 1421 1286.0,1277.5 r=10 | src=polestar status=unbestätigt roots=1
-@t425 lv=11
-  turnin 425 | src=polestar,eglink status=unbestätigt
   xp 12 | src=plan status=unbestätigt
-  goto 1421 1208.8,1289.7 r=10 | src=eglink,polestar status=unbestätigt roots=2
+  goto 1421 1207.3,1311.0 r=10 | src=eglink,polestar status=unbestätigt roots=2
 @a421 lv=12
   accept 421 | src=polestar,att,eglink status=unbestätigt
   goto 1421 1594.7,548.3 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
