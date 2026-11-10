@@ -333,6 +333,20 @@ function U.install(M, W, opts)
 	function Frame:EnableMouse(on)
 		self.mouse = on
 	end
+	function Frame:GetFrameLevel()
+		local own = rawget(self, "frameLevel")
+		if own then
+			return own
+		end
+		local parent = rawget(self, "parent")
+		return parent and parent.GetFrameLevel and parent:GetFrameLevel() + 1 or 1
+	end
+	function Frame:SetFrameLevel(n)
+		self.frameLevel = n
+	end
+	function Frame:IsMouseOver()
+		return rawget(self, "mouseOver") == true
+	end
 	function Frame:SetChecked(on)
 		self.checked = on and true or false
 	end

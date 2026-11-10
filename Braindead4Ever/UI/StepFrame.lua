@@ -218,6 +218,9 @@ local function Build()
 	W.cur:SetScript("OnMouseUp", function(_, button)
 		if button == "RightButton" then
 			ns.Menu.Open(W)
+		elseif button == "LeftButton" and W.box:IsShown() and W.box:IsMouseOver() then
+			-- the line lies over the box: a left click on the box must still check the step (owner 10.11.2026)
+			SF.CheckCurrent()
 		end
 	end)
 
@@ -229,6 +232,8 @@ local function Build()
 	W.box:SetScript("OnClick", function()
 		SF.CheckCurrent()
 	end)
+	-- above the line of the current step, which also takes the mouse (tooltip, right-click menu)
+	W.box:SetFrameLevel(W.cur:GetFrameLevel() + 2)
 	W.icon = W:CreateTexture(nil, "ARTWORK") -- check or fail
 	W.icon:SetSize(SF.ICON, SF.ICON)
 	W.icon:SetPoint("CENTER", W.box, "CENTER")

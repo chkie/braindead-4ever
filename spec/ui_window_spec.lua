@@ -157,6 +157,23 @@ describe("Step window", function()
 			assert.matches("Kobold Camp Cleanup", W.step.text, 1, true) -- t783 hands in 783 and accepts 7
 		end)
 
+		-- Owner 10.11.2026: a left click on the box did nothing, only right-click and Skip worked. The line of
+		-- the current step takes the mouse too; the box must lie above it, and a left click that lands on the
+		-- line over the box still checks the step.
+		it("puts the box above the step line and checks on a left click over the box", function()
+			local ns = S.login()
+			local W = frame(ns)
+			assert.is_true(W.box:GetFrameLevel() > W.cur:GetFrameLevel())
+			local first = ns.Route.Current().key
+			W.cur.scripts.OnMouseUp(W.cur, "LeftButton")
+			wow.advance(0.9)
+			assert.are.equal(first, ns.Route.Current().key, "a click beside the box does nothing")
+			W.box.mouseOver = true
+			W.cur.scripts.OnMouseUp(W.cur, "LeftButton")
+			wow.advance(0.9)
+			assert.are_not.equal(first, ns.Route.Current().key)
+		end)
+
 		it("comes from the game as well: an accepted quest checks the step", function()
 			local ns = S.login()
 			local W = frame(ns)
