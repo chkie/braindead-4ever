@@ -55,6 +55,7 @@ L.WORD_ON = "an"
 L.WORD_OFF = "aus"
 
 L.MSG_FLAG_MANDATORY = "%s: %s gehört zum Addon und lässt sich nicht ausschalten"
+L.MSG_FLAG_SHARE = "Das Teilen im versteckten Kanal lässt sich in den Einstellungen ausschalten, Seite Teilen."
 L.MSG_AFTER_COMBAT = "Braindead 4ever: nach dem Kampf erneut versuchen"
 
 L.COPY_STATUS = "%d Zeichen. Mit Strg+C kopieren."
@@ -398,6 +399,10 @@ L.TIP_TOMTOM = "Gibt das aktuelle Ziel als Wegpunkt an TomTom weiter, damit auch
 L.PAGE_A11Y = "Barrierefreiheit"
 L.OPT_TEXTSIZE = "Textgröße des Spiels nutzen"
 L.TIP_TEXTSIZE = "Passt die Schrift an die Textgröße aus den Spieleinstellungen an."
+L.PAGE_SHARE = "Teilen"
+L.OPT_SHARE = "Im versteckten Kanal teilen"
+L.TIP_SHARE =
+	"Teilt Funde und Zeiten in einem versteckten Kanal, in dem andere deinen Charakternamen sehen; Gruppe und Gilde bekommen sie immer."
 L.PAGE_CREDITS = "Credits"
 L.CREDITS_LICENSE = "Freie Software unter der GNU General Public License 3.0, ohne Gewährleistung."
 L.CREDITS_SOURCES_TITLE = "Datenquellen"

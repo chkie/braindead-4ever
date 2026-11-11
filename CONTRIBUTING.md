@@ -61,7 +61,7 @@ A pull request can only be merged when all checks are green.
 
 ## Releases
 
-A tag `vX.Y.Z` on `main` runs all checks and then the BigWigs packager, which uploads to CurseForge, Wago and GitHub Releases. Tags containing `alpha` or `beta` become alpha or beta releases. Use annotated tags: `git tag -a v0.1.0 -m "v0.1.0"`.
+A tag `vX.Y.Z` on `main` runs all checks and then the BigWigs packager, which uploads to CurseForge and GitHub Releases (Wago only once the secret `WAGO_API_TOKEN` is set; it is not). Tags containing `alpha` or `beta` become alpha or beta releases. Use annotated tags: `git tag -a v0.1.0 -m "v0.1.0"`.
 
 The release notes come from [CHANGELOG.md](CHANGELOG.md) (`manual-changelog` in `.pkgmeta`): before a tag, give its top section the version and the date, in English, and keep "Known issues" current. If the Discord secret `DISCORD_WEBHOOK_URL` is set, `release.yml` posts the tag to the channel; the workflow "Discord test" (started by hand) checks the webhook first.
 

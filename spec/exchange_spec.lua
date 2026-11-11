@@ -238,6 +238,92 @@ describe("Exchange: sending", function()
 	end)
 end)
 
+describe("Exchange: the option to share on the hidden channel (owner 2026-11-11)", function()
+	local function lines()
+		local out = {}
+		for _, l in ipairs(wow.world.chat) do
+			if l.chatType == "CHANNEL" then
+				out[#out + 1] = l
+			end
+		end
+		return out
+	end
+
+	it("switched off before the start: no channel, group and guild still get their messages", function()
+		local _, X = start({ saved = { ui = { share = false } } })
+		wow.advance(60)
+		assert.are.equal("off", X.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		wow.world.group.party, wow.world.guild = true, true
+		loot()
+		wow.advance(91)
+		assert.are.equal(1, #sent("PARTY"))
+		assert.are.equal(1, #sent("GUILD"))
+		assert.are.equal(0, #sent("CHANNEL"))
+		wow.press()
+		assert.are.equal(0, #lines())
+	end)
+
+	it("switched off while the server confirms the join: leaves again and sends nothing there", function()
+		wow.reset({})
+		_G.JoinTemporaryChannel = function(name)
+			C_Timer.After(1, function()
+				wow.world.channels[name] = 5
+			end)
+		end
+		local ns = wow.loadFiles(wow.addonFiles(false))
+		wow.fire("ADDON_LOADED", "Braindead4Ever")
+		wow.fire("PLAYER_LOGIN")
+		wow.fire("PLAYER_ENTERING_WORLD", true, false)
+		wow.ns = ns
+		local X = ns.Exchange
+		wow.advance(8) -- the join is asked for, the server answers in 1 s
+		ns.db.ui.share = false
+		X.SetChannel(false)
+		wow.advance(3)
+		assert.are.equal("off", X.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare, "left again")
+		wow.freeChannel(ns)
+		loot()
+		wow.advance(95)
+		assert.are.equal(0, #sent("CHANNEL"))
+		wow.press()
+		assert.are.equal(0, #lines())
+	end)
+
+	it("a late join notice after the switch leaves the channel", function()
+		local ns, X = start({ saved = { ui = { share = false } } })
+		wow.advance(10)
+		wow.world.channels.BraindeadShare = 5
+		wow.fire("CHAT_MSG_CHANNEL_NOTICE", "YOU_JOINED", "", "", "", "", "", 0, 5, "BraindeadShare")
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		assert.are.equal("off", X.channel.state)
+		assert.is_false(ns.db.ui.share)
+	end)
+
+	it("switched off in the game: leaves the channel and drops what waits for it; on joins again", function()
+		local _, X = start()
+		wow.freeChannel()
+		wow.advance(10)
+		assert.are.equal("on", X.channel.state)
+		loot()
+		wow.advance(91)
+		assert.are.equal(1, #X.lines.queue, "a line waits for a press")
+		X.SetChannel(false)
+		assert.are.equal("off", X.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		assert.are.equal(0, #X.lines.queue)
+		wow.press()
+		assert.are.equal(0, #lines(), "no line after the switch")
+		wow.advance(40)
+		assert.are.equal("off", X.channel.state, "no rejoin by itself")
+		X.SetChannel(true)
+		wow.advance(2)
+		assert.are.equal("on", X.channel.state)
+		assert.are.equal(5, wow.world.channels.BraindeadShare)
+	end)
+end)
+
 describe("Exchange: receiving", function()
 	local function receive(msg, sender, dist)
 		wow.fire("CHAT_MSG_ADDON", "BDF", msg, dist or "CHANNEL", sender, "", 0, 5, "BraindeadShare", 0)

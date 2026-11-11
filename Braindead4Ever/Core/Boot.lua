@@ -126,6 +126,9 @@ SlashCmdList.BRAINDEADFOREVER = function(msg)
 		print(L.MSG_SAFE_MODE_SET:format(L.TITLE, OnOff(db.safeMode)))
 	elseif cmd == "flag" and ns.Modules.defs[a] and ns.Modules.defs[a].mandatory then
 		print(L.MSG_FLAG_MANDATORY:format(L.TITLE, a))
+		if a == "exchange" then
+			print(L.MSG_FLAG_SHARE) -- the hidden channel has its own switch (owner 2026-11-11)
+		end
 	elseif cmd == "flag" and a ~= "" then
 		-- nil = default (on). Trap: "x and nil or false" is always false in Lua.
 		if b == "off" then
