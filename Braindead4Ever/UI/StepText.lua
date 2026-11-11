@@ -437,6 +437,9 @@ function ST.Offer(o)
 			return L.READY_ASK_NPC:format(ST.Quest(o.quest), npc, zone)
 		end
 		return L.READY_ASK:format(ST.Quest(o.quest), zone)
+	elseif o.kind == "opt" then
+		local n = o.quests and #o.quests or 0
+		return n == 1 and L.OPT_ASK_1 or L.OPT_ASK_N:format(n)
 	elseif o.kind == "later" then
 		local n = o.classes or (o.quests and #o.quests) or 0
 		return n == 1 and L.LATER_ASK_1 or L.LATER_ASK_N:format(n)
@@ -466,7 +469,13 @@ function ST.Undo(act)
 	if act.kind == "unknown" or not fmt or fmt == "ACT_" .. tostring(act.kind) then
 		return L.UNDO
 	end
-	if act.kind == "back" or act.kind == "adjust" or act.kind == "switch" or act.kind == "takelater" then
+	if
+		act.kind == "back"
+		or act.kind == "adjust"
+		or act.kind == "switch"
+		or act.kind == "takelater"
+		or act.kind == "optional"
+	then
 		return L.UNDO_ACTION:format(fmt)
 	end
 	return L.UNDO_ACTION:format(fmt:format(act.quest and ST.Quest(act.quest) or ""))

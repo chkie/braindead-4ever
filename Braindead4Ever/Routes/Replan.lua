@@ -372,6 +372,52 @@ function RT:ReadyOffer(ctx)
 	return nil
 end
 
+-- Optional quests (owner 2026-11-10: Camping 101 "als Hinweis ... deutlich wegklickbar", in both modes).
+-- When the current step accepts a quest of a module's optional list that is neither handed in, in the
+-- log nor left out, the route asks once per module and kind "fit them in now or do them on your own".
+-- Yes keeps the steps; no leaves the open quests of the list out with their follow-up quests (undo
+-- takes it back). Until the answer the optional automation does not take them (RT:OptPending).
+function RT:OptOffer(ctx)
+	local s = self.steps[self.cur]
+	if not s or s.kind ~= "quest" or self.saved.side then
+		return nil
+	end
+	local offers = type(self.saved.offers) == "table" and self.saved.offers or {}
+	local blocked = ctx and ctx.blocked or self:Blocked()
+	local w = self.world
+	local id
+	for _, el in ipairs(s.els) do
+		local q = el[2]
+		local qid = el[1] == V.ACCEPT and self.optQ[q]
+		if qid and not offers[qid] and not w.IsFlagged(q) and not w.InLog(q) and not blocked[q] then
+			id = qid
+			break
+		end
+	end
+	if not id then
+		return nil
+	end
+	local quests = {}
+	for q, qid in pairs(self.optQ) do
+		if qid == id and not w.IsFlagged(q) and not blocked[q] then
+			quests[#quests + 1] = q
+		end
+	end
+	table.sort(quests)
+	return { kind = "opt", id = id, key = s.key, quests = quests }
+end
+
+-- An optional quest whose question is not answered yes (asked or not yet asked); answered no it is left
+-- out anyway (RT:Blocked).
+function RT:OptPending(q)
+	local id = self.optQ and self.optQ[q]
+	if not id then
+		return false
+	end
+	local offers = type(self.saved.offers) == "table" and self.saved.offers or {}
+	return offers[id] ~= "y"
+end
+
 function RT:LaterOffer()
 	local s = self.steps[self.cur]
 	if not s or s.kind ~= "travel" or self:Detour(s) or self.saved.side then
@@ -395,7 +441,7 @@ function RT:LaterOffer()
 end
 
 -- The open question of the current step: the class detour, a switch point, the list "later", the
--- level hint of a class insert (ME-1106), then "over the plan"; nil when none. Nothing is asked while
+-- level hint of a class insert (ME-1106), optional quests, then "over the plan"; nil when none. Nothing is asked while
 -- an abandon question waits.
 function RT:Offer(ctx)
 	if self.saved.pending or not self.cur or not self.steps[self.cur] then
@@ -404,7 +450,12 @@ function RT:Offer(ctx)
 	ctx = ctx or self:Context()
 	-- a switch point first: it decides where the route goes next; the list "later" asks after it at
 	-- the same travel step (or at the new block's), the level hint after both
-	return self:ClassOffer() or self:Switch(ctx) or self:LaterOffer() or self:ReadyOffer(ctx) or self:OverPlan(ctx)
+	return self:ClassOffer()
+		or self:Switch(ctx)
+		or self:LaterOffer()
+		or self:ReadyOffer(ctx)
+		or self:OptOffer(ctx)
+		or self:OverPlan(ctx)
 end
 
 -- Answer to the open question with this id: yes = true takes it. Returns true when answered, or
@@ -436,6 +487,21 @@ function RT:AnswerOffer(id, yes)
 			s.offers["class:" .. o.key] = "y"
 			self:TakeModule(o.module, o.quest)
 		end
+		return true
+	end
+	if o.kind == "opt" then
+		-- yes: the steps stay; no: the open quests of the list leave the route with their follow-ups
+		if yes then
+			s.offers[id] = "y"
+			return true
+		end
+		self:Push("optional", o.key)
+		s.offers[id] = "n"
+		for _, q in ipairs(o.quests) do
+			local a = self.accepts[q]
+			s.roots[q] = a and self.steps[a].key or o.key
+		end
+		self:Changed("skip")
 		return true
 	end
 	if o.kind == "later" then

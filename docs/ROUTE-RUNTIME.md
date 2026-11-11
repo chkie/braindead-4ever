@@ -91,6 +91,8 @@ A step is **done** when every counted element is done or the player checked it, 
 
 ## Interface `ns.Route`
 
+**Optional quests** (owner 2026-11-10, Camping 101). A module can list quests the route offers with a choice (`optional`, docs/ROUTE-FORMAT.md). When the current step accepts one of them that is neither handed in, in the log nor left out, the route asks once per module "<n> profession quests: fit them in now or do them on your own?" (`Offer` kind `opt`, with `quests`). Fit in keeps the steps; on your own leaves the open quests of the list out with their follow-up quests, like a skip (undo takes it back, act kind `optional`). Until the answer the optional automation does not accept them (`RT:OptPending`, `Route.DialogQuests`). Order of the questions at one step: class detour, switch point, list `later`, level hint, optional quests, "over the plan".
+
 | Function | Returns |
 | --- | --- |
 | `Route.Current()` | step info of the current step, or nil (no route, route finished, module off) |

@@ -182,7 +182,10 @@ UTF-8, one module per file, `data/routes/<faction>/<module>.route`. `--` starts 
 #label   vorläufig                 vorläufig | stabil
 #version 1                         integer, raised on every change of content
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+#optional beruf 97915 97916        optional: quests the route offers with a choice (kind beruf)
 ```
+
+`#optional <kind> <quest IDs>` names quests of the module that the route offers instead of requiring them (owner 2026-11-10: Camping 101 in every start zone, "deutlich wegklickbar", both modes). The only kind is `beruf` (profession quests). Every ID must be a quest the module accepts; the steps stay as they are. The compiler writes `optional = { beruf = { … } }` into the module; the runtime asks once per module (docs/ROUTE-RUNTIME.md §Optional quests).
 
 `#label stabil` is reserved for sections with 20 measured runs whose median moved less than 5 % between two weekly releases (Plan, stable rule). Until the data collector delivers, every module is `vorläufig`.
 
