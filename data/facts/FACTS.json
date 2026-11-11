@@ -1,12 +1,12 @@
 {
  "counts": {
   "dungeons": 14,
-  "finds": 429,
-  "flight legs": 113,
-  "flight legs measured": 31,
+  "finds": 431,
+  "flight legs": 126,
+  "flight legs measured": 38,
   "flight points": 66,
   "kept": 2246,
-  "no level": 166,
+  "no level": 167,
   "npcs flightmaster": 35,
   "npcs innkeeper": 40,
   "npcs trainer": 224,
@@ -17,9 +17,9 @@
  },
  "flightModel": {
   "basis": "model",
-  "measuredLegs": 31,
+  "measuredLegs": 38,
   "rule": "seconds = straight distance between the flight points (yards) x secondsPerYard, the median over the measured legs; replaced by a measured value as soon as one exists",
-  "secondsPerYard": 0.0446
+  "secondsPerYard": 0.0439
  },
  "license": "GPL-3.0-only",
  "note": "Merged from the sources below; contains Polestar forever-db data (GPL-3.0-only), EG Link data (CC BY 4.0) and All The Things data (MIT). Every value starts as unbestätigt.",
@@ -27,10 +27,10 @@
   "att 1-10": "209/313",
   "att 11-20": "96/178",
   "att 21-30": "47/110",
-  "att 31-40": "111/322",
+  "att 31-40": "118/352",
   "polestar 1-10": "209/311",
   "polestar 11-20": "73/192",
-  "polestar 21-30": "30/113",
+  "polestar 21-30": "31/113",
   "polestar 31-40": "11/49"
  },
  "rules": {
@@ -75,19 +75,19 @@
  },
  "sources": {
   "att": {
-   "commit": "de9e691d29e635443fd365f6af0f8a75e854157d",
+   "commit": "426a6f738b33582e806f174028e5cefd372e06ab",
    "license": "MIT",
    "name": "All The Things, Forever database",
    "repository": "https://github.com/ATTWoWAddon/AllTheThings/tree/master/.contrib/.db/forever"
   },
   "eglink": {
-   "commit": "23f9636486d3d60479dc0bcee2356053c33faf2c",
+   "commit": "9fcae73cc74fea4f1c4f2f09df9ca811b0f893ae",
    "license": "CC-BY-4.0",
    "name": "EG Link output: World of Warcraft: Forever",
    "repository": "https://github.com/JIVESCORP/eg-link-output-wowf"
   },
   "polestar": {
-   "commit": "cafeb253903d49c5d0e65fdc90bd4425d29d35c9",
+   "commit": "0df6f58ab8eeabb248153fdd889e64211177e279",
    "license": "GPL-3.0-only",
    "name": "Polestar forever-db",
    "repository": "https://github.com/fitzforge/polestar/tree/next/forever-db",

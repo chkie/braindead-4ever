@@ -11,6 +11,7 @@
 #label vorläufig
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+#optional beruf 97950 97944 97938 97946 97939 97949 97940 97942 97943 96634
 
 @a456 lv=1
   accept 456 | src=polestar,att status=unbestätigt
@@ -55,12 +56,12 @@
   turnin 458 | src=polestar status=unbestätigt
   accept 97977 | src=polestar,att status=unbestätigt
   accept 459 | src=polestar,att status=unbestätigt
-  goto 1438 870.0,10297.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1438 878.1,10304.5 r=10 | src=polestar status=unbestätigt roots=1
 @c97977 lv=3
   complete 97977 | src=polestar status=unbestätigt
 @t97977 lv=3
   turnin 97977 | src=polestar status=unbestätigt
-  goto 1438 870.0,10297.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1438 878.1,10304.5 r=10 | src=polestar status=unbestätigt roots=1
 @a916 lv=3
   accept 916 | src=polestar,att status=unbestätigt
   goto 1438 871.0,10418.0 r=10 | src=polestar,att status=unbestätigt roots=2
@@ -95,7 +96,7 @@
   goto 1438 871.0,10418.0 r=10 | src=polestar status=unbestätigt roots=1
 @t459 lv=4
   turnin 459 | src=polestar status=unbestätigt
-  goto 1438 870.0,10297.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1438 878.1,10304.5 r=10 | src=polestar status=unbestätigt roots=1
 @a488 lv=4
   accept 488 | src=polestar,att status=unbestätigt
   goto 1438 742.0,9925.5 r=10 | src=polestar,att status=unbestätigt roots=2
@@ -256,7 +257,7 @@
   train | src=plan status=unbestätigt
 @a487 lv=7
   accept 487 | src=polestar,att status=unbestätigt
-  goto 1438 1120.5,9890.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1438 993.2,9846.3 r=10 | src=polestar status=unbestätigt roots=1
 @a2541 lv=7
   accept 2541 | src=polestar,att status=unbestätigt
   goto 1438 1526.5,9741.0 r=10 | src=polestar,att status=unbestätigt roots=2
@@ -284,7 +285,7 @@
   goto 1438 1448.5,10018.5 r=10 | src=polestar status=unbestätigt roots=1
 @t487 lv=8
   turnin 487 | src=polestar status=unbestätigt
-  goto 1438 1120.5,9890.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1438 993.2,9846.3 r=10 | src=polestar status=unbestätigt roots=1
 @c932 lv=8
   complete 932 | src=polestar status=unbestätigt
   goto 1438 1202.0,10128.0 r=10 | src=polestar status=unbestätigt roots=1
@@ -498,10 +499,14 @@
 @t97950 lv=10
   turnin 97950 | src=polestar status=unbestätigt
   goto 1438 2266.0,10088.5 r=10 | src=polestar status=unbestätigt roots=1
+@r1457 lv=10
+  travel walk 1457 | src=plan status=unbestätigt
 @t922 lv=10
   turnin 922 | src=polestar status=unbestätigt
   turnin 2241 << class=ROGUE | src=polestar status=unbestätigt
-  goto 1438 2534.5,10085.5 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1457 2530.9,10086.8 r=10 | src=polestar status=unbestätigt roots=1
+@r1438h lv=10 !return "Abgabe in der Stadt"
+  travel walk 1438 | src=plan status=unbestätigt
 @t940 lv=11
   turnin 940 | src=polestar status=unbestätigt
   turnin 935 | src=polestar status=unbestätigt

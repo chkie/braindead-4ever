@@ -1,9 +1,11 @@
 {"class":"PALADIN","count":1,"faction":"Alliance","key":"Dwarf|Alliance|PALADIN","positions":[[1426,331,-6240.3]],"race":"Dwarf"}
 {"class":"PRIEST","count":1,"faction":"Alliance","key":"Dwarf|Alliance|PRIEST","positions":[[1426,331,-6240.3]],"race":"Dwarf"}
 {"class":"PRIEST","count":1,"faction":"Alliance","key":"Gnome|Alliance|PRIEST","positions":[[1426,331,-6240.3]],"race":"Gnome"}
+{"class":"MAGE","count":1,"faction":"Alliance","key":"Human|Alliance|MAGE","positions":[[1429,-132.5,-8950]],"race":"Human"}
 {"class":"PRIEST","count":1,"faction":"Alliance","key":"Human|Alliance|PRIEST","positions":[[1429,-132.5,-8950]],"race":"Human"}
 {"class":"WARRIOR","count":1,"faction":"Alliance","key":"Human|Alliance|WARRIOR","positions":[[1429,-132.5,-8950]],"race":"Human"}
 {"class":"DRUID","count":1,"faction":"Alliance","key":"NightElf|Alliance|DRUID","positions":[[1438,831.5,10311.3]],"race":"NightElf"}
+{"class":"HUNTER","count":1,"faction":"Alliance","key":"NightElf|Alliance|HUNTER","positions":[[1438,831.5,10311.3]],"race":"NightElf"}
 {"class":"ROGUE","count":2,"faction":"Horde","key":"Orc|Horde|ROGUE","positions":[[1411,-4251.7,-618.5]],"race":"Orc"}
 {"class":"WARRIOR","count":2,"faction":"Horde","key":"Orc|Horde|WARRIOR","positions":[[1411,-4251.7,-618.5]],"race":"Orc"}
 {"class":"MAGE","count":8,"faction":"Horde","key":"Scourge|Horde|MAGE","positions":[[1420,1677.5,1676.4]],"race":"Scourge"}

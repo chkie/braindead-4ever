@@ -11,6 +11,7 @@
 #label vorläufig
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+#optional beruf 97924 97925 97918 97923 97922 97915 97916 97920 96626 97921 97919
 
 @a783 lv=1
   accept 783 | src=polestar,att status=unbestätigt
@@ -349,9 +350,13 @@
 @t97923 lv=9
   turnin 97923 | src=polestar status=unbestätigt
   goto 1429 693.5,-8434.0 r=10 | src=polestar status=unbestätigt roots=1
+@r1453 lv=9
+  travel walk 1453 | src=plan status=unbestätigt
 @t61 lv=9
   turnin 61 | src=polestar status=unbestätigt
-  goto 1429 625.5,-8858.0 r=10 | src=polestar status=unbestätigt roots=1
+  goto 1453 625.2,-8859.0 r=10 | src=polestar status=unbestätigt roots=1
+@r1429h lv=9 !return "Abgabe in der Stadt"
+  travel walk 1429 | src=plan status=unbestätigt
 @a11 lv=9
   accept 11 | src=polestar,att status=unbestätigt
   goto 1429 694.5,-9663.0 r=10 | src=polestar,att status=unbestätigt roots=2

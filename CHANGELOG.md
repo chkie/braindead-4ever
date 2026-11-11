@@ -8,6 +8,12 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.11 (2026-11-11)
+
+- Profession quests are your choice. Where the route reaches Camping 101 in a start zone, the step window asks whether you want to fit the profession quests in now or do them on your own. "Fit in" keeps them in the route as before. "On my own" leaves them out, and the route goes on with the next quest. Undo in the right-click menu brings them back. The Great Outdoors stays in the route. The optional automation takes these quests only after "Fit in".
+- A left click on the check box of the current step now checks the step off. Before, only the right-click menu worked.
+- Quest data as of 11 November. Quest givers that stand somewhere else in Forever have their new places: in Teldrassil and Redridge Mountains some waypoints moved by up to 135 yards, and one turn-in each in Elwynn Forest and Teldrassil is in Stormwind or Darnassus, with a walk step into the city and back out.
+
 ## 0.9.10 (2026-11-09)
 
 - A ride step now names where the ride lands. The zeppelin from Orgrimmar lands in Tirisfal Glades, and a walk step then leads on to Silverpine Forest. Before, the step said "zeppelin to Silverpine Forest". This holds for every boat, zeppelin, airship and tram step in both factions.
