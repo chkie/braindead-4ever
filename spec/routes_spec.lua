@@ -203,8 +203,11 @@ describe("Example route Elwynn Forest", function()
 					log[el[2]] = nil
 					done[#done + 1] = el[2]
 				elseif el[1] == V.GOTO then
-					assert.are.equal(1429, el[2], s.step.id)
-					inElwynn = inElwynn + 1
+					-- since the quest data of 2026-11-11 one turn-in (t61) is in Stormwind, with walk steps
+					if el[2] ~= 1453 then
+						assert.are.equal(1429, el[2], s.step.id)
+						inElwynn = inElwynn + 1
+					end
 				end
 			end
 		end

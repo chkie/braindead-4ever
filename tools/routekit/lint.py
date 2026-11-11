@@ -214,6 +214,17 @@ def lint_module(mod, facts):
         hits = blocked(h["text"])
         if hits:
             E("sperrliste", mod.header_lines["text"], "Sperrliste: %s" % ", ".join(hits))
+    opt = mod.optional()
+    if opt is None:
+        E("kopf", mod.header_lines["optional"], "#optional nicht im Format <Art> <Quest-IDs>")
+    else:
+        accepted = {el.args["q"] for st in mod.steps for el in st.elements if el.verb == "accept" and "q" in el.args}
+        for kind, ids in opt.items():
+            if kind not in routefmt.OPTIONAL_KINDS:
+                E("kopf", mod.header_lines["optional"], "unbekannte Art '%s' in #optional" % kind)
+            for q in ids:
+                if q not in accepted:
+                    E("kopf", mod.header_lines["optional"], "#optional nennt Quest %d, die das Modul nicht annimmt" % q, q)
     levels = mod.levels()
     if h.get("levels") and not levels:
         E("kopf", mod.header_lines["levels"], "#levels nicht im Format a-b")

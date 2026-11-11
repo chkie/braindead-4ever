@@ -185,7 +185,7 @@ describe("NPC names in the steps (M4)", function()
 			end
 			assert.is_true(n > 500, faction)
 		end
-		assert.are.same({ 196, 3, 196, 1, 0 }, ns.NpcFacts.Alliance()[33]) -- giver and turn-in with sources
+		assert.are.same({ 196, 7, 196, 5, 0 }, ns.NpcFacts.Alliance()[33]) -- giver and turn-in with sources
 	end)
 
 	it("counter-check: a name in the data is found", function()

@@ -27,6 +27,14 @@ local function stub(ns, offer)
 	end
 end
 
+-- Since the quest data of 2026-11-11 the human's Elwynn route walks into Stormwind for one turn-in (t61)
+-- and back out. A zone change waits for the player, so these tests let him have done that turn-in and the
+-- next quest before he grinds: the first zone change ahead is then the boat to Darkshore again.
+local function pastStormwind()
+	wow.world.completed[61] = true
+	wow.world.completed[11] = true
+end
+
 describe("Replanning in the step window", function()
 	it("stops at the zone change after grinding and offers the block that fits; undo goes back", function()
 		local ns = S.login()
@@ -37,6 +45,7 @@ describe("Replanning in the step window", function()
 			changed = offer
 		end)
 		-- twenty levels of grinding in Elwynn Forest without the route
+		pastStormwind()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
@@ -93,6 +102,7 @@ describe("Replanning in the step window", function()
 		local ns = S.login({ char = char, loaded = inject })
 		local W = ns.StepFrame.frame
 		wow.world.mapInfo[1439] = { mapID = 1439, name = "Darkshore" }
+		pastStormwind()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
@@ -144,6 +154,7 @@ describe("Replanning in the step window", function()
 	it("offers the switch at a core module's return into a zone, not at a class detour", function()
 		local ns = S.login({ loaded = returnAt("neue Quests") })
 		wow.world.mapInfo[1439] = { mapID = 1439, name = "Darkshore" }
+		pastStormwind()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
@@ -155,6 +166,7 @@ describe("Replanning in the step window", function()
 		-- counter check: the same step as the travel step of a class insert is a detour; it is no switch
 		-- point, the level rule passes it like before
 		ns = S.login({ loaded = returnAt("Klassenquest", "class") })
+		pastStormwind()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
@@ -166,6 +178,7 @@ describe("Replanning in the step window", function()
 	it("“Keep route” keeps it and does not ask again", function()
 		local ns = S.login()
 		local W = ns.StepFrame.frame
+		pastStormwind()
 		wow.world.player.level = 20
 		wow.fire("PLAYER_LEVEL_UP", 20)
 		wow.advance(0.5)
@@ -207,6 +220,30 @@ describe("Replanning in the step window", function()
 		assert.are.equal("Later", W.btnNo.text)
 		W.btnNo:Click()
 		assert.is_false(answered())
+	end)
+
+	it("profession quests ask Fit in or On my own; On my own counts them in the status line", function()
+		local ns = S.login()
+		local W = ns.StepFrame.frame
+		local answered = stub(ns, { kind = "opt", id = "opt:test:beruf", key = "test/tG", quests = { 1, 2, 3 } })
+		ns.StepFrame.Refresh()
+		assert.are.equal("3 profession quests: fit them in now or do them on your own?", W.banner.text)
+		assert.are.equal("Fit in", W.btnYes.text)
+		assert.are.equal("On my own", W.btnNo.text)
+		W.btnNo:Click()
+		assert.is_false(answered())
+		assert.are.equal("3 profession quests left out.", W.status.text)
+		assert.is_false(shown(W.btnYes))
+	end)
+
+	it("profession quests in German, in the owner's words", function()
+		local ns = S.login({ locale = "deDE" })
+		local W = ns.StepFrame.frame
+		stub(ns, { kind = "opt", id = "opt:test:beruf", key = "test/tG", quests = { 1 } })
+		ns.StepFrame.Refresh()
+		assert.are.equal("Berufsquest: jetzt kurz einschieben oder selbst machen?", W.banner.text)
+		assert.are.equal("Einschieben", W.btnYes.text)
+		assert.are.equal("Selbst machen", W.btnNo.text)
 	end)
 
 	it("shows no new question in a fight, one shown before stays", function()

@@ -234,6 +234,7 @@
 {"id":2476,"key":"rare-2476-1432-5880-2820","pos":[[1432,5880,2820],[1432,5980,3180],[1432,6120,4060],[1432,6240,4560]],"src":["att"],"status":"unbestätigt","type":"rare"}
 {"id":2541,"key":"rare-2541-1434-2860-6220","pos":[[1434,2860,6220]],"src":["att"],"status":"unbestätigt","type":"rare"}
 {"id":2598,"key":"rare-2598-1417-2980-6020","pos":[[1417,2980,6020],[1417,2700,6520],[1417,2780,6640]],"src":["att"],"status":"unbestätigt","type":"rare"}
+{"id":259801,"key":"rare-259801-2548-6250-3600","pos":[[2548,6250,3600]],"src":["att"],"status":"unbestätigt","type":"rare"}
 {"id":2600,"key":"rare-2600-1417-3140-2660","pos":[[1417,3140,2660],[1417,3360,2780],[1417,3180,3180],[1417,3480,3140]],"src":["att"],"status":"unbestätigt","type":"rare"}
 {"id":2601,"key":"rare-2601-1417-1940-6400","pos":[[1417,1940,6400],[1417,2000,6660],[1417,2160,6540]],"src":["att"],"status":"unbestätigt","type":"rare"}
 {"id":2602,"key":"rare-2602-1417-1820-6860","pos":[[1417,1820,6860]],"src":["att"],"status":"unbestätigt","type":"rare"}
@@ -426,4 +427,5 @@
 {"id":3642,"key":"treasure-3642-1413-4300-2350","pos":[[1413,4300,2350],[1413,5280,4180],[1413,4430,3770]],"src":["att"],"status":"unbestätigt","type":"treasure"}
 {"id":674124,"key":"treasure-674124-1434-1440-2720","pos":[[1434,1440,2720]],"src":["att"],"status":"unbestätigt","type":"treasure"}
 {"id":674126,"key":"treasure-674126-1442-4070-5270","pos":[[1442,4070,5270]],"src":["att"],"status":"unbestätigt","type":"treasure"}
+{"id":694054,"key":"treasure-694054-1430-5240-3440","pos":[[1430,5240,3440]],"src":["att"],"status":"unbestätigt","type":"treasure"}
 {"id":701788,"key":"treasure-701788-1458-2300-3640","pos":[[1458,2300,3640],[1458,2360,3540],[1458,2370,3590]],"src":["att"],"status":"unbestätigt","type":"treasure"}

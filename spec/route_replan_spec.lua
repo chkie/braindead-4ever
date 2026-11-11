@@ -811,7 +811,15 @@ describe("Replanning: time and frame budget of the reorder", function()
 				movable = movable and MOVABLE[el[1]] == true
 			end
 		end
-		if e.module == "a-speed-start-elwynn" and quest and movable then
+		-- the steps in Elwynn Forest only: the turn-in in Stormwind (quest data of 2026-11-11) is a block of
+		-- its own between two walk steps
+		local inElwynn = true
+		for _, el in ipairs(e.step) do
+			if el[1] == 5 and el[2] ~= 1429 then -- goto
+				inElwynn = false
+			end
+		end
+		if e.module == "a-speed-start-elwynn" and quest and movable and inElwynn then
 			elwynn[#elwynn + 1] = e
 		end
 	end

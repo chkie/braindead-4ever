@@ -142,23 +142,23 @@ describe("Flight vault: saturation", function()
 	it("stops sending a connection at three sources and seconds at five measured flights", function()
 		local ns = pure()
 		local f = vault(ns)
-		-- 2>4 is in the facts without a measured flight: one source, no measure
-		assert.are.equal(0, ns.FlightFacts.legs["2>4"])
-		assert.are.same({ 1, 0 }, { f:Known("2>4") })
-		assert.are.equal("h;1;2;4;0", (f:Own(2, 4, 0, false)))
-		assert.are.equal("new", hear(ns, f, H(ns, 2, 4, 0), "Anna Sommer"))
-		assert.are.same({ 3, 0 }, { f:Known("2>4") })
-		assert.is_nil((f:Own(2, 4, 0, false)), "the connection is known from three sources")
+		-- 2>6 is in the facts without a measured flight: one source, no measure
+		assert.are.equal(0, ns.FlightFacts.legs["2>6"])
+		assert.are.same({ 1, 0 }, { f:Known("2>6") })
+		assert.are.equal("h;1;2;6;0", (f:Own(2, 6, 0, false)))
+		assert.are.equal("new", hear(ns, f, H(ns, 2, 6, 0), "Anna Sommer"))
+		assert.are.same({ 3, 0 }, { f:Known("2>6") })
+		assert.is_nil((f:Own(2, 6, 0, false)), "the connection is known from three sources")
 		-- seconds still add something until five flights are measured
 		for i, who in ipairs({ "Ben Winter", "Cleo Herbst", "Dana Sommer", "Emil Winter" }) do
-			assert.are.equal("new", hear(ns, f, H(ns, 2, 4, 90 + i), who))
+			assert.are.equal("new", hear(ns, f, H(ns, 2, 6, 90 + i), who))
 		end
-		assert.are.same({ 7, 4 }, { f:Known("2>4") })
-		local msg, secs = f:Own(2, 4, 93, true)
-		assert.are.same({ "h;1;2;4;93", 93 }, { msg, secs })
-		assert.is_nil((f:Own(2, 4, 95, true)), "five measured flights")
-		assert.are.same({ 7, 6 }, { f:Known("2>4") })
-		assert.is_false(f:Wants("2>4", 94))
+		assert.are.same({ 7, 4 }, { f:Known("2>6") })
+		local msg, secs = f:Own(2, 6, 93, true)
+		assert.are.same({ "h;1;2;6;93", 93 }, { msg, secs })
+		assert.is_nil((f:Own(2, 6, 95, true)), "five measured flights")
+		assert.are.same({ 7, 6 }, { f:Known("2>6") })
+		assert.is_false(f:Wants("2>6", 94))
 		-- the facts' measured flights count: 22>25 has 16 (EG Link, 2026-11-09), so its seconds are saturated with the sources
 		assert.are.equal(16, ns.FlightFacts.legs["22>25"])
 		f:Own(22, 25, 0, false)
@@ -246,14 +246,14 @@ describe("Flight vault: relaying", function()
 		local ns = pure()
 		local db = {}
 		local f = vault(ns, db)
-		f:Own(2, 4, 90, true)
-		hear(ns, f, H(ns, 2, 4, 95), "A", false)
-		hear(ns, f, H(ns, 2, 4, 85), "B", false)
+		f:Own(2, 6, 90, true)
+		hear(ns, f, H(ns, 2, 6, 95), "A", false)
+		hear(ns, f, H(ns, 2, 6, 85), "B", false)
 		local t
 		f, t = vault(ns, db)
-		assert.are.equal("implausible", hear(ns, f, H(ns, 2, 4, 5), "Mallory"))
+		assert.are.equal("implausible", hear(ns, f, H(ns, 2, 6, 5), "Mallory"))
 		t.now = 1
-		assert.are.equal("h;1;2;4;90", f:NextRelay())
+		assert.are.equal("h;1;2;6;90", f:NextRelay())
 	end)
 
 	it("relays nothing the others know already", function()
@@ -608,7 +608,7 @@ describe("Spread simulation with flight legs", function()
 		assert.is_true(r.maxWindow <= WINDOW_MAX, r.maxWindow)
 		local f = r.flights
 		assert.is_true(f.messages > 0)
-		assert.are.equal(111, f.legs) -- flight legs of the facts, EG Link 2026-11-09
+		assert.are.equal(124, f.legs) -- flight legs of the facts, EG Link 2026-11-10
 		-- most legs other players saw reach an exporter, the ones the facts lack too
 		assert.is_true(f.reach.legs.any >= 0.9, f.reach.legs.any)
 		assert.is_true(f.reach.hidden.any >= 0.9, f.reach.hidden.any)

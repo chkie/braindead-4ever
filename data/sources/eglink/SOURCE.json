@@ -26,8 +26,8 @@
   "wowf/1.60.1.70840",
   "wowf/1.60.1.70862"
  ],
- "commit": "23f9636486d3d60479dc0bcee2356053c33faf2c",
- "commitDate": "2026-11-09T11:30:06Z",
+ "commit": "9fcae73cc74fea4f1c4f2f09df9ca811b0f893ae",
+ "commitDate": "2026-11-10T11:33:23Z",
  "files": [
   "quests.jsonl",
   "starts.jsonl",

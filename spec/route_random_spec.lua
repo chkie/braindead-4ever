@@ -329,9 +329,10 @@ describe("Route runtime under random actions", function()
 			for _, name in ipairs({ "play", "abandon", "check", "skip", "back", "undo", "resolve", "reload", "move" }) do
 				assert.is_true((counts[name] or 0) > 50, name .. " ran only " .. tostring(counts[name]))
 			end
-			-- measured 3 to 7 applied reorders per seed (the rest: no clear gain, a question waits, the player
-			-- went back, the current step is no movable quest step); every action after one runs on the new order
-			assert.is_true((counts.reorder or 0) >= 3, "reordered only " .. tostring(counts.reorder))
+			-- measured 2 to 7 applied reorders per seed (the rest: no clear gain, a question waits, the player
+			-- went back, the current step is no movable quest step; since the quest data of 2026-11-11 a
+			-- turn-in in Stormwind cuts Elwynn into two blocks); every action after one runs on the new order
+			assert.is_true((counts.reorder or 0) >= 2, "reordered only " .. tostring(counts.reorder))
 			io.stdout:write(
 				("\n[replan] seed %d: %d reorders applied in %d actions"):format(seed, counts.reorder or 0, ACTIONS)
 			)

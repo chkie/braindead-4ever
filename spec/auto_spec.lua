@@ -40,8 +40,14 @@ local function login(opts)
 			local build = ns.RouteData.Alliance
 			ns.RouteData.Alliance = function()
 				local d = build()
-				d.modules["t-auto"] =
-					{ kind = "start", mode = "speed", levels = { 1, 10 }, label = "stabil", steps = STEPS }
+				d.modules["t-auto"] = {
+					kind = "start",
+					mode = "speed",
+					levels = { 1, 10 },
+					label = "stabil",
+					steps = STEPS,
+					optional = opts.optional,
+				}
 				d.compose.speed = { starts = { { key = "t-auto" } }, core = {}, inserts = {} }
 				for _, q in ipairs({ A, B, C, LATER, HIGH }) do
 					d.quests[q] = { 1, 100, {} }
@@ -107,6 +113,17 @@ describe("Optional automation", function()
 		wow.fire("GOSSIP_SHOW")
 		detail(A)
 		assert.are.same({}, calls())
+	end)
+
+	it("leaves an optional quest alone until the player says to fit it in (Camping 101)", function()
+		local ns = login({ optional = { beruf = { B } } })
+		local dq = ns.Route.DialogQuests()
+		assert.is_true(dq.accept[A])
+		assert.is_nil(dq.accept[B], "unanswered: not taken")
+		local o = ns.Route.Offer()
+		assert.are.equal("opt", o.kind)
+		assert.is_true(ns.Route.AnswerOffer(true))
+		assert.is_true(ns.Route.DialogQuests().accept[B], "fit in: taken like any route quest")
 	end)
 
 	describe("accept", function()

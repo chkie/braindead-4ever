@@ -109,6 +109,8 @@ def _module(m, facts=None):
         lines.append("\t\t\tready = %d," % ready)
     if m.filter is not None:
         lines.append("\t\t\t" + ", ".join(_ids(m.filter.races, m.filter.classes)) + ",")
+    for kind, ids in sorted((m.optional() or {}).items()):
+        lines.append("\t\t\toptional = { %s = { %s } }," % (kind, ", ".join(str(q) for q in ids)))
     lines.append("\t\t\tsteps = {")
     for st in m.steps:
         head = ["id = %s" % _lua_str(st.id)]

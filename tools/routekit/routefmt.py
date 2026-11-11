@@ -24,7 +24,10 @@ VERBS = {
     "note": (r'"(?P<text>[^"]*)"', False),
 }
 HEADERS_REQUIRED = ("module", "kind", "faction", "mode", "levels", "label", "version", "sources")
-HEADERS = set(HEADERS_REQUIRED) | {"for", "text"}
+HEADERS = set(HEADERS_REQUIRED) | {"for", "text", "optional"}
+# #optional <kind> <questIDs>: quests the route offers with a choice instead of requiring them (owner
+# 2026-11-10, Camping 101: "als Hinweis ... deutlich wegklickbar"); the only kind is "beruf".
+OPTIONAL_KINDS = ("beruf",)
 KINDS = ("start", "core", "class")
 MODES = ("speed", "explorer")
 LABELS = ("vorläufig", "stabil")
@@ -116,6 +119,16 @@ class Module:
     @property
     def kind(self):
         return self.header.get("kind")
+
+    def optional(self):
+        """{kind: [questID, ...]} of the #optional line, {} without one; None when it does not parse."""
+        v = self.header.get("optional")
+        if v is None:
+            return {}
+        parts = v.split()
+        if len(parts) < 2 or not all(p.isdigit() for p in parts[1:]):
+            return None
+        return {parts[0]: [int(p) for p in parts[1:]]}
 
     def levels(self):
         m = re.fullmatch(r"(\d+)-(\d+)", self.header.get("levels", ""))

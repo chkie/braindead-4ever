@@ -71,6 +71,41 @@ class LinterAcceptance(unittest.TestCase):
         self.assertEqual(10, len(set(found)))
 
 
+class OptionalQuests(unittest.TestCase):
+    """#optional beruf <IDs> (owner 2026-11-10, Camping 101 as an offer with a choice)."""
+
+    def _lint(self, line):
+        with open(os.path.join(FIX, "good", "t-speed-start-elwynn.route"), encoding="utf-8") as fh:
+            text = fh.read()
+        text = text.replace("#text Prüfroute", line + "\n#text Prüfroute", 1)
+        mod = routefmt.parse(text, "opt.route")
+        errs = lint.lint_all({mod.key: mod}, [compose()], fixture_facts(), combo_list=HUMAN_WARRIOR, modes=("speed",))
+        return mod, [str(e) for e in errs]
+
+    def test_quests_the_module_accepts_pass(self):
+        mod, errs = self._lint("#optional beruf 900002 900003")
+        self.assertEqual([], errs)
+        self.assertEqual({"beruf": [900002, 900003]}, mod.optional())
+        lines = compiler._module(mod)
+        self.assertIn("\t\t\toptional = { beruf = { 900002, 900003 } },", lines)
+
+    def test_a_quest_the_module_does_not_accept_is_an_error(self):
+        _, errs = self._lint("#optional beruf 900002 912345")
+        self.assertEqual(1, len(errs), errs)
+        self.assertIn("912345", errs[0])
+
+    def test_unknown_kind_and_bad_format_are_errors(self):
+        _, errs = self._lint("#optional jagd 900002")
+        self.assertEqual(1, len(errs), errs)
+        _, errs = self._lint("#optional beruf abc")
+        self.assertEqual(1, len(errs), errs)
+
+    def test_without_the_line_nothing_is_compiled(self):
+        mod, errs = self._lint("")
+        self.assertEqual([], errs)
+        self.assertFalse(any("optional" in l for l in compiler._module(mod)))
+
+
 class Format(unittest.TestCase):
     def test_filter_tokens(self):
         f = routefmt.Filter("race=HUMAN,DWARF class=!WARRIOR")

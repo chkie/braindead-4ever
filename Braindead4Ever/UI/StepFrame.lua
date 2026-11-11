@@ -218,6 +218,9 @@ local function Build()
 	W.cur:SetScript("OnMouseUp", function(_, button)
 		if button == "RightButton" then
 			ns.Menu.Open(W)
+		elseif button == "LeftButton" and W.box:IsShown() and W.box:IsMouseOver() then
+			-- the line lies over the box: a left click on the box must still check the step (owner 10.11.2026)
+			SF.CheckCurrent()
 		end
 	end)
 
@@ -229,6 +232,8 @@ local function Build()
 	W.box:SetScript("OnClick", function()
 		SF.CheckCurrent()
 	end)
+	-- above the line of the current step, which also takes the mouse (tooltip, right-click menu)
+	W.box:SetFrameLevel(W.cur:GetFrameLevel() + 2)
 	W.icon = W:CreateTexture(nil, "ARTWORK") -- check or fail
 	W.icon:SetSize(SF.ICON, SF.ICON)
 	W.icon:SetPoint("CENTER", W.box, "CENTER")
@@ -958,8 +963,11 @@ local function RenderBanner(info)
 		view.offerId = offer.id
 		SetLine(W.banner, ST.Offer(offer))
 		local class = offer.kind == "class" or offer.kind == "later" or offer.kind == "ready"
-		W.btnYes:SetText(class and L.CLASS_NOW or offer.kind == "switch" and L.SWITCH_GO or L.ADJUST)
-		W.btnNo:SetText(class and L.CLASS_LATER or L.KEEP_ROUTE)
+		local opt = offer.kind == "opt"
+		W.btnYes:SetText(
+			opt and L.OPT_NOW or class and L.CLASS_NOW or offer.kind == "switch" and L.SWITCH_GO or L.ADJUST
+		)
+		W.btnNo:SetText(opt and L.OPT_OWN or class and L.CLASS_LATER or L.KEEP_ROUTE)
 		W.btnYes:Show()
 		W.btnNo:Show()
 		return true
@@ -1362,6 +1370,9 @@ function SF.AnswerOffer(yes)
 	local ok = C.AnswerOffer(yes)
 	if ok and yes and offer.kind == "over" then
 		view.message = ST.Adjusted(#offer.drop)
+	elseif ok and not yes and offer.kind == "opt" then
+		local n = offer.quests and #offer.quests or 0
+		view.message = n == 1 and L.OPT_LEFT_1 or L.OPT_LEFT_N:format(n)
 	end
 	view.offerId = nil
 	SF.Invalidate()

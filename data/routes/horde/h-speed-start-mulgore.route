@@ -11,6 +11,7 @@
 #label vorläufig
 #version 2
 #sources polestar=2026.10.1@463c52c att=f8d538a eglink=572beca
+#optional beruf 97928 97937 97934 97935 97931 97932 97929 97936 96661 97927 97930
 
 @a752 lv=1
   accept 752 | src=polestar,att,eglink status=unbestätigt

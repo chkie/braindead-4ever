@@ -770,7 +770,8 @@ end
 
 -- Quests the current part of the route takes and hands in, for the optional automation (UI/Auto.lua):
 -- the current step and the next DIALOG_AHEAD open steps, without quests the player skipped and their
--- follow-up quests. { accept = { [questID] = true }, turnin = { [questID] = true } }, nil without a route.
+-- follow-up quests and without optional quests whose question is not answered yes (RT:OptPending).
+-- { accept = { [questID] = true }, turnin = { [questID] = true } }, nil without a route.
 -- Steps the route passed (level rule, entry anchor) are not part of it.
 Route.DIALOG_AHEAD = 3
 function Route.DialogQuests()
@@ -783,7 +784,7 @@ function Route.DialogQuests()
 				n = n + 1
 				for _, el in ipairs(rt.steps[i].els) do
 					local v, q = el[1], el[2]
-					if not ctx.blocked[q] then
+					if not ctx.blocked[q] and not (v == R.VERB.ACCEPT and rt:OptPending(q)) then
 						if v == R.VERB.ACCEPT then
 							out.accept[q] = true
 						elseif v == R.VERB.TURNIN then

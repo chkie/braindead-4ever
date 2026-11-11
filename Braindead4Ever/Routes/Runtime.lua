@@ -174,6 +174,23 @@ function RT.New(steps, quests, world, saved, opts)
 		end
 	end
 	self.routeQuests = seen
+	-- Optional quests (owner 2026-11-10, Camping 101): module field optional = { <kind> = { questIDs } };
+	-- optQ maps a route quest to the id of the question that decides it (RT:OptOffer, Routes/Replan.lua).
+	self.optQ = {}
+	local optSeen = {}
+	for _, s in ipairs(self.steps) do
+		local mod = self.modules[s.module]
+		if not optSeen[s.module] and mod and type(mod.optional) == "table" then
+			optSeen[s.module] = true
+			for kind, list in pairs(mod.optional) do
+				for _, q in ipairs(type(list) == "table" and list or {}) do
+					if seen[q] then
+						self.optQ[q] = "opt:" .. s.module .. ":" .. tostring(kind)
+					end
+				end
+			end
+		end
+	end
 	self:Reindex()
 	if self.InitReplan then
 		self:InitReplan(opts) -- Routes/Replan.lua: blocks for reordering, saved orders, alternatives
