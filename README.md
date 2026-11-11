@@ -2,7 +2,7 @@
 
 Braindead 4ever is a free leveling guide addon for World of Warcraft: Forever. Its working title was Pathmark. The routes cover levels 1 to 30; levels 30 to 60 follow with updates.
 
-**Status:** first release 0.9.0, submitted to [CurseForge](https://www.curseforge.com/wow/addons/braindead-4ever) for the start of WoW: Forever on 5 November 2026. The routes are computed from open data; real runs confirm them after the start.
+**Status:** on [CurseForge](https://www.curseforge.com/wow/addons/braindead-4ever) since the start of WoW: Forever on 5 November 2026; what changed in each version is in [CHANGELOG.md](CHANGELOG.md), together with the known issues. The routes are computed from open data and marked as provisional. They are being rebuilt zone by zone, starting with the first 20 levels; until a zone is rebuilt, the current route stays.
 
 ## What it is for
 
@@ -12,7 +12,7 @@ Braindead 4ever is a free leveling guide addon for World of Warcraft: Forever. I
 
 ## How it is built
 
-Every change has to pass automated tests, linting, a type check, a format check and a secret scan before it can be merged. Features are tested in the game client before a release.
+Every change has to pass automated tests, linting, a type check, a format check and a secret scan before it can be merged. Braindead 4ever is developed by one person, who plays parts of each release in the Forever client; not every feature is played before it goes out.
 
 Quest IDs, coordinates and times come from open sources with a known licence or from our own measurements. Each value carries its source.
 
@@ -20,7 +20,7 @@ Quest IDs, coordinates and times come from open sources with a known licence or 
 
 Braindead 4ever records what you do while leveling, in your own game folder: quests accepted and turned in with their place, experience, objects you loot, rare enemies, flight masters, the flights you take and similar finds. Nothing in it names your character, your realm, your guild or other players, and there is no chat. Time is kept relative to the session, the date only as a day.
 
-What you discover, Braindead 4ever shares in the game with other players who use it: IDs and map positions only, to your group at once, to your guild and other players 30 to 90 seconds later. Group and guild get addon messages. Other players get short chat lines in a hidden channel that only Braindead 4ever joins and reads, because WoW Forever does not pass addon messages on in such a channel; a line goes out with one of your key presses or clicks, never in a fight or an instance, and no chat window shows it. This is part of the addon and cannot be switched off. Addon messages and chat lines show the game's sender name to the receiving addon; Braindead 4ever never stores it.
+What you discover, Braindead 4ever shares in the game with other players who use it: IDs and map positions only, to your group at once, to your guild and other players 30 to 90 seconds later. Group and guild get addon messages. Other players get short chat lines in a hidden channel that only Braindead 4ever joins and reads, because WoW Forever does not pass addon messages on in such a channel; a line goes out with one of your key presses or clicks, never in a fight or an instance, and no chat window shows it. You can switch sharing on the hidden channel off in the settings, page "Sharing"; the addon then leaves the channel, and your group and guild still get addon messages. Addon messages and chat lines show the game's sender name to the receiving addon; Braindead 4ever never stores it. Like any chat line, a line in the hidden channel shows the character name to everyone in that channel; the channel has a password, which is part of this source code.
 
 Braindead 4ever also shares how long each level and each route part took you: active seconds, experience, race and class as numbers, whether you followed the route, the level and the day. These run times carry a random token that Braindead 4ever rolls once per character and derives from nothing else; it only serves to count each level of a character once. Other copies of Braindead 4ever keep them and pass them on, so the routes can be measured against real play ([format](docs/RUN-TIMES.md)). The page "Your run" (right-click menu, `/bd4 stats`) shows your own times per level and, once at least ten runs of your class have reached you, their median and where you stand ([details](docs/RUN-STATS.md)).
 
@@ -28,7 +28,7 @@ The flight connections you see at a flight master and the seconds of flights wit
 
 Braindead 4ever tells other players which version of it you run (to your group, your guild and the hidden channel, once per session), so it can say when a newer version is out.
 
-`/bd4 export` shows your data as a text to copy, for the website that comes later. `/bd4 report` builds a problem report without names.
+`/bd4 export` shows your data as a text to copy. It holds what you recorded and what other players shared with you, without names; nothing leaves the game unless you copy it. `/bd4 report` builds a problem report without names.
 
 ## Help and problem reports
 

@@ -8,6 +8,10 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## Unreleased
+
+- Sharing on the hidden channel is now your choice: settings, page "Sharing", on by default. Off, the addon leaves the channel and sends no chat lines; your group and guild still get addon messages, which no chat window shows.
+
 ## 0.9.11 (2026-11-11)
 
 - Profession quests are your choice. Where the route reaches Camping 101 in a start zone, the step window asks whether you want to fit the profession quests in now or do them on your own. "Fit in" keeps them in the route as before. "On my own" leaves them out, and the route goes on with the next quest. Undo in the right-click menu brings them back. The Great Outdoors stays in the route. The optional automation takes these quests only after "Fit in".
@@ -88,6 +92,6 @@ Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 
 ## Known issues
 
-- The routes are computed from open data and not played yet; every section is marked as provisional until our own runs replace it.
-- The Speed routes leave out some quests in the starting zones that the quest givers offer, for example "Cutting Teeth" in the Valley of Trials. Corrected routes follow with the next update.
-- Braindead 4ever could not be tested in the Forever client before the start. If a part fails, it turns off and the rest keeps running; after two failed starts the safe mode keeps the core running.
+- The routes are computed from open data, and every section is marked as provisional. Rebuilt routes replace them zone by zone, starting with the first 20 levels.
+- The Speed routes leave out some quests in the starting zones that the quest givers offer, for example "Cutting Teeth" in the Valley of Trials. The rebuilt routes take them in.
+- Not every release is played in the Forever client before it goes out. If a part fails, it turns off and the rest keeps running; after two failed starts the safe mode keeps the core running. Please report it with "Report a problem".

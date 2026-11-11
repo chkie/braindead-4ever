@@ -23,7 +23,8 @@ of the Ace3 libraries used as well as that of the covered work.
 
 -- Collector/Exchange.lua: every installation shares its discoveries with other players who run the
 -- addon, through addon messages (Plan: "Teilen im Spiel"; owner decision 2026-11-01: contributing data
--- is part of the addon, not an option). Received finds go into the collector's second buffer marked
+-- is part of the addon). Sharing on the hidden channel can be switched off (owner 2026-11-11, option
+-- "share", X.SetChannel); group and guild keep their addon messages. Received finds go into the collector's second buffer marked
 -- as unconfirmed ("rx"); a second independent sender confirms them ("rx2").
 -- Transport after chapter 13 pattern D and the ForeverItemFinder channel approach (GPL-3.0, read only;
 -- own code): group, guild and a hidden custom chat channel, own token bucket (server default 10 per
@@ -147,6 +148,14 @@ local function ChannelNumber()
 	end
 end
 
+-- Sharing on the hidden channel is the player's choice (owner 2026-11-11): the option "share" in
+-- BraindeadForeverDB.ui, on by default. Read here directly, so the channel follows it also without the
+-- interface modules. Group and guild keep their addon messages, which no chat window shows.
+local function ChannelWanted()
+	local ui = ns.db and ns.db.ui
+	return not (type(ui) == "table" and ui.share == false)
+end
+
 -- Own name as the game writes it in CHAT_MSG_ADDON (Forever: "Firstname Lastname", Retail: name without
 -- realm). Used only to drop our own echo, never stored.
 local function Me()
@@ -246,7 +255,7 @@ function X.Pump()
 				target = ChannelNumber()
 				target = target and tostring(target)
 			end
-			if item.dist == "CHANNEL" and not target then
+			if item.dist == "CHANNEL" and (not target or X.channel.state ~= "on") then
 				result = "nochannel"
 			else
 				result = C_ChatInfo.SendAddonMessage(Proto.PREFIX, item.msg, item.dist, target)
@@ -257,7 +266,7 @@ function X.Pump()
 				return
 			end
 			table.remove(q, i) -- sent or a final error (not in group, no channel, ...)
-			if item.dist == "CHANNEL" and target then
+			if item.dist == "CHANNEL" and target and result ~= "nochannel" then
 				-- the chat line carries the message whatever the addon message did (Forever: it never arrives)
 				X.nextChannelAt = now + X.CHANNEL_GAP
 				X.budget:Spend(item.pool)
@@ -824,6 +833,10 @@ function Join()
 	if not M.IsActive("exchange") then
 		return
 	end
+	if not ChannelWanted() then
+		c.state = "off"
+		return
+	end
 	if ChannelNumber() then
 		HideChannel()
 		c.state = "on"
@@ -860,6 +873,30 @@ function Join()
 	)
 end
 X.Join = Join
+
+-- The option "share" changed (UI/Settings.lua): off leaves the channel at once, drops what waits for it
+-- (messages and chat lines) and sends nothing there any more; on joins it again.
+function X.SetChannel(on)
+	local c = X.channel
+	if on then
+		if c.state == "off" and M.IsActive("exchange") then
+			c.state, c.tries, c.refused = "waiting", 0, false
+			Join()
+		end
+		return
+	end
+	c.state = "off"
+	local q = X.queue
+	for i = #q, 1, -1 do
+		if q[i].dist == "CHANNEL" then
+			table.remove(q, i)
+		end
+	end
+	X.lines.queue, X.lines.out = {}, nil
+	if ChannelNumber() and api.LeaveChannelByName then
+		pcall(api.LeaveChannelByName, ChannelName())
+	end
+end
 
 -- Only the channel's owner or a moderator can do these; copies of the addon never do.
 local TAKEOVER = {

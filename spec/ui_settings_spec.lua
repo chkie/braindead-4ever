@@ -51,7 +51,7 @@ local function sentences(text)
 end
 
 describe("Settings", function()
-	it("register one category with five sub pages as vertical lists, Credits as canvas", function()
+	it("register one category with six sub pages as vertical lists, Credits as canvas", function()
 		S.login()
 		local main = byName("Braindead 4ever")
 		assert.is_true(main.registered)
@@ -61,7 +61,10 @@ describe("Settings", function()
 				subs[#subs + 1] = c.name .. (c.canvas and " (canvas)" or "")
 			end
 		end
-		assert.are.same({ "Play style", "Display", "Arrow and Map", "Accessibility", "Credits (canvas)" }, subs)
+		assert.are.same(
+			{ "Play style", "Display", "Arrow and Map", "Accessibility", "Sharing", "Credits (canvas)" },
+			subs
+		)
 	end)
 
 	-- Rule E1 (brain chapter 18 §7.3): at most five options and two buttons on the main page. The fifth
@@ -136,6 +139,19 @@ describe("Settings", function()
 			end
 		end)
 	end
+
+	it("sharing on the hidden channel: on by default, off leaves the channel at once (owner 2026-11-11)", function()
+		local ns = S.login()
+		assert.is_true(ns.UI.Get("share"))
+		wow.advance(10)
+		assert.are.equal("on", ns.Exchange.channel.state)
+		wow.world.settings.settings.BRAINDEADFOREVER_SHARE:SetValue(false)
+		assert.are.equal("off", ns.Exchange.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		wow.world.settings.settings.BRAINDEADFOREVER_SHARE:SetValue(true)
+		wow.advance(2)
+		assert.are.equal("on", ns.Exchange.channel.state)
+	end)
 
 	it("apply at once: size, background, steps ahead, combat dim", function()
 		local ns = S.login()

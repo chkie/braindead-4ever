@@ -206,9 +206,20 @@ local function Build()
 	local a11y = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_A11Y)
 	Check(a11y, "textSize", L.OPT_TEXTSIZE, L.TIP_TEXTSIZE)
 
+	-- Sharing on the hidden channel (owner 2026-11-11): the player's choice, on by default
+	local share = Settings.RegisterVerticalLayoutSubcategory(cat, L.PAGE_SHARE)
+	Check(share, "share", L.OPT_SHARE, L.TIP_SHARE)
+
 	Credits(cat)
 	Settings.RegisterAddOnCategory(cat)
 end
+
+-- The hidden channel follows the option "share" at once (Collector/Exchange.lua).
+UI.OnChange("share", SET, function(_, _, value)
+	if ns.Exchange and ns.Exchange.SetChannel then
+		ns.Exchange.SetChannel(value ~= false)
+	end
+end)
 
 -- "Anzeigeumfang" sets several options at once (brain chapter 18 pattern D).
 local applying = false

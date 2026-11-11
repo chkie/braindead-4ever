@@ -398,6 +398,10 @@ L.TIP_TOMTOM = "Gibt das aktuelle Ziel als Wegpunkt an TomTom weiter, damit auch
 L.PAGE_A11Y = "Barrierefreiheit"
 L.OPT_TEXTSIZE = "Textgröße des Spiels nutzen"
 L.TIP_TEXTSIZE = "Passt die Schrift an die Textgröße aus den Spieleinstellungen an."
+L.PAGE_SHARE = "Teilen"
+L.OPT_SHARE = "Im versteckten Kanal teilen"
+L.TIP_SHARE =
+	"Teilt Funde und Zeiten in einem versteckten Kanal, in dem andere deinen Charakternamen sehen; Gruppe und Gilde bekommen sie immer."
 L.PAGE_CREDITS = "Credits"
 L.CREDITS_LICENSE = "Freie Software unter der GNU General Public License 3.0, ohne Gewährleistung."
 L.CREDITS_SOURCES_TITLE = "Datenquellen"

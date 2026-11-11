@@ -238,6 +238,55 @@ describe("Exchange: sending", function()
 	end)
 end)
 
+describe("Exchange: the option to share on the hidden channel (owner 2026-11-11)", function()
+	local function lines()
+		local out = {}
+		for _, l in ipairs(wow.world.chat) do
+			if l.chatType == "CHANNEL" then
+				out[#out + 1] = l
+			end
+		end
+		return out
+	end
+
+	it("switched off before the start: no channel, group and guild still get their messages", function()
+		local _, X = start({ saved = { ui = { share = false } } })
+		wow.advance(60)
+		assert.are.equal("off", X.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		wow.world.group.party, wow.world.guild = true, true
+		loot()
+		wow.advance(91)
+		assert.are.equal(1, #sent("PARTY"))
+		assert.are.equal(1, #sent("GUILD"))
+		assert.are.equal(0, #sent("CHANNEL"))
+		wow.press()
+		assert.are.equal(0, #lines())
+	end)
+
+	it("switched off in the game: leaves the channel and drops what waits for it; on joins again", function()
+		local _, X = start()
+		wow.freeChannel()
+		wow.advance(10)
+		assert.are.equal("on", X.channel.state)
+		loot()
+		wow.advance(91)
+		assert.are.equal(1, #X.lines.queue, "a line waits for a press")
+		X.SetChannel(false)
+		assert.are.equal("off", X.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		assert.are.equal(0, #X.lines.queue)
+		wow.press()
+		assert.are.equal(0, #lines(), "no line after the switch")
+		wow.advance(40)
+		assert.are.equal("off", X.channel.state, "no rejoin by itself")
+		X.SetChannel(true)
+		wow.advance(2)
+		assert.are.equal("on", X.channel.state)
+		assert.are.equal(5, wow.world.channels.BraindeadShare)
+	end)
+end)
+
 describe("Exchange: receiving", function()
 	local function receive(msg, sender, dist)
 		wow.fire("CHAT_MSG_ADDON", "BDF", msg, dist or "CHANNEL", sender, "", 0, 5, "BraindeadShare", 0)

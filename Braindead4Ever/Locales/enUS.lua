@@ -423,6 +423,10 @@ L.TIP_TOMTOM = "Passes the current goal to TomTom as a waypoint, so TomTom's arr
 L.PAGE_A11Y = "Accessibility"
 L.OPT_TEXTSIZE = "Follow Blizzard text size"
 L.TIP_TEXTSIZE = "Matches the text to the text size from the game settings."
+L.PAGE_SHARE = "Sharing"
+L.OPT_SHARE = "Share on the hidden channel"
+L.TIP_SHARE =
+	"Shares your finds and times in a hidden channel where other players see your character name; group and guild always get them."
 L.PAGE_CREDITS = "Credits"
 L.CREDITS_LICENSE = "Free software under the GNU General Public License 3.0, without warranty."
 L.CREDITS_SOURCES_TITLE = "Data sources"
