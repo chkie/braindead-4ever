@@ -55,6 +55,7 @@ L.WORD_ON = "an"
 L.WORD_OFF = "aus"
 
 L.MSG_FLAG_MANDATORY = "%s: %s gehört zum Addon und lässt sich nicht ausschalten"
+L.MSG_FLAG_SHARE = "Das Teilen im versteckten Kanal lässt sich in den Einstellungen ausschalten, Seite Teilen."
 L.MSG_AFTER_COMBAT = "Braindead 4ever: nach dem Kampf erneut versuchen"
 
 L.COPY_STATUS = "%d Zeichen. Mit Strg+C kopieren."

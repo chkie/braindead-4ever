@@ -835,6 +835,9 @@ function Join()
 	end
 	if not ChannelWanted() then
 		c.state = "off"
+		if ChannelNumber() and api.LeaveChannelByName then
+			pcall(api.LeaveChannelByName, ChannelName()) -- still in it from before the switch
+		end
 		return
 	end
 	if ChannelNumber() then
@@ -855,6 +858,14 @@ function Join()
 		2,
 		Guard.Wrap("exchange", function()
 			if c.slot ~= slot then
+				return
+			end
+			if c.state == "off" or not ChannelWanted() then
+				-- switched off while the server confirmed the join: leave again
+				c.state = "off"
+				if ChannelNumber() and api.LeaveChannelByName then
+					pcall(api.LeaveChannelByName, ChannelName())
+				end
 				return
 			end
 			if ChannelNumber() then
@@ -918,6 +929,13 @@ local function Notice(kind, name)
 	local c = X.channel
 	if kind == "THROTTLED" and X.lines.out then
 		LineDropped(GetTime()) -- the line in flight was dropped by the server
+		return
+	end
+	if (kind == "YOU_JOINED" or kind == "YOU_CHANGED") and c.state == "off" then
+		-- a join the server confirmed after the switch went off
+		if api.LeaveChannelByName then
+			pcall(api.LeaveChannelByName, ChannelName())
+		end
 		return
 	end
 	if kind == "WRONG_PASSWORD" or kind == "BANNED" then

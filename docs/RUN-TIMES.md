@@ -1,6 +1,6 @@
 # Run times in the exchange
 
-Every installation measures how long its character takes for each level and each route module and shares that in the game. Every installation also keeps the run times it hears and passes them on, so one export brings the runs of many players. After the start this measures how fast the route is in real play, apart for players who follow it and players who play freely (plan "Laufzeiten im Austausch", 2026-11-02). Data contribution is part of the addon; there is no switch.
+Every installation measures how long its character takes for each level and each route module and shares that in the game. Every installation also keeps the run times it hears and passes them on, so one export brings the runs of many players. After the start this measures how fast the route is in real play, apart for players who follow it and players who play freely (plan "Laufzeiten im Austausch", 2026-11-02). Sharing them on the hidden channel can be switched off (settings, page "Sharing"); group and guild still get them.
 
 The page "Your run" compares the player's own levels and sections with the vault's runs of the same class ([RUN-STATS.md](RUN-STATS.md)), so the shared times bring every player something back.
 

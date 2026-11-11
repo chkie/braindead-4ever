@@ -63,6 +63,7 @@ L.WORD_OFF = "off"
 
 -- Slash command extras
 L.MSG_FLAG_MANDATORY = "%s: %s is part of the addon and cannot be turned off"
+L.MSG_FLAG_SHARE = "Sharing on the hidden channel can be turned off in the settings, page Sharing."
 L.MSG_AFTER_COMBAT = "Braindead 4ever: try again after combat"
 
 -- Copy window

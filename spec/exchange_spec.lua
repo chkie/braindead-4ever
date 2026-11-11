@@ -264,6 +264,43 @@ describe("Exchange: the option to share on the hidden channel (owner 2026-11-11)
 		assert.are.equal(0, #lines())
 	end)
 
+	it("switched off while the server confirms the join: leaves again and sends nothing there", function()
+		wow.reset({})
+		_G.JoinTemporaryChannel = function(name)
+			C_Timer.After(1, function()
+				wow.world.channels[name] = 5
+			end)
+		end
+		local ns = wow.loadFiles(wow.addonFiles(false))
+		wow.fire("ADDON_LOADED", "Braindead4Ever")
+		wow.fire("PLAYER_LOGIN")
+		wow.fire("PLAYER_ENTERING_WORLD", true, false)
+		wow.ns = ns
+		local X = ns.Exchange
+		wow.advance(8) -- the join is asked for, the server answers in 1 s
+		ns.db.ui.share = false
+		X.SetChannel(false)
+		wow.advance(3)
+		assert.are.equal("off", X.channel.state)
+		assert.is_nil(wow.world.channels.BraindeadShare, "left again")
+		wow.freeChannel(ns)
+		loot()
+		wow.advance(95)
+		assert.are.equal(0, #sent("CHANNEL"))
+		wow.press()
+		assert.are.equal(0, #lines())
+	end)
+
+	it("a late join notice after the switch leaves the channel", function()
+		local ns, X = start({ saved = { ui = { share = false } } })
+		wow.advance(10)
+		wow.world.channels.BraindeadShare = 5
+		wow.fire("CHAT_MSG_CHANNEL_NOTICE", "YOU_JOINED", "", "", "", "", "", 0, 5, "BraindeadShare")
+		assert.is_nil(wow.world.channels.BraindeadShare)
+		assert.are.equal("off", X.channel.state)
+		assert.is_false(ns.db.ui.share)
+	end)
+
 	it("switched off in the game: leaves the channel and drops what waits for it; on joins again", function()
 		local _, X = start()
 		wow.freeChannel()

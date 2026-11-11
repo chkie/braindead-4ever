@@ -8,20 +8,21 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
-## Unreleased
+## 0.9.12 (2026-11-11)
 
-- Sharing on the hidden channel is now your choice: settings, page "Sharing", on by default. Off, the addon leaves the channel and sends no chat lines; your group and guild still get addon messages, which no chat window shows.
+- New settings page "Sharing" with one option, on by default. When it's off, the addon leaves the hidden channel, sends nothing there and hears nobody there. Your group and guild still get addon messages, which no chat window shows.
+- `/bd4 flag exchange off` now tells you where the Sharing setting is.
 
 ## 0.9.11 (2026-11-11)
 
-- Profession quests are your choice. Where the route reaches Camping 101 in a start zone, the step window asks whether you want to fit the profession quests in now or do them on your own. "Fit in" keeps them in the route as before. "On my own" leaves them out, and the route goes on with the next quest. Undo in the right-click menu brings them back. The Great Outdoors stays in the route. The optional automation takes these quests only after "Fit in".
+- Profession quests are optional. Where the route reaches Camping 101 in a start zone, the step window asks whether you want to fit the profession quests in now or do them on your own. "Fit in" keeps them in the route as before. "On my own" leaves them out, and the route goes on with the next quest. Undo in the right-click menu brings them back. The quest The Great Outdoors stays in the route. The quest automation picks these quests up only after "Fit in".
 - A left click on the check box of the current step now checks the step off. Before, only the right-click menu worked.
-- Quest data as of 11 November. Quest givers that stand somewhere else in Forever have their new places: in Teldrassil and Redridge Mountains some waypoints moved by up to 135 yards, and one turn-in each in Elwynn Forest and Teldrassil is in Stormwind or Darnassus, with a walk step into the city and back out.
+- Quest data as of 11 November. Quest givers that Forever moved are at their new spots: in Teldrassil and Redridge Mountains some waypoints moved by up to 135 yards, and one turn-in each in Elwynn Forest and Teldrassil is in Stormwind or Darnassus, with a walk step into the city and back out.
 
 ## 0.9.10 (2026-11-09)
 
-- A ride step now names where the ride lands. The zeppelin from Orgrimmar lands in Tirisfal Glades, and a walk step then leads on to Silverpine Forest. Before, the step said "zeppelin to Silverpine Forest". This holds for every boat, zeppelin, airship and tram step in both factions.
-- Quest data as of 9 November. Quests the game offers only after another quest now come after that quest in the route, for example a chain in the Barrens and a quest in Tirisfal Glades. Quest givers that stand somewhere else in Forever have their new places, for example Burning Shadows is handed in in Orgrimmar, with a walk step into the city and back out.
+- A ride step now names where the ride lands. The zeppelin from Orgrimmar lands in Tirisfal Glades, and a walk step then leads on to Silverpine Forest. Before, the step said "zeppelin to Silverpine Forest". Same for every boat, zeppelin, airship and tram step, both factions.
+- Quest data as of 9 November. Quests the game offers only after another quest now come after that quest in the route, for example a chain in the Barrens and a quest in Tirisfal Glades. Quest givers that Forever moved are at their new spots, for example Burning Shadows is handed in in Orgrimmar, with a walk step into the city and back out.
 - A few quests are out of the route until the next large update brings in the quests they need: one Silverpine Forest quest for every Horde character, one more Silverpine Forest quest in the Speed route, and some Undead Paladin and Night Elf Druid class quests. Before, the route asked for them although the game does not offer them yet.
 - "Blizzard's quest tracker: Hidden" (the default) now only hides the tracker and leaves your quest marks alone. The game marks new quests by itself again, and the quest areas show on the minimap. Before, the option removed the marks, and with them the areas on the minimap.
 - The tooltip of "Only quests of the route" says that quest areas on the minimap show only for marked quests. Choose "Unchanged" if you want every quest marked.
