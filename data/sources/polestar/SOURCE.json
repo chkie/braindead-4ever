@@ -1,7 +1,7 @@
 {
  "clientBuild": "1.60.1.70532",
- "commit": "0df6f58ab8eeabb248153fdd889e64211177e279",
- "commitDate": "2026-11-10T15:39:58+01:00",
+ "commit": "19bd636e7d6f33231770f6029c76d2d4dfc63798",
+ "commitDate": "2026-11-12T17:00:00+01:00",
  "files": [
   "quests.jsonl",
   "ui_map.jsonl",

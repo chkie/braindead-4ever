@@ -24,10 +24,11 @@
   "wowf/1.60.1.70532",
   "wowf/1.60.1.70790",
   "wowf/1.60.1.70840",
-  "wowf/1.60.1.70862"
+  "wowf/1.60.1.70862",
+  "wowf/1.60.1.70888"
  ],
- "commit": "9fcae73cc74fea4f1c4f2f09df9ca811b0f893ae",
- "commitDate": "2026-11-10T11:33:23Z",
+ "commit": "164bd1e2d89579ada4ee5e2de7e5fd4db684a9f1",
+ "commitDate": "2026-11-12T11:29:30Z",
  "files": [
   "quests.jsonl",
   "starts.jsonl",

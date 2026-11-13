@@ -21,12 +21,12 @@
   accept 95981 | src=polestar,att,eglink status=unbestätigt
   accept 516 | src=polestar,att,eglink status=unbestätigt
   goto 1421 1601.8,517.2 r=10 | src=eglink,polestar,att status=unbestätigt roots=3
-@a78261 lv=24
+@a78261 lv=24 << class=ROGUE
   accept 78261 | src=att status=unbestätigt
   goto 1421 1471.8,-324.1 r=10 | src=att status=unbestätigt roots=1
-@c78261 lv=24
+@c78261 lv=24 << class=ROGUE
   complete 78261 | src=polestar status=unbestätigt
-@t78261 lv=24
+@t78261 lv=24 << class=ROGUE
   turnin 78261 | src=polestar status=unbestätigt
   accept 78307 | src=att status=unbestätigt
   turnin 78307 | src=polestar status=unbestätigt
