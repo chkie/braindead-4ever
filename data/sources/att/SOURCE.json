@@ -1,6 +1,6 @@
 {
- "commit": "426a6f738b33582e806f174028e5cefd372e06ab",
- "commitDate": "2026-11-11T00:52:55-06:00",
+ "commit": "be93509c03c53817d072968d4ba23d640d3d32ee",
+ "commitDate": "2026-11-12T20:20:38-06:00",
  "copyright": "Copyright (c) 2026 AllTheThings WoW Addon (MIT License, LICENSE in the source repository)",
  "files": [
   "quests.jsonl",

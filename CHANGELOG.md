@@ -8,6 +8,11 @@ After renamed or deleted files add:
 Keep "Known issues" current. Hotfix steps: CONTRIBUTING.md, "Hotfix".
 -->
 
+## 0.9.13 (2026-11-13)
+
+- The Horn of Xelthos in Silverpine Forest is a Rogue quest. The Horde route now shows it and its second part to Rogues only. Before, it sent every Horde character to a quest they can't take.
+- Quest data as of 12 November.
+
 ## 0.9.12 (2026-11-11)
 
 - New settings page "Sharing" with one option, on by default. When it's off, the addon leaves the hidden channel, sends nothing there and hears nobody there. Your group and guild still get addon messages, which no chat window shows.

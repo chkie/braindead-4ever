@@ -608,7 +608,7 @@ describe("Spread simulation with flight legs", function()
 		assert.is_true(r.maxWindow <= WINDOW_MAX, r.maxWindow)
 		local f = r.flights
 		assert.is_true(f.messages > 0)
-		assert.are.equal(124, f.legs) -- flight legs of the facts, EG Link 2026-11-10
+		assert.are.equal(134, f.legs) -- flight legs of the facts, EG Link 2026-11-12
 		-- most legs other players saw reach an exporter, the ones the facts lack too
 		assert.is_true(f.reach.legs.any >= 0.9, f.reach.legs.any)
 		assert.is_true(f.reach.hidden.any >= 0.9, f.reach.hidden.any)
